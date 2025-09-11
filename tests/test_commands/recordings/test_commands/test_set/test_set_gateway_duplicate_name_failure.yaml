@@ -1,0 +1,866 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"value": []}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '32'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:22:44 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 09eea390-1224-4063-afd3-0f09f64efbd3
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "West Europe", "state":
+        "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '456'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:22:50 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 6c6865b4-9ff1-4ce8-9c9f-dbd456a7594d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://management.azure.com/subscriptions?api-version=2022-12-01
+  response:
+    body:
+      string: '{"value": [{"id": "/subscriptions/00000000-0000-0000-0000-000000000000"}],
+        "count": {"type": "Total", "value": 1}}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '479'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:22:51 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Network/virtualNetworks?api-version=2024-05-01
+  response:
+    body:
+      string: '{"value": [{"name": "mocked_fabriccli_vnet_name", "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Network/virtualNetworks/mocked_fabriccli_vnet_name",
+        "properties": {"subnets": [{"name": "mocked_fabriccli_vnet_subnet", "id":
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Network/virtualNetworks/mocked_fabriccli_vnet_name/subnets/mocked_fabriccli_vnet_subnet"}]}}]}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '3706'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:22:51 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+      "inactivityMinutesBeforeSleep": 30, "numberOfMemberGateways": 1, "type": "VirtualNetwork",
+      "virtualNetworkAzureResource": {"subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "resourceGroupName": "mocked_fabriccli_resource_group", "virtualNetworkName":
+      "mocked_fabriccli_vnet_name", "subnetName": "mocked_fabriccli_vnet_subnet"}}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '377'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "e81742f9-e23d-44fa-a4a3-20775057aca9",
+        "type": "VirtualNetwork"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId,Location
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '287'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:01 GMT
+      Location:
+      - https://api.fabric.microsoft.com/v1/gateways/e81742f9-e23d-44fa-a4a3-20775057aca9
+      Pragma:
+      - no-cache
+      RequestId:
+      - 0df492d1-400c-4a44-aded-cb01b91c5fa8
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 201
+      message: Created
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"value": [{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "e81742f9-e23d-44fa-a4a3-20775057aca9",
+        "type": "VirtualNetwork"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '298'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:02 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - ec0f35f5-8cc5-410a-888d-916cb62f1d06
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "West Europe", "state":
+        "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '456'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:06 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - ad492095-34d1-4d51-96eb-3ee19b828c42
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://management.azure.com/subscriptions?api-version=2022-12-01
+  response:
+    body:
+      string: '{"value": [{"id": "/subscriptions/00000000-0000-0000-0000-000000000000"}],
+        "count": {"type": "Total", "value": 1}}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '479'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:07 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Network/virtualNetworks?api-version=2024-05-01
+  response:
+    body:
+      string: '{"value": [{"name": "mocked_fabriccli_vnet_name", "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Network/virtualNetworks/mocked_fabriccli_vnet_name",
+        "properties": {"subnets": [{"name": "mocked_fabriccli_vnet_subnet", "id":
+        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Network/virtualNetworks/mocked_fabriccli_vnet_name/subnets/mocked_fabriccli_vnet_subnet"}]}}]}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '3706'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:07 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+      "inactivityMinutesBeforeSleep": 30, "numberOfMemberGateways": 1, "type": "VirtualNetwork",
+      "virtualNetworkAzureResource": {"subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "resourceGroupName": "mocked_fabriccli_resource_group", "virtualNetworkName":
+      "mocked_fabriccli_vnet_name", "subnetName": "mocked_fabriccli_vnet_subnet"}}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '377'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "b9c76343-d135-4187-8692-51cc83d9d85b",
+        "type": "VirtualNetwork"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId,Location
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '288'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:18 GMT
+      Location:
+      - https://api.fabric.microsoft.com/v1/gateways/b9c76343-d135-4187-8692-51cc83d9d85b
+      Pragma:
+      - no-cache
+      RequestId:
+      - 12a03cea-0529-4d70-a9f5-850e5b97fc0d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 201
+      message: Created
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"value": [{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "e81742f9-e23d-44fa-a4a3-20775057aca9",
+        "type": "VirtualNetwork"}, {"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "b9c76343-d135-4187-8692-51cc83d9d85b",
+        "type": "VirtualNetwork"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '347'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:19 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 6ea87069-273b-4658-9983-8ce97c482558
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways/e81742f9-e23d-44fa-a4a3-20775057aca9
+  response:
+    body:
+      string: '{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "e81742f9-e23d-44fa-a4a3-20775057aca9",
+        "type": "VirtualNetwork"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '287'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:20 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 244eb485-08e0-4ac0-a418-a8f5d6854e3d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+      "inactivityMinutesBeforeSleep": 30, "numberOfMemberGateways": 1, "type": "VirtualNetwork"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '202'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: PATCH
+    uri: https://api.fabric.microsoft.com/v1/gateways/e81742f9-e23d-44fa-a4a3-20775057aca9
+  response:
+    body:
+      string: '{"requestId": "7ca2dc50-909c-4d77-bf68-d6e55c4fa5be", "errorCode":
+        "DuplicateGatewayName", "message": "The gateway DisplayName input is already
+        being used by another gateway"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:26 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 7ca2dc50-909c-4d77-bf68-d6e55c4fa5be
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+      x-ms-public-api-error-code:
+      - DuplicateGatewayName
+    status:
+      code: 409
+      message: Conflict
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"value": [{"displayName": "fabcli000001", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "e81742f9-e23d-44fa-a4a3-20775057aca9",
+        "type": "VirtualNetwork"}, {"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "b9c76343-d135-4187-8692-51cc83d9d85b",
+        "type": "VirtualNetwork"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '347'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:27 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 135c97da-d2ec-4197-986d-09e0c6bc9dcf
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: DELETE
+    uri: https://api.fabric.microsoft.com/v1/gateways/e81742f9-e23d-44fa-a4a3-20775057aca9
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/octet-stream
+      Date:
+      - Wed, 03 Sep 2025 09:23:28 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - aedb56e9-4250-4feb-a815-a368ea8f84a9
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/gateways
+  response:
+    body:
+      string: '{"value": [{"displayName": "fabcli000002", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "virtualNetworkAzureResource": {"virtualNetworkName": "mocked_fabriccli_vnet_name",
+        "subnetName": "mocked_fabriccli_vnet_subnet", "resourceGroupName": "mocked_fabriccli_resource_group",
+        "subscriptionId": "00000000-0000-0000-0000-000000000000"}, "inactivityMinutesBeforeSleep":
+        30, "numberOfMemberGateways": 1, "id": "b9c76343-d135-4187-8692-51cc83d9d85b",
+        "type": "VirtualNetwork"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '299'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 09:23:28 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 16a19729-7aad-4fe2-97c9-219124ca8c7f
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: DELETE
+    uri: https://api.fabric.microsoft.com/v1/gateways/b9c76343-d135-4187-8692-51cc83d9d85b
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/octet-stream
+      Date:
+      - Wed, 03 Sep 2025 09:23:30 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 82241d1c-1e3f-4d23-8a16-6305462beb6e
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+version: 1

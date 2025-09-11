@@ -1,0 +1,253 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces
+  response:
+    body:
+      string: '{"value": [{"id": "94da8ea5-0bd6-4a9e-b717-5fdb482f4c71", "displayName":
+        "My workspace", "description": "", "type": "Personal"}, {"id": "bb0ba71a-4df8-4dd0-a627-355ca5802c9f",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
+        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '356'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 03:25:32 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 78c9202d-7bda-4442-8bd6-7a91b049ac87
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/bb0ba71a-4df8-4dd0-a627-355ca5802c9f
+  response:
+    body:
+      string: '{"id": "bb0ba71a-4df8-4dd0-a627-355ca5802c9f", "displayName": "fabriccli_WorkspacePerTestclass_000001",
+        "description": "Created by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004",
+        "capacityRegion": "West Europe", "oneLakeEndpoints": {"blobEndpoint": "https://westeurope-onelake.blob.fabric.microsoft.com",
+        "dfsEndpoint": "https://westeurope-onelake.dfs.fabric.microsoft.com"}, "capacityAssignmentProgress":
+        "Completed"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '296'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 03:25:33 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 666a94bd-5812-471e-8f2c-ea20ee1e7755
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/bb0ba71a-4df8-4dd0-a627-355ca5802c9f/managedPrivateEndpoints
+  response:
+    body:
+      string: '{"value": []}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '32'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 03:25:32 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - e015a424-c1c5-433c-9292-f62bc6c89435
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/bb0ba71a-4df8-4dd0-a627-355ca5802c9f/spark/settings
+  response:
+    body:
+      string: '{"automaticLog": {"enabled": true}, "highConcurrency": {"notebookInteractiveRunEnabled":
+        true, "notebookPipelineRunEnabled": false}, "pool": {"customizeComputeEnabled":
+        true, "defaultPool": {"name": "Starter Pool", "type": "Workspace", "id": "00000000-0000-0000-0000-000000000000"},
+        "starterPool": {"maxNodeCount": 10, "maxExecutors": 9}}, "environment": {"runtimeVersion":
+        "1.3"}, "job": {"conservativeJobAdmissionEnabled": false, "sessionTimeoutInMinutes":
+        20}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId,ETag
+      Content-Length:
+      - '600'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 03:25:33 GMT
+      ETag:
+      - '"0x8DDEA998A6690D8"'
+      RequestId:
+      - cc895ec2-521b-4a10-aacb-4b1779249366
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/bb0ba71a-4df8-4dd0-a627-355ca5802c9f/roleAssignments
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000001", "principal":
+        {"id": "00000000-0000-0000-0000-000000000001", "displayName": "Tenant Admin",
+        "type": "User", "userDetails": {"userPrincipalName": "mocked@admin_test_user"}},
+        "role": "Admin"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '180'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 03 Sep 2025 03:25:33 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 902ee86d-5651-41f7-b9db-a961e8a6e72b
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+version: 1

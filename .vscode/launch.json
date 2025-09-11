@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Fabric CLI Debug (Integrated Console)",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${command:python.interpreterPath}",
+            "program": "${workspaceRoot}/src/fabric_cli/main.py",
+            "cwd": "${workspaceRoot}/src",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}/src"
+            },
+            "args": "${command:pickArgs}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Fabric CLI Debug (External Console)",
+            "type": "debugpy",
+            "request": "launch",
+            "stopOnEntry": true,
+            "python": "${command:python.interpreterPath}",
+            "program": "${workspaceRoot}/src/fabric_cli/main.py",
+            "cwd": "${workspaceRoot}/src",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}/src"
+            },
+            "args": "${command:pickArgs}",
+            "console": "externalTerminal"
+        }
+    ]
+}

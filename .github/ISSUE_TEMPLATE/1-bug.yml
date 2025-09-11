@@ -1,0 +1,133 @@
+name: "🐛 Bug report"
+description: Create a report to help us improve fabric-cli
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us diagnose and fix the issue.
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug you encountered...
+    validations:
+      required: true
+
+  - type: input
+    id: fabric-cli-version
+    attributes:
+      label: fabric-cli version
+      description: Run `fab --version` to get your version
+      placeholder: e.g., 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Run `python --version` to get your version
+      placeholder: e.g., Python 3.11.5
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: cli-mode
+    attributes:
+      label: CLI Mode
+      description: Which mode were you using when the bug occurred?
+      options:
+        - Interactive mode
+        - Command line mode
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth-method
+    attributes:
+      label: Authentication Method
+      description: How are you authenticating with fabric-cli?
+      options:
+        - Interactive browser login
+        - Service principal (secret)
+        - Service principal (certificate)
+        - Service principal (federated credential)
+        - Managed identity
+        - Access token defined as environment variable
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Go to '...'
+        2. Run command '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen
+      placeholder: Describe what should have happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: |
+        A clear and concise description of what actually happened.
+        Please include the full command output including any error messages.
+      placeholder: |
+        Describe what actually happened...
+        
+        Command output:
+        ```
+        Paste command output here
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here, such as:
+        - Specific workspace/item types involved
+        - Network configuration (if relevant)
+        - Screenshots (if applicable)
+        - Related issues or documentation
+        - Request ID
+      placeholder: Additional details...
+
+  - type: textarea
+    id: possible-solution
+    attributes:
+      label: Possible Solution
+      description: If you have ideas on how to fix the issue, please share them here
+      placeholder: Your suggestions for fixing the issue...
