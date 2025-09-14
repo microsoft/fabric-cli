@@ -1,0 +1,328 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces
+  response:
+    body:
+      string: '{"value": [{"id": "94da8ea5-0bd6-4a9e-b717-5fdb482f4c71", "displayName":
+        "My workspace", "description": "", "type": "Personal"}, {"id": "f8afce4d-5748-4f22-a741-863c80a4dabf",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
+        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '357'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:57 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - ab2f1546-2d2f-4397-9c2f-ecff6e69323d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/f8afce4d-5748-4f22-a741-863c80a4dabf/roleAssignments
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000001", "principal":
+        {"id": "00000000-0000-0000-0000-000000000001", "displayName": "Tenant Admin",
+        "type": "User", "userDetails": {"userPrincipalName": "mocked@admin_test_user"}},
+        "role": "Admin"}, {"id": "00000000-0000-0000-0000-000000000003", "principal":
+        {"id": "00000000-0000-0000-0000-000000000003", "displayName": "fabric-cli-oidc",
+        "type": "ServicePrincipal", "servicePrincipalDetails": {"aadAppId": "324ad028-5125-490f-b4a2-7cc89d688e5e"}},
+        "role": "Member"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '283'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:56 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - e3336dab-f01f-4517-b43b-ce75a8da45f9
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"principal": {"id": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3", "type": "User"},
+      "role": "member"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '95'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/workspaces/f8afce4d-5748-4f22-a741-863c80a4dabf/roleAssignments
+  response:
+    body:
+      string: '{"requestId": "61ce56d1-4233-4d8f-bda8-4cbe76e748bb", "errorCode":
+        "PrincipalNotFound", "moreDetails": [{"relatedResource": {"resourceId": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3",
+        "resourceType": "Principal"}}], "message": "The provided principal was not
+        found", "relatedResource": {"resourceId": "f8afce4d-5748-4f22-a741-863c80a4dabf",
+        "resourceType": "Workspace"}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:57 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 61ce56d1-4233-4d8f-bda8-4cbe76e748bb
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+      x-ms-public-api-error-code:
+      - PrincipalNotFound
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"principal": {"id": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3", "type": "ServicePrincipal"},
+      "role": "member"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '107'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/workspaces/f8afce4d-5748-4f22-a741-863c80a4dabf/roleAssignments
+  response:
+    body:
+      string: '{"requestId": "10f96eb6-bb3e-4689-bbb4-f3bc269b3a83", "errorCode":
+        "PrincipalNotFound", "moreDetails": [{"relatedResource": {"resourceId": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3",
+        "resourceType": "Principal"}}], "message": "The provided principal was not
+        found", "relatedResource": {"resourceId": "f8afce4d-5748-4f22-a741-863c80a4dabf",
+        "resourceType": "Workspace"}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:57 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 10f96eb6-bb3e-4689-bbb4-f3bc269b3a83
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+      x-ms-public-api-error-code:
+      - PrincipalNotFound
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"principal": {"id": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3", "type": "Group"},
+      "role": "member"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '96'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/workspaces/f8afce4d-5748-4f22-a741-863c80a4dabf/roleAssignments
+  response:
+    body:
+      string: '{"requestId": "cdf22a9a-b971-4eff-babc-0aab5fdcefd9", "errorCode":
+        "PrincipalNotFound", "moreDetails": [{"relatedResource": {"resourceId": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3",
+        "resourceType": "Principal"}}], "message": "The provided principal was not
+        found", "relatedResource": {"resourceId": "f8afce4d-5748-4f22-a741-863c80a4dabf",
+        "resourceType": "Workspace"}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:58 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - cdf22a9a-b971-4eff-babc-0aab5fdcefd9
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+      x-ms-public-api-error-code:
+      - PrincipalNotFound
+    status:
+      code: 400
+      message: Bad Request
+- request:
+    body: '{"principal": {"id": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3", "type": "ServicePrincipalProfile"},
+      "role": "member"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '114'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.0.0
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/workspaces/f8afce4d-5748-4f22-a741-863c80a4dabf/roleAssignments
+  response:
+    body:
+      string: '{"requestId": "78c47bad-5f63-4dee-a881-3e373f0e8631", "errorCode":
+        "WorkspaceRoleNotAllowedForServicePrincipalProfile", "moreDetails": [{"relatedResource":
+        {"resourceId": "2186d0ea-d02b-4f04-9d4a-305791e2c4c3", "resourceType": "Principal"}}],
+        "message": "The provided role cannot be assigned to the provided profile",
+        "relatedResource": {"resourceId": "f8afce4d-5748-4f22-a741-863c80a4dabf",
+        "resourceType": "Workspace"}}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 02 Sep 2025 17:15:58 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 78c47bad-5f63-4dee-a881-3e373f0e8631
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-west-europe-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+      x-ms-public-api-error-code:
+      - WorkspaceRoleNotAllowedForServicePrincipalProfile
+    status:
+      code: 400
+      message: Bad Request
+version: 1

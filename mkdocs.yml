@@ -1,0 +1,161 @@
+site_name: fabric-cli
+site_description: Microsoft Fabric CLI Documentation
+site_url: https://micorosft.github.io/fabric-cli/
+repo_name: microsoft/fabric-cli
+repo_url: https://github.com/microsoft/fabric-cli
+
+theme:
+      name: material
+      icon:
+            logo: fontawesome/solid/terminal
+            repo: fontawesome/brands/github
+      favicon: config/assets/icon.png
+      font:
+            text: Merriweather Sans
+            code: Red Hat Mono
+      features:
+            - navigation.expand
+            - navigation.indexes
+            - navigation.instant
+            - navigation.sections
+            - navigation.tabs
+            - navigation.tabs.sticky
+            - navigation.top
+            - navigation.path
+            - navigation.footer
+            - search.highlight
+            - search.suggest
+            - toc.follow
+            - content.tabs.link
+            - content.tooltips
+            - content.code.copy
+            - content.code.select
+      language: en
+      palette:
+            - media: "(prefers-color-scheme: light)"
+              scheme: default
+              toggle:
+                    icon: material/weather-night
+                    name: Switch to dark mode
+              primary: teal
+              accent: teal
+            - media: "(prefers-color-scheme: dark)"
+              scheme: slate
+              toggle:
+                    icon: material/weather-sunny
+                    name: Switch to light mode
+              primary: teal
+              accent: teal
+
+extra:
+      version:
+            provider: mike
+            default: latest
+            alias: true
+
+plugins:
+      - search:
+              separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      - section-index
+nav:
+      - Home: index.md
+      - Essentials:
+              - Conceptual Hierarchy: essentials/hierarchy.md
+              - Resource Types: essentials/resource_types.md
+              - CLI Parameters: essentials/parameters.md
+              - Modes: essentials/modes.md
+              - Settings: essentials/settings.md
+              - Environment Variables: essentials/env_vars.md
+              - File Storage: essentials/file_storage.md
+              - Caching: essentials/cache.md
+              - Exit Codes: essentials/exit_codes.md
+      - "Commands":
+              - commands/index.md
+              - acl: commands/acls/index.md
+              - api: commands/api/index.md
+              - assign: commands/fs/assign.md
+              - auth: commands/auth/index.md
+              - cd: commands/fs/cd.md
+              - config: commands/config/index.md
+              - cp (copy): commands/fs/cp.md
+              - desc: commands/desc/index.md
+              - export: commands/fs/export.md
+              - exists: commands/fs/exists.md
+              - get: commands/fs/get.md
+              - import: commands/fs/import.md
+              - jobs: commands/jobs/index.md
+              - label: commands/labels/index.md
+              - ln (mklink): commands/fs/ln.md
+              - ls (dir): commands/fs/ls.md
+              - mkdir (create): commands/fs/mkdir.md
+              - mv (move): commands/fs/mv.md
+              - open: commands/fs/open.md
+              - pwd: commands/fs/pwd.md
+              - rm (del): commands/fs/rm.md
+              - set: commands/fs/set.md
+              - start: commands/fs/start.md
+              - stop: commands/fs/stop.md
+              - table: commands/tables/index.md
+              - unassign: commands/fs/unassign.md
+      - Usage Examples:
+              - examples/index.md
+              - Authentication & Configuration:
+                      - Auth Examples: examples/auth_examples.md
+                      - Config Examples: examples/config_examples.md
+              - Core Management:
+                      - API Examples: examples/api_examples.md
+                      - ACL Examples: examples/acl_examples.md
+                      - Describe Examples: examples/desc_examples.md
+              - Tenant Management:
+                      - Capacity Examples: examples/capacity_examples.md
+                      - Connection Examples: examples/connection_examples.md
+                      - Domain Examples: examples/domain_examples.md
+                      - Gateway Examples: examples/gateway_examples.md
+              - Workspace Management:
+                      - External Data Shares: examples/externaldatashare_examples.md
+                      - Folder Examples: examples/folder_examples.md
+                      - Managed Identities: examples/managedidentity_examples.md
+                      - Managed Private Endpoints: examples/managedprivateendpoint_examples.md
+                      - Spark Pools: examples/sparkpool_examples.md
+                      - Workspace Examples: examples/workspace_examples.md
+              - Item Management:
+                      - Item Examples: examples/item_examples.md
+                      - Job Examples: examples/job_examples.md
+                      - Label Examples: examples/label_examples.md
+              - Data & Storage:
+                      - OneLake Examples: examples/onelake_examples.md
+                      - Shortcut Examples: examples/shortcut_examples.md
+                      - Table Examples: examples/table_examples.md
+      - Troubleshooting: troubleshooting.md
+      - Release Notes: release-notes.md
+
+markdown_extensions:
+      - abbr
+      - attr_list
+      - md_in_html
+      - admonition
+      - footnotes
+      - tables
+      - toc:
+              permalink: true
+              toc_depth: 3
+      - pymdownx.highlight:
+              anchor_linenums: true
+              line_spans: __span
+              pygments_lang_class: true
+      - pymdownx.inlinehilite
+      - pymdownx.snippets
+      - pymdownx.superfences:
+              custom_fences:
+                    - name: mermaid
+                      class: mermaid
+                      format: !!python/name:pymdownx.superfences.fence_code_format
+      - pymdownx.mark
+      - pymdownx.details
+      - pymdownx.tabbed:
+              alternate_style: true
+      - pymdownx.emoji:
+              emoji_index: !!python/name:material.extensions.emoji.twemoji
+              emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+copyright: Copyright © Microsoft Corporation

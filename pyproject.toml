@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=65.5.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="ms-fabric-cli"
+authors = [
+    { name = "Microsoft Corporation" },
+]
+version="1.1.0"
+description="Command-line tool for Microsoft Fabric"
+readme="README.md"
+requires-python=">=3.10,<3.13"
+license="MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "msal[broker]>=1.29,<2",
+    "msal_extensions",
+    "questionary",
+    "prompt_toolkit>=3.0.41",
+    "cachetools>=5.5.0",
+    "jmespath",
+    "pyyaml==6.0.2",
+    "argcomplete>=3.6.2",
+    "psutil==7.0.0"
+]
+
+[project.scripts]
+fab = "fabric_cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"fabric_cli.core.fab_config" = ["command_support.yaml"]
+"fabric_cli.commands.fs" = ["payloads/*"]
+"*" = ["NOTICE.txt", "LICENSE"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.2.1",
+]

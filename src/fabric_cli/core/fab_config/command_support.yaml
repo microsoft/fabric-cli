@@ -1,0 +1,364 @@
+---
+commands:
+  acl:
+    supported_elements:
+      - workspace
+    subcommands:
+      ls:
+        supported_elements:
+          - item
+          - onelake
+        supported_items:
+          - gateway
+          - connection
+        unsupported_items:
+          - semantic_model
+          - environment
+          - dashboard
+      get:
+        supported_elements:
+          - item
+          - onelake
+        supported_items:
+          - gateway
+          - connection
+        unsupported_items:
+          - semantic_model
+          - environment
+          - dashboard
+      rm:
+        supported_elements:
+          - workspace
+        supported_items:
+          - gateway
+          - connection
+      set:
+        supported_elements:
+          - workspace
+        supported_items:
+          - gateway
+          - connection
+  
+  job:
+    supported_items:
+      - spark_job_definition
+      - notebook
+      - data_pipeline
+      - lakehouse
+    subcommands:
+      run:
+      run_cancel:
+      run_list:
+      run_update:
+      run_sch:
+      run_status:
+      run_wait:
+  
+  label:
+    supported_elements:
+      - item
+    subcommands:
+      set:
+        unsupported_items:
+          - warehouse
+          - sql_endpoint
+      rm:
+        unsupported_items:
+          - warehouse
+          - sql_endpoint
+  
+  table:
+    supported_elements:
+      - onelake
+    supported_items:
+      - lakehouse
+    subcommands:
+      load:
+      optimize:
+      schema:
+        supported_items:
+          - lakehouse
+          - warehouse
+          - kql_database
+          - mirrored_database
+          - semantic_model
+          - sql_database
+      vacuum:
+  
+  fs:
+    subcommands:
+      ls:
+        supported_elements: 
+          - tenant
+          - workspace
+          - folder
+          - virtual_workspace
+          - virtual_item_container
+          - onelake
+        supported_items:
+          - lakehouse
+          - spark_job_definition
+          - warehouse
+          - kql_database
+          - mirrored_database
+          - semantic_model
+          - capacity
+          - domain
+          - spark_pool
+          - managed_identity
+          - managed_private_endpoint
+          - external_data_share
+          - connection
+          - gateway
+          - sql_database
+          - graph_ql_api
+      rm:
+        supported_elements: 
+          - tenant
+          - workspace
+          - item
+          - onelake # TODO only shortcuts
+          - folder
+        supported_items:
+          - spark_pool
+          - capacity
+          - managed_identity
+          - managed_private_endpoint
+          - domain
+          - connection
+          - gateway
+          - external_data_share
+        unsupported_items:
+          - dashboard
+          - paginated_report
+          - sql_endpoint
+          - mirrored_warehouse
+          - datamart  
+          - org_app
+          - metric_set
+          - apache_airflow_job
+          - exploration
+          - retail_data_manager
+          - healthcare_data_solution
+          - sustainability_data_solution
+          - user_data_function
+          - ai_skill
+      mv:
+        supported_elements:
+          - workspace
+          - folder
+          - onelake
+        supported_items: # same as export
+          - report
+          - spark_job_definition
+          - semantic_model
+          - notebook
+          - kql_dashboard
+          - data_pipeline
+          - kql_queryset
+          # - eventhouse
+          # - kql_database
+          - mirrored_database
+          - reflex
+          # - eventstream
+          - mounted_data_factory
+          - copy_job
+          - variable_library
+          #- lakehouse # this is included just to support underlying /Files
+      cp:
+        supported_elements:
+          - workspace
+          - folder
+          - onelake
+          - local_path
+        supported_items: # same as export
+          - report
+          - spark_job_definition
+          - semantic_model
+          - notebook
+          - kql_dashboard
+          - data_pipeline
+          - kql_queryset
+          # - eventhouse
+          # - kql_database
+          - mirrored_database
+          - reflex
+          # - eventstream
+          - mounted_data_factory
+          - copy_job
+          - variable_library
+          #- lakehouse # this is included just to support underlying /Files
+      ln:
+        supported_elements:
+          - onelake
+      cd:
+        supported_elements:
+          - tenant
+          - workspace
+          - virtual_workspace
+          - virtual_item_container
+          - item
+          - folder
+          - virtual_item
+          - virtual_workspace_item
+          - onelake
+      exists:
+        supported_elements:
+          - workspace
+          - item
+          - onelake
+          - folder
+        supported_items:
+          - spark_pool
+          - capacity
+          - managed_identity
+          - managed_private_endpoint
+          - domain
+          - connection
+          - gateway
+          - external_data_share
+      export:
+        supported_elements:
+          - workspace
+        supported_items:
+          - report
+          - spark_job_definition
+          - semantic_model
+          - notebook
+          - kql_dashboard
+          - data_pipeline
+          - kql_queryset
+          - eventhouse
+          - kql_database
+          - mirrored_database
+          - reflex
+          - eventstream
+          - mounted_data_factory
+          - copy_job
+          - variable_library
+          - graph_ql_api
+      import:
+        supported_items:
+          - report
+          - spark_job_definition
+          - semantic_model
+          - notebook
+          - kql_dashboard
+          - data_pipeline
+          - kql_queryset
+          - eventhouse
+          - kql_database
+          - mirrored_database
+          - reflex
+          - eventstream
+          - mounted_data_factory
+          - environment
+          - copy_job
+          - variable_library
+          - graph_ql_api
+      get:
+        supported_elements:
+          - workspace
+          - item
+          - onelake 
+          - folder
+        supported_items:
+          - sparkpool
+          - capacity
+          - managed_private_endpoint
+          - domain
+          - connection
+          - gateway
+          - external_data_share
+        unsupported_items:
+          - dashboard
+          - paginated_report
+          - sql_endpoint
+          - mirrored_warehouse
+          - datamart
+          - org_app
+          - metric_set
+          - apache_airflow_job
+          - exploration
+          - retail_data_manager
+          - healthcare_data_solution
+          - sustainability_data_solution
+          - user_data_function
+          - ai_skill
+      set:
+        supported_elements:
+          - workspace
+          - item
+          - onelake # TODO only shortcuts
+          - folder
+        supported_items:
+          - sparkpool
+          - capacity
+          - domain
+          - connection
+          - gateway
+        unsupported_items:
+          - dashboard
+          - paginated_report
+          - sql_endpoint
+          - mirrored_warehouse
+          - datamart
+          - org_app
+          - metric_set
+          - apache_airflow_job
+          - exploration
+          - retail_data_manager
+          - healthcare_data_solution
+          - sustainability_data_solution
+          - user_data_function
+          - ai_skill
+      open:
+        supported_elements: 
+          - workspace
+          - item
+      mkdir:
+        supported_elements: 
+          - workspace
+          - item
+          - onelake
+          - folder
+        supported_items:
+          - spark_pool
+          - capacity
+          - managed_identity
+          - managed_private_endpoint
+          - domain
+          - connection
+          - gateway
+          - external_data_share
+        unsupported_items:
+          - dashboard
+          - paginated_report
+          - sql_endpoint
+          - datamart
+          - mirrored_warehouse
+          - org_app
+          - metric_set
+          - apache_airflow_job
+          - exploration
+          - retail_data_manager
+          - healthcare_data_solution
+          - sustainability_data_solution
+          - user_data_function
+          - ai_skill
+      start:
+        supported_items:
+          - capacity
+          - mirrored_database
+      stop:
+        supported_items:
+          - capacity
+          - mirrored_database
+      assign:
+        supported_items:
+          - capacity
+          - domain
+      unassign:
+        supported_items:
+          - capacity
+          - domain

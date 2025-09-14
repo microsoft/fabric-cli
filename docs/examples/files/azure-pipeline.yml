@@ -1,0 +1,26 @@
+# Example Azure Pipeline YAML file for using Fabric CLI
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.10'
+    displayName: 'Use Python 3.10'
+  
+  - task: AzureCLI@2
+    displayName: 'Azure CLI Login'
+    inputs:
+      azureSubscription: <your-service-connection-name>
+      addSpnToEnvironment: true
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "##vso[task.setvariable variable=ARM_CLIENT_ID]$servicePrincipalId" 
+        echo "##vso[task.setvariable variable=ARM_ID_TOKEN]$idToken"
+        echo "##vso[task.setvariable variable=ARM_TENANT_ID]$tenantId"
+
+  - script: |
+      python -m pip install --upgrade pip
+      python -m pip install ms-fabric-cli
+      fab config set fab_encryption_fallback_enabled true
+      fab auth login -u $(ARM_CLIENT_ID) --tenant $(ARM_TENANT_ID) --federated-token $(ARM_ID_TOKEN)
+      fab ls
+    displayName: 'Fabric CLI'
