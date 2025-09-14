@@ -36,7 +36,7 @@ fab cd ../.connections/conn1.Connection
 Create a connection to SQL database with required parameters only.
 
 ```
-fab create .connections/conn.Connection -P connectionDetails.type=SQL,connectionDetails.parameters.server=contoso.database.windows.net,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>
+fab create .connections/conn.Connection -P connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>
 ```
 
 #### Create Connection with Gateway
@@ -44,7 +44,7 @@ fab create .connections/conn.Connection -P connectionDetails.type=SQL,connection
 Create a connection that uses a specific gateway for secure access.
 
 ```
-fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=contoso.database.windows.net,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>
+fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>
 ```
 
 #### Create Connection with All Parameters
@@ -52,7 +52,7 @@ fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connect
 Create a connection with comprehensive configuration including privacy level and encryption settings.
 
 ```
-fab create .connections/conn.Connection -P privacyLevel=Private,connectionDetails.creationMethod=SQL,gatewayId=852aee7c-d056-48dc-891f-9d7110a01b88,connectionDetails.type=SQL,connectionDetails.parameters.server=contoso.database.windows.net,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>,credentialDetails.connectionEncryption=NotEncrypted,credentialDetails.skipTestConnection=False
+fab create .connections/conn.Connection -P privacyLevel=Private,connectionDetails.creationMethod=SQL,gatewayId=852aee7c-d056-48dc-891f-9d7110a01b88,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>,credentialDetails.connectionEncryption=NotEncrypted,credentialDetails.skipTestConnection=False
 ```
 
 ### Check Connection Existence
