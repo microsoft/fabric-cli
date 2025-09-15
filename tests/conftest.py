@@ -15,6 +15,37 @@ def mock_questionary_print():
 
 
 @pytest.fixture
+def mock_print_warning():
+    """Mock fab_ui.print_warning function."""
+    with patch("fabric_cli.utils.fab_ui.print_warning") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_os_path_exists():
+    with patch("os.path.exists") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_json_load():
+    with patch("json.load") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_os_remove():
+    with patch("os.remove") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_glob_glob():
+    with patch("glob.glob") as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_fab_set_state_config():
     original_values = {}
 
