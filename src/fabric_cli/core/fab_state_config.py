@@ -14,7 +14,9 @@ def config_location():
         os.makedirs(_location)
     return _location
 
+
 config_file = os.path.join(config_location(), "config.json")
+
 
 def read_config(file_path) -> dict:
     try:
@@ -53,7 +55,7 @@ def init_defaults():
     """
     current_config = read_config(config_file)
 
-    for key in fab_constant.CONFIG_KEYS:
+    for key in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
         old_key = f"fab_{key}"
         if old_key in current_config:
             # Transfer value if not already set under the new key
@@ -64,3 +66,9 @@ def init_defaults():
             current_config[key] = fab_constant.CONFIG_DEFAULT_VALUES[key]
 
     write_config(current_config)
+
+
+def normalize_config_key(key: str) -> str:
+    if key.startswith("fab_"):
+        return key[4:]
+    return key

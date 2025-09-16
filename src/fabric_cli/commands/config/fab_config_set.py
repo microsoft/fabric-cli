@@ -15,10 +15,10 @@ from fabric_cli.utils import fab_util as utils
 
 
 def exec_command(args: Namespace) -> None:
-    key = _normalize_key(args.key.lower())
+    key = fab_state_config.normalize_config_key(args.key.lower())
     value = args.value.strip().strip("'").strip('"')
 
-    if key not in fab_constant.CONFIG_KEYS:
+    if key not in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
         raise FabricCLIError(
             ErrorMessages.Config.unknown_configuration_key(key),
             fab_constant.ERROR_INVALID_INPUT,
@@ -33,29 +33,19 @@ def exec_command(args: Namespace) -> None:
     else:
         raise FabricCLIError(
             ErrorMessages.Config.invalid_configuration_value(
-                value, key, fab_constant.CONFIG_KEYS[key]
+                value, key, fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES[key]
             ),
             fab_constant.ERROR_INVALID_INPUT,
         )
 
 
 def _can_key_contain_value(key: str, value: str) -> bool:
-    if key in fab_constant.CONFIG_KEYS:
-        allowed_values = fab_constant.CONFIG_KEYS[key]
+    if key in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
+        allowed_values = fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES[key]
         if allowed_values == []:  # Empty list means it can accept any value
             return True
         return value in allowed_values
     return False
-
-
-def _normalize_key(key: str) -> str:
-    """
-    Removes the 'fab_' prefix from the key if it exists.
-    Otherwise returns the original key.
-    """
-    if key.startswith("fab_"):
-        return key[4:]
-    return key
 
 
 def _set_config(args: Namespace, key: str, value: Any, verbose: bool = True) -> None:
@@ -75,7 +65,9 @@ def _set_config(args: Namespace, key: str, value: Any, verbose: bool = True) -> 
     previous_mode = fab_state_config.get_config(key)
     fab_state_config.set_config(key, value)
     if verbose:
-        utils_ui.print_output_format(args, message=f"Configuration '{key}' set to '{value}'")
+        utils_ui.print_output_format(
+            args, message=f"Configuration '{key}' set to '{value}'"
+        )
     current_mode = fab_state_config.get_config(fab_constant.FAB_MODE)
 
     # Clean up context files when changing mode
