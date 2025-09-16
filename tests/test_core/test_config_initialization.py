@@ -61,7 +61,7 @@ def test_config_init_adds_new_keys():
 
             cfg = config.read_config(tmp_file)
             # Should have all default keys
-            for key in constants.CONFIG_KEYS:
+            for key in constants.FAB_CONFIG_KEYS_TO_VALID_VALUES:
                 if key in constants.CONFIG_DEFAULT_VALUES:
                     assert key in cfg, f"Missing default key: {key}"
 
