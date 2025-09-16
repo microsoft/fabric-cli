@@ -108,6 +108,8 @@ def process_request(request):
         if is_record_mode():
             body_str = _process_string_data(body_str)
 
+        body_str = _process_global_strings(body_str)
+
         data = json.loads(body_str)
 
         # Now we have a Python dict for the JSON.
@@ -152,6 +154,8 @@ def process_response(response):
 
         if is_record_mode():
             body_str = _process_string_data(body_str)
+
+        body_str = _process_global_strings(body_str)
 
         try:
             data = json.loads(body_str)
@@ -198,6 +202,11 @@ def _process_string_data(data: str) -> str:
     updated_data = _replace_resource_group_name(updated_data)
     updated_data = _replace_sql_server_name(updated_data)
     updated_data = _replace_labels_ids(updated_data)
+    return updated_data
+
+def _process_global_strings(data: str) -> str:
+    updated_data = data
+    updated_data = _replace_email_addresses(updated_data)
     return updated_data
 
 
@@ -263,6 +272,21 @@ def _replace_user_details(
 
     return updated_data
 
+def _replace_email_addresses(data: str) -> str:
+    # Mock UPNs that should be excluded from replacement
+    mock_user_upn = get_mock_data().user.upn
+    mock_admin_upn = get_mock_data().admin.upn
+    excluded_emails = [mock_user_upn, mock_admin_upn, "lisa@fabrikam.com"]
+
+    email_pattern = r"(\"?)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\"?)"
+
+    def replace_email(match):
+        email = match.group(2)
+        if email in excluded_emails:
+            return match.group(0)
+        return f"{match.group(1)}unknown@mocked_user{match.group(3)}"
+
+    return re.sub(email_pattern, replace_email, data)
 
 def _replace_subscription(data: str) -> str:
     subscription_id = get_static_data().azure_subscription_id
@@ -318,6 +342,7 @@ def _process_json_data_recursively(data, is_response: bool):
     _remove_credentials_details(data)
     if is_response:
         _replace_response_connection_details(data)
+        _replace_response_sql_endpoint_properties(data)
         _replace_invitationUrl(data)
     else:
         _replace_request_connection_details(data)
@@ -358,6 +383,9 @@ def _replace_request_connection_details(data: dict):
     if isinstance(data, dict) and "connectionDetails" in data:
         data["connectionDetails"] = "mock_request_connection_details"
 
+def _replace_response_sql_endpoint_properties(data: dict):
+    if isinstance(data, dict) and "connectionString" in data and data["connectionString"] is not None:
+        data["connectionString"] = "mock_connection_string"
 
 def _replace_invitationUrl(data: dict):
     if isinstance(data, dict) and "invitationUrl" in data:
