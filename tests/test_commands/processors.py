@@ -384,12 +384,8 @@ def _replace_request_connection_details(data: dict):
         data["connectionDetails"] = "mock_request_connection_details"
 
 def _replace_response_sql_endpoint_properties(data: dict):
-    if isinstance(data, dict) and "sqlEndpointProperties" in data and data["sqlEndpointProperties"] is not None:
-        sql_endpoint_properties = data["sqlEndpointProperties"]
-        if "connectionString" in sql_endpoint_properties and sql_endpoint_properties["connectionString"] is not None:
-            sql_endpoint_properties["connectionString"] = "mock_connection_string"
-        if "id" in sql_endpoint_properties and sql_endpoint_properties["id"] is not None:
-            sql_endpoint_properties["id"] = "mock_sql_endpoint_properties_id"
+    if isinstance(data, dict) and "connectionString" in data and data["connectionString"] is not None:
+        data["connectionString"] = "mock_connection_string"
 
 def _replace_invitationUrl(data: dict):
     if isinstance(data, dict) and "invitationUrl" in data:
