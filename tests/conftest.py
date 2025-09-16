@@ -66,3 +66,16 @@ def mock_fab_set_state_config():
     for key, original_value in original_values.items():
         # Restore original value
         state_config.set_config(key, original_value)
+
+
+@pytest.fixture
+def reset_context():
+    """Reset the Context singleton before test to prevent state leakage."""
+    from fabric_cli.core.fab_context import Context
+
+    context_instance = Context()
+    context_instance._context = None
+    context_instance._command = None
+    context_instance._loading_context = False
+
+    yield context_instance

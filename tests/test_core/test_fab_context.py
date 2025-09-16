@@ -15,6 +15,9 @@ from fabric_cli.core.hiearchy import fab_hiearchy as hierarchy
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 
+# Use the reset_context fixture for all tests in this module
+pytestmark = pytest.mark.usefixtures("reset_context")
+
 
 def test_context_tenant(monkeypatch):
     _tenant = hierarchy.Tenant(name="tenant_name", id="0000")
@@ -275,7 +278,6 @@ class MockProcessWithException:
 
 
 def test_load_context_from_file_success_with_valid_path(
-    clean_context_instance,
     mock_os_path_exists,
     mock_json_load,
     mock_get_command_context,
@@ -297,21 +299,20 @@ def test_load_context_from_file_success_with_valid_path(
         patch("platform.system", return_value="Windows"),
         patch("subprocess.run") as mock_subprocess,
     ):
-
         mock_result = Mock()
         mock_result.stdout = ""
         mock_subprocess.return_value = mock_result
 
-        clean_context_instance._load_context_from_file()
+        context = Context()
+        context._load_context_from_file()
 
-        assert clean_context_instance._context == mock_context
-        assert clean_context_instance._loading_context is False
+        assert context._context == mock_context
+        assert context._loading_context is False
         mock_get_command_context.assert_called_once_with(test_path)
         mock_print_warning.assert_called_once_with(f"Command context path: {test_path}")
 
 
 def test_load_context_from_file_json_parse_error(
-    clean_context_instance,
     mock_os_path_exists,
     mock_json_load,
     mock_os_remove,
@@ -328,22 +329,21 @@ def test_load_context_from_file_json_parse_error(
         patch("platform.system", return_value="Windows"),
         patch("subprocess.run") as mock_subprocess,
     ):
-
         mock_result = Mock()
         mock_result.stdout = ""
         mock_subprocess.return_value = mock_result
 
+        context = Context()
         with pytest.raises(FabricCLIError) as exc_info:
-            clean_context_instance._load_context_from_file()
+            context._load_context_from_file()
 
         assert exc_info.value.status_code == fab_constant.ERROR_CONTEXT_LOAD_FAILED
         assert exc_info.value.message == ErrorMessages.Context.context_load_failed()
-        assert clean_context_instance._loading_context is False
-        mock_os_remove.assert_called_once_with(clean_context_instance._context_file)
+        assert context._loading_context is False
+        mock_os_remove.assert_called_once_with(context._context_file)
 
 
 def test_load_context_from_file_file_removal_fails_silently(
-    clean_context_instance,
     mock_os_path_exists,
     mock_json_load,
     mock_get_command_context,
@@ -363,16 +363,16 @@ def test_load_context_from_file_file_removal_fails_silently(
         patch("platform.system", return_value="Windows"),
         patch("subprocess.run") as mock_subprocess,
     ):
-
         mock_result = Mock()
         mock_result.stdout = ""
         mock_subprocess.return_value = mock_result
 
+        context = Context()
         with pytest.raises(FabricCLIError) as exc_info:
-            clean_context_instance._load_context_from_file()
+            context._load_context_from_file()
 
         assert exc_info.value.status_code == fab_constant.ERROR_CONTEXT_LOAD_FAILED
-        assert clean_context_instance._loading_context is False
+        assert context._loading_context is False
 
 
 @pytest.fixture
@@ -396,11 +396,3 @@ def mock_psutil_process():
 def mock_get_command_context():
     with patch("fabric_cli.core.fab_handle_context.get_command_context") as mock:
         yield mock
-
-
-@pytest.fixture
-def clean_context_instance(mock_config_location, mock_psutil_process):
-    context = Context()
-    context._context = None
-    context._loading_context = False
-    return context
