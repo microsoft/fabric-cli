@@ -16,6 +16,9 @@ from fabric_cli.core.fab_context import Context
 from fabric_cli.core.hiearchy.fab_hiearchy import Workspace
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 
+# Use the reset_context fixture for all tests in this module
+pytestmark = pytest.mark.usefixtures("reset_context")
+
 
 def test_context_persistence_save(monkeypatch):
     """Test that context is saved to file in command-line mode with persistence enabled."""
@@ -388,7 +391,6 @@ def test_loading_context_re_entrancy_guard(monkeypatch):
 
     # Test the actual re-entrancy scenario
     load_calls = []
-    original_load_method = context._load_context_from_file
 
     def mock_load_context_from_file():
         """Mock that simulates accessing context during load (which would cause re-entrancy)."""
@@ -409,8 +411,8 @@ def test_loading_context_re_entrancy_guard(monkeypatch):
             # Always reset the flag (like the real method does)
             context._loading_context = False
 
-    # Replace the method with our mock
-    context._load_context_from_file = mock_load_context_from_file
+    # Use monkeypatch to ensure proper cleanup of the mock
+    monkeypatch.setattr(context, "_load_context_from_file", mock_load_context_from_file)
 
     # Mock os.path.exists to pretend the context file exists
     with patch("os.path.exists", return_value=True):
