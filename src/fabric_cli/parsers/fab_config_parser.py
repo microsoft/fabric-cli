@@ -42,15 +42,15 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         fab_learnmore=["_"],
     )
 
-    # Add completer to key argument
-    key_arg = parser_set.add_argument("key", metavar="<key>", help="Configuration key")
-    key_arg.completer = fab_config_completers.complete_config_keys
+    set_key_arg = parser_set.add_argument(
+        "key", metavar="<key>", help="Configuration key"
+    )
+    set_key_arg.completer = fab_config_completers.complete_config_keys
 
-    # Add completer to value argument
-    value_arg = parser_set.add_argument(
+    set_value_arg = parser_set.add_argument(
         "value", metavar="<value>", help="Configuration value"
     )
-    value_arg.completer = fab_config_completers.complete_config_values
+    set_value_arg.completer = fab_config_completers.complete_config_values
 
     parser_set.usage = f"{utils_error_parser.get_usage_prog(parser_set)}"
     parser_set.set_defaults(func=config.set_config)

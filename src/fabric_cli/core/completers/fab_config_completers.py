@@ -4,14 +4,14 @@
 from argparse import Namespace
 from typing import List
 
-from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core import fab_constant
 
 
 def complete_config_keys(prefix: str, **kwargs) -> List[str]:
     keys = list(fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES.keys())
     matching_keys = [key for key in keys if key.lower().startswith(prefix.lower())]
 
-    return sorted(list(set(matching_keys)))
+    return sorted(matching_keys)
 
 
 def complete_config_values(prefix: str, parsed_args: Namespace, **kwargs) -> List[str]:

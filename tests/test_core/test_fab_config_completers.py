@@ -8,7 +8,7 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core.completers import fab_config_completers
 
 
-def test_complete_config_keys_returns_all_keys_when_no_prefix():
+def test_complete_config_keys_returns_all_keys_when_no_prefix_should_return_all_keys():
     with patch(
         "fabric_cli.core.completers.fab_config_completers.sorted"
     ) as mock_sorted:
@@ -22,7 +22,7 @@ def test_complete_config_keys_returns_all_keys_when_no_prefix():
         assert set(result) == set(expected_keys)
 
 
-def test_complete_config_keys_filters_by_prefix():
+def test_complete_config_keys_filters_by_prefix_should_return_matching_keys():
     result = fab_config_completers.complete_config_keys("mode")
     assert "mode" in result
 
@@ -32,14 +32,14 @@ def test_complete_config_keys_filters_by_prefix():
         assert key.startswith("default")
 
 
-def test_complete_config_keys_case_insensitive():
+def test_complete_config_keys_case_insensitive_should_return_same_results():
     result_lower = fab_config_completers.complete_config_keys("mode")
     result_upper = fab_config_completers.complete_config_keys("MODE")
 
     assert result_lower == result_upper
 
 
-def test_complete_config_values_enum_keys():
+def test_complete_config_values_enum_keys_should_return_expected_values():
     args = Namespace()
     args.key = "mode"
 
@@ -50,7 +50,7 @@ def test_complete_config_values_enum_keys():
     assert result == ["interactive"]
 
 
-def test_complete_config_values_invalid_key():
+def test_complete_config_values_invalid_key_should_return_empty():
     args = Namespace()
     args.key = "invalid_key_that_does_not_exist"
 
@@ -58,7 +58,7 @@ def test_complete_config_values_invalid_key():
     assert result == []
 
 
-def test_complete_config_values_empty_key():
+def test_complete_config_values_empty_key_should_return_empty():
     args = Namespace()
     args.key = ""
 
@@ -66,7 +66,7 @@ def test_complete_config_values_empty_key():
     assert result == []
 
 
-def test_complete_config_values_default_capacity():
+def test_complete_config_values_valid_key_no_values_should_return_empty():
     args = Namespace()
     args.key = "default_capacity"
 
