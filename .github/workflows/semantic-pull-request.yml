@@ -1,0 +1,112 @@
+# Linter to enforce semantic pull request titles (see https://www.conventionalcommits.org/)
+---
+name: 🔍 Semantic PR Validation
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types:
+      - opened
+      - edited
+      - reopened
+      - ready_for_review
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check_pr_title:
+    name: Check Pull Request Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Semantic PR Validation
+        id: validation
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const regex = /^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\([^)]+\))?(!?): .+/;
+
+            if (!regex.test(prTitle)) {
+              core.setFailed('Pull request title does not follow Conventional Commits specification. See PR comment for details.');
+            }
+      - name: Handle Invalid Title
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const commentMarker = '<!-- semantic-pr-comment -->';
+
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const existingComment = comments.find(comment => comment.body.includes(commentMarker));
+
+            if (!existingComment) {
+              const message = `<!-- semantic-pr-comment -->
+
+            Hey there and thank you for your contribution! 👋🏼
+
+            We require pull request titles to follow the [Conventional Commits](https://www.conventionalcommits.org/) specification and it looks like your proposed title needs to be adjusted.
+
+            A valid title has the format: \`type(scope): subject\`
+
+            **type**: Must be one of the following:
+              - \`feat\`: A new feature
+              - \`fix\`: A bug fix
+              - \`docs\`: Documentation only changes
+              - \`style\`: Changes that do not affect the meaning of the code (e.g., formatting)
+              - \`refactor\`: A code change that neither fixes a bug nor adds a feature
+              - \`perf\`: A code change that improves performance
+              - \`test\`: Adding missing tests or correcting existing tests
+              - \`chore\`: Changes to the build process or auxiliary tools
+              - \`build\`: Changes that affect the build system or external dependencies
+              - \`ci\`: Changes to CI configuration files and scripts
+              - \`revert\`: Reverts a previous commit
+
+            **scope** (optional): A noun describing a section of the codebase.
+
+            **subject**: A short description of the code changes.
+
+            Examples:
+              - \`feat(api): add new endpoint for users\`
+              - \`fix: correct a typo in the documentation\`
+              - \`docs(readme): update installation instructions\`
+
+            Please update your pull request title to match this format.`;
+
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: message
+              });
+            }
+
+            await github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['invalid']
+            });
+      - name: Handle Valid Title
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'invalid',
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+            }
