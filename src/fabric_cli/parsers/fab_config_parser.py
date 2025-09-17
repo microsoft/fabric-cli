@@ -5,6 +5,7 @@ from argparse import Namespace, _SubParsersAction
 
 from fabric_cli.commands.config import fab_config as config
 from fabric_cli.core import fab_constant
+from fabric_cli.core.completers import fab_config_completers
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils.fab_util import get_os_specific_command
@@ -40,8 +41,16 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=set_examples,
         fab_learnmore=["_"],
     )
-    parser_set.add_argument("key", metavar="<key>", help="Configuration key")
-    parser_set.add_argument("value", metavar="<value>", help="Configuration value")
+
+    set_key_arg = parser_set.add_argument(
+        "key", metavar="<key>", help="Configuration key"
+    )
+    set_key_arg.completer = fab_config_completers.complete_config_keys
+
+    set_value_arg = parser_set.add_argument(
+        "value", metavar="<value>", help="Configuration value"
+    )
+    set_value_arg.completer = fab_config_completers.complete_config_values
 
     parser_set.usage = f"{utils_error_parser.get_usage_prog(parser_set)}"
     parser_set.set_defaults(func=config.set_config)
@@ -60,7 +69,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=get_examples,
         fab_learnmore=["_"],
     )
-    parser_get.add_argument("key", metavar="<key>", help="Configuration key")
+
+    # Add completer to key argument
+    get_key_arg = parser_get.add_argument(
+        "key", metavar="<key>", help="Configuration key"
+    )
+    get_key_arg.completer = fab_config_completers.complete_config_keys
 
     parser_get.usage = f"{utils_error_parser.get_usage_prog(parser_get)}"
     parser_get.set_defaults(func=config.get_config)

@@ -92,7 +92,7 @@ FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
 
-CONFIG_KEYS = {
+FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
     FAB_CONTEXT_PERSISTENCE_ENABLED: ["false", "true"],
     FAB_DEBUG_ENABLED: ["false", "true"],
@@ -208,9 +208,7 @@ WARNING_DIFFERENT_ITEM_TYPES = "Different item types, review"
 WARNING_INVALID_PATHS = (
     "Source and destination must be of the same type. Check your paths"
 )
-WARNING_NOT_SUPPORTED_PATHS = (
-    "mv is not supported for the specified source and destination items types. Check your paths"
-)
+WARNING_NOT_SUPPORTED_PATHS = "mv is not supported for the specified source and destination items types. Check your paths"
 WARNING_INVALID_SPECIAL_CHARACTERS = (
     "Special caracters not supported for this item type"
 )
