@@ -13,7 +13,6 @@ on:
       - ready_for_review
 
 permissions:
-  issues: write
   pull-requests: write
 
 jobs:
@@ -99,15 +98,19 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            try {
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const invalidLabel = labels.find(label => label.name === 'invalid');
+
+            if (invalidLabel) {
               await github.rest.issues.removeLabel({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 name: 'invalid',
               });
-            } catch (error) {
-              if (error.status !== 404) {
-                throw error;
-              }
             }
