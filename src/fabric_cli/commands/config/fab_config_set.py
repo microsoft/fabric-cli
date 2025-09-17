@@ -15,7 +15,7 @@ from fabric_cli.utils import fab_util as utils
 
 
 def exec_command(args: Namespace) -> None:
-    key = fab_state_config.normalize_config_key(args.key.lower())
+    key = args.key.lower()
     value = args.value.strip().strip("'").strip('"')
 
     if key not in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:

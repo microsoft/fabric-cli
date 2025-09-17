@@ -66,9 +66,3 @@ def init_defaults():
             current_config[key] = fab_constant.CONFIG_DEFAULT_VALUES[key]
 
     write_config(current_config)
-
-
-def normalize_config_key(key: str) -> str:
-    if key.startswith("fab_"):
-        return key[4:]
-    return key

@@ -10,7 +10,7 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 
 def exec_command(args: Namespace) -> None:
-    key = fab_state_config.normalize_config_key(args.key.lower())
+    key = args.key.lower()
     if key not in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
         raise FabricCLIError(
             ErrorMessages.Config.unknown_configuration_key(key),

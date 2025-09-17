@@ -73,11 +73,3 @@ def test_complete_config_values_default_capacity():
     result = fab_config_completers.complete_config_values("", args)
 
     assert result == []
-
-
-def test_complete_config_keys_with_fab_prefix():
-    result_with_fab = fab_config_completers.complete_config_keys("fab_mode")
-    result_without_fab = fab_config_completers.complete_config_keys("mode")
-
-    assert "mode" in result_with_fab
-    assert "mode" in result_without_fab
