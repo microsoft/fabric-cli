@@ -425,7 +425,7 @@ def _print_simple_items(data: list[Any], to_stderr: bool) -> None:
 
 
 def _print_output_format_json(output_json: str) -> None:
-    print_grey(output_json, to_stderr=False)
+    _safe_print(output_json)
 
 
 def _print_error_format_json(output: str) -> None:
