@@ -1,0 +1,168 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_part:
+        description: 'The part of the version to bump'
+        required: true
+        type: choice
+        default: 'patch'
+        options:
+          - major
+          - minor
+          - patch
+          - rc
+          - release
+
+      create_pr_in_fork:
+        description: 'Create PR in fork'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Bump version
+        id: version
+        run: |
+          import re
+          import os
+
+          files_to_update = [
+              'pyproject.toml',
+              'src/fabric_cli/__init__.py',
+              'src/fabric_cli/core/fab_constant.py'
+          ]
+
+          def increment_version(version, part):
+              if 'rc' in version:
+                  if '.rc' in version:
+                      base_version, rc_part = version.split('.rc')
+                  else:
+                      base_version, rc_part = version.split('rc')
+                  major, minor, patch = map(int, base_version.split('.'))
+                  rc_num = int(rc_part)
+              else:
+                  major, minor, patch = map(int, version.split('.'))
+                  rc_num = None
+              
+              if part == 'major':
+                  major += 1
+                  minor = 0
+                  patch = 0
+                  rc_num = None
+              elif part == 'minor':
+                  minor += 1
+                  patch = 0
+                  rc_num = None
+              elif part == 'patch':
+                  patch += 1
+                  rc_num = None
+              elif part == 'rc':
+                  if rc_num is not None:
+                      rc_num += 1
+                  else:
+                      rc_num = 0
+              elif part == 'release':
+                  rc_num = None
+              else:
+                  raise ValueError("Part must be one of 'major', 'minor', 'patch', 'rc', or 'release'")
+
+              return f"{major}.{minor}.{patch}" if rc_num is None else f"{major}.{minor}.{patch}.rc{rc_num}"
+
+          def update_file(file_path, old_version, new_version):
+              with open(file_path, 'r') as file:
+                  content = file.read()
+
+              content = re.sub(old_version, new_version, content)
+
+              with open(file_path, 'w') as file:
+                  file.write(content)
+
+          part = "${{ github.event.inputs.version_part }}"
+
+          with open('pyproject.toml', 'r') as file:
+              content = file.read()
+              current_version = re.search(
+                  r'version\s*=\s*"(\d+\.\d+\.\d+(?:\.?rc\d+)?)', content).group(1)
+
+          new_version = increment_version(current_version, part)
+
+          for file_path in files_to_update:
+              update_file(file_path, current_version, new_version)
+
+          print(f"::set-output name=new_version::{new_version}")
+        shell: python
+
+      - name: Create Fork
+        id: create_fork
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              const fork = await github.rest.repos.createFork({
+                owner,
+                repo,
+              });
+              return fork.data.full_name;
+            } catch (error) {
+              if (error.message.includes('fork exists')) {
+                console.log('Fork already exists, proceeding.');
+                // The authenticated user is the owner of the fork
+                const user = await github.rest.users.getAuthenticated();
+                return `${user.data.login}/${repo}`;
+              }
+              throw error;
+            }
+
+      - name: Commit and Push Changes to Fork
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote add fork "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ steps.create_fork.outputs.result }}.git"
+          git checkout -b chore/version-bump-${{ steps.version.outputs.new_version }}
+          git add pyproject.toml src/fabric_cli/__init__.py src/fabric_cli/core/fab_constant.py
+          git commit -m "chore(version): bump version to ${{ steps.version.outputs.new_version }}"
+          git push --set-upstream fork chore/version-bump-${{ steps.version.outputs.new_version }}
+
+      - name: Create Pull Request
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { repo, owner: upstream_owner } = context.repo;
+            const new_version = "${{ steps.version.outputs.new_version }}";
+            const branch = `chore/version-bump-${new_version}`;
+            const fork_full_name = "${{ steps.create_fork.outputs.result }}";
+            const fork_owner = fork_full_name.split('/')[0];
+            const create_pr_in_fork = ${{ github.event.inputs.create_pr_in_fork }};
+
+            const pr_owner = create_pr_in_fork ? fork_owner : upstream_owner;
+
+            await github.rest.pulls.create({
+              owner: pr_owner,
+              repo,
+              title: `chore(version): bump version to ${new_version}`,
+              head: `${fork_owner}:${branch}`,
+              base: 'main',
+              body: `This PR bumps the version to ${new_version}`,
+              draft: true
+            });
