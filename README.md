@@ -89,7 +89,7 @@ fab auth login
 fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>
 ```
 
-The CLI supports additional authentication methods including certificates, managed identity, and environment variables. See the [authentication documentation](https://microsoft.github.io/fabric-cli/authentication.html) for complete details.
+The CLI supports additional authentication methods including certificates, managed identity, and environment variables. See the [authentication documentation](https://microsoft.github.io/fabric-cli/examples/auth_examples/)) for complete details.
 
 ## 🎯 Usage Examples
 
@@ -206,10 +206,10 @@ fab config ls
 | Resource | Description |
 |----------|-------------|
 | **[Command Reference](https://microsoft.github.io/fabric-cli/commands/)** | Complete command documentation |
-| **[Usage Examples](https://microsoft.github.io/fabric-cli/examples/)** | Real-world scenarios and scripts |
-| **[API Integration](https://microsoft.github.io/fabric-cli/api-integration/)** | Direct REST API access patterns |
-| **[CI/CD Integration](https://microsoft.github.io/fabric-cli/cicd/)** | GitHub Actions and Azure Pipelines |
-| **[Environment Variables](https://microsoft.github.io/fabric-cli/environment/)** | Configuration and authentication |
+| **[Usage Examples](https://microsoft.github.io/fabric-cli/examples/)** | Real-world scenarios and scripts | 
+| **[API Integration](https://microsoft.github.io/fabric-cli/commands/api/)** | Direct REST API access patterns |
+| **[CI/CD Integration](https://microsoft.github.io/fabric-cli/examples/#cicd-integration)** | GitHub Actions and Azure Pipelines |
+| **[Settings](https://microsoft.github.io/fabric-cli/essentials/settings/)** | CLI Configuration |
 
 ## 🤝 Contributing
 
@@ -251,7 +251,7 @@ Before contributing, please review our [Contributing Guidelines](CONTRIBUTING.md
 - 🆕 GraphQLApi items support
 - 🔧 Multiple bug fixes and improvements
 
-See the full [Release Notes](docs/release-notes.md) for detailed changelog.
+See the full [Release Notes](https://microsoft.github.io/fabric-cli/release-notes/) for detailed changelog.
 
 ## 📄 License
 
