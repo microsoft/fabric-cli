@@ -442,8 +442,6 @@ def upsert_item_to_cache(item: Item) -> None:
     # when creating items inside folders
     invalidate_item_cache(item.parent)
     
-    # When creating an item inside a folder, we also need to invalidate
-    # the folder cache to ensure proper listing
     if isinstance(item.parent, Folder):
         invalidate_folder_cache(item.workspace)
 
