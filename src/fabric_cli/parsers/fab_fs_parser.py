@@ -207,6 +207,13 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         action="store_true",
         help="Recursive. Optional, copies all items in the source path recursively, including subfolders and their contents. This option is only applicable for workspaces and folders.",
     )
+    cp_parser.add_argument(
+        "-ftp",
+        "--force-target-path",
+        required=False,
+        action="store_true",
+        help="Force target path. Optional, prevents copying when an item with the same name exists in a different folder within the target workspace.",
+    )
 
     cp_parser.usage = f"{utils_error_parser.get_usage_prog(cp_parser)}"
     cp_parser.set_defaults(func=fs.cp_command)
@@ -324,10 +331,10 @@ def register_get_parser(subparsers: _SubParsersAction) -> None:
     ]
 
     get_parser = subparsers.add_parser(
-        "get", 
+        "get",
         help=fab_constant.COMMAND_FS_GET_DESCRIPTION,
-        fab_examples=get_examples, 
-        fab_learnmore=get_learnmore
+        fab_examples=get_examples,
+        fab_learnmore=get_learnmore,
     )
     get_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     get_parser.add_argument(
@@ -416,10 +423,10 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
     ]
 
     set_parser = subparsers.add_parser(
-        "set", 
+        "set",
         help=fab_constant.COMMAND_FS_SET_DESCRIPTION,
-        fab_examples=set_examples, 
-        fab_learnmore=set_learnmore
+        fab_examples=set_examples,
+        fab_learnmore=set_learnmore,
     )
     set_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     set_parser.add_argument(
@@ -443,7 +450,9 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
 
 # Command for 'clear'
 def register_clear_parser(subparsers: _SubParsersAction) -> None:
-    clear_parser = subparsers.add_parser("clear", aliases=["cls"], help=fab_constant.COMMAND_FS_CLEAR_DESCRIPTION)
+    clear_parser = subparsers.add_parser(
+        "clear", aliases=["cls"], help=fab_constant.COMMAND_FS_CLEAR_DESCRIPTION
+    )
     clear_parser.usage = f"{utils_error_parser.get_usage_prog(clear_parser)}"
     clear_parser.set_defaults(func=do_clear)
 
