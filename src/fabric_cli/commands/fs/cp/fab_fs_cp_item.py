@@ -148,7 +148,7 @@ def cp_single_item(
                 if existing_item_with_same_name.parent != to_context.parent:
                     if hasattr(args, "force_target_path") and args.force_target_path:
                         raise FabricCLIError(
-                            "An item with the same name exists in a different location within the workspace.",
+                            ErrorMessages.Cp.item_exists_different_path(),
                             fab_constant.ERROR_INVALID_INPUT,
                         )
                     else:

@@ -9,11 +9,13 @@ from unittest.mock import patch
 
 import fabric_cli.commands.fs.fab_fs_cp as fab_cp
 import fabric_cli.commands.fs.fab_fs_ls as fab_ls
+from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import LocalPath, OneLakeItem
+from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.conftest import rm
 from tests.test_commands.data.models import EntityMetadata
@@ -952,6 +954,85 @@ class TestCP:
                 for call in mock_questionary_print.mock_calls
             ), "Notebook should be copied to the newly created folder with '_copy' suffix"
 
+    def _setup_name_conflict_scenario(
+        self, workspace_factory, folder_factory, item_factory
+    ):
+        ws1 = workspace_factory()
+        ws2 = workspace_factory()
+        f1 = folder_factory(path=ws1.full_path)
+        f2 = folder_factory(path=ws2.full_path)
+
+        source_notebook = item_factory(ItemType.NOTEBOOK, path=ws1.full_path)
+
+        existing_notebook = item_factory(
+            ItemType.NOTEBOOK,
+            path=f2.full_path,
+            custom_name=source_notebook.display_name,
+        )
+
+        return ws1, ws2, f1, f2, source_notebook, existing_notebook
+
+    def _reset_mocks_and_setup_confirm(self, mock_print_done, mock_print_warning):
+        mock_print_done.reset_mock()
+        mock_print_warning.reset_mock()
+        return patch("questionary.confirm")
+
+    def test_cp_item_existing_name_different_location_without_force_target_path(
+        self,
+        workspace_factory,
+        folder_factory,
+        item_factory,
+        mock_print_done,
+        mock_print_warning,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        ws1, ws2, f1, f2, source_notebook, existing_notebook = (
+            self._setup_name_conflict_scenario(
+                workspace_factory, folder_factory, item_factory
+            )
+        )
+
+        with self._reset_mocks_and_setup_confirm(
+            mock_print_done, mock_print_warning
+        ) as mock_confirm:
+            mock_confirm.return_value.ask.return_value = True
+
+            cli_executor.exec_command(
+                f"cp {source_notebook.full_path} {ws2.full_path}/{source_notebook.name} --force"
+            )
+
+            mock_print_warning.assert_called()
+            mock_print_done.assert_called()
+
+            assert any(
+                "Copy completed" in str(call) for call in mock_print_done.mock_calls
+            )
+
+    def test_cp_item_existing_name_different_location_with_force_target_path(
+        self,
+        workspace_factory,
+        folder_factory,
+        item_factory,
+        mock_print_done,
+        assert_fabric_cli_error,
+        cli_executor: CLIExecutor,
+    ):
+        ws1, ws2, f1, f2, source_notebook, existing_notebook = (
+            self._setup_name_conflict_scenario(
+                workspace_factory, folder_factory, item_factory
+            )
+        )
+
+        cli_executor.exec_command(
+            f"cp {source_notebook.full_path} {ws2.full_path}/{source_notebook.name} --force --force-target-path"
+        )
+
+        assert_fabric_cli_error(
+            fab_constant.ERROR_INVALID_INPUT,
+            ErrorMessages.Cp.item_exists_different_path(),
+        )
+
 
 # region Helper Methods
 def ls(path, long=False, all=False):
@@ -994,7 +1075,8 @@ def _generate_test_binary_file(file_path: str):
         f.write(b"TESTFILE")  # Text header
         f.write(bytes(range(256)))  # All byte values 0-255
         f.write(b"\x00" * 100)  # Null bytes
-        f.write(b"\xFF" * 100)  # All 1s
+        f.write(b"\xff" * 100)  # All 1s
         f.write(b"ENDTEST")  # Text footer
+
 
 # endregion
