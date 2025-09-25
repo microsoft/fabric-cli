@@ -14,6 +14,9 @@ from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy import fab_hiearchy as hierarchy
 
+# Use the reset_context fixture for all tests in this module
+pytestmark = pytest.mark.usefixtures("reset_context")
+
 
 def mock_get_fabric_ids(
     monkeypatch,
