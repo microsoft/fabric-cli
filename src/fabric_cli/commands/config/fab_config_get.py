@@ -10,8 +10,8 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 
 def exec_command(args: Namespace) -> None:
-    key = _normalize_key(args.key.lower())
-    if key not in fab_constant.CONFIG_KEYS:
+    key = args.key.lower()
+    if key not in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
         raise FabricCLIError(
             ErrorMessages.Config.unknown_configuration_key(key),
             fab_constant.ERROR_INVALID_INPUT,
@@ -20,13 +20,3 @@ def exec_command(args: Namespace) -> None:
         value = fab_state_config.get_config(key)
         if value:
             utils_ui.print_output_format(args, data=value)
-
-
-def _normalize_key(key: str) -> str:
-    """
-    Removes the 'fab_' prefix from the key if it exists.
-    Otherwise returns the original key.
-    """
-    if key.startswith("fab_"):
-        return key[4:]
-    return key
