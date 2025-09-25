@@ -34,7 +34,7 @@ To avoid cases where submitted PRs are rejected, please follow the following ste
 
 Before reporting a new bug or suggesting a feature, please search the [GitHub Issues page](https://github.com/microsoft/fabric-cli/issues) to check if one already exists.
 
-All reported bugs or feature suggestions must start with creating an issue in the GitHub Issues pane. Please add as much information as possible to help us with triage and understanding. Once the issue is triaged, labels will be added to indicate its status (e.g., "missing-info", "help-wanted").
+All reported bugs or feature suggestions must start with creating an issue in the GitHub Issues pane. Please add as much information as possible to help us with triage and understanding. Once the issue is triaged, labels will be added to indicate its status (e.g., "need more info", "help wanted").
 
 When creating an issue please select the relevant topic - bug, new feature or general question - and provide all required input.
 
@@ -45,7 +45,7 @@ We aim to respond to new issues promptly, but response times may vary depending 
 #### For Beginners
 If you're new to contributing, look for issues with these labels:
 - **`good-first-issue`** - Beginner-friendly tasks that are well-scoped and documented
-- **`help-wanted`** - Issues where community contributions are especially welcome
+- **`help wanted`** - Issues where community contributions are especially welcome
 - **`documentation`** - Improve docs, examples, or help text (great for first contributions)
 
 #### Getting Started Tips
@@ -55,7 +55,7 @@ If you're new to contributing, look for issues with these labels:
 4. **Test locally** - Always test your changes thoroughly before submitting
 
 #### Before You Code
-All PRs must be linked with a "help-wanted" issue. To avoid rework after investing effort:
+All PRs must be linked with a "help wanted" issue. To avoid rework after investing effort:
 1. **Comment on the issue** - Express interest and describe your planned approach
 2. **Wait for acknowledgment** - Get team confirmation before starting significant work
 3. **Ask for clarification** - Don't hesitate to ask questions about requirements
@@ -72,7 +72,7 @@ Before submitting the pull request please verify that:
 - Tests coverage is kept and all tests pass
 - Your code is aligned with the code conventions of this project
 
-Before your PR can be merged, make sure to address and resolve all review comments. Once submitted, your PR will be labeled with its status—"reviewing" during the review and "pending" when there are comments to resolve. Approved PRs will be merged by the Fabric CLI team.
+Before your PR can be merged, make sure to address and resolve all review comments. PR will be labeled as "need author feedback" when there are comments to resolve. Approved PRs will be merged by the Fabric CLI team.
 
 ## Resources to help you get started
 Here are some resources to help you get started:
