@@ -13,7 +13,7 @@ The behavior of the `cp` command varies depending on the source (item or folder)
 **Usage:**
 
 ```
-fab cp <from_path> <to_path> [-r] [-f]
+fab cp <from_path> <to_path> [-r] [-f] [-ftp]
 ```
 
 **Parameters:**
@@ -22,6 +22,7 @@ fab cp <from_path> <to_path> [-r] [-f]
 - `<to_path>`: Destination path.
 - `-r, --recursive`: Copies all items in the source path, including subfolders and their contents (only applicable for workspaces and folders). Optional.
 - `-f, --force`: Force copy without confirmation. Optional.
+- `-ftp, --force-target-path`: Force target path. Prevents copying when an item with the same name exists in a different folder within the target workspace. Optional.
 
 
 ## Limitations

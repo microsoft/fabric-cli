@@ -263,13 +263,20 @@ def item_factory(vcr_instance, cassette_name, workspace):
         path=workspace.full_path,
         content_path=None,
         should_clean=True,
+        custom_name=None,
     ):
         """
         Actually creates the item resource and returns an EntityMetadata object.
         """
-        # Use the test's specific recording file
-        generated_name = generate_random_string(vcr_instance, cassette_name)
+        # Use custom name if provided, otherwise generate random name
+        if custom_name:
+            generated_name = custom_name
+        else:
+            # Use the test's specific recording file
+            generated_name = generate_random_string(vcr_instance, cassette_name)
+
         item_name = f"{generated_name}.{type}"
+
         item_path = cli_path_join(path, item_name)
 
         if content_path:
