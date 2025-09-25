@@ -1616,6 +1616,37 @@ class TestMkdir:
     # endregion
 
     # region Folders
+    
+    def test_mkdir_item_in_folder_listing_success(
+        self, workspace, cli_executor, mock_print_done, mock_questionary_print, mock_fab_set_state_config, vcr_instance, cassette_name
+    ):
+        # Enable folder listing
+        mock_fab_set_state_config(constant.FAB_FOLDER_LISTING_ENABLED, "true")
+
+        
+        # Setup
+        folder_name = f"{generate_random_string(vcr_instance, cassette_name)}.Folder"
+        folder_full_path = cli_path_join(workspace.full_path, folder_name)
+        
+        # Create folder
+        cli_executor.exec_command(f"mkdir {folder_full_path}")
+        mock_print_done.assert_called_once()
+        mock_print_done.reset_mock()
+        
+        # Create notebook in folder
+        notebook_name = f"{generate_random_string(vcr_instance, cassette_name)}.Notebook"
+        notebook_full_path = cli_path_join(folder_full_path, notebook_name)
+        cli_executor.exec_command(f"mkdir {notebook_full_path}")
+        
+        # Verify notebook appears in folder listing
+        cli_executor.exec_command(f"ls {folder_full_path}")
+        printed_output = mock_questionary_print.call_args[0][0]
+        assert notebook_name in printed_output
+        
+        # Cleanup
+        rm(notebook_full_path)
+        rm(folder_full_path)
+
 
     def test_mkdir_folder_success(self, workspace, cli_executor, mock_print_done):
         # Setup

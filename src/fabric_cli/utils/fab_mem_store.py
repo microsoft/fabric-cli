@@ -438,8 +438,12 @@ def get_item_id(workspace: Workspace, name) -> str:
 
 
 def upsert_item_to_cache(item: Item) -> None:
-    # Due to dependent elements (e.g. SQLEndpoint for Lakehouse), we need to invalidate the cache
+    # Invalidate both item cache and folder cache to maintain consistency
+    # when creating items inside folders
     invalidate_item_cache(item.parent)
+    
+    if isinstance(item.parent, Folder):
+        invalidate_folder_cache(item.workspace)
 
 
 def invalidate_item_cache(workspace: Workspace) -> None:
