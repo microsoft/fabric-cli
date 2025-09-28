@@ -1,6 +1,6 @@
-id: issue-pr-triage
+id: issue-triage
 name: GitOps.PullRequestIssueManagement
-description: Issue and pull request triage workflow
+description: Issue triage workflow
 owner:
 resource: repository
 disabled: false
@@ -176,15 +176,3 @@ configuration:
                 
                 Please continue discussion in the original issue to consolidate tracking and avoid fragmentation.
           - closeIssue
-
-      - description: Remove stale label of closed issues when new activity occurs
-        if:
-          - payloadType: Issues
-          - not:
-              isAction:
-                action: Closed
-          - hasLabel:
-              label: no recent activity
-        then:
-          - removeLabel:
-              label: no recent activity
