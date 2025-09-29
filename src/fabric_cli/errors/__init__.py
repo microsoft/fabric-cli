@@ -6,6 +6,7 @@ from .client import ClientErrors
 from .common import CommonErrors
 from .config import ConfigErrors
 from .context import ContextErrors
+from .cp import CpErrors
 from .hierarchy import HierarchyErrors
 from .labels import LabelsErrors
 from .mkdir import MkdirErrors
@@ -20,6 +21,7 @@ class ErrorMessages:
     Common = CommonErrors
     Config = ConfigErrors
     Context = ContextErrors
+    Cp = CpErrors
     Hierarchy = HierarchyErrors
     Labels = LabelsErrors
     Mkdir = MkdirErrors
