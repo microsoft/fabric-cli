@@ -579,12 +579,6 @@ def mock_print_done():
         yield mock
 
 
-@pytest.fixture
-def mock_print_warning():
-    with patch("fabric_cli.utils.fab_ui.print_warning") as mock:
-        yield mock
-
-
 @pytest.fixture()
 def mock_print_grey():
     with patch("fabric_cli.utils.fab_ui.print_grey") as mock:

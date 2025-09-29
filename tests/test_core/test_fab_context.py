@@ -1,11 +1,22 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import os
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 
 import fabric_cli.core.fab_auth as auth
+from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_context import Context
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy import fab_hiearchy as hierarchy
+from fabric_cli.core.hiearchy.fab_tenant import Tenant
+from fabric_cli.errors import ErrorMessages
+
+# Use the reset_context fixture for all tests in this module
+pytestmark = pytest.mark.usefixtures("reset_context")
 
 
 def test_context_tenant(monkeypatch):
@@ -162,7 +173,9 @@ def test_get_context_session_id_no_parent_process(monkeypatch):
     assert session_id == 9999
     assert len(log_calls) == 1
     assert "No parent process was found" in log_calls[0]
-    assert "Falling back to the current process for session ID resolution" in log_calls[0]
+    assert (
+        "Falling back to the current process for session ID resolution" in log_calls[0]
+    )
 
 
 def test_get_context_session_id_parent_process_exception(monkeypatch):
@@ -262,3 +275,124 @@ class MockProcessWithException:
         if self.exception_on_parent_call:
             raise Exception("failed to get parent process")
         return None
+
+
+def test_load_context_from_file_success_with_valid_path(
+    mock_os_path_exists,
+    mock_json_load,
+    mock_get_command_context,
+    mock_print_warning,
+    mock_glob_glob,
+):
+    test_path = "/workspaces/test-workspace"
+    context_data = {"path": test_path}
+    mock_context = Mock()
+    mock_context.path = test_path
+
+    mock_os_path_exists.return_value = True
+    mock_json_load.return_value = context_data
+    mock_get_command_context.return_value = mock_context
+    mock_glob_glob.return_value = []
+
+    with (
+        patch("builtins.open", mock_open(read_data=json.dumps(context_data))),
+        patch("platform.system", return_value="Windows"),
+        patch("subprocess.run") as mock_subprocess,
+    ):
+        mock_result = Mock()
+        mock_result.stdout = ""
+        mock_subprocess.return_value = mock_result
+
+        context = Context()
+        context._load_context_from_file()
+
+        assert context._context == mock_context
+        assert context._loading_context is False
+        mock_get_command_context.assert_called_once_with(test_path)
+        mock_print_warning.assert_called_once_with(f"Command context path: {test_path}")
+
+
+def test_load_context_from_file_json_parse_error(
+    mock_os_path_exists,
+    mock_json_load,
+    mock_os_remove,
+    mock_glob_glob,
+):
+    invalid_json = '{"path": "incomplete'
+
+    mock_os_path_exists.return_value = True
+    mock_json_load.side_effect = json.JSONDecodeError("Invalid JSON", "", 0)
+    mock_glob_glob.return_value = []
+
+    with (
+        patch("builtins.open", mock_open(read_data=invalid_json)),
+        patch("platform.system", return_value="Windows"),
+        patch("subprocess.run") as mock_subprocess,
+    ):
+        mock_result = Mock()
+        mock_result.stdout = ""
+        mock_subprocess.return_value = mock_result
+
+        context = Context()
+        with pytest.raises(FabricCLIError) as exc_info:
+            context._load_context_from_file()
+
+        assert exc_info.value.status_code == fab_constant.ERROR_CONTEXT_LOAD_FAILED
+        assert exc_info.value.message == ErrorMessages.Context.context_load_failed()
+        assert context._loading_context is False
+        mock_os_remove.assert_called_once_with(context._context_file)
+
+
+def test_load_context_from_file_file_removal_fails_silently(
+    mock_os_path_exists,
+    mock_json_load,
+    mock_get_command_context,
+    mock_os_remove,
+    mock_glob_glob,
+):
+    context_data = {"path": "/invalid/path"}
+
+    mock_os_path_exists.return_value = True
+    mock_json_load.return_value = context_data
+    mock_get_command_context.side_effect = Exception("Context loading failed")
+    mock_os_remove.side_effect = OSError("Permission denied")
+    mock_glob_glob.return_value = []
+
+    with (
+        patch("builtins.open", mock_open(read_data=json.dumps(context_data))),
+        patch("platform.system", return_value="Windows"),
+        patch("subprocess.run") as mock_subprocess,
+    ):
+        mock_result = Mock()
+        mock_result.stdout = ""
+        mock_subprocess.return_value = mock_result
+
+        context = Context()
+        with pytest.raises(FabricCLIError) as exc_info:
+            context._load_context_from_file()
+
+        assert exc_info.value.status_code == fab_constant.ERROR_CONTEXT_LOAD_FAILED
+        assert context._loading_context is False
+
+
+@pytest.fixture
+def mock_config_location():
+    with patch("fabric_cli.core.fab_context.fab_state_config.config_location") as mock:
+        mock.return_value = "/tmp"
+        yield mock
+
+
+@pytest.fixture
+def mock_psutil_process():
+    with patch("fabric_cli.core.fab_context.psutil.Process") as mock:
+        mock_process = Mock()
+        mock_process.parent.return_value = Mock(pid=1234)
+        mock_process.parent.return_value.parent.return_value = Mock(pid=5678)
+        mock.return_value = mock_process
+        yield mock
+
+
+@pytest.fixture
+def mock_get_command_context():
+    with patch("fabric_cli.core.fab_handle_context.get_command_context") as mock:
+        yield mock
