@@ -276,7 +276,6 @@ def item_factory(vcr_instance, cassette_name, workspace):
             generated_name = generate_random_string(vcr_instance, cassette_name)
 
         item_name = f"{generated_name}.{type}"
-
         item_path = cli_path_join(path, item_name)
 
         if content_path:

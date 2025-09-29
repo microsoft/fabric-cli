@@ -977,7 +977,7 @@ class TestCP:
         mock_print_warning.reset_mock()
         return patch("questionary.confirm")
 
-    def test_cp_item_existing_name_different_location_without_block_on_path_collision(
+    def test_cp_item_existing_name_different_location_without_block_on_path_collision_success(
         self,
         workspace_factory,
         folder_factory,
@@ -1009,7 +1009,7 @@ class TestCP:
                 "Copy completed" in str(call) for call in mock_print_done.mock_calls
             )
 
-    def test_cp_item_existing_name_different_location_with_block_on_path_collision(
+    def test_cp_item_existing_name_different_location_with_block_on_path_collision_failure(
         self,
         workspace_factory,
         folder_factory,
