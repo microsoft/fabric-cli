@@ -12,7 +12,7 @@ def exec_command(args: Namespace) -> None:
 
     all_configs = [
         {"setting": key, "value": configs.get(key, "")}
-        for key in fab_constant.CONFIG_KEYS
+        for key in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES
     ]
 
     columns = ["setting", "value"]

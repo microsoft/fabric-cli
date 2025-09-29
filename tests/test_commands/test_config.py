@@ -40,7 +40,11 @@ class TestConfig:
         assert test_data.capacity.name in call_args[0]
 
     def test_config_set_default_capacity_invalid_capacity_failure(
-        self, mock_print_done, assert_fabric_cli_error, cli_executor: CLIExecutor, test_data: StaticTestData
+        self,
+        mock_print_done,
+        assert_fabric_cli_error,
+        cli_executor: CLIExecutor,
+        test_data: StaticTestData,
     ):
         capacity_name = test_data.capacity.name + "?"
         expected_message = ErrorMessages.Config.invalid_capacity(capacity_name)
@@ -147,7 +151,7 @@ class TestConfig:
         cli_executor.exec_command("config ls")
 
         # Assert
-        for key in constant.CONFIG_KEYS:
+        for key in constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
             assert any(
                 key in call.args[0] for call in mock_questionary_print.mock_calls
             )

@@ -92,7 +92,7 @@ FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
 
-CONFIG_KEYS = {
+FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
     FAB_CONTEXT_PERSISTENCE_ENABLED: ["false", "true"],
     FAB_DEBUG_ENABLED: ["false", "true"],
