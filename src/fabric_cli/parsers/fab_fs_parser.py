@@ -208,11 +208,11 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         help="Recursive. Optional, copies all items in the source path recursively, including subfolders and their contents. This option is only applicable for workspaces and folders.",
     )
     cp_parser.add_argument(
-        "-ftp",
-        "--force-target-path",
+        "-bpc",
+        "--block_on_path_collision",
         required=False,
         action="store_true",
-        help="Force target path. Optional, prevents copying when an item with the same name exists in a different folder within the target workspace.",
+        help="Block on path collision. Optional, prevents copying when an item with the same name exists in a different folder within the target workspace.",
     )
 
     cp_parser.usage = f"{utils_error_parser.get_usage_prog(cp_parser)}"

@@ -146,7 +146,10 @@ def cp_single_item(
 
             if existing_item_with_same_name:
                 if existing_item_with_same_name.parent != to_context.parent:
-                    if hasattr(args, "force_target_path") and args.force_target_path:
+                    if (
+                        hasattr(args, "block_on_path_collision")
+                        and args.block_on_path_collision
+                    ):
                         raise FabricCLIError(
                             ErrorMessages.Cp.item_exists_different_path(),
                             fab_constant.ERROR_INVALID_INPUT,
@@ -156,7 +159,7 @@ def cp_single_item(
 
                 item_already_exists = True
                 fab_logger.log_warning(
-                    f"An item with the same name exists in {destination_path}"
+                    fab_constant.WARNING_ITEM_EXISTS_IN_PATH.format(destination_path)
                 )
                 if args.force or utils_ui.prompt_confirm("Overwrite?"):
                     pass

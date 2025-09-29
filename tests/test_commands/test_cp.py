@@ -977,7 +977,7 @@ class TestCP:
         mock_print_warning.reset_mock()
         return patch("questionary.confirm")
 
-    def test_cp_item_existing_name_different_location_without_force_target_path(
+    def test_cp_item_existing_name_different_location_without_block_on_path_collision(
         self,
         workspace_factory,
         folder_factory,
@@ -1009,7 +1009,7 @@ class TestCP:
                 "Copy completed" in str(call) for call in mock_print_done.mock_calls
             )
 
-    def test_cp_item_existing_name_different_location_with_force_target_path(
+    def test_cp_item_existing_name_different_location_with_block_on_path_collision(
         self,
         workspace_factory,
         folder_factory,
@@ -1025,7 +1025,7 @@ class TestCP:
         )
 
         cli_executor.exec_command(
-            f"cp {source_notebook.full_path} {ws2.full_path}/{source_notebook.name} --force --force-target-path"
+            f"cp {source_notebook.full_path} {ws2.full_path}/{source_notebook.name} --force --block_on_path_collision"
         )
 
         assert_fabric_cli_error(
