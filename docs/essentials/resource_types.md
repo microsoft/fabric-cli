@@ -37,7 +37,7 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.SQLEndpoint`         | SQL connection endpoints           |
 | `.VariableLibrary`     | Variable libraries                 |
 | `.GraphQLApi`          | GraphQL API endpoints              |
-| `.Dataflow  `          | Dataflow API endpoints             |
+| `.Dataflow`            | Dataflow API endpoints             |
 
 ---
 
