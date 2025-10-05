@@ -283,6 +283,7 @@ class ItemType(_BaseItemType):
     GRAPHQLAPI = "GraphQLApi"
     MOUNTED_DATA_FACTORY = "MountedDataFactory"
     SQL_DATABASE = "SQLDatabase"
+    DATAFLOW = "Dataflow"
 
     def __str__(self):
         return self.value
@@ -510,6 +511,7 @@ format_mapping = {
     ItemType.COPYJOB: "copyJobs",
     ItemType.GRAPHQLAPI: "graphqlapis",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
+    ItemType.DATAFLOW: "dataflows",
 }
 
 # Item URI in the Fabric Portal
@@ -552,6 +554,7 @@ uri_mapping = {
     ItemType.COPYJOB: "copyjobs",
     ItemType.GRAPHQLAPI: "graphql",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
+    ItemType.DATAFLOW: "dataflows",
 }
 
 # Item Payload definition
