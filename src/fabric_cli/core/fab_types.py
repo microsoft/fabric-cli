@@ -235,7 +235,7 @@ VICMap: dict[VirtualItemContainerType, VirtualItemType] = {
     VirtualItemContainerType.SPARK_POOL: VirtualItemType.SPARK_POOL,
     VirtualItemContainerType.MANAGED_IDENTITY: VirtualItemType.MANAGED_IDENTITY,
     VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT: VirtualItemType.MANAGED_PRIVATE_ENDPOINT,
-    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE
+    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE,
 }
 
 ################
@@ -559,4 +559,5 @@ uri_mapping = {
 definition_format_mapping = {
     ItemType.SPARK_JOB_DEFINITION: "?format=SparkJobDefinitionV1",
     ItemType.NOTEBOOK: "?format=ipynb",
+    ItemType.SQL_DATABASE: "?format=dacpac",
 }
