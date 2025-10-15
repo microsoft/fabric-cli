@@ -23,7 +23,7 @@ The Fabric CLI (`fab`) is a fast, file‑system‑inspired command‑line interf
 
 Prerequisites:
 
-  - Python version 3.10, 3.11, or 3.12 is installed on your machine.
+  - Python version 3.10, 3.11, 3.12, 3.13, or 3.14 is installed on your machine.
   - Ensure `python` (defined in the `PATH` environment variable) is accessible from your terminal, by opening a terminal and run `python`.
 
 Open a terminal and run:

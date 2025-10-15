@@ -58,7 +58,7 @@ Navigate Microsoft Fabric like your local file system with intuitive commands:
 ## 📦 Installation
 
 ### Prerequisites
-- **Python 3.10, 3.11, or 3.12**
+- **Python 3.10, 3.11, 3.12, 3.13, or 3.14**
 - A **Microsoft Fabric** account with access to your tenant/workspaces.
 
 ### Install via pip
