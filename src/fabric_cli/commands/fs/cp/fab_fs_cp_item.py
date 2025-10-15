@@ -14,10 +14,10 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Folder, Item, Workspace
 from fabric_cli.errors import ErrorMessages
+from fabric_cli.utils import fab_item_util as item_utils
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils import fab_util as util
-from fabric_cli.utils import fab_item_util as item_utils
 
 
 def copy_items(
@@ -137,19 +137,36 @@ def cp_single_item(
 
         if _confirm_copy(args.force, is_move_command):
             item_already_exists = False
-            # Check if the item already exists
-            if any(
-                target_item.name == to_context.name for target_item in ws_items_target
-            ):
+            existing_item_with_same_name = None
+            destination_path = args.to_path
+
+            existing_item_with_same_name = next(
+                (item for item in ws_items_target if item.name == to_context.name), None
+            )
+
+            if existing_item_with_same_name:
+                if existing_item_with_same_name.parent != to_context.parent:
+                    if (
+                        hasattr(args, "block_on_path_collision")
+                        and args.block_on_path_collision
+                    ):
+                        raise FabricCLIError(
+                            ErrorMessages.Cp.item_exists_different_path(),
+                            fab_constant.ERROR_INVALID_INPUT,
+                        )
+                    else:
+                        destination_path = existing_item_with_same_name.path
+
                 item_already_exists = True
-                fab_logger.log_warning("An item with the same name exists")
+                fab_logger.log_warning(
+                    fab_constant.WARNING_ITEM_EXISTS_IN_PATH.format(destination_path)
+                )
                 if args.force or utils_ui.prompt_confirm("Overwrite?"):
                     pass
                 else:
                     return False
-
             utils_ui.print_grey(
-                f"{'Moving' if delete_after_copy else 'Copying'} '{args.from_path}' → '{args.to_path}'..."
+                f"{'Moving' if delete_after_copy else 'Copying'} '{args.from_path}' → '{destination_path}'..."
             )
             # Copy including definition, cross ws
             _copy_item_with_definition(
@@ -167,8 +184,6 @@ def cp_single_item(
 
 
 # Utils
-
-
 def _confirm_copy(bypass_confirmation: bool, is_move_command: bool) -> bool:
     if not bool(bypass_confirmation):
         confirm_message = item_utils.get_confirm_copy_move_message(is_move_command)
