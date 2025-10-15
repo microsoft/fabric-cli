@@ -136,6 +136,7 @@ class Item(_BaseItem):
                 | ItemType.COPYJOB
                 | ItemType.VARIABLE_LIBRARY
                 | ItemType.GRAPHQLAPI
+                | ItemType.DATAFLOW
             ):
                 return {
                     "type": str(self.item_type),
