@@ -1,0 +1,49 @@
+# docs: https://changie.dev/config/
+---
+changesDir: .changes
+unreleasedDir: unreleased
+headerPath: header.tpl.md
+versionExt: md
+changelogPath: docs/release-notes.md
+versionFormat: |
+  ## [{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}})
+
+  *Release date: {{.Time.Format "2006-01-02"}}*
+kindFormat: '### {{.Kind}}'
+changeFormat: '* {{.Body}}'
+kinds:
+  - label: '⚠️ Breaking Change'
+    key: breaking
+    auto: minor
+  - label: '🆕 New Items Support'
+    key: new-items
+    auto: minor
+  - label: '✨ New Functionality'
+    key: added
+    auto: minor
+  - label: '🔧 Bug Fix'
+    key: fixed
+    auto: patch
+  - label: '⚡ Additional Optimizations'
+    key: optimization
+    auto: patch
+  - label: '📝 Documentation Update'
+    key: docs
+    auto: patch
+newlines:
+  afterChangelogHeader: 1
+  beforeChangelogVersion: 1
+  endOfVersion: 2
+  afterKind: 1
+  beforeKind: 1
+envPrefix: CHANGIE_
+replacements:
+  - path: pyproject.toml
+    find: 'version=".*"'
+    replace: 'version="{{.VersionNoPrefix}}"'
+  - path: src/fabric_cli/__init__.py
+    find: '__version__ = ".*"'
+    replace: '__version__ = "{{.VersionNoPrefix}}"'
+  - path: src/fabric_cli/core/fab_constant.py
+    find: 'FAB_VERSION = ".*"'
+    replace: 'FAB_VERSION = "{{.VersionNoPrefix}}"'
