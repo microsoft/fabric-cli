@@ -227,6 +227,7 @@ WARNING_MOVING_ITEMS_INSIDE_WORKSPACE_NOT_SUPPORTED = (
     "Moving items between folders in the same workspace is not yet supported"
 )
 WARNING_WORKSPACE_EMPTY = "Workspace is empty"
+WARNING_ITEM_EXISTS_IN_PATH = "An item with the same name exists in {0}"
 
 # Error codes
 
