@@ -3,10 +3,10 @@
 changesDir: .changes
 unreleasedDir: unreleased
 headerPath: header.tpl.md
-changelogPath: docs/release-notes.md
 versionExt: md
-versionFormat: '## [v{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}})'
-kindFormat: ''
+changelogPath: docs/release-notes.md
+versionFormat: '## [{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}})'
+kindFormat: '### {{.Kind}}'
 changeFormat: '* {{.Body}}'
 kinds:
   - label: '⚠️ Breaking Change'
@@ -30,7 +30,7 @@ kinds:
 newlines:
   afterChangelogHeader: 1
   beforeChangelogVersion: 1
-  endOfVersion: 1
+  endOfVersion: 2
   afterKind: 1
   beforeKind: 1
 envPrefix: CHANGIE_
