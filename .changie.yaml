@@ -5,7 +5,10 @@ unreleasedDir: unreleased
 headerPath: header.tpl.md
 versionExt: md
 changelogPath: docs/release-notes.md
-versionFormat: '## [{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}})'
+versionFormat: |
+  ## [{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}})
+
+  *Release date: {{.Time.Format "2006-01-02"}}*
 kindFormat: '### {{.Kind}}'
 changeFormat: '* {{.Body}}'
 kinds:
