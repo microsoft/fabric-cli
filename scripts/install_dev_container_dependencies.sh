@@ -6,4 +6,4 @@ apt-get update && apt-get install -y \
 
 pip3 install --user -r requirements.txt
 
-npm install -g changie@
+npm install -g changie
