@@ -554,7 +554,7 @@ uri_mapping = {
     ItemType.COPYJOB: "copyjobs",
     ItemType.GRAPHQLAPI: "graphql",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
-    ItemType.DATAFLOW: "dataflows",
+    ItemType.DATAFLOW: "dataflows-gen2",
 }
 
 # Item Payload definition
