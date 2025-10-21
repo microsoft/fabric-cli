@@ -12,6 +12,10 @@ class CommonErrors:
         return f"Invalid jmespath query (https://jmespath.org)"
 
     @staticmethod
+    def invalid_parameter(invalid_fields: list, valid_columns: list) -> str:
+        return f"Invalid query field(s): {', '.join(invalid_fields)}. Available fields: {', '.join(valid_columns)}"
+
+    @staticmethod
     def invalid_hostname(hostname: str) -> str:
         return f"Invalid hostname for '{hostname}'"
 

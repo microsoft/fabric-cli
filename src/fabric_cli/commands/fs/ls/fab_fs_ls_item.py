@@ -8,7 +8,6 @@ from fabric_cli.core.fab_types import VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
 from fabric_cli.utils import fab_cmd_fs_utils as utils_fs
-# from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils import fab_cmd_ls_utils as utils_ls
 
 

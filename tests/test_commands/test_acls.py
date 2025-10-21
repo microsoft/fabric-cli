@@ -321,8 +321,8 @@ class TestACLs:
         mock_fab_ui_print_error.assert_called()
         error_call = mock_fab_ui_print_error.mock_calls[0]
         assert isinstance(error_call.args[0], FabricCLIError)
-        assert error_call.args[0].status_code == constant.ERROR_INVALID_INPUT
-        assert "Invalid query field" in error_call.args[0].message
+        assert error_call.args[0].status_code == constant.ERROR_INVALID_QUERY_FIELDS
+        assert "Invalid query field(s): invalidfield. Available fields: acl, identity, type" in error_call.args[0].message
 
     def test_acls_ls_connection_success(
         self,

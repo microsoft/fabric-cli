@@ -7,6 +7,7 @@ import time
 
 import pytest
 
+from fabric_cli.core.fab_exceptions import FabricCLIError
 import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_output import OutputStatus
@@ -189,6 +190,21 @@ class TestLS:
         _assert_strings_in_mock_calls(
             self._virtual_workspace_items, True, mock_questionary_print.mock_calls
         )
+
+    def test_ls_invalid_query_failure(
+        self,
+        mock_fab_ui_print_error,
+        cli_executor: CLIExecutor,
+    ):
+        # Execute command with invalid query
+        cli_executor.exec_command('ls -q invalidfield')
+
+        # Assert error
+        mock_fab_ui_print_error.assert_called()
+        error_call = mock_fab_ui_print_error.mock_calls[0]
+        assert isinstance(error_call.args[0], FabricCLIError)
+        assert error_call.args[0].status_code == fab_constant.ERROR_INVALID_QUERY_FIELDS
+        assert "Invalid query field(s): invalidfield" in error_call.args[0].message
 
     def test_ls_query_filter_success(
         self,
