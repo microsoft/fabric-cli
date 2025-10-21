@@ -190,6 +190,55 @@ class TestLS:
             self._virtual_workspace_items, True, mock_questionary_print.mock_calls
         )
 
+    def test_ls_query_filter_success(
+        self,
+        workspace,
+        item_factory,
+        mock_questionary_print,
+        test_data: StaticTestData,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup items with different names and types
+        notebook1 = item_factory(ItemType.NOTEBOOK)
+        notebook2 = item_factory(ItemType.NOTEBOOK)
+        notebook3 = item_factory(ItemType.NOTEBOOK)
+        
+        # Test 1: Single query parameter - shows just name column
+        cli_executor.exec_command(f'ls {workspace.full_path} -q name')
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            True,
+            mock_questionary_print.mock_calls
+        )
+        
+        mock_questionary_print.reset_mock()
+
+        def verify_filtered_columns (mock_calls):
+            mock_questionary_print.assert_called()
+            _assert_strings_in_mock_calls(
+                [f"{workspace.name}   {test_data.capacity.name}"],
+                True,
+                mock_questionary_print.mock_calls,
+                require_all_in_same_args=True
+            )
+            _assert_strings_in_mock_calls(
+                ["name", "capacityName"],
+                True,
+                mock_questionary_print.mock_calls,
+                require_all_in_same_args=True
+            )
+
+        # # Test 2: Multiple query parameters
+        cli_executor.exec_command(f'ls -q name capacityName')
+        verify_filtered_columns(mock_questionary_print.mock_calls)
+        mock_questionary_print.reset_mock()
+
+        # # Test 3: Multiple query parameters - override -l flag: verify that only the specified columns are shown
+        cli_executor.exec_command(f'ls -l -q name capacityName')
+        verify_filtered_columns(mock_questionary_print.mock_calls)
+        mock_questionary_print.reset_mock()
+
     def test_ls_item_show_hidden_from_config_success(
         self,
         item_factory,

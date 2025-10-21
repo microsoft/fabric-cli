@@ -261,6 +261,28 @@ class TestACLs:
         # Clean up
         _cleanup_acl(cli_executor, workspace.full_path, spn_id)
 
+    def test_acls_ls_workspace_query_success(
+        self,
+        workspace,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        # Test single query parameter
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q identity")
+        mock_questionary_print.assert_called()
+        assert any("identity" in call.args[0] for call in mock_questionary_print.mock_calls)
+        assert not any("objectId" in call.args[0] for call in mock_questionary_print.mock_calls)
+        
+        # Reset mock for next test
+        mock_questionary_print.reset_mock()
+        
+        # Test multiple query parameters
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q identity name")
+        mock_questionary_print.assert_called()
+        assert any("identity" in call.args[0] for call in mock_questionary_print.mock_calls)
+        assert any("name" in call.args[0] for call in mock_questionary_print.mock_calls)
+        assert not any("objectId" in call.args[0] for call in mock_questionary_print.mock_calls)
+
     def test_acls_ls_workspace_long_success(
         self,
         workspace,
@@ -285,6 +307,22 @@ class TestACLs:
             "objectId" in call.args[0] for call in mock_questionary_print.mock_calls
         )
         assert any("name" in call.args[0] for call in mock_questionary_print.mock_calls)
+
+    def test_acls_ls_workspace_invalid_query_failure(
+        self,
+        workspace,
+        mock_fab_ui_print_error,
+        cli_executor: CLIExecutor,
+    ):
+        # Execute command with invalid query
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q invalidfield")
+
+        # Assert error
+        mock_fab_ui_print_error.assert_called()
+        error_call = mock_fab_ui_print_error.mock_calls[0]
+        assert isinstance(error_call.args[0], FabricCLIError)
+        assert error_call.args[0].status_code == constant.ERROR_INVALID_INPUT
+        assert "Invalid query field" in error_call.args[0].message
 
     def test_acls_ls_connection_success(
         self,
@@ -313,6 +351,29 @@ class TestACLs:
         # Assert
         acls_ls_vws_assestion(mock_questionary_print, long=True)
 
+    def test_acls_ls_connection_query_success(
+        self,
+        virtual_workspace_item_factory,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup
+        connection = virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION)
+        
+        # Test single query parameter
+        cli_executor.exec_command(f"acl ls {connection.full_path} -q principalType")
+        mock_questionary_print.assert_called()
+        assert any("principalType" in call.args[0] for call in mock_questionary_print.mock_calls)
+        
+        # Reset mock
+        mock_questionary_print.reset_mock()
+        
+        # Test multiple query parameters
+        cli_executor.exec_command(f"acl ls {connection.full_path} -q 'principalType role'")
+        mock_questionary_print.assert_called()
+        assert any("principalType" in call.args[0] for call in mock_questionary_print.mock_calls)
+        assert any("role" in call.args[0] for call in mock_questionary_print.mock_calls)
+
     def test_acls_ls_gateway_success(
         self,
         virtual_workspace_item_factory,
@@ -339,6 +400,29 @@ class TestACLs:
 
         # Assert
         acls_ls_vws_assestion(mock_questionary_print, long=True)
+
+    def test_acls_ls_gateway_query_success(
+        self,
+        virtual_workspace_item_factory,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup
+        gateway = virtual_workspace_item_factory(VirtualWorkspaceType.GATEWAY)
+        
+        # Test single query parameter
+        cli_executor.exec_command(f"acl ls {gateway.full_path} -q principalType")
+        mock_questionary_print.assert_called()
+        assert any("principalType" in call.args[0] for call in mock_questionary_print.mock_calls)
+        
+        # Reset mock
+        mock_questionary_print.reset_mock()
+        
+        # Test multiple query parameters
+        cli_executor.exec_command(f"acl ls {gateway.full_path} -q 'principalType role'")
+        mock_questionary_print.assert_called()
+        assert any("principalType" in call.args[0] for call in mock_questionary_print.mock_calls)
+        assert any("role" in call.args[0] for call in mock_questionary_print.mock_calls)
 
     def test_acls_ls_lakehouse_success(
         self,

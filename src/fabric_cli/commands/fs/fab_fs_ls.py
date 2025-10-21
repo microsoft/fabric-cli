@@ -32,6 +32,7 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 
 def exec_command(args, context: FabricElement):
+    args.long = bool(args.long) if args.long else (args.query is not None and bool(len(args.query) > 1))
     if isinstance(context, Tenant):
         ls_workspace.exec(context, args)
     elif isinstance(context, VirtualWorkspace):

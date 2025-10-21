@@ -28,13 +28,14 @@ List access control entries for a workspace, item, or OneLake resource.
 **Usage:**
 
 ```
-fab acl ls <path> [-l]
+fab acl ls <path> [-l] [-q <fields>]
 ```
 
 **Parameters:**
 
 - `<path>`: Path to the resource.
 - `-l, --long`: Show detailed output. Optional.
+- `-q, --query`: Space-separated list of fields to display (e.g., 'identity role'). Shows only specified fields. Optional.
 
 **Examples:**
 
@@ -42,6 +43,8 @@ fab acl ls <path> [-l]
 fab acl ls workspace1.workspace
 fab acl ls lh1.lakehouse -l
 fab acl ls /Files/data -l
+fab acl ls workspace1.workspace -q identity          # Show only identity column
+fab acl ls workspace1.workspace -q "identity name"   # Show identity and name columns
 ```
 
 ---
