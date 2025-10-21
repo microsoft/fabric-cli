@@ -243,14 +243,6 @@ Before contributing, please review our [Contributing Guidelines](CONTRIBUTING.md
 
 ## 🔄 Release Notes
 
-### Latest Release - v1.1.0
-- ✨ Added support for folders in `fs` commands
-- ✨ JSON output format support
-- ✨ Context persistence in command-line mode
-- ✨ Autocomplete support for commands (in command-line mode)
-- 🆕 GraphQLApi items support
-- 🔧 Multiple bug fixes and improvements
-
 See the full [Release Notes](https://microsoft.github.io/fabric-cli/release-notes/) for detailed changelog.
 
 ## 📄 License
