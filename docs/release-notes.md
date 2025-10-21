@@ -15,12 +15,12 @@ hide:
 ### ✨ New Functionality
 
 * Enable GraphQLApi item support in `mv` and `cp` commands
+* Add `--block-path-collision` (`-bpc`) flag to `cp` command to prevent implicit overwriting when copying items to another workspace
 
 ### 🔧 Bug Fix
 
 * Align output font color in JSON output format
 * Return newly created item in `ls` command in Folder path
-* Avoid implicit overwriting when copying an item to another workspace
 
 ### ⚡ Additional Optimizations
 
