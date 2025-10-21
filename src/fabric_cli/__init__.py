@@ -2,4 +2,4 @@
 # Licensed under the MIT License.
 
 # Don't change this
-__version__ = "1.1.0"
+__version__ = "1.2.0"
