@@ -6,10 +6,7 @@ hide:
 # Release Notes
 
 
-## [v1.2.0](https://pypi.org/project/ms-fabric-cli/v1.2.0)
-
-*Release date: 2025-10-21*
-
+## [v1.2.0](https://pypi.org/project/ms-fabric-cli/v1.2.0) - October 21, 2025
 
 ### 🆕 New Items Support
 
@@ -30,9 +27,7 @@ hide:
 * Enhance auto-completion with supported config keys
 
 
-## [v1.1.0](https://pypi.org/project/ms-fabric-cli/1.1.0/)
-
-*Release date: 2025-09-10*
+## [v1.1.0](https://pypi.org/project/ms-fabric-cli/1.1.0/) - September 10, 2025
 
 ### 🆕 New Items Support
 
@@ -61,9 +56,7 @@ hide:
 ### 📝 Documentation Update
 
 * Switched to MIT license
-## [v1.0.1](https://pypi.org/project/ms-fabric-cli/1.0.1/)
-
-*Release date: 2025-07-15*
+## [v1.0.1](https://pypi.org/project/ms-fabric-cli/1.0.1/) - July 15, 2025
 
 ### 🔧 Bug Fix
 
@@ -79,9 +72,7 @@ hide:
 
 * Improved error messages
 * Added support for custom files in `api` commands
-## [v1.0.0](https://pypi.org/project/ms-fabric-cli/1.0.0/)
-
-*Release date: 2025-05-14*
+## [v1.0.0](https://pypi.org/project/ms-fabric-cli/1.0.0/) - May 14, 2025
 
 ### ⚠️ Breaking Change
 
@@ -105,9 +96,7 @@ hide:
 ### 📝 Documentation Update
 
 * Clarified in the documentation for `cp`, `get`, `mv`, and `export` that sensitivity labels are not included in item definitions
-## [v0.2.0](https://pypi.org/project/ms-fabric-cli/0.2.0/)
-
-*Release date: 2025-04-24*
+## [v0.2.0](https://pypi.org/project/ms-fabric-cli/0.2.0/) - April 24, 2025
 
 ### ⚠️ Breaking Change
 
@@ -129,9 +118,7 @@ hide:
 * Fixed OneLake-to-OneLake copy with encoded data
 
 
-## [v0.1.10](https://pypi.org/project/ms-fabric-cli/0.1.10/)
-
-*Release date: 2025-03-27*
+## [v0.1.10](https://pypi.org/project/ms-fabric-cli/0.1.10/) - March 27, 2025
 
 ### ✨ New Functionality
 
@@ -146,9 +133,7 @@ hide:
 
 * Updated settings descriptions
 
-## [v0.1.9](https://pypi.org/project/ms-fabric-cli/0.1.9/)
-
-*Release date: 2025-03-25*
+## [v0.1.9](https://pypi.org/project/ms-fabric-cli/0.1.9/) - March 25, 2025
 
 ### ✨ New Functionality
 
