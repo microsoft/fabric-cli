@@ -85,7 +85,7 @@ def print_progress(text, progress: Optional[str] = None) -> None:
 
 
 def print_version(args=None):
-    print(f"fab version {__version__} (09-2025)")
+    print(f"fab version {__version__}")
     print("https://aka.ms/fabric-cli/release-notes")
 
 
