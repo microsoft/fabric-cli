@@ -115,14 +115,6 @@ Change the authentication password for a connection.
 fab set .connections/conn.Connection -q credentialDetails.password -i <new_password>
 ```
 
-#### Change Gateway
-
-Update the gateway used by a connection.
-
-```
-fab set .connections/conn.Connection -q gatewayId -i "00000000-0000-0000-0000-000000000000"
-```
-
 ### Remove Connection
 
 #### Remove a connection with interactive confirmation
