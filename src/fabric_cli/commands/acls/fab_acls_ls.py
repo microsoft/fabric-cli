@@ -134,13 +134,11 @@ def _ls_acls_gateway(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            columns = ["role", "principalId", "principalType"]
             
-            if hasattr(args, 'query') and args.query:
-                show_details = True if len(args.query) > 1 else show_details
-                columns = args.query
-            elif show_all:
-                columns = ["id", "role", "principalId", "principalType"]
+            columns = ["role", "principalId", "principalType"]
+            if show_all:
+                columns.insert(0, "id")
+
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
@@ -173,13 +171,10 @@ def _ls_acls_connection(connection: VirtualWorkspaceItem, args: Namespace) -> No
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            columns = ["role", "principalId", "principalType"]
             
-            if hasattr(args, 'query') and args.query:
-                show_details = True if len(args.query) > 1 else show_details
-                columns = args.query
-            elif show_all:
-                columns = ["id", "role", "principalId", "principalType"]
+            columns = ["role", "principalId", "principalType"]
+            if show_all:
+                columns.insert(0, "id")
 
             utils_ls.format_and_print_output(
                 data=sorted_acls,
@@ -227,13 +222,11 @@ def _ls_acls_item(item: Item, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
-            columns = ["acl", "identity", "type"]
             
-            if hasattr(args, 'query') and args.query:
-                show_details = True if len(args.query) > 1 else show_details
-                columns = args.query
-            elif show_all:
-                columns = ["acl", "identity", "type", "id", "name"]
+            columns = ["acl", "identity", "type"]
+            if show_all:
+                columns.extend(["id", "name"])
+
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
@@ -301,12 +294,9 @@ def _ls_acls_onelake(context: OneLakeItem, args: Namespace) -> None:
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
             columns = ["acl", "identity", "type"]
-            
-            if hasattr(args, 'query') and args.query:
-                show_details = True if len(args.query) > 1 else show_details
-                columns = args.query
-            elif show_all:
-                columns = ["acl", "identity", "type", "details"]
+            if show_all:
+                columns.extend(["id", "name"])
+                
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
