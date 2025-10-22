@@ -59,7 +59,8 @@ All PRs must be linked with a "help wanted" issue. To avoid rework after investi
 1. **Comment on the issue** - Express interest and describe your planned approach
 2. **Wait for acknowledgment** - Get team confirmation before starting significant work
 3. **Ask for clarification** - Don't hesitate to ask questions about requirements
-Please review [engineering guidelines](#engineering-guidelines) for coding guidelines and common flows to help you with your task. 
+
+Please review [engineering guidelines](https://github.com/microsoft/fabric-cli/wiki) for coding guidelines and common flows to help you with your task. 
 
 ### Pull request process
 
@@ -122,107 +123,16 @@ The change entries will be automatically included in the release notes when a ne
 ## Resources to help you get started
 Here are some resources to help you get started:
 - A good place to start learning about Fabric CLI is the [Fabric CLI documentation](https://microsoft.github.io/fabric-cli/)
-- If you want to contribute code, please check more details about coding guidelines, major code flows and code building block in [Engineering guidelines](#engineering-guidelines)
+- If you want to contribute code, please check more details about coding guidelines, major code flows and code building block in [Engineering guidelines](https://github.com/microsoft/fabric-cli/wiki)
 - Browse [existing commands](https://microsoft.github.io/fabric-cli/commands/) to understand patterns and conventions
 - Check out [usage examples](https://microsoft.github.io/fabric-cli/examples/) to see the CLI in action
 
 ## Engineering guidelines
+For detailed engineering guidelines please refer to our [Wiki pages](https://github.com/microsoft/fabric-cli/wiki).
 
-### How to build and run
+The Wiki contains essential information and requirements for contributors, including: Code Style and Standards, Architecture Overview, Testing and more.
 
-#### Working with Docker
-Working with Docker provides a ready-to-use development environment with all dependencies pre-installed.
-
-Prerequisites:
-- Docker Desktop
-- Visual Studio Code
-- Dev Container extension installed on Visual Studio Code
-
-Open the repository in VSCode with Dev Container:
-1. Ensure Docker is up and running.
-2. Open the repo in VSCode.
-3. Ensure the Dev Containers extension is installed.
-4. If prompted by VSCode, select "Reopen in Container." Otherwise, open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P), search for and select "Dev Containers: Reopen Folder in Container."
-5. Wait for VSCode to build and start the container. This process might take a few minutes the first time.
-6. Run the code (F5 with VSCode) and on first prompt type `auth login`.
-
-### Architecture Overview
-
-Fabric CLI is designed with a modular architecture centered around these key concepts:
-
-#### Elements Hierarchy
-Fabric CLI uses an element hierarchy system:
-- **Tenants** - Top-level containers (capacities, gateways, domains)
-- **Workspaces** - Project containers within tenants
-- **Folders** - Organizational containers within workspaces for grouping items
-- **Items** - Fabric entities (notebooks, datasets, reports, etc.)
-- **OneLake** - File storage within items
-
-Each element type has specific supported operations and properties.
-
-### Common flows
-#### Adding a new Command
-Before starting implementation, review your new command's design with the Fabric CLI team through the relevant issue or task. Clearly describe the command's purpose, expected usage, and rationale to ensure alignment and avoid unnecessary rework.
-
-When adding a new command:
-- Follow naming conventions and code style used in the project.
-- Add the command to the appropriate parser module under the `parsers` folder, or create a new module if needed. Fabric CLI uses Python argparse to parse command prompts; see the [argparse documentation](https://docs.python.org/3/library/argparse.html) for details.
-- Implement the command handler in the relevant module under the `commands` folder, reusing existing modules and functions where possible.
-- Decorate the handler with exception handling and context-setting decorators.
-- Validate that the command is supported by the execution context before running its logic.
-- Handle failures by raising `FabricCLIError` with clear, actionable messages. See the [Error handling](#error-handling) section for more details.
-- Support both text and JSON output formats using the output functions. Refer to the [Output format](#output-format) section for guidelines.
-- Provide usage examples and update documentation (e.g., help text and docs folder) to ensure users understand how to use the new command.
-- Add tests for the new command, including edge cases and error scenarios. Refer to the [E2E command tests](#e2e-command-tests) section for guidelines.
-
-### Output format
-When developing new commands, it's important to consider the supported output formats and use the appropriate print functions for displaying command results (print_output_format, print_error_format) and for user-facing messages during execution (print_info, print_warning, etc.). Currently, we support two formats: json and text (default).
-
-### Error handling
-#### Error type
-Fabric CLI errors should be raised using the `FabricCLIError` type. Use this for user-facing errors that need to be reported to the CLI user, not for internal exceptions. All Fabric CLI commands are wrapped to handle this error type, printing the error message and error code to the user.
-
-#### Error messages
-- Create new error messages under the `errors` folder inside a module relevant to the error.
-- Before creating a new error message, check if an existing one can be reused.
-- Error messages should be clear, user-friendly, and avoid technical jargon unless necessary.
-- Where possible, include actionable advice (e.g., "Check your network connection").
-
-#### Error codes
-- All error codes should be created inside the `constant.py` module under the error codes region.
-- Before creating a new error code, check for reusing an existing one.
-#### Example
-```python
-from fabric_cli.core import fab_constant
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.errors import ErrorMessages
-
-# Example of raising an error
-raise FabricCLIError(ErrorMessages.Common.file_or_directory_not_exists(), fab_constant.ERROR_INVALID_PATH)
-```
-
-### Code Style and Standards
-
-- **Python Style**: Follow PEP 8 guidelines and use Black for formatting
-- **Type Hints**: Include type hints where helpful
-- **Documentation**: Add docstrings to functions and classes explaining purpose, arguments, return values, and exceptions
-- **Naming**: Use descriptive variable and function names
-- **Comments**: Explain 'why' not 'what' in code comments
-
-### Testing
-Write tests for error scenarios to ensure errors are raised and handled as expected.
-
-#### Fabric CLI tests
-Fabric CLI supports 2 types of tests, E2E for commands and unit tests for non-commands code like utils and core functionality.
-
-#### E2E command tests
-Please see [Test authoring](./tests/authoring_tests.md)
-
-#### Test Requirements for Contributions
-- **Maintain coverage**: Keep test coverage at current levels (~90% for commands, ~80% overall)
-- **Add tests for new features**: All new functionality must include appropriate tests
-- **Test both success and failure cases**: Cover normal operation and error conditions
-- **Use descriptive test names**: Test names should clearly describe what is being tested
+Before contributing code, please review these guidelines to ensure your contributions align with the project's standards and practices.
 
 ## Areas with Restricted Contributions
 
