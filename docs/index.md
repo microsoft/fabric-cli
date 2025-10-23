@@ -14,6 +14,7 @@ The Fabric CLI (`fab`) is a fast, file‑system‑inspired command‑line interf
 
 - File‑system navigation – `ls`, `cd`, `mkdir`, `cp`, `rm`, `run`. Work seemlesly in both Unix-style and Windows-style command names for file system operations. You can use whichever style you're most familiar with. For more details see [File System Commands](./commands/index.md#file-system-operations-fs).
 - Scripting & interactive modes – switch fluidly between live shell and one‑off commands.
+- Autocompletion – Enable [tab completion](./essentials/autocompletion.md) for commands, subcommands, and flags.
 - Automation ready – ideal for GitHub Actions, Azure Pipelines, or any Bash/PowerShell/Python workflow.
 - Cross‑platform – Windows Terminal, macOS Terminal, Linux shells.
 - Built on public APIs – Fabric REST, OneLake, and Microsoft.Fabric ARM endpoints.
