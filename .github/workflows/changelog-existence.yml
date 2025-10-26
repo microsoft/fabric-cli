@@ -27,7 +27,7 @@ jobs:
   changelog-existence:
     name: 🔄 Check Changelog
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') && github.actor != 'dependabot[bot]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -170,7 +170,7 @@ jobs:
   changelog-skip:
     name: ⏭️ Skip Changelog
     if: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') || github.actor == 'dependabot[bot]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 🔎 Find comment
         if: github.actor != 'dependabot[bot]'
