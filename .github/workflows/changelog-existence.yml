@@ -193,12 +193,15 @@ jobs:
         if: github.actor != 'dependabot[bot]' && steps.fc.outputs.result != ''
         with:
           script: |
-            console.log(`Deleting existing changelog comment due to skip label... ID: ${{ steps.fc.outputs.result }}`);
-            await github.rest.issues.deleteComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: ${{ steps.fc.outputs.result }},
-            });
+            const commentId = ${{ steps.fc.outputs.result }};
+            console.log(`Deleting existing changelog comment due to skip label... ID: ${commentId}`);
+            if (commentId) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+              });
+            }
 
       - name: ✅ Pass (skip)
         run: exit 0
