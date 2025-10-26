@@ -94,7 +94,7 @@ jobs:
             const fs = require('fs');
             const body = fs.readFileSync('changie.md', 'utf8');
             console.log('Preparing to create or update changelog comment...');
-            console.log(`body is '${body}'`);
+            console.log(`body is: \n\n '${body}'`);
             const comment_id = ${{ steps.fc.outputs.result }};
             console.log(`Comment ID: ${comment_id}`);
             if (comment_id) {
@@ -129,7 +129,7 @@ jobs:
             const fs = require('fs');
             const body = fs.readFileSync('changie.md', 'utf8');
             console.log('Preparing to create or update missing changelog comment...');
-            console.log(`body is ${body}`);
+            console.log(`body is: \n\n '${body}'`);
             const comment_id = ${{ steps.fc.outputs.result }};
             console.log(`Comment ID: ${comment_id}`);
             if (comment_id) {
