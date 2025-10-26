@@ -3,7 +3,7 @@
 name: 🔄 Changelog Existence
 
 on:
-  pull_request_target:
+  pull_request:
     branches: 
       - main
     types:
@@ -12,15 +12,14 @@ on:
       - labeled
       - unlabeled
       - synchronize
-      - edited
   workflow_dispatch:
 
-# concurrency:
-#   group: ${{ format('{0}-{1}-{2}-{3}-{4}', github.workflow, github.event_name, github.ref, github.base_ref || null, github.head_ref || null) }}
-#   cancel-in-progress: true
+concurrency:
+  group: ${{ format('{0}-{1}-{2}-{3}-{4}', github.workflow, github.event_name, github.ref, github.base_ref || null, github.head_ref || null) }}
+  cancel-in-progress: true
 
 permissions:
-  #pull-requests: write
+  pull-requests: write
   contents: read
   issues: write
 
