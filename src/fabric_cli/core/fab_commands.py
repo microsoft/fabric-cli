@@ -55,6 +55,7 @@ class Command(Enum):
     JOB_RUN_CANCEL = "job run-cancel"
     JOB_RUN_LIST = "job run-list"
     JOB_RUN_UPDATE = "job run-update"
+    JOB_RUN_RM = "job run-rm"
     JOB_RUN_SCH = "job run-sch"
     JOB_RUN_STATUS = "job run-status"
 
