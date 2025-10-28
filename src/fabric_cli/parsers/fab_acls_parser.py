@@ -51,6 +51,14 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         action="store_true",
         help="Show detailed output. Optional",
     )
+    ls_parser.add_argument(
+        "-q",
+        "--query",
+        metavar="",
+        nargs="+",
+        required=False,
+        help="Query to filter results. Optional",
+    )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"
     ls_parser.set_defaults(func=acls.ls_command)
