@@ -387,6 +387,7 @@ def _get_params_per_cred_type(cred_type, is_on_premises_gateway):
             utils_ui.print_warning(
                 f"Unsupported credential type {cred_type}. Skipping validation"
             )
+            return []
     
 
 def _validate_credential_params(cred_type, provided_cred_params, is_on_premises_gateway):
