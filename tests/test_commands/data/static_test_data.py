@@ -8,6 +8,7 @@ from tests.test_commands.data.models import (
     Capacity,
     CredentialDetails,
     Label,
+    OnPremisesGatewayDetails,
     ServicePrincipal,
     SQLServer,
     User,
@@ -96,6 +97,12 @@ class StaticTestData:
                     "password": "mocked_fabriccli_password",
                 }
             )
+            self._onpremises_gateway_details = OnPremisesGatewayDetails(
+                {
+                    "id": "00000000-0000-0000-0000-000000000007",
+                    "encrypted_credentials": "******************************"
+                }
+            )
 
     def _load_static_data(self):
         self._admin = User(
@@ -172,6 +179,15 @@ class StaticTestData:
             }
         )
 
+        self._onpremises_gateway_details = OnPremisesGatewayDetails(
+            {
+                "id": get_env_with_default("FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ID"),
+                "encrypted_credentials": get_env_with_default(
+                    "FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ENCRIPTED_CRADENTIALS"
+                ),
+            }
+        )
+
     @property
     def admin(self):
         return self._admin
@@ -215,6 +231,10 @@ class StaticTestData:
     @property
     def credential_details(self):
         return self._credential_details
+    
+    @property
+    def onpremises_gateway_details(self):
+        return self._onpremises_gateway_details
 
 
 def get_static_data() -> StaticTestData:
