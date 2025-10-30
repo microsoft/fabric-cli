@@ -359,14 +359,17 @@ def check_required_params(params, required_params):
             )
 
 
-def _validate_credential_params(cred_type, provided_cred_params):
+def _validate_credential_params(cred_type, provided_cred_params, connectivity_type="Default"):
     ignored_params = []
     params = {}
     match cred_type:
         case "Anonymous" | "WindowsWithoutImpersonation" | "WorkspaceIdentity":
             param_keys = []
         case "Basic" | "Windows":
-            param_keys = ["username", "password"]
+            if connectivity_type.lower() == "onpremisesgateway":
+                param_keys=["values"]
+            else:
+                param_keys = ["username", "password"]
         case "Key":
             param_keys = ["key"]
         case "OAuth2":
@@ -405,7 +408,27 @@ def _validate_credential_params(cred_type, provided_cred_params):
         utils_ui.print_warning(
             f"Ignoring unsupported parameters for credential type {cred_type}: {ignored_params}"
         )
-
+    if connectivity_type.lower() == "onpremisesgateway":
+        cred_values = provided_cred_params.get("values")
+        # Validate all items are JSON objects first (with early break)
+        for item in cred_values:
+            if not isinstance(item, dict):
+                raise FabricCLIError(
+                    ErrorMessages.Common.invalid_json_format(),
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+            
+        param_values_keys = ["gatewayId", "encryptedCredentials"]
+        missing_params = [
+            key for key in param_values_keys 
+            if not all(key.lower() in {k.lower() for k in item.keys()} for item in cred_values)
+        ]
+        if len(missing_params) > 0:
+            raise FabricCLIError(
+                f"Missing parameters for credential values in OnPremesisGateway connectivity type: {missing_params}",
+                fab_constant.ERROR_INVALID_INPUT,
+        )
+        
     for key in param_keys:
         params[key] = provided_cred_params[key.lower()]
 
@@ -537,13 +560,6 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
             fab_constant.ERROR_INVALID_INPUT,
         )
 
-    if missing_params:
-        missing_params_str = ", ".join(missing_params)
-        raise FabricCLIError(
-            f"Missing parameter(s) {missing_params_str} for creation method {c_method}",
-            fab_constant.ERROR_INVALID_INPUT,
-        )
-
     connection_request["connectionDetails"] = {
         "type": con_type,
         "creationMethod": creation_method["name"],
@@ -603,7 +619,7 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     if "skiptestconnection" in provided_cred_params:
         provided_cred_params.pop("skiptestconnection")
 
-    connection_params = _validate_credential_params(cred_type, provided_cred_params)
+    connection_params = _validate_credential_params(cred_type, provided_cred_params, connection_request.get("connectivityType"))
 
     connection_request["credentialDetails"] = {
         "singleSignOnType": singleSignOnType,
@@ -612,6 +628,10 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         "credentials": connection_params,
     }
     connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
+
+    # Build credential details based on connectivity type
+    if connection_request.get("connectivity_type") == "onpremisesgateway":
+        connection_request["credentialDetails"]["credentials"]["values"] = connection_params["credentialDetails"].get("values")
 
     return connection_request
 
