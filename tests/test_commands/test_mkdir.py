@@ -1296,7 +1296,6 @@ class TestMkdir:
         self,
         cli_executor,
         mock_print_done,
-        mock_questionary_print,
         vcr_instance,
         test_data: StaticTestData,
         cassette_name,
@@ -1317,8 +1316,42 @@ class TestMkdir:
         assert mock_print_done.call_count == 1
         assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
 
+        mock_print_done.reset_mock()
+        
         # Cleanup
         rm(connection_full_path)
+
+    def test_mkdir_connection_with_onpremises_gateway_params_ignore_params_success(
+        self,
+        cli_executor,
+        mock_print_done,
+        mock_print_warning,
+        vcr_instance,
+        test_data: StaticTestData,
+        cassette_name,
+    ):  
+        # Setup
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
+        connection_full_path = cli_path_join(
+            ".connections", connection_display_name + ".Connection"
+        )
+
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\",\"ignoreParameters\":\"ignoreParameters\"}}]"
+        )
+
+        # Assert
+        mock_print_done.assert_called()
+        assert mock_print_done.call_count == 1
+        assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
+
+        mock_print_warning.assert_called()
+        assert mock_print_warning.call_count == 1
+        assert f"Ignoring unsupported parameters for on-premises gateway: ['ignoreparameters']" == mock_print_warning.call_args[0][0]
+
+        # Cleanup
+        rm(connection_full_path)
+
 
     def test_mkdir_connection_with_onpremises_gateway_params_failure(
         self,

@@ -138,7 +138,7 @@ def try_get_json_value_from_string(value: str) -> Any:
         return json.loads(value)
     except json.JSONDecodeError:
         # For non-JSON values, return as-is without quote stripping
-        return value
+        return value.replace("'", "").replace('"', "")
 
 def merge_dicts(dict1: dict, dict2: dict) -> dict:
     """
