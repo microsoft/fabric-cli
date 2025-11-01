@@ -291,16 +291,14 @@ def status(args: Namespace) -> None:
             if is_logged_in
             else "✗ Not logged in to app.fabric.microsoft.com"
         )
-
-        fab_ui.print_grey(f"""{login_status}
-
-Account: {upn} ({oid})
-Tenant ID: {tid}
-App ID: {appid}
-Token (fabric/powerbi): {fabric_secret}
-Token (storage): {storage_secret}
-Token (azure): {azure_secret}""")
-
+        message = f"{login_status}\n"
+        message += f"  - Account: {upn} ({oid})\n"
+        message += f"  - Tenant ID: {tid}\n"
+        message += f"  - App ID: {appid}\n"
+        message += f"  - Token (fabric/powerbi): {fabric_secret}\n"
+        message += f"  - Token (storage): {storage_secret}\n"
+        message += f"  - Token (azure): {azure_secret}"
+        fab_ui.print_grey(message)
 
 # Utils
 def _get_token_info_from_bearer_token(bearer_token: str) -> Optional[dict[str, str]]:
