@@ -261,22 +261,45 @@ def status(args: Namespace) -> None:
     storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
     azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
 
-    # Check login status
-    login_status = (
-        "✓ Logged in to app.fabric.microsoft.com"
-        if fabric_secret != "N/A"
-        else "✗ Not logged in to app.fabric.microsoft.com"
+    # Check if user is logged in
+    is_logged_in = fabric_secret != "N/A"
+
+    # Get the output format from args or config
+    output_format = getattr(args, "output_format", None) or fab_state_config.get_config(
+        fab_constant.FAB_OUTPUT_FORMAT
     )
 
-    fab_ui.print_grey(
-        f"""{login_status}
-  - Account: {upn} ({oid})
-  - Tenant ID: {tid}
-  - App ID: {appid}
-  - Token (fabric/powerbi): {fabric_secret}
-  - Token (storage): {storage_secret}
-  - Token (azure): {azure_secret}"""
-    )
+    if output_format == "json":
+        # For JSON output, provide structured data
+        auth_data = {
+            "logged_in": is_logged_in,
+            "account": upn,
+            "user_id": oid,
+            "tenant_id": tid,
+            "app_id": appid,
+            "tokens": {
+                "fabric_powerbi": fabric_secret,
+                "storage": storage_secret,
+                "azure": azure_secret,
+            },
+        }
+        fab_ui.print_output_format(args, data=auth_data)
+    else:
+        # For text output, provide formatted message
+        login_status = (
+            "✓ Logged in to app.fabric.microsoft.com"
+            if is_logged_in
+            else "✗ Not logged in to app.fabric.microsoft.com"
+        )
+
+        fab_ui.print_grey(f"""{login_status}
+
+Account: {upn} ({oid})
+Tenant ID: {tid}
+App ID: {appid}
+Token (fabric/powerbi): {fabric_secret}
+Token (storage): {storage_secret}
+Token (azure): {azure_secret}""")
 
 
 # Utils
