@@ -12,7 +12,12 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 
 def exec_command(args: Namespace, context: Item) -> None:
+    if not args.force:
+        utils_ui.print_warning(f"You are about to delete schedule '{args.schedule_id}' from '{context.full_name}' This action cannot be undone.")
+
     if args.force or utils_ui.prompt_confirm():
+        utils_ui.print_grey(f"Removing job schedule '{args.schedule_id}'... from '{context.full_name}'")
+
         response = jobs_api.remove_item_schedule(args)
 
         if response.status_code == 200:
