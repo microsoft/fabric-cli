@@ -282,6 +282,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "$ job run-rm pip1.DataPipeline --id <schedule_id>\n",
         "# remove notebook schedule",
         "$ job run-rm nb1.Notebook --id <schedule_id>\n",
+        "# remove Spark job definition schedule",
+        "$ job run-rm sjd1.SparkJobDefinition --id <schedule_id>\n",
+        "# remove lakehouse schedule",
+        "$ job run-rm lh1.Lakehouse --id <schedule_id>\n",
+        "# Force remove a scheduled job without confirmation prompt",
+        "$ job run-rm pip1.DataPipeline --id <schedule_id> -f\n",
     ]
 
     run_rm_parser = jobs_subparsers.add_parser(
@@ -297,6 +303,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         metavar="",
         dest="schedule_id",
         help="Job Schedule ID",
+    )
+    run_rm_parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force delete the schedule without confirmation. Optional",
     )
     run_rm_parser.usage = f"{utils_error_parser.get_usage_prog(run_rm_parser)}"
     run_rm_parser.set_defaults(func=jobs.run_rm_command)
