@@ -183,7 +183,7 @@ class StaticTestData:
             {
                 "id": get_env_with_default("FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ID"),
                 "encrypted_credentials": get_env_with_default(
-                    "FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ENCRIPTED_CRADENTIALS"
+                    "FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ENCRYPTED_CREDENTIALS"
                 ),
             }
         )
