@@ -14,6 +14,7 @@ import fabric_cli.commands.jobs.fab_jobs_run_list as fab_jobs_run_list
 import fabric_cli.commands.jobs.fab_jobs_run_sch as fab_jobs_run_sch
 import fabric_cli.commands.jobs.fab_jobs_run_status as fab_jobs_run_status
 import fabric_cli.commands.jobs.fab_jobs_run_update as fab_jobs_run_update
+import fabric_cli.commands.jobs.fab_jobs_run_rm as fab_jobs_run_rm
 import fabric_cli.core.fab_state_config as state_config
 import fabric_cli.utils.fab_cmd_job_utils as utils_job
 from fabric_cli.core import fab_constant as constant
@@ -801,6 +802,99 @@ class TestJobs:
 
         calls = mock_questionary_print.call_args_list
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
+
+    def test_run_schedule_rm_invalid_param_types_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+    ):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Test unexisting schedule removal
+        cli_executor.exec_command(f"job run-rm {notebook.full_path} --id 00000000-0000-0000-0000-000000000000 --force")
+
+        assert_fabric_cli_error(
+            constant.ERROR_NOT_FOUND,
+            "The requested resource could not be found",
+        )
+        
+        # Test bad item path
+        cli_executor.exec_command(f"job run-rm /bad_path/ --id 00000000-0000-0000-0000-000000000000 --force")
+
+        assert_fabric_cli_error(
+            constant.ERROR_NOT_FOUND,
+            "The requested resource could not be found",
+        )
+
+
+    def test_run_schedule_rm(self, cli_executor, item_factory, mock_questionary_print):
+        # Create notebook
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Create data pipeline
+        dp_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.DataPipeline",
+        )
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=dp_path)
+
+        # Create a spark job definition
+        sjd_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.SparkJobDefinition",
+        )
+        spark_jd = item_factory(ItemType.SPARK_JOB_DEFINITION, content_path=sjd_path)
+
+
+        # Init schedules for all items
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {notebook.full_path} -i {input_config}")
+        cli_executor.exec_command(f"job run-sch {pipeline.full_path} -i {input_config}")
+        cli_executor.exec_command(f"job run-sch {spark_jd.full_path} -i {input_config}")
+
+
+        time.sleep(2)
+        job_run_list(notebook.full_path, schedule=True)
+        notebook_scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        job_run_list(pipeline.full_path, schedule=True)
+        pipeline_scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        job_run_list(spark_jd.full_path, schedule=True)
+        sparkjd_scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        # Remove schedules with rm command
+        cli_executor.exec_command(f"job run-rm {notebook.full_path} --id {notebook_scheduled_id} --force")
+        cli_executor.exec_command(f"job run-rm {pipeline.full_path} --id {pipeline_scheduled_id} --force")
+        cli_executor.exec_command(f"job run-rm {spark_jd.full_path} --id {sparkjd_scheduled_id} --force")
+
+        # Check notebook schedule removal
+        mock_questionary_print.reset_mock()
+        job_run_list(notebook.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
+        mock_questionary_print.reset_mock()
+        # Check data pipeline schedule removal
+        job_run_list(pipeline.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
+        mock_questionary_print.reset_mock()
+        # Check spark job definition schedule removal
+        job_run_list(spark_jd.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
 
 
 # region Helper Methods
