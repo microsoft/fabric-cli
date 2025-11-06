@@ -27,6 +27,7 @@ from fabric_cli.core.fab_types import (
     VirtualItemContainerType,
     VirtualWorkspaceType,
 )
+from fabric_cli.errors import ErrorMessages
 from tests.test_commands.conftest import mock_print_done
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
@@ -1388,7 +1389,7 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == "Missing parameters for credential values in OnPremesisGateway connectivity type: ['encryptedCredentials']"
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(['encryptedCredentials'])
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
         mock_fab_ui_print_error.reset_mock()
@@ -1401,7 +1402,7 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == "Missing parameters for credential values in OnPremesisGateway connectivity type: ['gatewayId']"
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(['gatewayId'])
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
         mock_fab_ui_print_error.reset_mock()
@@ -1414,7 +1415,7 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == "Invalid JSON format"
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values()
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
     def test_mkdir_connection_with_gateway_params_success(

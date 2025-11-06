@@ -18,7 +18,6 @@ class ConnectionAPIProcessor(BaseAPIProcessor):
 
     def try_process_request(self, request) -> bool:
         uri = request.uri
-        # First, handle URI mocking for gateway IDs
         self._mock_gateway_id_in_uri(request)
         
         # Handle connection creation and listing

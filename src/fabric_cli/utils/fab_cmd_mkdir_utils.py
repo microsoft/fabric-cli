@@ -422,16 +422,10 @@ def _validate_credential_params(cred_type, provided_cred_params, is_on_premises_
     return params
 
 def _validate_and_get_on_premises_gateway_credential_values(cred_values):
-    # Validate that the provided credential values are in the correct format
-    # The values should be a list of JSON objects with the following keys:
-    # - gatewayId: The ID of the OnPremisesGateway
-    # - encryptedCredentials: The encrypted credentials for the gateway
-    # The values should be a list of JSON objects
-    # Validate all items are JSON objects first (with early break)
     for item in cred_values:
         if not isinstance(item, dict):
             raise FabricCLIError(
-                ErrorMessages.Common.invalid_json_format(),
+                ErrorMessages.Common.invalid_onpremises_gateway_values(),
                 fab_constant.ERROR_INVALID_INPUT,
             )
         
@@ -442,7 +436,7 @@ def _validate_and_get_on_premises_gateway_credential_values(cred_values):
     ]
     if len(missing_params) > 0:
         raise FabricCLIError(
-            f"Missing parameters for credential values in OnPremesisGateway connectivity type: {missing_params}",
+            ErrorMessages.Common.missing_onpremises_gateway_parameters(missing_params),
             fab_constant.ERROR_INVALID_INPUT,
     )
 
@@ -606,15 +600,12 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
        }
     }
     or in case of OnPremisesGateway:
-        "credentialDetails": {
-          "credentialType": "Basic",
-          "singleSignOnType": "None",
-          "connectionEncryption": "NotEncrypted",
-          "skipTestConnection": false,
-          "credentials": {
-            "credentialType": "Basic",
-            "values": [{gatewayId: "gatewayId", encryptedCredentials: "**********"}] 
-          }
+    "credentialDetails": {
+        .....,
+        "credentials": {
+        "credentialType": "Basic",
+        "values": [{gatewayId: "gatewayId", encryptedCredentials: "**********"}] 
+        }
         }
     """
     sup_cred_types = ", ".join(con_type_def["supportedCredentialTypes"])
