@@ -48,7 +48,7 @@ fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connect
 ```
 #### Create Connection with On-premises Gateway
 
-Create a connection that uses a specific on-premises gateway for secure access.
+Create a connection that uses a specific on-premises gateway with encrypted credentials for secure access
 
 ```
 fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.values=[{"gatewayId":"<gatewayId>", "encryptedCredentials": "<encryptedCredentials>"}]
