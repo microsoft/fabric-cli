@@ -11,6 +11,7 @@ from fabric_cli.client import fab_api_onelake as api_onelake
 from fabric_cli.client import fab_api_workspace as api_workspaces
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricAPIError, FabricCLIError
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import (
     FabricElement,
@@ -91,7 +92,7 @@ def _ls_acls_workspace(workspace: Workspace, args: Namespace) -> None:
                 data=sorted_acls,
                 columns=columns,
                 args=args,
-                show_details=True,
+                text_style=TextFormatStyle.UNIX,
             )
 
 
@@ -141,7 +142,7 @@ def _ls_acls_gateway(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
                 data=sorted_acls,
                 columns=columns,
                 args=args,
-                show_details=True,
+                text_style=TextFormatStyle.UNIX,
             )
 
 
@@ -179,7 +180,7 @@ def _ls_acls_connection(connection: VirtualWorkspaceItem, args: Namespace) -> No
                 data=sorted_acls,
                 columns=columns,
                 args=args,
-                show_details=True,
+                text_style=TextFormatStyle.UNIX,
             )
 
 
@@ -230,7 +231,7 @@ def _ls_acls_item(item: Item, args: Namespace) -> None:
                 data=sorted_acls,
                 columns=columns,
                 args=args,
-                show_details=True,
+                text_style=TextFormatStyle.UNIX,
             )
 
 
@@ -301,7 +302,7 @@ def _ls_acls_onelake(context: OneLakeItem, args: Namespace) -> None:
                 data=sorted_acls,
                 columns=columns,
                 args=args,
-                show_details=True,
+                text_style=TextFormatStyle.UNIX,
             )
 
     except FabricAPIError as e:

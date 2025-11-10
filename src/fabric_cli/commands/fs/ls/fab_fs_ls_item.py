@@ -4,6 +4,7 @@
 from typing import Union
 
 from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.fab_types import VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
@@ -25,5 +26,5 @@ def exec(workspace: Workspace, args):
         args,
         data=sorted_elements_dict,
         hidden_data=VirtualItemContainerType if show_hidden else None,
-        show_headers=show_details,
+        text_style=TextFormatStyle.UNIX,
     )

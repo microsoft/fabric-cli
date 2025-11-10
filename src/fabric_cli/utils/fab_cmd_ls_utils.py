@@ -6,6 +6,7 @@ from argparse import Namespace
 
 from fabric_cli.client import fab_api_capacity as capacity_api
 from fabric_cli.client import fab_api_workspace as workspace_api
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualWorkspaceItem
 from fabric_cli.utils import fab_ui as utils_ui
 
@@ -72,7 +73,7 @@ def get_domain_name_by_id(
 def format_and_print_output(
     data: list[dict],
     args,
-    show_details: bool,
+    text_style: TextFormatStyle,
     columns: list[str] = [],
     hidden_data=None,
 ) -> None:
@@ -82,5 +83,5 @@ def format_and_print_output(
     ]
 
     utils_ui.print_output_format(
-        args, show_headers=show_details, data=filtered_data, hidden_data=hidden_data
+        args, text_style=text_style, data=filtered_data, hidden_data=hidden_data
     )

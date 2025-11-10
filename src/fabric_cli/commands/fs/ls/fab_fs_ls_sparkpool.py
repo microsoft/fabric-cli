@@ -4,6 +4,7 @@
 import json
 
 from fabric_cli.client import fab_api_workspace as workspace_api
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualItemContainer
 from fabric_cli.utils import fab_cmd_ls_utils as utils_ls
 from fabric_cli.utils import fab_mem_store as utils_mem_store
@@ -43,5 +44,5 @@ def exec(vic: VirtualItemContainer, args, show_details):
             data=sorted_spark_pools,
             columns=columns,
             args=args,
-            show_details=show_details
+            text_style=TextFormatStyle.UNIX
         )

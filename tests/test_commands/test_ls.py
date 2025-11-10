@@ -192,7 +192,6 @@ class TestLS:
 
     def test_ls_item_show_hidden_from_config_success(
         self,
-        item_factory,
         workspace,
         mock_questionary_print,
         cli_executor: CLIExecutor,
@@ -201,8 +200,6 @@ class TestLS:
         # Setup
         mock_fab_set_state_config(fab_constant.FAB_OUTPUT_FORMAT, "json")
         mock_fab_set_state_config(fab_constant.FAB_SHOW_HIDDEN, "true")
-        notebook = item_factory(ItemType.NOTEBOOK)
-        mock_questionary_print.reset_mock()
 
         # Test: ls without --all flag but with FAB_SHOW_HIDDEN=true config
         cli_executor.exec_command(f"ls {workspace.full_path}")
@@ -248,6 +245,7 @@ class TestLS:
         mock_questionary_print.assert_called()
 
         actual_json = json.loads(mock_questionary_print.mock_calls[0].args[0])
+        _assert_output_json_format_response(actual_json)
         # check --all flag
         assert actual_json["result"]["hidden_data"] is not None
         expected_hidden_data_keys = [vws.value for vws in VirtualItemContainerType]
@@ -1221,8 +1219,6 @@ def _assert_output_json_format_response(actual_result: dict):
         assert actual_result[key] == value
 
     assert "data" in actual_result["result"]
-    assert "hidden_data" not in actual_result["result"]
-    assert "message" not in actual_result["result"]
     assert "error_code" not in actual_result
 
 

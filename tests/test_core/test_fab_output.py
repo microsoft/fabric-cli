@@ -9,7 +9,7 @@ from enum import Enum
 import pytest
 
 from fabric_cli.core import fab_constant
-from fabric_cli.core.fab_output import FabricCLIOutput, OutputResult, OutputStatus
+from fabric_cli.core.fab_output import FabricCLIOutput, OutputResult, OutputStatus, TextFormatStyle
 
 
 class TestEnum(str, Enum):
@@ -116,15 +116,14 @@ def test_output_result_success():
     )
     assert result.hidden_data == ["a", "b", "c"]
 
-def test_fabric_cli_output_show_headers():
-    """Test show_headers property is handled correctly."""
-    # Test with show_headers True
-    output = FabricCLIOutput(data={"test": "data"}, show_headers=True)
-    assert output.show_headers is True
-
-    # Test with show_headers False (default)
+def test_fabric_cli_output_text_style():
+    """Test text_style property is handled correctly."""
+    output = FabricCLIOutput(data={"test": "data"}, text_style=TextFormatStyle.UNIX)
+    assert output.text_style == TextFormatStyle.UNIX
+    output = FabricCLIOutput(data={"test": "data"}, text_style=TextFormatStyle.KEY_VALUE)
+    assert output.text_style == TextFormatStyle.KEY_VALUE
     output = FabricCLIOutput(data={"test": "data"})
-    assert output.show_headers is False
+    assert output.text_style is None
 
 def test_fabric_cli_output_format_type_success():
     """Test output_format_type property is handled successfully."""

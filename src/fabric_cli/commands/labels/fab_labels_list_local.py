@@ -6,6 +6,7 @@ from argparse import Namespace
 
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
@@ -25,7 +26,7 @@ def exec_command(args: Namespace) -> None:
         )
 
     try:
-        utils_ui.print_output_format(args, show_headers=True, data=data["labels"])
+        utils_ui.print_output_format(args, text_style=TextFormatStyle.UNIX, data=data["labels"])
     except Exception:
         raise FabricCLIError(
             ErrorMessages.Labels.invalid_entries_format(),

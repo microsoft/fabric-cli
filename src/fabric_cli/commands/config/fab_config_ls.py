@@ -4,6 +4,7 @@
 from argparse import Namespace
 
 from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.utils import fab_cmd_ls_utils as utils_ls
 
 
@@ -20,5 +21,5 @@ def exec_command(args: Namespace) -> None:
         data=all_configs,
         columns=columns,
         args=args,
-        show_details=True,
+        text_style=TextFormatStyle.UNIX,
     )

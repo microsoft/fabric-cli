@@ -20,7 +20,7 @@ commands = {
 def register_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser("auth", help=fab_constant.COMMAND_AUTH_DESCRIPTION)
     parser.set_defaults(func=show_help)
-    auth_subparsers = parser.add_subparsers(dest="auth_command", required=False)
+    auth_subparsers = parser.add_subparsers(dest="auth_subcommand", required=False)
 
     # Subcommand for 'login'
     login_examples = [

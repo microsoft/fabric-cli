@@ -230,11 +230,11 @@ def main():
 
     try:
         fab_state_config.init_defaults()
-        if args.command == "auth" and args.auth_command == None:
+        if args.command == "auth" and args.auth_subcommand == None:
             auth_parser.show_help(args)
             return
 
-        if args.command == "auth" and args.auth_command == "login":
+        if args.command == "auth" and args.auth_subcommand == "login":
             if login.init(args):
                 if (
                     fab_state_config.get_config(fab_constant.FAB_MODE)
@@ -251,11 +251,11 @@ def main():
                             "\nInteractive mode cancelled. Returning to previous menu."
                         )
 
-        if args.command == "auth" and args.auth_command == "logout":
+        if args.command == "auth" and args.auth_subcommand == "logout":
             login.logout(args)
             return
 
-        if args.command == "auth" and args.auth_command == "status":
+        if args.command == "auth" and args.auth_subcommand == "status":
             login.status(args)
             return
 

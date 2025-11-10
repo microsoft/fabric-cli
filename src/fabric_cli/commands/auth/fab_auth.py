@@ -8,6 +8,7 @@ from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
+# from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui
@@ -268,6 +269,8 @@ def status(args: Namespace) -> None:
         else "✗ Not logged in to app.fabric.microsoft.com"
     )
 
+    # fab_ui.print_grey(login_status)
+
     fab_ui.print_grey(
         f"""{login_status}
   - Account: {upn} ({oid})
@@ -277,6 +280,19 @@ def status(args: Namespace) -> None:
   - Token (storage): {storage_secret}
   - Token (azure): {azure_secret}"""
     )
+    # is_logged_in = fabric_secret != "N/A"
+    # auth_data = {
+    #         "logged_in": is_logged_in,
+    #         "account": upn,
+    #         "user_id": oid,
+    #         "tenant_id": tid,
+    #         "app_id": appid,
+    #         "fabric_powerbi_token": fabric_secret,
+    #         "storage_token": storage_secret,
+    #         "azure_token": azure_secret,
+    #     }
+    
+    # fab_ui.print_output_format(args, data=auth_data, text_style=TextFormatStyle.KEY_VALUE)
 
 
 # Utils

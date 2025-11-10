@@ -10,6 +10,9 @@ from typing import Any, Dict, List, Optional, cast
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 
+class TextFormatStyle(Enum):
+    UNIX = "unix"
+    KEY_VALUE = "key-value"
 
 class OutputStatus(str, Enum):
     Success = "Success"
@@ -71,7 +74,7 @@ class FabricCLIOutput:
         command=None,
         subcommand=None,
         output_format_type=None,
-        show_headers=False,
+        text_style: TextFormatStyle=None,
         status: OutputStatus = OutputStatus.Success,
         message: Optional[str] = None,
         error_code: Optional[str] = None,
@@ -83,7 +86,7 @@ class FabricCLIOutput:
         Args:
             command: The command that generated this output
             output_format_type: The type of output format to be used (json / text)
-            show_headers: Whether to show headers in the output
+            text_style: The text style to be used for text output (unix, key-value)
             status: The operation status (Success/Failed). Defaults to Success.
             message: Optional message to include in the output
             error_code: Optional error code. Only included when status is Failed.
@@ -99,7 +102,7 @@ class FabricCLIOutput:
         self._command = command
         self._subcommand = subcommand
         self._output_format_type = output_format_type
-        self._show_headers = show_headers
+        self._text_style = text_style
 
         self._result = OutputResult(
             data=data,
@@ -121,8 +124,8 @@ class FabricCLIOutput:
         return self._result
 
     @property
-    def show_headers(self) -> bool:
-        return self._show_headers
+    def text_style(self) -> Optional[TextFormatStyle]:
+        return self._text_style
 
     def to_json(self, indent: int = 4) -> str:
         try:
@@ -144,7 +147,7 @@ class FabricCLIOutput:
         }
 
         if self._command is not None:
-            json_dict["command"] = self._command
+            json_dict["command"] = self._command + " " + self._subcommand if self._subcommand else self._command
 
         # Add result as the last key
         json_dict["result"] = self._result.to_dict()

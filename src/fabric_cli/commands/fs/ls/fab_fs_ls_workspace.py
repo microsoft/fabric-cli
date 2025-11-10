@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.fab_types import VirtualWorkspaceType
 from fabric_cli.core.hiearchy.fab_hiearchy import Tenant
 from fabric_cli.utils import fab_cmd_ls_utils as utils_ls
@@ -41,6 +42,6 @@ def exec(tenant: Tenant, args):
         data=sorted_workspaces,
         columns=columns,
         args=args,
-        show_details=show_details,
+        text_style=TextFormatStyle.UNIX,
         hidden_data=VirtualWorkspaceType if show_hidden else None
     )

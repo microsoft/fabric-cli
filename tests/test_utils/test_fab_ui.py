@@ -13,7 +13,7 @@ import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
+from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus, TextFormatStyle
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as ui
 
@@ -400,6 +400,7 @@ def test_print_output_format_text_success(
         data=[{"name": "test1"}, {"name": "test2"}],
         message="Test message",
         hidden_data=["hidden1", "hidden2"],
+        text_style=TextFormatStyle.UNIX
     )
 
     assert mock_questionary_print.call_count == 5
@@ -418,35 +419,49 @@ def test_print_output_format_text_success(
     assert mock_questionary_print.call_count == 1
     mock_questionary_print.reset_mock()
 
-    # Test 4: Text output with show_headers=True
+    # Test 4: Text output with text_style=TextFormatStyle.KEY_VALUE
     ui.print_output_format(
         args,
-        data=[{"name": "test1", "id": "test_id1"}, {"name": "test2", "id": "test_id2"}],
+        data=[{"name": "test1", "id": "test_id1", "item_type": "test_type1"}],
         message="Test message",
-        hidden_data=["hidden1", "hidden2"],
-        show_headers=True,
+        text_style=TextFormatStyle.KEY_VALUE,
     )
-    # assert there  is headers
-    assert "name" in mock_questionary_print.mock_calls[0].args[0]
-    assert "id" in mock_questionary_print.mock_calls[0].args[0]
-    # assert hidden folders are displayed
-    assert mock_questionary_print.mock_calls[5].args[0] == "hidden1"
-    assert mock_questionary_print.mock_calls[6].args[0] == "hidden2"
+    # assert the keys are Capitalized 
+    assert "Name" in mock_questionary_print.mock_calls[0].args[0]
+    assert "Id" in mock_questionary_print.mock_calls[1].args[0]
+    assert "Item Type" in mock_questionary_print.mock_calls[2].args[0]
 
     mock_questionary_print.reset_mock()
 
-    # Test 5: Text output with subcommand ls
+    # Test 5: Text output with text_style=TextFormatStyle.UNIX and no headers
     args.test_subcommand = "ls"
     ui.print_output_format(
         args,
         data=[{"name": "test1"}, {"name": "test2"}],
         message="Test message",
+        text_style=TextFormatStyle.UNIX,
     )
     # assert there is no headers
     assert "name" not in mock_questionary_print.mock_calls[0].args[0]
     assert "test1" in mock_questionary_print.mock_calls[0].args[0]
     assert "test2" in mock_questionary_print.mock_calls[1].args[0]
 
+    mock_questionary_print.reset_mock()
+
+    # Test 6: Text output with text_style=TextFormatStyle.UNIX with headers
+    ui.print_output_format(
+        args,
+        data=[{"name": "test1", "id": "test_id1"}, {"name": "test2", "id": "test_id2"}],
+        message="Test message",
+        text_style=TextFormatStyle.UNIX,
+    )
+    # assert there is no headers
+    assert "name" in mock_questionary_print.mock_calls[0].args[0]
+    assert "id" in mock_questionary_print.mock_calls[0].args[0]
+    assert "test1" in mock_questionary_print.mock_calls[2].args[0]
+    assert "test_id1" in mock_questionary_print.mock_calls[2].args[0]
+    assert "test2" in mock_questionary_print.mock_calls[3].args[0]
+    assert "test_id2" in mock_questionary_print.mock_calls[3].args[0]
 
 def test_print_output_format_text_print_to_stdout_success(
     mock_fab_set_state_config, capsys
@@ -454,13 +469,13 @@ def test_print_output_format_text_print_to_stdout_success(
     # set output format config to text
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
 
-    # Test output with show_headers=True
+    # Test output with text_style=TextFormatStyle.UNIX
     args = Namespace()
     ui.print_output_format(
         args,
         data=[{"name": "test1"}, {"name": "test2"}],
         message="Test message",
-        show_headers=True,
+        text_style=TextFormatStyle.UNIX,
     )
     # Verify text result is printed to stdout
     verify_output_stream(capsys, OutputType.STDOUT)
@@ -592,3 +607,77 @@ def test_print_version_seccess():
     ui.print_version()
     ui.print_version(None)
     # Just verify it doesn't crash - output verification would require mocking
+
+
+def test_format_key_to_pretty_name():
+    """Test the helper function for formatting keys to pretty names."""
+    # Test snake_case
+    assert ui._format_key_to_pretty_name("logged_in") == "Logged In"
+    assert ui._format_key_to_pretty_name("account_name") == "Account Name"
+    assert ui._format_key_to_pretty_name("user_id") == "User Id"
+    
+    # Test camelCase
+    assert ui._format_key_to_pretty_name("accountName") == "Account Name"
+    assert ui._format_key_to_pretty_name("lastLoginTime") == "Last Login Time"
+    assert ui._format_key_to_pretty_name("userId") == "User Id"
+    
+    # Test mixed case
+    assert ui._format_key_to_pretty_name("account_nameTest") == "Account Name Test"
+    
+    # Test single word
+    assert ui._format_key_to_pretty_name("account") == "Account"
+    assert ui._format_key_to_pretty_name("name") == "Name"
+    
+    # Test empty and edge cases
+    assert ui._format_key_to_pretty_name("") == ""
+    assert ui._format_key_to_pretty_name("a") == "A"
+
+
+def test_print_entries_key_value_style_success(capsys):
+    """Test printing entries in key-value format."""
+    # Test single dictionary
+    entry = {
+        "logged_in": True,
+        "account_name": "johndoe@example.com",
+        "lastLoginTime": "2023-01-01"
+    }
+    
+    ui.print_entries_key_value_style(entry)
+    verify_output_stream(capsys, OutputType.STDOUT)
+    
+    # Test list of dictionaries
+    entries = [
+        {"logged_in": True, "account": "user1"},
+        {"logged_in": False, "account": "user2"}
+    ]
+    
+    ui.print_entries_key_value_style(entries)
+    verify_output_stream(capsys, OutputType.STDOUT)
+    
+    # Test empty list
+    ui.print_entries_key_value_style([])
+    # Should not produce output for empty list
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_print_entries_key_value_style_failure():
+    """Test error handling for invalid input types."""
+    # Test with invalid input type
+    with pytest.raises(FabricCLIError) as excinfo:
+        ui.print_entries_key_value_style("invalid_input")
+    
+    assert excinfo.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
+    
+    # Test with None
+    with pytest.raises(FabricCLIError) as excinfo:
+        ui.print_entries_key_value_style(None)
+    
+    assert excinfo.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
+    
+    # Test with number
+    with pytest.raises(FabricCLIError) as excinfo:
+        ui.print_entries_key_value_style(123)
+    
+    assert excinfo.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT

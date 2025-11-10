@@ -12,7 +12,7 @@ from typing import Any, Optional, Sequence
 from fabric_cli import __version__
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
+from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus, TextFormatStyle
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_lazy_load
 
@@ -94,8 +94,7 @@ def print_output_format(
     message: Optional[str] = None,
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
-    show_headers: bool = False,
-    # print_callback: bool = True,
+    text_style: TextFormatStyle = None,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -104,7 +103,7 @@ def print_output_format(
         message: Success message to display
         data: Optional data to include in output
         hidden_data: Optional hidden data to include in output
-        show_headers: Whether to show headers in the output (default: False)
+        text_style: Whether to show text output in UNIX style or KEY_VALUE style or Raw data
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -120,7 +119,7 @@ def print_output_format(
         message=message,
         data=data,
         hidden_data=hidden_data,
-        show_headers=show_headers,
+        text_style=text_style,
     )
 
     # Get format from output or config
@@ -344,17 +343,20 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
             fab_constant.ERROR_INVALID_INPUT,
         )
 
-    show_headers = output.show_headers
+    # show_headers = output.show_headers
     if output_result.data:
-        # ls command and command pass show_headers = True (like job run-status) need special print handler
-        entries_unix_style_command = ["ls", "dir"]
-        if (
-            output._command in entries_unix_style_command
-            or output._subcommand in entries_unix_style_command
-            or show_headers
-        ):
-            data_keys = output.result.get_data_keys() if output_result.data else []
-            print_entries_unix_style(output_result.data, data_keys, header=show_headers)
+        # ls command or other commands pass show_headers = True (like job run-status) need special print handler
+        # entries_unix_style_command = ["ls", "dir"]
+        # if (
+        #     output._command in entries_unix_style_command
+        #     or output._subcommand in entries_unix_style_command
+        #     or show_headers
+        # ):
+        data_keys = output.result.get_data_keys() if output_result.data else []
+        if output.text_style == TextFormatStyle.UNIX:
+            print_entries_unix_style(output_result.data, data_keys, header=len(data_keys) > 1)
+        elif output.text_style == TextFormatStyle.KEY_VALUE:
+            print_entries_key_value_style(output_result.data)    
         else:
             _print_raw_data(output_result.data)
 
@@ -486,3 +488,49 @@ def _get_visual_length(string: str) -> int:
         else:
             length += 1
     return length
+
+
+def _format_key_to_pretty_name(key: str) -> str:
+    """Convert a snake_case or camelCase key to a Title Case pretty name.
+    
+    Args:
+        key: The key to format (e.g. 'logged_in' or 'accountName')
+        
+    Returns:
+        str: Formatted pretty name (e.g. 'Logged In' or 'Account Name')
+    """
+    # Replace underscores and camelCase with spaces
+    pretty = key.replace('_', ' ')
+    pretty = ''.join(' ' + char if char.isupper() else char for char in pretty).strip()
+    # Title case the result
+    return pretty.title()
+
+
+def print_entries_key_value_style(entries: Any) -> None:
+    """Print entries in a key-value list format with pretty-formatted keys.
+    
+    Args:
+        entries: Dictionary or list of dictionaries to print
+        
+    Example output:
+        Logged In: true
+        Account: johndoe@example.com
+    """
+    if isinstance(entries, dict):
+        _entries = [entries]
+    elif isinstance(entries, list):
+        if not entries:
+            return
+        _entries = entries
+    else:
+        raise FabricCLIError(
+            ErrorMessages.Labels.invalid_entries_format(),
+            fab_constant.ERROR_INVALID_ENTRIES_FORMAT,
+        )
+
+    for entry in _entries:
+        for key, value in entry.items():
+            pretty_key = _format_key_to_pretty_name(key)
+            print_grey(f"{pretty_key}: {value}", to_stderr=False)
+        if len(_entries) > 1:
+            print_grey("", to_stderr=False)  # Empty line between entries

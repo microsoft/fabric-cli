@@ -9,6 +9,7 @@ from fabric_cli.client import fab_api_azure as azure_api
 from fabric_cli.client import fab_api_capacity as capacity_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualWorkspace
 from fabric_cli.utils import fab_cmd_ls_utils as utils_ls
 from fabric_cli.utils import fab_mem_store as utils_mem_store
@@ -67,7 +68,7 @@ def exec(vws: VirtualWorkspace, args, show_details):
     )
 
     utils_ls.format_and_print_output(
-        data=sorted_capacities, columns=columns, args=args, show_details=show_details
+        data=sorted_capacities, columns=columns, args=args, text_style=TextFormatStyle.UNIX
     )
 
 

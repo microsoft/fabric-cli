@@ -9,6 +9,7 @@ from fabric_cli.client import fab_api_onelake as onelake_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_output import TextFormatStyle
 from fabric_cli.core.hiearchy.fab_hiearchy import OneLakeItem
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils import fab_util as utils
@@ -19,7 +20,7 @@ def exec_command(args: Namespace) -> None:
     if schema:
         fab_ui.print_grey("Schema extracted successfully")
         _schema = json.loads(schema)["fields"]
-        fab_ui.print_output_format(args, data=_schema, show_headers=True)
+        fab_ui.print_output_format(args, data=_schema, text_style=TextFormatStyle.UNIX)
 
     else:
         raise FabricCLIError(
