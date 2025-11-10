@@ -840,14 +840,14 @@ class TestJobs:
                               (ItemType.DATA_PIPELINE, "data/sample_items/example.DataPipeline"),
                               (ItemType.SPARK_JOB_DEFINITION, "data/sample_items/example.SparkJobDefinition")])
     def test_run_schedule_rm_success(self, cli_executor, item_factory, mock_questionary_print, item_type, item_path):
-        # Create notebook
+        # Create item
         item_full_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             item_path,
         )
         fabric_item = item_factory(item_type, content_path=item_full_path)
 
-        # Init schedules for all items
+        # Init schedule
         config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
@@ -860,7 +860,7 @@ class TestJobs:
         # Remove schedules with rm command
         cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id} --force")
 
-        # Check notebook schedule removal
+        # Check schedule removal
         mock_questionary_print.reset_mock()
         job_run_list(fabric_item.full_path, schedule=True)
         assert len(mock_questionary_print.call_args_list) == 0
