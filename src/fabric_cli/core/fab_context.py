@@ -274,7 +274,6 @@ class Context:
             return parent_process
 
         if self._is_in_venv():
-            fab_logger.log_debug("Virtual environment detected.")
             session_parent = session_process.parent()
 
             if not session_parent:
@@ -302,24 +301,25 @@ class Context:
         2. If that fails, fall back to parent process
         3. If parent fails, fall back to current process
         """
+        parent_process = None
         try:
             parent_process = psutil.Process().parent()
-            if parent_process is None:
+            if not parent_process:
                 fab_logger.log_debug(
-                    "No parent process found. Falling back to current process for session ID"
+                    "No parent process found. Falling back to current process for session ID."
                 )
                 return os.getpid()
-        except Exception as e:
-            fab_logger.log_debug(
-                f"Failed to get parent process: {e}. Falling back to current process for session ID resolution"
-            )
-            return os.getpid()
 
-        try:
             session_process = self._get_session_process(parent_process)
             return session_process.pid
         except Exception as e:
-            fab_logger.log_debug(
-                f"Failed to get session process: {e}. Falling back to parent process for session ID resolution"
-            )
-            return parent_process.pid
+            if parent_process:
+                fab_logger.log_debug(
+                    f"Failed to get session process: {e}. Falling back to parent process for session ID resolution."
+                )
+                return parent_process.pid
+            else:
+                fab_logger.log_debug(
+                    f"Failed to get parent process: {e}. Falling back to current process for session ID resolution."
+                )
+                return os.getpid()
