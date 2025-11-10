@@ -5,6 +5,7 @@ import glob
 import json
 import os
 import platform
+import sys
 
 import psutil
 
@@ -247,6 +248,44 @@ class Context:
             # If we can't determine process existence, assume it exists to be safe
             return True
 
+    def _is_in_venv(self):
+        """Check if running inside a virtual environment."""
+        return sys.prefix != sys.base_prefix
+
+    def _get_session_process(self, parent_process: psutil.Process) -> psutil.Process:
+        """
+        Get the session process, handling virtual environments and fallbacks.
+
+        If a virtual environment is detected, it traverses one additional level up to
+        find the true shell process.
+
+        Args:
+            parent_process (psutil.Process): The parent process to check.
+
+        Returns:
+            psutil.Process: The actual session process.
+        """
+        session_process = parent_process.parent()
+
+        if not session_process:
+            fab_logger.log_debug(
+                "No session process was found. Falling back to parent process for session ID resolution"
+            )
+            return parent_process
+
+        if self._is_in_venv():
+            fab_logger.log_debug("Virtual environment detected.")
+            session_parent = session_process.parent()
+
+            if not session_parent:
+                fab_logger.log_debug(
+                    "No session parent process found in virtual environment. Falling back to session process for session ID resolution"
+                )
+            else:
+                return session_parent
+
+        return session_process
+
     def _get_context_session_id(self):
         """Get the session ID for the current shell session.
 
@@ -255,35 +294,32 @@ class Context:
         process and anchors to the actual shell session, ensuring multiple shell sessions
         don't interfere with each other.
 
+        If a virtual environment is detected, it traverses one additional level up to
+        find the true shell process.
+
         Fallback hierarchy:
-        1. Try to get grandparent process (session/shell)
-        2. If grandparent fails, fall back to parent process
+        1. Try to get session process (grandparent or great-grandparent in venv)
+        2. If that fails, fall back to parent process
         3. If parent fails, fall back to current process
         """
         try:
             parent_process = psutil.Process().parent()
             if parent_process is None:
                 fab_logger.log_debug(
-                    "No parent process was found. Falling back to the current process for session ID resolution."
+                    "No parent process found. Falling back to current process for session ID"
                 )
                 return os.getpid()
         except Exception as e:
             fab_logger.log_debug(
-                f"Failed to get parent process: {e}. Falling back to current process for session ID resolution."
+                f"Failed to get parent process: {e}. Falling back to current process for session ID resolution"
             )
             return os.getpid()
 
         try:
-            session_process = parent_process.parent()
-            if session_process is not None:
-                return session_process.pid
-            else:
-                fab_logger.log_debug(
-                    "No grandparent process was found. Falling back to parent process for session ID resolution."
-                )
-                return parent_process.pid
+            session_process = self._get_session_process(parent_process)
+            return session_process.pid
         except Exception as e:
             fab_logger.log_debug(
-                f"Failed to get grandparent process: {e}. Falling back to parent process for session ID resolution."
+                f"Failed to get session process: {e}. Falling back to parent process for session ID resolution"
             )
             return parent_process.pid
