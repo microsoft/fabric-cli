@@ -265,25 +265,25 @@ class Context:
         Returns:
             psutil.Process: The actual session process.
         """
-        session_process = parent_process.parent()
+        grandparent_process = parent_process.parent()
 
-        if not session_process:
+        if not grandparent_process:
             fab_logger.log_debug(
-                "No session process was found. Falling back to parent process for session ID resolution"
+                "No grandparent process was found. Falling back to parent process for session ID resolution"
             )
             return parent_process
 
         if self._is_in_venv():
-            session_parent = session_process.parent()
+            great_grandparent_process = grandparent_process.parent()
 
-            if not session_parent:
+            if not great_grandparent_process:
                 fab_logger.log_debug(
-                    "No session parent process found in virtual environment. Falling back to session process for session ID resolution"
+                    "No great-grandparent process found in virtual environment. Falling back to grandparent process for session ID resolution"
                 )
             else:
-                return session_parent
+                return great_grandparent_process
 
-        return session_process
+        return grandparent_process
 
     def _get_context_session_id(self):
         """Get the session ID for the current shell session.
@@ -303,7 +303,8 @@ class Context:
         """
         parent_process = None
         try:
-            parent_process = psutil.Process().parent()
+            current_process = psutil.Process()
+            parent_process = current_process.parent()
             if not parent_process:
                 fab_logger.log_debug(
                     "No parent process found. Falling back to current process for session ID."

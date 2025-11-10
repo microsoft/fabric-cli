@@ -292,7 +292,7 @@ def test_get_context_session_id_no_grandparent_process(monkeypatch):
     assert session_id == 5678  # Falls back to parent process PID
     assert len(log_calls) == 1
     assert (
-        "No session process was found. Falling back to parent process for session ID resolution"
+        "No grandparent process was found. Falling back to parent process for session ID resolution"
         in log_calls[0]
     )
 
