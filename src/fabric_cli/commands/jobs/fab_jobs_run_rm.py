@@ -23,5 +23,5 @@ def exec_command(args: Namespace, context: Item) -> None:
         if response.status_code == 200:
             utils_ui.print_output_format(
                 args,
-                message=f"Job schedule {args.schedule_id} removed",
+                message=f"Job schedule '{args.schedule_id}' removed",
             )
