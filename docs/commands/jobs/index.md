@@ -174,7 +174,7 @@ fab job run-rm <path> --id <scheduled-id> [-f]
 **Parameters:**
 
 - `<path>`: Path to the resource.
-- `--id`: Job or schedule ID to remove.
+- `--id`: Schedule ID to remove.
 - `-f, --force`: Bypass confirmation prompt. Optional.
 
 ---
