@@ -6,6 +6,7 @@ import json
 import os
 import re
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -24,7 +25,6 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
-
 
 class TestJobs:
     # region JOB RUN
@@ -865,6 +865,71 @@ class TestJobs:
         job_run_list(fabric_item.full_path, schedule=True)
         assert len(mock_questionary_print.call_args_list) == 0
 
+    def test_run_schedule_rm_without_force_success(self, cli_executor, item_factory, mock_questionary_confirm, mock_questionary_print, mock_print_warning):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        fabric_item = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Init schedules for notebook
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+
+        time.sleep(2)
+        job_run_list(fabric_item.full_path, schedule=True)
+        scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        # Execute command without --force
+        cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id}")
+
+        # Ask confirmation
+        mock_questionary_confirm.assert_called()
+        
+        # Check confirmation message
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}' This action cannot be undone."
+
+        # Check schedule removal
+        mock_questionary_print.reset_mock()
+        job_run_list(fabric_item.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
+    def test_run_schedule_rm_without_force_cancel_operation_success(self, cli_executor, item_factory, assert_fabric_cli_error, mock_questionary_print, mock_print_warning):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        fabric_item = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Init schedules for notebook
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+
+        time.sleep(2)
+        job_run_list(fabric_item.full_path, schedule=True)
+        scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        with patch("questionary.confirm") as mock_confirm:
+            mock_confirm.return_value.ask.return_value = False
+
+            # Execute command without --force
+            cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id}")
+
+        mock_print_warning.assert_called_once()
+
+        # Check confirmation message
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}' This action cannot be undone."
+
+        # The schedule should still exist
+        mock_questionary_print.reset_mock()
+        job_run_list(fabric_item.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) != 0
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):
