@@ -21,7 +21,7 @@ configuration:
               label: needs triage
           - addReply:
               reply: >
-                Thank you for submitting this issue, @${issueAuthor}.
+                Thank you for submitting this issue, ${issueAuthor}.
                 
                 A member of the Fabric CLI team will review your submission and provide feedback shortly.
 
@@ -41,7 +41,7 @@ configuration:
               label: needs author feedback
           - addReply:
               reply: >
-                @${issueAuthor}, we require additional information to properly evaluate this issue.
+                ${issueAuthor}, we require additional information to properly evaluate this issue.
                 
                 Please provide the requested details so we can continue with the review process.
           - removeLabel:
@@ -68,7 +68,7 @@ configuration:
               label: needs triage
           - addReply:
               reply: >
-                Thank you for replying with additional information, @${issueAuthor}.
+                Thank you for replying with additional information, ${issueAuthor}.
                 
                 A member of the Fabric CLI team will continue reviewing this issue.
 
@@ -179,3 +179,35 @@ configuration:
                 
                 Please continue discussion in the original issue to consolidate tracking and avoid fragmentation.
           - closeIssue
+
+      - description: Maintainer command to mark as bug
+        if:
+          - payloadType: Issue_Comment
+          - commentContains:
+              pattern: '^/bug'
+              isRegex: true
+          - or:
+              - activitySenderHasPermission:
+                  permission: Admin
+              - activitySenderHasPermission:
+                  permission: Write
+        then:
+          - removeLabel:
+              label: needs triage
+          - addLabel:
+              label: bug
+          - addReply:
+              reply: >
+                This issue has been triaged and identified as a **bug**. Our team will review and prioritize it accordingly.
+
+      - description: Assign enhancement issues to HasanAboShally
+        if:
+          - payloadType: Issues
+          - or:
+            - isAction:
+                action: Opened
+          - hasLabel:
+              label: enhancement
+        then:
+          - addAssignee:
+              assignee: HasanAboShally
