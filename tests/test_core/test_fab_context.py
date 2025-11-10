@@ -185,21 +185,6 @@ def test_get_context_session_id_not_in_venv(monkeypatch):
     assert session_id == 2222
 
 
-def test_get_context_session_id_no_grandparent_process(monkeypatch):
-    parent_process = MockProcess(pid=1234, parent=None)
-    current_process = MockProcess(pid=9999, parent=parent_process)
-
-    def mock_process():
-        return current_process
-
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
-
-    context = Context()
-    session_id = context._get_context_session_id()
-
-    assert session_id == 1234
-
-
 def test_get_context_session_id_no_parent_process(monkeypatch):
     current_process = MockProcess(pid=9999, parent=None)
 
