@@ -77,6 +77,7 @@ class FabricCLIOutput:
         error_code: Optional[str] = None,
         data: Optional[Any] = None,
         hidden_data: Optional[Any] = None,
+        show_key_value_pretty: bool = False,
     ):
         """Initialize a new FabricCLIOutput instance.
 
@@ -89,6 +90,7 @@ class FabricCLIOutput:
             error_code: Optional error code. Only included when status is Failed.
             data: The main output data to be displayed
             hidden_data: Additional data shown only when --all flag or FAB_SHOW_HIDDEN is true
+            show_key_value_pretty: Whether to show output in key-value pretty format
 
         Note:
             The data parameter is always converted to a list format internally.
@@ -100,6 +102,7 @@ class FabricCLIOutput:
         self._subcommand = subcommand
         self._output_format_type = output_format_type
         self._show_headers = show_headers
+        self._show_key_value_pretty = show_key_value_pretty
 
         self._result = OutputResult(
             data=data,
@@ -123,6 +126,10 @@ class FabricCLIOutput:
     @property
     def show_headers(self) -> bool:
         return self._show_headers
+
+    @property
+    def show_key_value_pretty(self) -> bool:
+        return self._show_key_value_pretty
 
     def to_json(self, indent: int = 4) -> str:
         try:

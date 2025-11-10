@@ -5,11 +5,9 @@ import json
 import platform
 from argparse import Namespace
 from enum import Enum
-from typing import Callable, Optional
 
 import pytest
 
-import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -562,6 +560,98 @@ def test_print_output_format_with_force_output_success(
     )
 
 
+def test_print_output_format_with_show_key_value_pretty_success(
+    mock_questionary_print, mock_fab_set_state_config
+):
+    """Test print_output_format with show_key_value_pretty=True calls print_entries_key_value_style."""
+    
+    # Setup text output format
+    mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
+    
+    # Test data with multiple entries
+    test_data = [
+        {"user_name": "john", "is_active": "true"},
+        {"user_name": "jane", "is_active": "false"}
+    ]
+    
+    args = Namespace(command="test")
+    ui.print_output_format(
+        args,
+        data=test_data,
+        show_key_value_pretty=True
+    )
+    
+    assert mock_questionary_print.call_count >= 1
+
+    output_calls = [call.args[0] for call in mock_questionary_print.mock_calls]
+    output_text = " ".join(output_calls)
+    
+    assert "User Name:" in output_text
+    assert "Is Active:" in output_text
+    assert '"user_name"' not in output_text
+    assert '{\n' not in output_text
+    
+    mock_questionary_print.reset_mock()
+
+
+def test_print_output_format_with_show_key_value_pretty_false_success(
+    mock_questionary_print, mock_fab_set_state_config
+):
+    """Test print_output_format with show_key_value_pretty=False uses default JSON formatting."""
+    
+    # Setup text output format
+    mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
+    
+    # Test data
+    test_data = [{"user_name": "john", "is_active": "true"}]
+    
+    args = Namespace(command="test")
+    ui.print_output_format(
+        args,
+        data=test_data,
+        show_key_value_pretty=False  # Explicitly set to False
+    )
+    
+    assert mock_questionary_print.call_count == 1
+    output = mock_questionary_print.mock_calls[0].args[0]
+    
+    # Should contain JSON structure, not key-value format
+    assert '{\n' in output or '[' in output
+    assert '"user_name": "john"' in output or '"user_name":"john"' in output
+    
+    mock_questionary_print.reset_mock()
+
+
+def test_print_output_format_with_show_key_value_pretty_json_format_success(
+    mock_questionary_print, mock_fab_set_state_config
+):
+    """Test that show_key_value_pretty parameter works correctly with JSON output format."""
+    
+    # Setup JSON output format
+    mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
+    
+    # Test data
+    test_data = [{"user_name": "john", "is_active": "true"}]
+    
+    args = Namespace(command="test", output_format="json")
+    ui.print_output_format(
+        args,
+        data=test_data,
+        show_key_value_pretty=True  # This should be ignored in JSON format
+    )
+    
+    # Verify that JSON output is produced regardless of show_key_value_pretty
+    assert mock_questionary_print.call_count == 1
+    output = json.loads(mock_questionary_print.mock_calls[0].args[0])
+    
+    assert isinstance(output, dict)
+    assert "result" in output
+    assert "data" in output["result"]
+    assert output["result"]["data"] == test_data
+    
+    mock_questionary_print.reset_mock()
+
+
 def test_print_output_format_failure(mock_fab_set_state_config):
     # Mock get_config to return an unsupported format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "test")
@@ -586,6 +676,82 @@ def test_print_output_format_text_no_result_failure():
     # Assert
     assert excinfo.value.message == ErrorMessages.Common.invalid_result_format()
     assert excinfo.value.status_code == constant.ERROR_INVALID_INPUT
+
+
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="Failed to run on windows with vscode - no real console",
+)
+def test_print_entries_key_value_style_success(capsys):
+    """Test printing entries in key-value format."""
+    
+    # Test with single dictionary entry
+    entry = {"logged_in": "true", "account_name": "johndoe@example.com"}
+    ui.print_entries_key_value_pretty_style(entry)
+    
+    captured = capsys.readouterr()
+    # print_grey outputs to stderr with to_stderr=False, so check stdout
+    output = captured.out
+    assert "Logged In: true" in output
+    assert "Account Name: johndoe@example.com" in output
+    
+    # Test with list of dictionaries
+    entries = [
+        {"user_name": "john", "status": "active"},
+        {"user_name": "jane", "status": "inactive"}
+    ]
+    ui.print_entries_key_value_pretty_style(entries)
+    
+    captured = capsys.readouterr()
+    output = captured.out
+    assert "User Name: john" in output
+    assert "Status: active" in output
+    assert "User Name: jane" in output
+    assert "Status: inactive" in output
+    
+    # Test with empty list
+    ui.print_entries_key_value_pretty_style([])
+    captured = capsys.readouterr()
+    # Should not output anything for empty list
+    assert captured.err == ""
+    assert captured.out == ""
+
+
+def test_print_entries_key_value_style_invalid_input():
+    """Test error handling for invalid input types."""
+    
+    # Test with invalid input type (string)
+    with pytest.raises(FabricCLIError) as ex:
+        ui.print_entries_key_value_pretty_style("invalid_input")
+    
+    assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
+    
+    # Test with invalid input type (integer)
+    with pytest.raises(FabricCLIError) as ex:
+        ui.print_entries_key_value_pretty_style(123)
+    
+    assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
+
+
+def test_format_key_to_pretty_name():
+    """Test the key formatting function used in key-value style output."""
+    
+    # Test snake_case conversion
+    assert ui._format_key_to_pretty_name("logged_in") == "Logged In"
+    assert ui._format_key_to_pretty_name("account_name") == "Account Name"
+    assert ui._format_key_to_pretty_name("user_id") == "User Id"
+    
+    # Test camelCase conversion
+    assert ui._format_key_to_pretty_name("accountName") == "Account Name"
+    assert ui._format_key_to_pretty_name("userName") == "User Name"
+    assert ui._format_key_to_pretty_name("isActive") == "Is Active"
+    
+    # Test single word
+    assert ui._format_key_to_pretty_name("status") == "Status"
+    assert ui._format_key_to_pretty_name("name") == "Name"
+    
+    # Test mixed case
+    assert ui._format_key_to_pretty_name("user_Name") == "User  Name"
 
 
 def test_print_version_seccess():

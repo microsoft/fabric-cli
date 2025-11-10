@@ -167,3 +167,18 @@ def test_fabric_cli_output_error_handling_success():
 
     json_output = json.loads(output.to_json())
     assert json_output["result"]["error_code"] == "UnexpectedError"
+
+
+def test_fabric_cli_output_show_key_value_pretty_success():
+    """Test show_key_value_pretty property is handled correctly."""
+    # Test with show_key_value_pretty True
+    output = FabricCLIOutput(data={"test": "data"}, show_key_value_pretty=True)
+    assert output.show_key_value_pretty is True
+
+    # Test with show_key_value_pretty False (default)
+    output = FabricCLIOutput(data={"test": "data"})
+    assert output.show_key_value_pretty is False
+
+    # Test with explicit False
+    output = FabricCLIOutput(data={"test": "data"}, show_key_value_pretty=False)
+    assert output.show_key_value_pretty is False
