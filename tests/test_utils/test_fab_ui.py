@@ -560,10 +560,10 @@ def test_print_output_format_with_force_output_success(
     )
 
 
-def test_print_output_format_with_show_key_value_pretty_success(
+def test_print_output_format_with_show_key_value_list_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
-    """Test print_output_format with show_key_value_pretty=True calls print_entries_key_value_style."""
+    """Test print_output_format with show_key_value_list=True calls print_entries_key_value_style."""
     
     # Setup text output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
@@ -578,7 +578,7 @@ def test_print_output_format_with_show_key_value_pretty_success(
     ui.print_output_format(
         args,
         data=test_data,
-        show_key_value_pretty=True
+        show_key_value_list=True
     )
     
     assert mock_questionary_print.call_count >= 1
@@ -594,10 +594,10 @@ def test_print_output_format_with_show_key_value_pretty_success(
     mock_questionary_print.reset_mock()
 
 
-def test_print_output_format_with_show_key_value_pretty_false_success(
+def test_print_output_format_with_show_key_value_list_false_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
-    """Test print_output_format with show_key_value_pretty=False uses default JSON formatting."""
+    """Test print_output_format with show_key_value_list=False uses default JSON formatting."""
     
     # Setup text output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
@@ -609,7 +609,7 @@ def test_print_output_format_with_show_key_value_pretty_false_success(
     ui.print_output_format(
         args,
         data=test_data,
-        show_key_value_pretty=False  # Explicitly set to False
+        show_key_value_list=False  # Explicitly set to False
     )
     
     assert mock_questionary_print.call_count == 1
@@ -622,10 +622,10 @@ def test_print_output_format_with_show_key_value_pretty_false_success(
     mock_questionary_print.reset_mock()
 
 
-def test_print_output_format_with_show_key_value_pretty_json_format_success(
+def test_print_output_format_with_show_key_value_list_json_format_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
-    """Test that show_key_value_pretty parameter works correctly with JSON output format."""
+    """Test that show_key_value_list parameter works correctly with JSON output format."""
     
     # Setup JSON output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
@@ -637,10 +637,10 @@ def test_print_output_format_with_show_key_value_pretty_json_format_success(
     ui.print_output_format(
         args,
         data=test_data,
-        show_key_value_pretty=True  # This should be ignored in JSON format
+        show_key_value_list=True  # This should be ignored in JSON format
     )
     
-    # Verify that JSON output is produced regardless of show_key_value_pretty
+    # Verify that JSON output is produced regardless of show_key_value_list
     assert mock_questionary_print.call_count == 1
     output = json.loads(mock_questionary_print.mock_calls[0].args[0])
     
@@ -687,7 +687,7 @@ def test_print_entries_key_value_style_success(capsys):
     
     # Test with single dictionary entry
     entry = {"logged_in": "true", "account_name": "johndoe@example.com"}
-    ui.print_entries_key_value_pretty_style(entry)
+    ui._print_entries_key_value_list_style(entry)
     
     captured = capsys.readouterr()
     # print_grey outputs to stderr with to_stderr=False, so check stdout
@@ -700,7 +700,7 @@ def test_print_entries_key_value_style_success(capsys):
         {"user_name": "john", "status": "active"},
         {"user_name": "jane", "status": "inactive"}
     ]
-    ui.print_entries_key_value_pretty_style(entries)
+    ui._print_entries_key_value_list_style(entries)
     
     captured = capsys.readouterr()
     output = captured.out
@@ -710,7 +710,7 @@ def test_print_entries_key_value_style_success(capsys):
     assert "Status: inactive" in output
     
     # Test with empty list
-    ui.print_entries_key_value_pretty_style([])
+    ui._print_entries_key_value_list_style([])
     captured = capsys.readouterr()
     # Should not output anything for empty list
     assert captured.err == ""
@@ -722,13 +722,13 @@ def test_print_entries_key_value_style_invalid_input():
     
     # Test with invalid input type (string)
     with pytest.raises(FabricCLIError) as ex:
-        ui.print_entries_key_value_pretty_style("invalid_input")
+        ui._print_entries_key_value_list_style("invalid_input")
     
     assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
     
     # Test with invalid input type (integer)
     with pytest.raises(FabricCLIError) as ex:
-        ui.print_entries_key_value_pretty_style(123)
+        ui._print_entries_key_value_list_style(123)
     
     assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
 
@@ -737,21 +737,21 @@ def test_format_key_to_pretty_name():
     """Test the key formatting function used in key-value style output."""
     
     # Test snake_case conversion
-    assert ui._format_key_to_pretty_name("logged_in") == "Logged In"
-    assert ui._format_key_to_pretty_name("account_name") == "Account Name"
-    assert ui._format_key_to_pretty_name("user_id") == "User Id"
+    assert ui._format_key_to_convert_to_title_case("logged_in") == "Logged In"
+    assert ui._format_key_to_convert_to_title_case("account_name") == "Account Name"
+    assert ui._format_key_to_convert_to_title_case("user_id") == "User Id"
     
     # Test camelCase conversion
-    assert ui._format_key_to_pretty_name("accountName") == "Account Name"
-    assert ui._format_key_to_pretty_name("userName") == "User Name"
-    assert ui._format_key_to_pretty_name("isActive") == "Is Active"
+    assert ui._format_key_to_convert_to_title_case("accountName") == "Account Name"
+    assert ui._format_key_to_convert_to_title_case("userName") == "User Name"
+    assert ui._format_key_to_convert_to_title_case("isActive") == "Is Active"
     
     # Test single word
-    assert ui._format_key_to_pretty_name("status") == "Status"
-    assert ui._format_key_to_pretty_name("name") == "Name"
+    assert ui._format_key_to_convert_to_title_case("status") == "Status"
+    assert ui._format_key_to_convert_to_title_case("name") == "Name"
     
     # Test mixed case
-    assert ui._format_key_to_pretty_name("user_Name") == "User  Name"
+    assert ui._format_key_to_convert_to_title_case("user_Name") == "User  Name"
 
 
 def test_print_version_seccess():

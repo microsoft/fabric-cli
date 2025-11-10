@@ -95,7 +95,7 @@ def print_output_format(
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
-    show_key_value_pretty: bool = False,
+    show_key_value_list: bool = False,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -105,7 +105,7 @@ def print_output_format(
         data: Optional data to include in output
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
-        show_key_value_pretty: Whether to show output in key-value pretty format (default: False)
+        show_key_value_list: Whether to show output in key-value list format (default: False)
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -122,7 +122,7 @@ def print_output_format(
         data=data,
         hidden_data=hidden_data,
         show_headers=show_headers,
-        show_key_value_pretty=show_key_value_pretty,
+        show_key_value_list=show_key_value_list,
     )
 
     # Get format from output or config
@@ -357,8 +357,8 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         ):
             data_keys = output.result.get_data_keys() if output_result.data else []
             print_entries_unix_style(output_result.data, data_keys, header=show_headers)
-        elif output.show_key_value_pretty:
-            _print_entries_key_value_pretty_style(output_result.data)
+        elif output.show_key_value_list:
+            _print_entries_key_value_list_style(output_result.data)
         else:
             _print_raw_data(output_result.data)
 
@@ -492,8 +492,8 @@ def _get_visual_length(string: str) -> int:
     return length
 
 
-def _print_entries_key_value_pretty_style(entries: Any) -> None:
-    """Print entries in a key-value list format with pretty-formatted keys.
+def _print_entries_key_value_list_style(entries: Any) -> None:
+    """Print entries in a key-value list format with formatted keys.
     
     Args:
         entries: Dictionary or list of dictionaries to print
@@ -510,26 +510,26 @@ def _print_entries_key_value_pretty_style(entries: Any) -> None:
         _entries = entries
     else:
         raise FabricCLIError(
-            ErrorMessages.Labels.invalid_entries_format(),
+            ErrorMessages.Common.invalid_entries_format(),
             fab_constant.ERROR_INVALID_ENTRIES_FORMAT,
         )
 
     for entry in _entries:
         for key, value in entry.items():
-            pretty_key = _format_key_to_pretty_name(key)
+            pretty_key = _format_key_to_convert_to_title_case(key)
             print_grey(f"{pretty_key}: {value}", to_stderr=False)
         if len(_entries) > 1:
             print_grey("", to_stderr=False)  # Empty line between entries
 
 
-def _format_key_to_pretty_name(key: str) -> str:
-    """Convert a snake_case or camelCase key to a Title Case pretty name.
+def _format_key_to_convert_to_title_case(key: str) -> str:
+    """Convert a snake_case or camelCase key to a Title Case name.
     
     Args:
         key: The key to format (e.g. 'logged_in' or 'accountName')
         
     Returns:
-        str: Formatted pretty name (e.g. 'Logged In' or 'Account Name')
+        str: Formatted to title case name (e.g. 'Logged In' or 'Account Name')
     """
     # Replace underscores and camelCase with spaces
     pretty = key.replace('_', ' ')

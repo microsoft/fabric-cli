@@ -8,6 +8,10 @@ from typing import Optional
 class CommonErrors:
 
     @staticmethod
+    def invalid_entries_format() -> str:
+        return "Invalid entries format"
+    
+    @staticmethod
     def invalid_jmespath_query() -> str:
         return f"Invalid jmespath query (https://jmespath.org)"
 
