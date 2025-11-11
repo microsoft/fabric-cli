@@ -132,9 +132,45 @@ def test_get_context_session_id(monkeypatch):
     assert session_id == 1234
 
 
-def test_get_context_session_id_no_grandparent_process(monkeypatch):
-    parent_process = MockProcess(pid=1234, parent=None)
-    current_process = MockProcess(pid=9999, parent=parent_process)
+def test_get_context_session_id_in_venv(monkeypatch):
+    great_grandparent_process = MockProcess(pid=1111, parent=None)
+    grandparent_process = MockProcess(pid=2222, parent=great_grandparent_process)
+    parent_process = MockProcess(pid=3333, parent=grandparent_process)
+    current_process = MockProcess(pid=4444, parent=parent_process)
+
+    def mock_process():
+        return current_process
+
+    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    context = Context()
+    monkeypatch.setattr(context, "_is_in_venv", lambda: True)
+    session_id = context._get_context_session_id()
+
+    assert session_id == 1111
+
+
+def test_get_context_session_id_in_venv_no_great_grandparent(monkeypatch):
+    grandparent_process = MockProcess(pid=2222, parent=None)
+    parent_process = MockProcess(pid=3333, parent=grandparent_process)
+    current_process = MockProcess(pid=4444, parent=parent_process)
+
+    def mock_process():
+        return current_process
+
+    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    context = Context()
+    monkeypatch.setattr(context, "_is_in_venv", lambda: True)
+    session_id = context._get_context_session_id()
+
+    # Falls back to grandparent PID
+    assert session_id == 2222
+
+
+def test_get_context_session_id_not_in_venv(monkeypatch):
+    great_grandparent_process = MockProcess(pid=1111, parent=None)
+    grandparent_process = MockProcess(pid=2222, parent=great_grandparent_process)
+    parent_process = MockProcess(pid=3333, parent=grandparent_process)
+    current_process = MockProcess(pid=4444, parent=parent_process)
 
     def mock_process():
         return current_process
@@ -142,9 +178,11 @@ def test_get_context_session_id_no_grandparent_process(monkeypatch):
     monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
 
     context = Context()
+    monkeypatch.setattr(context, "_is_in_venv", lambda: False)
     session_id = context._get_context_session_id()
 
-    assert session_id == 1234
+    # Should return grandparent PID, not great-grandparent
+    assert session_id == 2222
 
 
 def test_get_context_session_id_no_parent_process(monkeypatch):
@@ -172,9 +210,9 @@ def test_get_context_session_id_no_parent_process(monkeypatch):
 
     assert session_id == 9999
     assert len(log_calls) == 1
-    assert "No parent process was found" in log_calls[0]
     assert (
-        "Falling back to the current process for session ID resolution" in log_calls[0]
+        "No parent process found. Falling back to current process for session ID"
+        in log_calls[0]
     )
 
 
@@ -227,11 +265,11 @@ def test_get_context_session_id_grandparent_process_exception(monkeypatch):
 
     assert session_id == 5678  # Falls back to parent process PID
     assert len(log_calls) == 1
-    assert "Failed to get grandparent process:" in log_calls[0]
+    assert "Failed to get session process:" in log_calls[0]
     assert "Falling back to parent process for session ID resolution" in log_calls[0]
 
 
-def test_get_context_session_id_grandparent_process_none(monkeypatch):
+def test_get_context_session_id_no_grandparent_process(monkeypatch):
     parent_process = MockProcess(pid=5678, parent=None)
     current_process = MockProcess(pid=9999, parent=parent_process)
 
@@ -253,8 +291,10 @@ def test_get_context_session_id_grandparent_process_none(monkeypatch):
 
     assert session_id == 5678  # Falls back to parent process PID
     assert len(log_calls) == 1
-    assert "No grandparent process was found" in log_calls[0]
-    assert "Falling back to parent process for session ID resolution" in log_calls[0]
+    assert (
+        "No grandparent process was found. Falling back to parent process for session ID resolution"
+        in log_calls[0]
+    )
 
 
 class MockProcess:
