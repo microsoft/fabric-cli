@@ -534,11 +534,12 @@ def _format_key_to_convert_to_title_case(key: str) -> str:
     """
     # Replace underscores and camelCase with spaces
     pretty = key.replace('_', ' ')
-    # pretty = ''.join(' ' + char if char.isupper() else char for char in pretty).strip()
+    # Replacing the camelCase with spaces only if the previous character is not a space
     pretty = re.sub(r'(?<!^)(?<! )(?=[A-Z])', ' ', pretty)
     # Title case the result
     pretty = pretty.title()
 
+    # Here add special cases for specific keys that need to be formatted differently
     special_cases = {
         "Id": "ID",
         "Powerbi": "PowerBI",
