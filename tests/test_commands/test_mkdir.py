@@ -1418,6 +1418,19 @@ class TestMkdir:
         assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values()
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
+        mock_fab_ui_print_error.reset_mock()
+
+        # Test 5: Execute command with invalid values as string array
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=['gatewayId', 'encryptedCredentials']"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values()
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
+
     def test_mkdir_connection_with_gateway_params_success(
         self,
         cli_executor,

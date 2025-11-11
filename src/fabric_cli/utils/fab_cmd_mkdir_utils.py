@@ -454,7 +454,6 @@ def _validate_and_get_on_premises_gateway_credential_values(cred_values):
     return [{key: item[key.lower()] for key in param_values_keys if key.lower() in item} for item in cred_values]
 
 
-
 def get_connection_config_from_params(payload, con_type, con_type_def, params):
     connection_request = payload
 
@@ -658,7 +657,6 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     }
     connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
 
-    # Build credential details based on connectivity type
     if is_on_premises_gateway:
         connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get("values")
 

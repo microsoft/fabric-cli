@@ -134,13 +134,11 @@ def try_get_json_value_from_string(value: str) -> Any:
     Returns:
         Parsed JSON if valid, otherwise original string
     """
-    try:
-        parse = json.loads(value)
-        if (isinstance(parse, list) and all(isinstance(item, dict) for item in parse)):
-            return parse
-    except json.JSONDecodeError:
-        # For non-JSON values, return as-is without quote stripping
-        pass
+    if value.strip().startswith('[{') and value.strip().endswith('}]'):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            pass        
     return value.replace("'", "").replace('"', "")
 
 def merge_dicts(dict1: dict, dict2: dict) -> dict:
