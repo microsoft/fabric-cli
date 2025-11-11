@@ -890,7 +890,7 @@ class TestJobs:
         mock_questionary_confirm.assert_called()
         
         # Check confirmation message
-        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}' This action cannot be undone."
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}'. This action cannot be undone."
 
         # Check schedule removal
         mock_questionary_print.reset_mock()
@@ -924,7 +924,7 @@ class TestJobs:
         mock_print_warning.assert_called_once()
 
         # Check confirmation message
-        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}' This action cannot be undone."
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}'. This action cannot be undone."
 
         # The schedule should still exist
         mock_questionary_print.reset_mock()
