@@ -736,15 +736,41 @@ def test_print_entries_key_value_style_invalid_input():
 def test_format_key_to_title_case_success():
     # Test snake_case conversion
     assert ui._format_key_to_convert_to_title_case("account_name") == "Account Name"
-    # Test camelCase conversion
-    assert ui._format_key_to_convert_to_title_case("accountName") == "Account Name"    
     # Test single word
-    assert ui._format_key_to_convert_to_title_case("status") == "Status"    
-    # Test mixed case
-    assert ui._format_key_to_convert_to_title_case("user_Name") == "User Name"
+    assert ui._format_key_to_convert_to_title_case("status") == "Status"
+    # Test snake_case with multiple underscores
+    assert ui._format_key_to_convert_to_title_case("user_account_name") == "User Account Name"
     # Test special cases from the function
     assert ui._format_key_to_convert_to_title_case("user_id") == "User ID"
     assert ui._format_key_to_convert_to_title_case("powerbi_settings") == "PowerBI Settings"
+    # Test numbers in keys
+    assert ui._format_key_to_convert_to_title_case("version_2_settings") == "Version 2 Settings"
+    # Test mixed case
+    assert ui._format_key_to_convert_to_title_case("user_Name") == "User Name"
+
+
+def test_format_key_to_title_case_failure():
+    """Test that the function throws ValueError for invalid key formats."""
+    
+    # Test camelCase (should fail)
+    with pytest.raises(ValueError, match="Invalid key format: 'accountName'. Only underscore-separated words are allowed."):
+        ui._format_key_to_convert_to_title_case("accountName")
+    
+    # Test camelCase with ID (should fail)
+    with pytest.raises(ValueError, match="Invalid key format: 'accountID'. Only underscore-separated words are allowed."):
+        ui._format_key_to_convert_to_title_case("accountID")
+    
+    # Test spaces mixed with underscores (should fail)
+    with pytest.raises(ValueError, match="Invalid key format: 'user name_test'. Only underscore-separated words are allowed."):
+        ui._format_key_to_convert_to_title_case("user name_test")
+    
+    # Test special characters (should fail)
+    with pytest.raises(ValueError, match="Invalid key format: 'user@name'. Only underscore-separated words are allowed."):
+        ui._format_key_to_convert_to_title_case("user@name")
+    
+    # Test hyphen separated (should fail)
+    with pytest.raises(ValueError, match="Invalid key format: 'user-name'. Only underscore-separated words are allowed."):
+        ui._format_key_to_convert_to_title_case("user-name")
 
 
 def test_print_version_seccess():

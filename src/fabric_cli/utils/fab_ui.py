@@ -524,29 +524,50 @@ def _print_entries_key_value_list_style(entries: Any) -> None:
 
 
 def _format_key_to_convert_to_title_case(key: str) -> str:
-    """Convert a snake_case or camelCase key to a Title Case name.
+    """Convert a snake_case key to a Title Case name.
     
     Args:
-        key: The key to format (e.g. 'user_id' or 'accountName')
+        key: The key to format in snake_case format (e.g. 'user_id', 'account_name')
         
     Returns:
-        str: Formatted to title case name (e.g. 'User Id' or 'Account Name')
+        str: Formatted to title case name (e.g. 'User ID', 'Account Name')
+        
+    Raises:
+        ValueError: If the key is not in the expected underscore-separated format
     """
-    # Replace underscores and camelCase with spaces
-    pretty = key.replace('_', ' ')
-    # Replacing the camelCase with spaces only if the previous character is not a space
-    pretty = re.sub(r'(?<!^)(?<! )(?=[A-Z])', ' ', pretty)
-    # Title case the result
-    pretty = pretty.title()
+    # Allow letters, numbers, and underscores only
+    if not key.replace('_', '').replace(' ', '').isalnum():
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    # Check for invalid patterns (camelCase, spaces mixed with underscores, etc.)
+    if ' ' in key and '_' in key:
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    # Check for camelCase pattern (uppercase letters not at the start)
+    if any(char.isupper() for char in key[1:]) and '_' not in key:
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    # Single words without underscores are allowed
+    if '_' not in key and key.islower():
+        pretty = key.title()
+    else:
+        # Replace underscores with spaces and title case
+        pretty = key.replace('_', ' ').title()
 
+    pretty = key.replace('_', ' ').title()
+
+    return _check_special_cases(pretty)
+
+
+def _check_special_cases(pretty: str) -> str:
+    """Check for special cases and replace them with the correct value."""
     # Here add special cases for specific keys that need to be formatted differently
     special_cases = {
         "Id": "ID",
         "Powerbi": "PowerBI",
     }
 
-    # Replace special cases
-    for key, value in special_cases.items():
-        pretty = pretty.replace(key.title(), value)
+    for case_key, case_value in special_cases.items():
+        pretty = pretty.replace(case_key.title(), case_value)
 
     return pretty
