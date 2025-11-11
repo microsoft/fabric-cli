@@ -1,0 +1,214 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+---
+name: 🔄 Changelog Existence
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ format('{0}-{1}-{2}-{3}-{4}', github.workflow, github.event_name, github.ref, github.base_ref || null, github.head_ref || null) }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  changelog-existence:
+    name: 🔄 Check Changelog
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') && github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: ⤵️ Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to access full commit history
+
+      - name: ✔️ Check for changelog changes
+        id: changelog_check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const base = process.env.BASE_SHA;
+            const head = process.env.HEAD_SHA;
+            console.log(`Comparing changes from ${base} to ${head}`)
+            const output = execSync(`git diff --name-only --no-renames --diff-filter=AM ${base} ${head}`).toString();
+            const files = output.split('\n').filter(Boolean);
+            const changelogExists = files.some(file => file.startsWith('.changes/unreleased/') && file.endsWith('.yaml'));
+            core.setOutput('exists', changelogExists);
+
+      - name: 🚧 Setup Node
+        if: steps.changelog_check.outputs.exists == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: 🚧 Install Changie
+        if: steps.changelog_check.outputs.exists == 'true'
+        run: npm i -g changie
+
+      - name: 🔎 Find comment
+        id: fc
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const commentMarker = '<!-- changelog -->';
+            console.log('Searching for existing changelog comment...');
+            console.log(`PR Number: ${context.issue.number}`);
+            console.log(`Repo: ${context.repo.repo}`);
+            console.log(`Owner: ${context.repo.owner}`);
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            const comment = comments?.find(c => c.user.login === 'github-actions[bot]' && c.body.includes(commentMarker));
+            if (comment) {
+              console.log(`Found existing changelog comment: ${comment.id}`);
+              return comment.id;
+            }
+            console.log('No existing changelog comment found.');
+            return null;
+
+      - name: 🔄 Prepare comment (changelog)
+        if: steps.changelog_check.outputs.exists == 'true'
+        run: |
+          echo -e "# Changelog Preview\n" > changie.md
+          changie batch patch --dry-run --prerelease 'dev' >> changie.md
+          cat changie.md >> $GITHUB_STEP_SUMMARY
+          echo -e "\n<!-- changelog -->" >> changie.md
+
+      - name: 📝 Create or Update comment (changelog)
+        if: steps.changelog_check.outputs.exists == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('changie.md', 'utf8');
+            console.log('Preparing to create or update changelog comment...');
+            console.log(`body is: \n\n '${body}'`);
+            const comment_id = ${{ steps.fc.outputs.result }};
+            console.log(`Comment ID: ${comment_id}`);
+            if (comment_id) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment_id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+      - name: 🔄 Prepare comment (missing)
+        if: steps.changelog_check.outputs.exists == 'false'
+        run: |
+          echo -e "# 🛑 Changelog entry required to merge\n" > changie.md
+          echo "Run \`changie new\` to add a new changelog entry" >> changie.md
+          cat changie.md >> $GITHUB_STEP_SUMMARY
+          echo -e "\n<!-- changelog -->" >> changie.md
+
+      - name: 📝 Create or Update comment (missing)
+        if: steps.changelog_check.outputs.exists == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('changie.md', 'utf8');
+            console.log('Preparing to create or update missing changelog comment...');
+            console.log(`body is: \n\n '${body}'`);
+            const comment_id = ${{ steps.fc.outputs.result }};
+            console.log(`Comment ID: ${comment_id}`);
+            if (comment_id) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment_id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+      - name: ✅ Pass if changelog entry exists
+        if: steps.changelog_check.outputs.exists == 'true'
+        run: |
+          echo "✅ Changelog entry exists."
+          exit 0
+
+      - name: 🛑 Fail if changelog entry is missing and required
+        if: steps.changelog_check.outputs.exists == 'false'
+        run: |
+          echo "🛑 Changelog entry required to merge."
+          exit 1
+
+  changelog-skip:
+    name: ⏭️ Skip Changelog
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') || github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔎 Find comment
+        if: github.actor != 'dependabot[bot]'
+        id: fc
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const commentMarker = '<!-- changelog -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            if (!comments) {
+              return null;
+            }
+            const comment = comments.find(c => c.user.login === 'github-actions[bot]' && c.body.includes(commentMarker));
+            if (comment) {
+              console.log(`Found existing changelog comment: ${comment.id}`);
+              return comment.id;
+            }
+            console.log('No existing changelog comment found.');
+            return null;
+
+      - name: 🗑️ Delete comment
+        uses: actions/github-script@v6
+        if: github.actor != 'dependabot[bot]' && steps.fc.outputs.result != ''
+        with:
+          script: |
+            const commentId = ${{ steps.fc.outputs.result }};
+            console.log(`Deleting existing changelog comment due to skip label... ID: ${commentId}`);
+            if (commentId) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+              });
+            }
+
+      - name: ✅ Pass (skip)
+        run: exit 0
