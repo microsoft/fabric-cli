@@ -4,6 +4,7 @@
 import builtins
 import html
 import json
+import re
 import sys
 import unicodedata
 from argparse import Namespace
@@ -526,13 +527,25 @@ def _format_key_to_convert_to_title_case(key: str) -> str:
     """Convert a snake_case or camelCase key to a Title Case name.
     
     Args:
-        key: The key to format (e.g. 'logged_in' or 'accountName')
+        key: The key to format (e.g. 'user_id' or 'accountName')
         
     Returns:
-        str: Formatted to title case name (e.g. 'Logged In' or 'Account Name')
+        str: Formatted to title case name (e.g. 'User Id' or 'Account Name')
     """
     # Replace underscores and camelCase with spaces
     pretty = key.replace('_', ' ')
-    pretty = ''.join(' ' + char if char.isupper() else char for char in pretty).strip()
+    # pretty = ''.join(' ' + char if char.isupper() else char for char in pretty).strip()
+    pretty = re.sub(r'(?<!^)(?<! )(?=[A-Z])', ' ', pretty)
     # Title case the result
-    return pretty.title()
+    pretty = pretty.title()
+
+    special_cases = {
+        "Id": "ID",
+        "Powerbi": "PowerBI",
+    }
+
+    # Replace special cases
+    for key, value in special_cases.items():
+        pretty = pretty.replace(key.title(), value)
+
+    return pretty

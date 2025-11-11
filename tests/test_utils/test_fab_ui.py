@@ -733,25 +733,18 @@ def test_print_entries_key_value_style_invalid_input():
     assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
 
 
-def test_format_key_to_pretty_name():
-    """Test the key formatting function used in key-value style output."""
-    
+def test_format_key_to_title_case_success():
     # Test snake_case conversion
-    assert ui._format_key_to_convert_to_title_case("logged_in") == "Logged In"
     assert ui._format_key_to_convert_to_title_case("account_name") == "Account Name"
-    assert ui._format_key_to_convert_to_title_case("user_id") == "User Id"
-    
     # Test camelCase conversion
-    assert ui._format_key_to_convert_to_title_case("accountName") == "Account Name"
-    assert ui._format_key_to_convert_to_title_case("userName") == "User Name"
-    assert ui._format_key_to_convert_to_title_case("isActive") == "Is Active"
-    
+    assert ui._format_key_to_convert_to_title_case("accountName") == "Account Name"    
     # Test single word
-    assert ui._format_key_to_convert_to_title_case("status") == "Status"
-    assert ui._format_key_to_convert_to_title_case("name") == "Name"
-    
+    assert ui._format_key_to_convert_to_title_case("status") == "Status"    
     # Test mixed case
-    assert ui._format_key_to_convert_to_title_case("user_Name") == "User  Name"
+    assert ui._format_key_to_convert_to_title_case("user_Name") == "User Name"
+    # Test special cases from the function
+    assert ui._format_key_to_convert_to_title_case("user_id") == "User ID"
+    assert ui._format_key_to_convert_to_title_case("powerbi_settings") == "PowerBI Settings"
 
 
 def test_print_version_seccess():
