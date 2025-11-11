@@ -199,15 +199,3 @@ configuration:
           - addReply:
               reply: >
                 This issue has been triaged and identified as a **bug**. Our team will review and prioritize it accordingly.
-
-      - description: Assign enhancement issues to HasanAboShally
-        if:
-          - payloadType: Issues
-          - isAction:
-              action: Opened
-          - hasLabel:
-              label: enhancement
-        then:
-          - assignTo:
-              users:
-              - HasanAboShally
