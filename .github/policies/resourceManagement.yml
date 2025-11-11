@@ -203,11 +203,11 @@ configuration:
       - description: Assign enhancement issues to HasanAboShally
         if:
           - payloadType: Issues
-          - or:
-            - isAction:
-                action: Opened
+          - isAction:
+              action: Opened
           - hasLabel:
               label: enhancement
         then:
-          - addAssignee:
-              assignee: HasanAboShally
+          - assignTo:
+              users:
+              - HasanAboShally
