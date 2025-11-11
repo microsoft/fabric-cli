@@ -835,15 +835,15 @@ class TestJobs:
         )
 
 
-    @pytest.mark.parametrize("item_type,item_path",
-                             [(ItemType.NOTEBOOK, "data/sample_items/example.Notebook"),
-                              (ItemType.DATA_PIPELINE, "data/sample_items/example.DataPipeline"),
-                              (ItemType.SPARK_JOB_DEFINITION, "data/sample_items/example.SparkJobDefinition")])
-    def test_run_schedule_rm_success(self, cli_executor, item_factory, mock_questionary_print, item_type, item_path):
+    @pytest.mark.parametrize("item_type",
+                             [(ItemType.NOTEBOOK),
+                              (ItemType.DATA_PIPELINE),
+                              (ItemType.SPARK_JOB_DEFINITION)])
+    def test_run_schedule_rm_success(self, cli_executor, item_factory, mock_questionary_print, item_type):
         # Create item
         item_full_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            item_path,
+            f"data/sample_items/example.{item_type.value}",
         )
         fabric_item = item_factory(item_type, content_path=item_full_path)
 
