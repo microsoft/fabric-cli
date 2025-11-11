@@ -82,7 +82,8 @@ jobs:
       - name: 🛑 Fail if changelog entry is missing and required
         if: steps.changelog_check.outputs.exists == 'false'
         run: |
-          echo "🛑 Changelog entry required to merge.\n\nPlease run \`changie new\` to add a new changelog entry"
+          echo "🛑 Changelog entry required to merge.
+          echo "Please run 'changie new' to add a new changelog entry"
           exit 1
 
   changelog-skip:
