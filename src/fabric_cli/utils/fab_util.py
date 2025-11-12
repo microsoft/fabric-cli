@@ -121,9 +121,25 @@ def get_dict_from_parameter(
         key, rest = param.split(".", 1)
         return {key: get_dict_from_parameter(rest, value, max_depth, current_depth + 1)}
     else:
-        clean_value = value.replace("'", "").replace('"', "")
+        clean_value = try_get_json_value_from_string(value)
         return {param: clean_value}
 
+def try_get_json_value_from_string(value: str) -> Any:
+    """
+    Try to parse a string as JSON, with special handling for array parameters.
+    
+    Args:
+        value: String that may contain JSON data
+        
+    Returns:
+        Parsed JSON if valid, otherwise original string
+    """
+    if value.strip().startswith('[{') and value.strip().endswith('}]'):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            pass        
+    return value.replace("'", "").replace('"', "")
 
 def merge_dicts(dict1: dict, dict2: dict) -> dict:
     """

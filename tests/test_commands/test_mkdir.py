@@ -27,6 +27,8 @@ from fabric_cli.core.fab_types import (
     VirtualItemContainerType,
     VirtualWorkspaceType,
 )
+from fabric_cli.errors import ErrorMessages
+from tests.test_commands.conftest import mock_print_done
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
@@ -1290,6 +1292,144 @@ class TestMkdir:
 
         # Cleanup
         rm(connection_full_path)
+
+    def test_mkdir_connection_with_onpremises_gateway_params_success(
+        self,
+        cli_executor,
+        mock_print_done,
+        vcr_instance,
+        test_data: StaticTestData,
+        cassette_name,
+    ):
+        # Setup
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
+        connection_full_path = cli_path_join(
+            ".connections", connection_display_name + ".Connection"
+        )
+
+        # Execute command with gateway and OnPremisesGateway connectivity type
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}}]"
+        )
+
+        # Assert
+        mock_print_done.assert_called()
+        assert mock_print_done.call_count == 1
+        assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
+
+        mock_print_done.reset_mock()
+        
+        # Cleanup
+        rm(connection_full_path)
+
+    def test_mkdir_connection_with_onpremises_gateway_params_ignore_params_success(
+        self,
+        cli_executor,
+        mock_print_done,
+        mock_print_warning,
+        vcr_instance,
+        test_data: StaticTestData,
+        cassette_name,
+    ):  
+        # Setup
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
+        connection_full_path = cli_path_join(
+            ".connections", connection_display_name + ".Connection"
+        )
+
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\",\"ignoreParameters\":\"ignoreParameters\"}}]"
+        )
+
+        # Assert
+        mock_print_done.assert_called()
+        assert mock_print_done.call_count == 1
+        assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
+
+        mock_print_warning.assert_called()
+        assert mock_print_warning.call_count == 1
+        assert f"Ignoring unsupported parameters for on-premises gateway: ['ignoreparameters']" == mock_print_warning.call_args[0][0]
+
+        # Cleanup
+        rm(connection_full_path)
+
+
+    def test_mkdir_connection_with_onpremises_gateway_params_failure(
+        self,
+        cli_executor,
+        mock_fab_ui_print_error,
+        vcr_instance,
+        test_data: StaticTestData,
+        cassette_name,
+    ):
+        # Setup
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
+        connection_full_path = cli_path_join(
+            ".connections", connection_display_name + ".Connection"
+        )
+
+        # Test 1: Execute command with missing values params
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == "Missing parameters for credential type Basic: ['values']"
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
+
+        mock_fab_ui_print_error.reset_mock()
+
+        # Test 2: Execute command with missing encryptedCredentials params
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\"}}]"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(['encryptedCredentials'])
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
+
+        mock_fab_ui_print_error.reset_mock()
+
+        # Test 3: Execute command with missing encryptedCredentials params in one of the values
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}},{{\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}}]"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(['gatewayId'])
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
+
+        mock_fab_ui_print_error.reset_mock()
+
+        # Test 4: Execute command with invalid json format for values
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{gatewayId:{test_data.onpremises_gateway_details.id}, encryptedCredentials:{test_data.onpremises_gateway_details.encrypted_credentials}}}]"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values()
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
+
+        mock_fab_ui_print_error.reset_mock()
+
+        # Test 5: Execute command with invalid values as string array
+        cli_executor.exec_command(
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=['gatewayId', 'encryptedCredentials']"
+        )
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert mock_fab_ui_print_error.call_count == 1
+        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values()
+        assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
     def test_mkdir_connection_with_gateway_params_success(
         self,
