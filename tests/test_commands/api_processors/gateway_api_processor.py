@@ -8,7 +8,7 @@ from tests.test_commands.api_processors.utils import (
     load_request_json_body,
     load_response_json_body,
 )
-from tests.test_commands.data.static_test_data import get_mock_data
+from tests.test_commands.data.static_test_data import get_mock_data, get_static_data
 
 
 class GatewayAPIProcessor(BaseAPIProcessor):
@@ -20,6 +20,9 @@ class GatewayAPIProcessor(BaseAPIProcessor):
 
     def try_process_request(self, request) -> bool:
         uri = request.uri
+        # First, handle URI mocking for gateway IDs
+        self._mock_gateway_id_in_uri(request)
+        
         # Handle list_gateways
         if uri.lower() == self.GATEWAYS_URI.lower():
             method = request.method
@@ -27,6 +30,14 @@ class GatewayAPIProcessor(BaseAPIProcessor):
                 """https://learn.microsoft.com/en-us/rest/api/fabric/core/gateways/create-gateway?tabs=HTTP"""
                 self._handle_post_request(request)
             return True
+        
+        # Handle individual gateway requests
+        if re.fullmatch(rf"{re.escape(self.GATEWAYS_URI)}/[0-9a-fA-F-]{{36}}", request.uri):
+            method = request.method
+            if method in ("GET", "PATCH", "DELETE", "PUT"):
+                self._handle_gateway_request(request)
+            return True
+        
         return False
 
     def try_process_response(self, request, response) -> bool:
@@ -55,6 +66,7 @@ class GatewayAPIProcessor(BaseAPIProcessor):
         if not data:
             return
         self._mock_virtual_network_azure_resource(data)
+        self._mock_gateway_id(data)
         new_body_str = json.dumps(data)
         response["body"]["string"] = new_body_str.encode("utf-8")
 
@@ -67,6 +79,7 @@ class GatewayAPIProcessor(BaseAPIProcessor):
         for item in data["value"]:
             if item.get("displayName") in self.generated_name_mapping:
                 self._mock_virtual_network_azure_resource(item)
+                self._mock_gateway_id(item)
                 new_value.append(item)
 
         data["value"] = new_value
@@ -80,6 +93,7 @@ class GatewayAPIProcessor(BaseAPIProcessor):
             return
 
         self._mock_virtual_network_azure_resource(data)
+        self._mock_gateway_id(data)
 
         new_body_str = json.dumps(data)
         response["body"]["string"] = new_body_str.encode("utf-8")
@@ -90,6 +104,7 @@ class GatewayAPIProcessor(BaseAPIProcessor):
             return
 
         self._mock_virtual_network_azure_resource(data)
+        self._mock_gateway_id(data)
 
         new_body_str = json.dumps(data)
         request.body = new_body_str
@@ -108,3 +123,34 @@ class GatewayAPIProcessor(BaseAPIProcessor):
                 obj["virtualNetworkAzureResource"][
                     "resourceGroupName"
                 ] = get_mock_data().azure_resource_group
+
+    def _mock_gateway_id(self, obj):
+        """Mock gateway ID values in gateway objects"""
+        static_gateway_id = get_static_data().onpremises_gateway_details.id
+        mock_gateway_id = get_mock_data().onpremises_gateway_details.id
+        
+        # Mock direct id field
+        if "id" in obj and obj["id"] == static_gateway_id:
+            obj["id"] = mock_gateway_id
+        
+        # Mock gatewayId field
+        if "gatewayId" in obj and obj["gatewayId"] == static_gateway_id:
+            obj["gatewayId"] = mock_gateway_id
+
+    def _mock_gateway_id_in_uri(self, request):
+        """Mock gateway IDs in request URIs"""
+        static_gateway_id = get_static_data().onpremises_gateway_details.id
+        mock_gateway_id = get_mock_data().onpremises_gateway_details.id
+        
+        # Replace gateway ID in URI path
+        request.uri = request.uri.replace(static_gateway_id, mock_gateway_id)
+
+    def _handle_gateway_request(self, request):
+        """Handle individual gateway requests (GET, PATCH, DELETE, PUT)"""
+        data = load_request_json_body(request)
+        if data:
+            self._mock_virtual_network_azure_resource(data)
+            self._mock_gateway_id(data)
+            
+            new_body_str = json.dumps(data)
+            request.body = new_body_str

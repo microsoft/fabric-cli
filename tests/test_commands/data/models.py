@@ -122,3 +122,17 @@ class CredentialDetails:
     @property
     def password(self) -> str:
         return self._password
+
+class OnPremisesGatewayDetails:
+    def __init__(self, gateway_data: dict[str, str]):
+        # Expecting keys: "id", "encrypted_credentials"
+        self._id = gateway_data.get("id") or ""
+        self._encrypted_credentials = gateway_data.get("encrypted_credentials") or ""
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    @property
+    def encrypted_credentials(self) -> str:
+        return self._encrypted_credentials
