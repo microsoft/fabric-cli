@@ -191,3 +191,13 @@ class CommonErrors:
         supported_creation_methods: list,
     ) -> str:
         return f"Missing connection creation method and parameters. Please indicate either one of the following creation methods: {supported_creation_methods}, or provide parameters for automatic selection"
+    
+    @staticmethod
+    def missing_onpremises_gateway_parameters(
+        missing_params: list,
+    ) -> str:
+        return  f"Missing parameters for credential values in OnPremisesGateway connectivity type: {missing_params}"
+
+    @staticmethod
+    def invalid_onpremises_gateway_values() -> str:
+        return "Values must be a list of JSON objects, each containing 'gatewayId' and 'encryptedCredentials' keys"
