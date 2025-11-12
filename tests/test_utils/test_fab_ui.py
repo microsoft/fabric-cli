@@ -747,6 +747,10 @@ def test_format_key_to_title_case_success():
     assert ui._format_key_to_convert_to_title_case("version_2_settings") == "Version 2 Settings"
     # Test mixed case
     assert ui._format_key_to_convert_to_title_case("user_Name") == "User Name"
+    # Test remove spaces
+    assert ui._format_key_to_convert_to_title_case(" user") == "User"
+    # Test already title case
+    assert ui._format_key_to_convert_to_title_case("User") == "User"
 
 
 def test_format_key_to_title_case_failure():

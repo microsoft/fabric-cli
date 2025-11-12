@@ -547,14 +547,7 @@ def _format_key_to_convert_to_title_case(key: str) -> str:
     if any(char.isupper() for char in key[1:]) and '_' not in key:
         raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
     
-    # Single words without underscores are allowed
-    if '_' not in key and key.islower():
-        pretty = key.title()
-    else:
-        # Replace underscores with spaces and title case
-        pretty = key.replace('_', ' ').title()
-
-    pretty = key.replace('_', ' ').title()
+    pretty = key.replace('_', ' ').title().trim()
 
     return _check_special_cases(pretty)
 
