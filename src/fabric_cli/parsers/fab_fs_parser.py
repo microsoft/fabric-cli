@@ -419,7 +419,8 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         "$ set ws2r.workspace -q sparkSettings.pool.defaultPool -i <inline_json_w_id_name_type> -f",
     ]
     set_learnmore = [
-        "Tip: Run `set <path> -q check -i empty` to see updatable  properties (e.g. set ws1.Workspace -q check -i empty)"
+        "Tip: Run `set <path> -q check -i empty` to see updatable properties (e.g. set ws1.Workspace -q check -i empty)",
+        "Tip: Use --raw-string when setting a property that expects a JSON-encoded string rather than a JSON object",
     ]
 
     set_parser = subparsers.add_parser(
@@ -438,7 +439,13 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         help="JSON path to filter",
     )
     set_parser.add_argument(
-        "-i", "--input", nargs="+", required=True, help="Input path for replace"
+        "-i", "--input", nargs="+", required=True, help="Input value to set"
+    )
+    set_parser.add_argument(
+        "--raw-string",
+        required=False,
+        action="store_true",
+        help="Keep input as literal string without JSON parsing. Use when setting JSON-encoded string properties. Optional",
     )
     set_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
