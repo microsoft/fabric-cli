@@ -678,22 +678,20 @@ def test_print_output_format_text_no_result_failure():
     assert excinfo.value.status_code == constant.ERROR_INVALID_INPUT
 
 
-@pytest.mark.skipif(
-    platform.system() == "Windows",
-    reason="Failed to run on windows with vscode - no real console",
-)
-def test_print_entries_key_value_style_success(capsys):
+def test_print_entries_key_value_style_success(mock_questionary_print):
     """Test printing entries in key-value format."""
     
     # Test with single dictionary entry
     entry = {"logged_in": "true", "account_name": "johndoe@example.com"}
     ui._print_entries_key_value_list_style(entry)
     
-    captured = capsys.readouterr()
-    # print_grey outputs to stderr with to_stderr=False, so check stdout
-    output = captured.out
-    assert "Logged In: true" in output
-    assert "Account Name: johndoe@example.com" in output
+    # Verify the correct formatted output was printed
+    assert mock_questionary_print.call_count == 2
+    printed_calls = [call.args[0] for call in mock_questionary_print.call_args_list]
+    assert "Logged In: true" in printed_calls
+    assert "Account Name: johndoe@example.com" in printed_calls
+    
+    mock_questionary_print.reset_mock()
     
     # Test with list of dictionaries
     entries = [
@@ -702,19 +700,21 @@ def test_print_entries_key_value_style_success(capsys):
     ]
     ui._print_entries_key_value_list_style(entries)
     
-    captured = capsys.readouterr()
-    output = captured.out
-    assert "User Name: john" in output
-    assert "Status: active" in output
-    assert "User Name: jane" in output
-    assert "Status: inactive" in output
+    # Verify output for list of entries (should include empty line between entries, but not after last)
+    assert mock_questionary_print.call_count == 5  # 2 for john + 1 empty line + 2 for jane
+    printed_calls = [call.args[0] for call in mock_questionary_print.call_args_list]
+    assert "User Name: john" in printed_calls
+    assert "Status: active" in printed_calls
+    assert "User Name: jane" in printed_calls
+    assert "Status: inactive" in printed_calls
+    assert "" in printed_calls  # Empty line between entries (but not after the last entry)
+    
+    mock_questionary_print.reset_mock()
     
     # Test with empty list
     ui._print_entries_key_value_list_style([])
-    captured = capsys.readouterr()
-    # Should not output anything for empty list
-    assert captured.err == ""
-    assert captured.out == ""
+    # Should not call print for empty list
+    mock_questionary_print.assert_not_called()
 
 
 def test_print_entries_key_value_style_invalid_input():

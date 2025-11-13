@@ -513,11 +513,11 @@ def _print_entries_key_value_list_style(entries: Any) -> None:
             fab_constant.ERROR_INVALID_ENTRIES_FORMAT,
         )
 
-    for entry in _entries:
+    for i, entry in enumerate(_entries):
         for key, value in entry.items():
             pretty_key = _format_key_to_convert_to_title_case(key)
             print_grey(f"{pretty_key}: {value}", to_stderr=False)
-        if len(_entries) > 1:
+        if i < len(_entries) - 1:
             print_grey("", to_stderr=False)  # Empty line between entries
 
 
