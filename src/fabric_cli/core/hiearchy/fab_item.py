@@ -58,6 +58,7 @@ class Item(_BaseItem):
             for prop in ITMutablePropMap[item_type]:
                 if key in prop:
                     return prop[key]
+        return None
 
     @property
     def parent(self) -> Workspace | Folder:
