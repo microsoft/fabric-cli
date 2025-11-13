@@ -64,6 +64,8 @@ AUTH_KEYS = {
     IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
 }
 
+FAB_HOST_APP_ENV_VAR = "FABRIC_CLI_HOST_APP"
+
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"
 FAB_DEFAULT_OPEN_EXPERIENCE_FABRIC = "fabric-developer"
@@ -316,3 +318,11 @@ ITEM_METADATA_PROPERTIES = {
     "workspaceId",
     "folderId",
 }
+
+################################################
+### Only allowed for modification by CLI team ##
+
+ALLOWED_FAB_HOST_APP_VALUES = [
+    #    "CLI-ADO-Pipeline"
+]
+################################################

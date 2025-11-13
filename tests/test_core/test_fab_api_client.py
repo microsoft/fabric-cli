@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.client.fab_api_client import (
+    _get_host_app_suffix,
     _transform_workspace_url_for_private_link_if_needed,
     do_request,
 )
@@ -309,6 +310,116 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
         assert "ErrorCode" == excinfo.value.status_code
 
 
+@pytest.mark.parametrize(
+    "host_app_env, expected_suffix",
+    [
+        ("VSCode-Extension", "; HostApp/VSCode-Extension"),  # Valid, correct case
+        ("vscode-extension", "; HostApp/VSCode-Extension"),  # Valid, lower case
+        ("VSCodE-ExTenSion", "; HostApp/VSCode-Extension"),  # Valid, mixed case
+        (
+            "Azure-DevOps-Pipeline",
+            "; HostApp/Azure-DevOps-Pipeline",
+        ),  # Valid, correct case
+        (
+            "azure-devops-pipeline",
+            "; HostApp/Azure-DevOps-Pipeline",
+        ),  # Valid, lower case
+        ("Invalid-App", ""),  # Invalid
+        ("", ""),  # Empty
+        (None, ""),  # Not set
+    ],
+)
+def test_get_host_app_suffix(host_app_env, expected_suffix, monkeypatch):
+    """Test the _get_host_app_suffix helper function."""
+    if host_app_env is not None:
+        monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
+
+    result = _get_host_app_suffix()
+
+    assert result == expected_suffix
+
+
 @pytest.fixture()
 def setup_default_private_links(mock_fab_set_state_config):
     mock_fab_set_state_config(fab_constant.FAB_WS_PRIVATE_LINKS_ENABLED, "true")
+
+
+@patch("platform.release", return_value="5.4.0")
+@patch("platform.machine", return_value="x86_64")
+@patch("platform.system", return_value="Linux")
+@patch("requests.Session.request")
+@patch("fabric_cli.core.fab_auth.FabAuth")
+@patch("fabric_cli.core.fab_context.Context")
+@pytest.mark.parametrize(
+    "host_app_env, expected_suffix",
+    [
+        (None, ""),  # No env var set
+        ("VSCode-Extension", "; HostApp/VSCode-Extension"),  # Valid and allowed
+        (
+            "Azure-DevOps-Pipeline",
+            "; HostApp/Azure-DevOps-Pipeline",
+        ),  # Valid and allowed
+        (
+            "vscode-extension",
+            "; HostApp/VSCode-Extension",
+        ),  # Valid and allowed (case-insensitive)
+        ("Invalid-App", ""),  # Invalid and not in allowlist
+        ("", ""),  # Empty value
+    ],
+)
+def test_do_request_user_agent_header(
+    mock_context,
+    mock_auth,
+    mock_request,
+    mock_system,
+    mock_machine,
+    mock_release,
+    host_app_env,
+    expected_suffix,
+    monkeypatch,
+):
+    """Test User-Agent header construction with and without host app identifier."""
+    if host_app_env is not None:
+        monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
+
+    # Configure mocks
+    mock_auth.return_value.get_access_token.return_value = "dummy-token"
+    mock_context.return_value.command = "test-command"
+
+    class DummyResponse:
+        status_code = 200
+        text = "{}"
+        content = b"{}"
+        headers = {}
+
+    mock_request.return_value = DummyResponse()
+
+    dummy_args = Namespace(
+        uri="items",
+        method="get",
+        audience=None,
+        headers=None,
+        wait=False,
+        raw_response=True,
+        request_params={},
+        json_file=None,
+    )
+
+    do_request(dummy_args)
+
+    # Verify the User-Agent header from the actual request call
+    call_kwargs = mock_request.call_args.kwargs
+    headers = call_kwargs["headers"]
+    user_agent = headers["User-Agent"]
+
+    base_user_agent = (
+        f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} "
+        f"(test-command; Linux; x86_64; 5.4.0)"
+    )
+    expected_user_agent = base_user_agent + expected_suffix
+
+    assert user_agent == expected_user_agent

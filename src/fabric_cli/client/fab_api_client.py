@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import os
 import platform
 import re
 import time
@@ -23,13 +24,11 @@ from fabric_cli.core.fab_exceptions import (
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
-from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
-
-
 
 
 def do_request(
@@ -91,14 +90,17 @@ def do_request(
 
     # Get token
     from fabric_cli.core.fab_auth import FabAuth
+
     token = FabAuth().get_access_token(scope)
 
     # Build headers
     from fabric_cli.core.fab_context import Context as FabContext
+
     ctxt_cmd = FabContext().command
+
     headers = {
         "Authorization": "Bearer " + str(token),
-        "User-Agent": f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} ({ctxt_cmd}; {platform.system()}; {platform.machine()}; {platform.release()})",
+        "User-Agent": _build_user_agent(ctxt_cmd),
     }
 
     if files is None:
@@ -279,6 +281,37 @@ def _handle_successful_response(args: Namespace, response: ApiResponse) -> ApiRe
     return response
 
 
+def _build_user_agent(ctxt_cmd: str) -> str:
+    """Build the User-Agent header for API requests, including context command and HostApp if applicable."""
+    base_user_agent = f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} ({ctxt_cmd}; {platform.system()}; {platform.machine()}; {platform.release()})"
+    host_app_suffix = _get_host_app_suffix()
+    return f"{base_user_agent}{host_app_suffix}"
+
+
+def _get_host_app_suffix() -> str:
+    """Get the HostApp suffix for the User-Agent header based on environment variable.
+
+    Returns an empty string if the environment variable is not set or has an invalid value.
+    """
+    _host_app_in_env = os.environ.get(fab_constant.FAB_HOST_APP_ENV_VAR)
+    if not _host_app_in_env:
+        return ""
+
+    host_app = next(
+        (
+            allowed_app
+            for allowed_app in fab_constant.ALLOWED_FAB_HOST_APP_VALUES
+            if _host_app_in_env.lower() == allowed_app.lower()
+        ),
+        None,
+    )
+
+    if not host_app:
+        return ""
+
+    return f"; HostApp/{host_app}"
+
+
 def _print_response_details(response: ApiResponse) -> None:
     response_details = dict(
         {
@@ -355,10 +388,10 @@ def _poll_operation(
     args.method = "get"
     args.wait = False
     args.params = {}
-    
+
     initial_interval = get_polling_interval(original_response.headers)
     time.sleep(initial_interval)
-    
+
     while True:
         response = do_request(args, hostname=hostname)
 
