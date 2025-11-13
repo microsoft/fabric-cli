@@ -271,11 +271,9 @@ def status(args: Namespace) -> None:
         "user_id": oid,
         "tenant_id": tid,
         "app_id": appid,
-        "tokens": {
-            "fabric_powerbi": fabric_secret,
-            "storage": storage_secret,
-            "azure": azure_secret,
-        },
+        "token_fabric_powerbi": fabric_secret,
+        "token_storage": storage_secret,
+        "token_azure": azure_secret,
     }
     fab_ui.print_output_format(args, data=auth_data, show_key_value_list=True)
 
