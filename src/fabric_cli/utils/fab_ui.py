@@ -3,8 +3,6 @@
 
 import builtins
 import html
-import json
-import re
 import sys
 import unicodedata
 from argparse import Namespace
