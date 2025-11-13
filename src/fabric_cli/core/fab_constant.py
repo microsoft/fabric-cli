@@ -316,3 +316,16 @@ ITEM_METADATA_PROPERTIES = {
     "workspaceId",
     "folderId",
 }
+
+# Item set constants
+ITEM_QUERY_DEFINITION = "definition"
+ITEM_QUERY_PROPERTIES = "properties"
+ITEM_QUERY_DISPLAY_NAME = "displayName"
+ITEM_QUERY_DESCRIPTION = "description"
+
+# Allowed metadata keys for item set operations
+ITEM_SET_ALLOWED_METADATA_KEYS = [
+    ITEM_QUERY_DISPLAY_NAME,
+    ITEM_QUERY_DESCRIPTION,
+    ITEM_QUERY_PROPERTIES,
+]

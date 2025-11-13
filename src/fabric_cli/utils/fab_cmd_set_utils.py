@@ -9,6 +9,20 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 
+def validate_item_query(query_value: str) -> None:
+    if not (
+        query_value in fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS
+        or query_value == fab_constant.ITEM_QUERY_DEFINITION
+        or query_value.startswith(f"{fab_constant.ITEM_QUERY_DEFINITION}.")
+        or query_value.startswith(f"{fab_constant.ITEM_QUERY_PROPERTIES}.")
+    ):
+        raise FabricCLIError(
+            f"Invalid query '{query_value}'. Allowed queries for items are: {', '.join(fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS)}, "
+            f"'{fab_constant.ITEM_QUERY_DEFINITION}', '{fab_constant.ITEM_QUERY_DEFINITION}.*', or '{fab_constant.ITEM_QUERY_PROPERTIES}.*'",
+            fab_constant.ERROR_INVALID_INPUT,
+        )
+
+
 def validate_expression(expression: str, allowed_keys: list[str]) -> None:
     if not any(
         expression == key or expression.startswith(f"{key}.") for key in allowed_keys
@@ -35,13 +49,18 @@ def ensure_notebook_dependency(decoded_item_def: dict, query: str) -> dict:
 
 
 def update_fabric_element(
-    resource_def: dict, query: str, input: str, decode_encode: bool = False
+    resource_def: dict,
+    query: str,
+    input: str,
+    decode_encode: bool = False,
+    raw_string: bool = False,
 ) -> tuple[str, dict]:
-    try:
-        input = json.loads(input)
-    except (TypeError, json.JSONDecodeError):
-        # If it's not a JSON string, keep it as is
-        pass
+    if not raw_string:
+        try:
+            input = json.loads(input)
+        except (TypeError, json.JSONDecodeError):
+            # If it's not a JSON string, keep it as is
+            pass
 
     # Decode > replace > encode
     if decode_encode:
@@ -73,6 +92,16 @@ def extract_json_schema(schema: dict, definition: bool = True) -> tuple:
         definition_properties = {"definition": schema.get("definition", {})}
 
     return definition_properties, name_description_properties
+
+
+def extract_updated_properties(updated_data: dict, query_path: str) -> dict:
+    result = {}
+    top_level_key = query_path.split(".")[0]
+
+    if top_level_key in updated_data:
+        result[top_level_key] = updated_data[top_level_key]
+
+    return result
 
 
 def _encode_payload(item_def: dict) -> dict:
