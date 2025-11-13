@@ -264,7 +264,6 @@ def status(args: Namespace) -> None:
     # Check if user is logged in
     is_logged_in = fabric_secret != "N/A"
 
-    # For JSON output, provide structured data
     auth_data = {
         "logged_in": is_logged_in,
         "account": upn,
