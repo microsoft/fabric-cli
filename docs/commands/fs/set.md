@@ -46,6 +46,27 @@ Any explicit path (specified via the `-q` / `--query` command argument) to prope
 - Paths must map directly to JSON paths without filters or wildcards
 - Only paths already present in the item definition can be updated. Properties with default values may not appear when retrieved via `get` unless explicitly set previously.
 
+**Supported - Single property path:**
+
+```bash
+# Setting a single property path
+fab set ws1/notebook1.Notebook -q lakehouse -i "lakehouse1.Lakehouse" -f
+```
+
+**Not Supported - Multiple property paths in one `-query`:**
+
+```bash
+#  This will NOT work - multiple paths cannot be specified in a single -query argument
+fab set ws1/notebook1.Notebook -q "lakehouse, environment" -i "lakehouse1.Lakehouse, env1.Environment" -f
+```
+
+!!! tip "Setting multiple properties"
+    To set multiple properties, execute separate `set` commands for each property:
+    ```bash
+    fab set ws1/notebook1.Notebook -q lakehouse -i "lakehouse1.Lakehouse" -f
+    fab set ws1/notebook1.Notebook -q environment -i "env1.Environment" -f
+    ```
+
 ### Common Item-Specific Definition Property Paths
 
 These are friendly names that map to specific paths in the item's definition structure. When using the `set` command, you can use these names directly (as the `-query` / `--q` argument value) as they map to the correct definition paths:
@@ -53,3 +74,6 @@ These are friendly names that map to specific paths in the item's definition str
 - **Notebook**: `lakehouse`, `environment`, `warehouse`
 - **Report**: `semanticModelId` (applies only to [Report definition.pbir version 1](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report?tabs=v1%2Cdesktop#definitionpbir). For other versions, check the correct property path in the Report definition documentation)
 - **SparkJobDefinition**: `payload`
+
+!!! note "Note on friendly names"
+    These friendly names may be deprecated in a future release. For forward compatibility, consider using explicit JSON paths within the item's `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions).
