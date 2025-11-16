@@ -51,14 +51,14 @@ class Item(_BaseItem):
     def folder_id(self) -> str | None:
         return self.parent.id if isinstance(self.parent, Folder) else None
 
-    def get_mutable_prop_path(self, key: str) -> str | None:
+    def extract_friendly_name_path_or_default(self, key: str) -> str | None:
         item_type = self.item_type
 
         if item_type in ITMutablePropMap:
             for prop in ITMutablePropMap[item_type]:
                 if key in prop:
                     return prop[key]
-        return None
+        return key
 
     @property
     def parent(self) -> Workspace | Folder:

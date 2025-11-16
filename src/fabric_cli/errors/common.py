@@ -4,6 +4,8 @@
 
 from typing import Optional
 
+from fabric_cli.core import fab_constant
+
 
 class CommonErrors:
 
@@ -177,7 +179,9 @@ class CommonErrors:
         return "Invalid destination, expected file or writable folder"
 
     @staticmethod
-    def cannot_write_in_folder(root_folder: str, item_type: str, supported_folders: str) -> str:
+    def cannot_write_in_folder(
+        root_folder: str, item_type: str, supported_folders: str
+    ) -> str:
         return f"Cannot write in folder '{root_folder}' for {item_type}. Only {supported_folders} folders are supported"
 
     @staticmethod
@@ -191,3 +195,16 @@ class CommonErrors:
         supported_creation_methods: list,
     ) -> str:
         return f"Missing connection creation method and parameters. Please indicate either one of the following creation methods: {supported_creation_methods}, or provide parameters for automatic selection"
+
+    @staticmethod
+    def definition_update_not_supported_for_item_type(item_type: str) -> str:
+        return f"Item type '{item_type}' does not support definition updates"
+
+    @staticmethod
+    def invalid_item_set_query(query_value: str) -> str:
+        return (
+            f"Invalid query '{query_value}'. Allowed queries for items are: "
+            f"{', '.join(fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS)}, "
+            f"'{fab_constant.ITEM_QUERY_DEFINITION}', '{fab_constant.ITEM_QUERY_DEFINITION}.*', "
+            f"or '{fab_constant.ITEM_QUERY_PROPERTIES}.*'"
+        )

@@ -9,6 +9,7 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_types import definition_format_mapping, format_mapping
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
+from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
@@ -17,12 +18,9 @@ from fabric_cli.utils import fab_ui as utils_ui
 def exec(item: Item, args: Namespace) -> None:
     force = args.force
     query = args.query
-    raw_string = getattr(args, "raw_string", False)
+    raw_string = args.raw_string
 
-    query_value = item.get_mutable_prop_path(query)
-
-    if query_value is None:
-        query_value = query
+    query_value = item.extract_friendly_name_path_or_default(query)
 
     utils_set.validate_item_query(query_value)
 
@@ -39,8 +37,10 @@ def exec(item: Item, args: Namespace) -> None:
         ):
             if not item.check_command_support(Command.FS_EXPORT):
                 raise utils_set.FabricCLIError(
-                    f"Item type '{item.item_type}' does not support definition updates",
-                    utils_set.fab_constant.ERROR_UNSUPPORTED_COMMAND,
+                    CommonErrors.definition_update_not_supported_for_item_type(
+                        item.item_type
+                    ),
+                    fab_constant.ERROR_UNSUPPORTED_COMMAND,
                 )
 
             args.format = definition_format_mapping.get(item.item_type, "")
@@ -81,7 +81,7 @@ def exec(item: Item, args: Namespace) -> None:
             item_api.update_item(args, item_update_payload, item_uri=True)
 
             if fab_constant.ITEM_QUERY_DISPLAY_NAME in updated_metadata:
-                new_item_name = updated_metadata["displayName"]
+                new_item_name = updated_metadata[fab_constant.ITEM_QUERY_DISPLAY_NAME]
                 item._name = new_item_name
                 utils_mem_store.upsert_item_to_cache(item)
 

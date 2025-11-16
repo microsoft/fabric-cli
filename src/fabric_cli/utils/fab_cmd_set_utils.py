@@ -6,6 +6,7 @@ import json
 
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 
@@ -17,9 +18,8 @@ def validate_item_query(query_value: str) -> None:
         or query_value.startswith(f"{fab_constant.ITEM_QUERY_PROPERTIES}.")
     ):
         raise FabricCLIError(
-            f"Invalid query '{query_value}'. Allowed queries for items are: {', '.join(fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS)}, "
-            f"'{fab_constant.ITEM_QUERY_DEFINITION}', '{fab_constant.ITEM_QUERY_DEFINITION}.*', or '{fab_constant.ITEM_QUERY_PROPERTIES}.*'",
-            fab_constant.ERROR_INVALID_INPUT,
+            CommonErrors.invalid_item_set_query(query_value),
+            fab_constant.ERROR_INVALID_QUERY,
         )
 
 
