@@ -51,7 +51,7 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
         metavar="",
         nargs="+",
         required=False,
-        help="Query to filter results. Optional",
+        help="JMESPath query to filter. Optional",
     )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"

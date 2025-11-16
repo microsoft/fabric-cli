@@ -7,10 +7,8 @@ from argparse import Namespace
 from fabric_cli.client import fab_api_capacity as capacity_api
 from fabric_cli.client import fab_api_workspace as workspace_api
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualWorkspaceItem
-from fabric_cli.errors import ErrorMessages
-from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core import fab_constant
+from fabric_cli.utils import fab_ui as utils_ui, fab_util
+from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 def sort_elements(
     elements: list[dict[str, str]], key: str = "name"
@@ -78,27 +76,10 @@ def format_and_print_output(
     columns: list[str] = [],
     hidden_data=None,
 ) -> None:
-    # Handle query parameter
-    if hasattr(args, 'query') and args.query:
-        query_parts = args.query.split() if isinstance(args.query, str) else args.query
-        
-        # Validate that all query fields exist in available columns
-        invalid_fields = [field for field in query_parts if field not in columns]
-        if invalid_fields:
-            raise FabricCLIError(
-                ErrorMessages.Common.invalid_parameter(invalid_fields, columns),
-                fab_constant.ERROR_INVALID_QUERY_FIELDS,
-            )
-
-        if len(query_parts) > 1:
-            # Multiple query parameters - simulate -l flag
-            show_details = True
-        columns = query_parts
-
-    # Project only requested columns
-    filtered_data = [
-        {key: item[key] for key in columns if key in item} for item in data
-    ]
+    
+    args.query = fab_util.process_nargs(args.query)
+    # Project the columns requested by the user based on JMESPath if query is provided else project the columns requested based on item type
+    filtered_data = utils_jmespath.search(data, args.query) if args.query else [{key: item[key] for key in columns if key in item} for item in data]
 
     utils_ui.print_output_format(
         args, show_headers=show_details, data=filtered_data, hidden_data=hidden_data

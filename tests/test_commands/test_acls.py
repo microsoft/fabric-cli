@@ -266,22 +266,32 @@ class TestACLs:
         workspace,
         mock_questionary_print,
         cli_executor: CLIExecutor,
+        test_data: StaticTestData,
     ):
-        # Test single query parameter
-        cli_executor.exec_command(f"acl ls {workspace.full_path} -q identity")
+
+        # Test 1: Array projection for single field
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q '[*].identity'")
         mock_questionary_print.assert_called()
-        assert any("identity" in call.args[0] for call in mock_questionary_print.mock_calls)
-        assert not any("objectId" in call.args[0] for call in mock_questionary_print.mock_calls)
-        
-        # Reset mock for next test
+        assert any(test_data.admin.upn in call.args[0] for call in mock_questionary_print.mock_calls)
+
         mock_questionary_print.reset_mock()
-        
-        # Test multiple query parameters
-        cli_executor.exec_command(f"acl ls {workspace.full_path} -q identity type")
+
+        # Test 2: Multiple fields using array syntax
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [].[identity,type]")
         mock_questionary_print.assert_called()
-        assert any("identity" in call.args[0] for call in mock_questionary_print.mock_calls)
-        assert any("type" in call.args[0] for call in mock_questionary_print.mock_calls)
-        assert not any("objectId" in call.args[0] for call in mock_questionary_print.mock_calls)
+        call_args = mock_questionary_print.mock_calls[0].args[0]
+        assert test_data.admin.upn in call_args and "User" in call_args
+        
+        mock_questionary_print.reset_mock()
+
+        # Test 3: Object projection with field aliases
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [].{{principalInfo: identity, accessLevel: acl}}")
+        mock_questionary_print.assert_called()
+        call_args = mock_questionary_print.mock_calls[0].args[0]
+        assert "principalInfo" in call_args and "accessLevel" in call_args
+        
+        # Cleanup test ACL entry
+        _cleanup_acl(cli_executor, workspace.full_path,  test_data.service_principal.id)
 
     def test_acls_ls_workspace_long_success(
         self,
@@ -307,22 +317,6 @@ class TestACLs:
             "objectId" in call.args[0] for call in mock_questionary_print.mock_calls
         )
         assert any("name" in call.args[0] for call in mock_questionary_print.mock_calls)
-
-    def test_acls_ls_workspace_invalid_query_failure(
-        self,
-        workspace,
-        mock_fab_ui_print_error,
-        cli_executor: CLIExecutor,
-    ):
-        # Execute command with invalid query
-        cli_executor.exec_command(f"acl ls {workspace.full_path} -q invalidfield")
-
-        # Assert error
-        mock_fab_ui_print_error.assert_called()
-        error_call = mock_fab_ui_print_error.mock_calls[0]
-        assert isinstance(error_call.args[0], FabricCLIError)
-        assert error_call.args[0].status_code == constant.ERROR_INVALID_QUERY_FIELDS
-        assert "Invalid query field(s): invalidfield. Available fields: acl, identity, type" in error_call.args[0].message
 
     def test_acls_ls_connection_success(
         self,
@@ -351,7 +345,6 @@ class TestACLs:
         # Assert
         acls_ls_vws_assestion(mock_questionary_print, long=True)
 
-
     def test_acls_ls_gateway_success(
         self,
         virtual_workspace_item_factory,
@@ -378,7 +371,6 @@ class TestACLs:
 
         # Assert
         acls_ls_vws_assestion(mock_questionary_print, long=True)
-
 
     def test_acls_ls_lakehouse_success(
         self,
