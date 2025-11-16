@@ -43,7 +43,7 @@ Any explicit path (specified via the `-q` / `--query` command argument) to prope
 ### Limitations
 
 - Only one property path can be specified per `-query` argument
-- Paths must map directly to JSON paths without filters or wildcards
+- Paths must map directly to JSON paths **without** filters or wildcards
 - Only paths already present in the item definition can be updated. Properties with default values may not appear when retrieved via `get` unless explicitly set previously.
 
 **Supported - Single property path:**
