@@ -4,7 +4,7 @@
 from argparse import Namespace
 from typing import Any, Optional
 
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
