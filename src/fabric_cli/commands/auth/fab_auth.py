@@ -261,8 +261,14 @@ def status(args: Namespace) -> None:
     storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
     azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
 
-    # Check if user is logged in
+    # Check login status
     is_logged_in = fabric_secret != "N/A"
+    login_status = (
+        "✓ Logged in to app.fabric.microsoft.com"
+        if is_logged_in
+        else "✗ Not logged in to app.fabric.microsoft.com"
+    )
+    fab_ui.print_grey(login_status)
 
     auth_data = {
         "logged_in": is_logged_in,
