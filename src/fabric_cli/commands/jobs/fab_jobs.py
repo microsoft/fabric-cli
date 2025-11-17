@@ -9,6 +9,7 @@ from fabric_cli.commands.jobs import fab_jobs_run_list as jobs_run_list
 from fabric_cli.commands.jobs import fab_jobs_run_sch as jobs_run_sch
 from fabric_cli.commands.jobs import fab_jobs_run_status as jobs_run_status
 from fabric_cli.commands.jobs import fab_jobs_run_update as jobs_run_update
+from fabric_cli.commands.jobs import fab_jobs_run_rm as jobs_run_rm
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_decorators import handle_exceptions, set_command_context
@@ -86,3 +87,13 @@ def run_update_command(args: Namespace) -> None:
     utils_job.add_item_props_to_args(args, context)
     utils_job.build_config_from_args(args, context, schedule=True)
     jobs_run_update.exec_command(args, context)
+
+
+@handle_exceptions()
+@set_command_context()
+def run_rm_command(args: Namespace) -> None:
+    context = handle_context.get_command_context(args.path)
+    context.check_command_support(Command.JOB_RUN_RM)
+    assert isinstance(context, Item)
+    utils_job.add_item_props_to_args(args, context)
+    jobs_run_rm.exec_command(args, context)

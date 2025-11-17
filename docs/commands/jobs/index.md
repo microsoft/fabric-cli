@@ -161,4 +161,22 @@ fab job run-cancel <path> --id <job_id> [--wait]
 
 ---
 
+### run-rm
+
+Remove a scheduled job.
+
+**Usage:**
+
+```
+fab job run-rm <path> --id <scheduled-id> [-f]
+```
+
+**Parameters:**
+
+- `<path>`: Path to the resource.
+- `--id`: Schedule ID to remove.
+- `-f, --force`: Bypass confirmation prompt. Optional.
+
+---
+
 For more examples and detailed scenarios, see [Job Management Examples](../../examples/job_examples.md).
