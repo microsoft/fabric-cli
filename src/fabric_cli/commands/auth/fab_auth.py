@@ -273,7 +273,7 @@ def status(args: Namespace) -> None:
     auth_data = {
         "logged_in": is_logged_in,
         "account": upn,
-        "user_id": oid,
+        "principal_id": oid,
         "tenant_id": tid,
         "app_id": appid,
         "token_fabric_powerbi": fabric_secret,
