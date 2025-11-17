@@ -11,6 +11,15 @@ from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 
 def validate_item_query(query_value: str) -> None:
+    """Validate that a query string is allowed for item metadata modification.
+
+    Args:
+        query_value: Query string to validate. Must be an allowed metadata key,
+            or start with "definition." or "properties.".
+
+    Raises:
+        FabricCLIError: If the query is not in an allowed format.
+    """
     if not (
         query_value in fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS
         or query_value == fab_constant.ITEM_QUERY_DEFINITION
@@ -55,6 +64,19 @@ def update_fabric_element(
     decode_encode: bool = False,
     raw_string: bool = False,
 ) -> tuple[str, dict]:
+    """Update a Fabric resource element using a JMESPath query.
+
+    Args:
+        resource_def: Resource definition dictionary to modify.
+        query: JMESPath expression specifying the path to update.
+        input: New value to set. JSON parsed unless raw_string is True.
+        decode_encode: If True, decode/encode base64 payloads. Default False.
+        raw_string: If True, treat input as literal string. Default False.
+
+    Returns:
+        Tuple of (json_payload, updated_def) where json_payload is the JSON string
+        and updated_def is the updated dictionary.
+    """
     if not raw_string:
         try:
             input = json.loads(input)

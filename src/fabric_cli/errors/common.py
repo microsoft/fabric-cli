@@ -208,3 +208,7 @@ class CommonErrors:
             f"'{fab_constant.ITEM_QUERY_DEFINITION}', '{fab_constant.ITEM_QUERY_DEFINITION}.*', "
             f"or '{fab_constant.ITEM_QUERY_PROPERTIES}.*'"
         )
+
+    @staticmethod
+    def invalid_set_item_query(query_path: str) -> str:
+        return f"Invalid query. Either '{query_path}' is not a valid query or the item does not contain the specified path"
