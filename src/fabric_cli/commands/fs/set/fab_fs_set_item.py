@@ -7,6 +7,7 @@ from argparse import Namespace
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_commands import Command
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import definition_format_mapping, format_mapping
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors.common import CommonErrors
@@ -36,7 +37,7 @@ def exec(item: Item, args: Namespace) -> None:
             f"{fab_constant.ITEM_QUERY_DEFINITION}."
         ):
             if not item.check_command_support(Command.FS_EXPORT):
-                raise utils_set.FabricCLIError(
+                raise FabricCLIError(
                     CommonErrors.definition_update_not_supported_for_item_type(
                         item.item_type
                     ),
@@ -47,7 +48,7 @@ def exec(item: Item, args: Namespace) -> None:
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
 
-            json_payload, updated_def = utils_set.update_fabric_element(
+            json_payload, updated_def = _update_element(
                 definition,
                 query_value,
                 args.input,
@@ -63,7 +64,7 @@ def exec(item: Item, args: Namespace) -> None:
         else:
             item_metadata = json.loads(item_api.get_item(args, item_uri=True).text)
 
-            json_payload, updated_metadata = utils_set.update_fabric_element(
+            json_payload, updated_metadata = _update_element(
                 item_metadata,
                 query_value,
                 args.input,
@@ -86,3 +87,25 @@ def exec(item: Item, args: Namespace) -> None:
                 utils_mem_store.upsert_item_to_cache(item)
 
         utils_ui.print_output_format(args, message="Item updated")
+
+
+def _update_element(
+    resource_def: dict,
+    query_value: str,
+    input_value: str,
+    decode_encode: bool,
+    raw_string: bool,
+) -> tuple[str, dict]:
+    try:
+        return utils_set.update_fabric_element(
+            resource_def,
+            query_value,
+            input_value,
+            decode_encode=decode_encode,
+            raw_string=raw_string,
+        )
+    except (ValueError, KeyError, IndexError):
+        raise FabricCLIError(
+            CommonErrors.invalid_set_item_query(query_value),
+            fab_constant.ERROR_INVALID_QUERY,
+        )

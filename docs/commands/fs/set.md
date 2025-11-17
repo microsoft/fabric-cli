@@ -42,9 +42,9 @@ Any explicit path (specified via the `-q` / `--query` command argument) to prope
 
 ### Limitations
 
-- Only one property path can be specified per `-query` argument
+- Only one property path can be specified per `--query` argument
 - Paths must map directly to JSON paths **without** filters or wildcards
-- Only paths already present in the item definition can be updated. Properties with default values may not appear when retrieved via `get` unless explicitly set previously.
+- Properties can be added one level deep from existing paths returned by [`get`](get.md), provided they are valid according to the item's schema. Nested properties must be created incrementally (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
 
 **Supported - Single property path:**
 
