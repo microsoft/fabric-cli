@@ -4,7 +4,7 @@
 from argparse import Namespace
 from typing import Any, Optional
 
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -262,21 +262,25 @@ def status(args: Namespace) -> None:
     azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
 
     # Check login status
+    is_logged_in = fabric_secret != "N/A"
     login_status = (
         "✓ Logged in to app.fabric.microsoft.com"
-        if fabric_secret != "N/A"
+        if is_logged_in
         else "✗ Not logged in to app.fabric.microsoft.com"
     )
+    fab_ui.print_grey(login_status)
 
-    fab_ui.print_grey(
-        f"""{login_status}
-  - Account: {upn} ({oid})
-  - Tenant ID: {tid}
-  - App ID: {appid}
-  - Token (fabric/powerbi): {fabric_secret}
-  - Token (storage): {storage_secret}
-  - Token (azure): {azure_secret}"""
-    )
+    auth_data = {
+        "logged_in": is_logged_in,
+        "account": upn,
+        "principal_id": oid,
+        "tenant_id": tid,
+        "app_id": appid,
+        "token_fabric_powerbi": fabric_secret,
+        "token_storage": storage_secret,
+        "token_azure": azure_secret,
+    }
+    fab_ui.print_output_format(args, data=auth_data, show_key_value_list=True)
 
 
 # Utils
