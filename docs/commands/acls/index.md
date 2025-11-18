@@ -1,149 +1,124 @@
-# ACL Commands
+# Access Control List (ACL) Commands
 
-The `acl` commands manage access control lists (ACLs) for Fabric resources. Use these commands to view, set, and manage access permissions.
+The access control list (`acl`) commands let you manage permissions and security settings for workspaces, items, and OneLake resources.
+
+**Supported Types:**
+
+- `.Workspace` (workspace-level ACLs)
+- All workspace item types (item-level ACLs)
+- OneLake storage sections (RBAC)
 
 ## Available Commands
 
-| Command    | Description                    | Usage                                             |
-|------------|--------------------------------|---------------------------------------------------|
-| `acl get`  | Get ACL entries for a resource | `acl get <path> [-q QUERY]`                      |
-| `acl ls`   | List ACL entries              | `acl ls <path> [-l] [-q QUERY]`                  |
-| `acl set`  | Set ACL entry                 | `acl set <path> --identity ID --role ROLE [-f]`  |
-| `acl rm`   | Remove ACL entry              | `acl rm <path> --identity ID [-f]`               |
+| Command         | Description             | Usage                                              |
+|-----------------|------------------------|----------------------------------------------------|
+| `acl ls` (dir)  | List ACLs              | `acl ls <path> [-l]`                               |
+| `acl set`       | Set access controls     | `acl set <path> [-I <identity>] [-R <role>] [-f]`  |
+| `acl rm` (del)  | Remove an ACL          | `acl rm <path> [-I <identity>] [-f]`               |
+| `acl get`       | Get ACL details        | `acl get <path> [-q <query>] [-o <output_path>]`   |
 
 ---
 
 ### ls (dir)
 
-List ACL entries for a resource.
+List access control entries for a workspace, item, or OneLake resource.
 
 !!! info "Listing ACLs for a workspace or item requires tenant-level Fabric Administrator"
 
 **Usage:**
 
 ```
-fab acl ls <path> [-l] [-q QUERY]
+fab acl ls <path> [-l] [-q <query>]
 ```
 
 **Parameters:**
 
-- `<path>`: Resource path
-- `-l, --long`: Show detailed output including object IDs and names. Optional.
-- `-q, --query`: JMESPath query to filter and project fields. Optional.
+- `<path>`: Path to the resource.
+- `-l, --long`: Show detailed output. Optional.
+- `-q, --query`: JMESPath query to filter results. Optional.
 
 **Examples:**
 
-```bash
-# List basic ACL entries
-fab acl ls ws1.Workspace
-
-# List detailed ACL information
-fab acl ls ws1.Workspace -l
-
-# Project single field using array projection
-fab acl ls ws1.Workspace -q "[*].identity"
-
-# Project multiple fields using array syntax  
-fab acl ls ws1.Workspace -q "[identity, type]"
-
-# Project and rename fields using object syntax
-fab acl ls ws1.Workspace -q "{principalInfo: identity, accessLevel: role}"
-
-# Filter specific roles and project fields
-fab acl ls ws1.Workspace -q "[?role=='Member'].{id: identity, role: role}"
 ```
-
-**Notes:**
-
-- The `-q` parameter accepts JMESPath query expressions (https://jmespath.org)
-- Array projection `[*].field` returns an array of values
-- Array syntax `[field1, field2]` selects multiple fields 
-- Object syntax `{newName: field}` renames fields in output
-- Filter expressions `[?field=='value']` filter results
-- Query projection takes precedence over `-l` flag field selection
-
----
-
-### get
-
-Get ACL entries for a resource.
-
-**Usage:**
-
-```
-fab acl get <path> [-q QUERY]
-```
-
-**Parameters:**
-
-- `<path>`: Resource path
-- `-q, --query`: JMESPath query to filter and project fields. Optional.
-
-**Examples:**
-
-```bash
-# Get all ACL entries
-fab acl get ws1.Workspace
-
-# Query specific roles
-fab acl get ws1.Workspace -q "[?role=='Admin']"
-
-# Project role information
-fab acl get ws1.Workspace -q "[].role"
+fab acl ls workspace1.workspace
+fab acl ls lh1.lakehouse -l
+fab acl ls /Files/data -l
+fab acl ls workspace1.workspace -q [].[?role=='Admin']
 ```
 
 ---
 
 ### set
 
-Set an ACL entry for a resource.
+Set access control permissions for a resource.
 
 **Usage:**
 
 ```
-fab acl set <path> --identity ID --role ROLE [-f]
+fab acl set <path> [-I <identity>] [-R <role>] [-f]
 ```
 
 **Parameters:**
 
-- `<path>`: Resource path
-- `--identity`: Principal ID (user ID, service principal ID, or security group ID)
-- `--role`: Role to assign (e.g., Admin, Member, Viewer)
+- `<path>`: Path to the resource.
+- `-I, --identity`: Object ID of the Microsoft Entra identity to set or update.
+- `-R, --role`: ACL role (admin, member, contributor, viewer).
 - `-f, --force`: Skip confirmation prompt. Optional.
 
 **Examples:**
 
-```bash
-# Set member role for a user
-fab acl set ws1.Workspace --identity "user@contoso.com" --role Member
-
-# Set admin role for a service principal (force)
-fab acl set ws1.Workspace --identity "00000000-0000-0000-0000-000000000000" --role Admin -f
+```
+fab acl set ws1.Workspace/lh1.Lakehouse -I 11111111-2222-3333-4444-555555555555 -R viewer
 ```
 
 ---
 
-### rm
+### rm (del)
 
-Remove an ACL entry from a resource.
+Remove access permissions for an identity.
 
 **Usage:**
 
 ```
-fab acl rm <path> --identity ID [-f]
+fab acl rm <path> [-I <identity>] [-f]
 ```
 
 **Parameters:**
 
-- `<path>`: Resource path
-- `--identity`: Principal ID to remove
+- `<path>`: Path to the resource.
+- `-I, --identity`: Object ID of the Microsoft Entra identity to remove.
 - `-f, --force`: Skip confirmation prompt. Optional.
 
 **Examples:**
 
-```bash
-# Remove ACL entry for a user
-fab acl rm ws1.Workspace --identity "user@contoso.com"
+```
+fab acl rm ws1.Workspace/lh1.Lakehouse -I 11111111-2222-3333-4444-555555555555
+```
 
-# Force remove ACL entry
-fab acl rm ws1.Workspace --identity "00000000-0000-0000-0000-000000000000" -f
+---
+
+### get
+
+Get detailed ACL information with optional filtering.
+
+**Usage:**
+
+```
+fab acl get <path> [-q <query>] [-o <output_path>]
+```
+
+**Parameters:**
+
+- `<path>`: Path to the resource.
+- `-q, --query`: JMESPath query to filter results. Optional.
+- `-o, --output`: Output path for results. Optional.
+
+**Examples:**
+
+```
+fab acl get ws1.Workspace
+```
+
+---
+
+For more examples and detailed scenarios, see [ACLs Examples](../../examples/acl_examples.md).

@@ -46,6 +46,13 @@ Create a connection that uses a specific gateway for secure access.
 ```
 fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.username=<username>,credentialDetails.password=<password>
 ```
+#### Create Connection with On-premises Gateway
+
+Create a connection that uses a specific on-premises gateway with encrypted credentials for secure access
+
+```
+fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.values=[{"gatewayId":"<gatewayId>", "encryptedCredentials": "<encryptedCredentials>"}]
+```
 
 #### Create Connection with All Parameters
 
@@ -113,14 +120,6 @@ Change the authentication password for a connection.
 
 ```
 fab set .connections/conn.Connection -q credentialDetails.password -i <new_password>
-```
-
-#### Change Gateway
-
-Update the gateway used by a connection.
-
-```
-fab set .connections/conn.Connection -q gatewayId -i "00000000-0000-0000-0000-000000000000"
 ```
 
 ### Remove Connection

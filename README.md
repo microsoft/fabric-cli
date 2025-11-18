@@ -18,10 +18,8 @@ pip install ms-fabric-cli
 fab auth login
 
 # Start exploring
-fab ls                           # List workspaces and items
-fab cd MyWorkspace.workspace     # Navigate to a workspace
-fab ls -l                        # List items with details
-fab get MyNotebook.notebook      # Get item properties
+fab ls                                                           # List workspaces
+fab get <workspace-name>.Workspace/<item-name>.<item-type>       # Get item properties (e.g., ws1.Workspace/nb1.Notebook)
 ```
 
 ## ✨ Key Features
@@ -242,14 +240,6 @@ Before contributing, please review our [Contributing Guidelines](CONTRIBUTING.md
 
 
 ## 🔄 Release Notes
-
-### Latest Release - v1.1.0
-- ✨ Added support for folders in `fs` commands
-- ✨ JSON output format support
-- ✨ Context persistence in command-line mode
-- ✨ Autocomplete support for commands (in command-line mode)
-- 🆕 GraphQLApi items support
-- 🔧 Multiple bug fixes and improvements
 
 See the full [Release Notes](https://microsoft.github.io/fabric-cli/release-notes/) for detailed changelog.
 
