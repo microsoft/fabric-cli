@@ -93,6 +93,14 @@ For most testing scenarios, the mock values provided in [`static_test_data.py`](
 | `FABRIC_CLI_TEST_CREDENTIAL_DETAILS_USERNAME` | Username for Connection credential details | Username for Connection creation tests |
 | `FABRIC_CLI_TEST_CREDENTIAL_DETAILS_PASSWORD` | Password for Connection  credentialdetails | Password for Connection creation tests|
 
+### On-premesis gateway Details
+
+| Variable | Description | Purpose |
+|----------|-------------|---------|
+| `FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ID` | On-premesis gateway Id for Connection credential details | Gateway Id for Connection creation tests |
+| `FABRIC_CLI_TEST_ONPREMISES_GATEWAY_ENCRYPTED_CREDENTIALS` | On-premesis gateway encrypted credential for Connection encrypted credential details | Encrypted credential for Connection creation tests|
+
+
 ### Mock vs. Actual Values - Best Practices
 
 | Resource Type | Recommended Approach | Example Mock Value | When to Use Actual |
