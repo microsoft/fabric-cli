@@ -38,7 +38,7 @@ def exec(item: Item, args: Namespace) -> None:
             if not item.check_command_support(Command.FS_EXPORT):
                 raise FabricCLIError(
                     CommonErrors.definition_update_not_supported_for_item_type(
-                        item.item_type
+                        str(item.item_type)
                     ),
                     fab_constant.ERROR_UNSUPPORTED_COMMAND,
                 )

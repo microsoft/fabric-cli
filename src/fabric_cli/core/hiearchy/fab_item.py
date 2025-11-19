@@ -51,7 +51,7 @@ class Item(_BaseItem):
     def folder_id(self) -> str | None:
         return self.parent.id if isinstance(self.parent, Folder) else None
 
-    def extract_friendly_name_path_or_default(self, key: str) -> str | None:
+    def extract_friendly_name_path_or_default(self, key: str) -> str:
         item_type = self.item_type
 
         if item_type in ITMutablePropMap:
