@@ -418,15 +418,12 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         "# assign a custom pool",
         "$ set ws2r.workspace -q sparkSettings.pool.defaultPool -i <inline_json_w_id_name_type> -f",
     ]
-    set_learnmore = [
-        "Tip: Use --raw-string when setting a property that expects a JSON-encoded string rather than a JSON object",
-    ]
 
     set_parser = subparsers.add_parser(
         "set",
         help=fab_constant.COMMAND_FS_SET_DESCRIPTION,
         fab_examples=set_examples,
-        fab_learnmore=set_learnmore,
+        fab_learnmore=["_"],
     )
     set_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     set_parser.add_argument(
@@ -439,12 +436,6 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
     )
     set_parser.add_argument(
         "-i", "--input", nargs="+", required=True, help="Input value to set"
-    )
-    set_parser.add_argument(
-        "--raw-string",
-        required=False,
-        action="store_true",
-        help="Keep input as literal string without JSON parsing. Use when setting JSON-encoded string properties. Optional",
     )
     set_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"

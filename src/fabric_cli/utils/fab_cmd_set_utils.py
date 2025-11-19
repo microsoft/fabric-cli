@@ -62,27 +62,24 @@ def update_fabric_element(
     query: str,
     input: str,
     decode_encode: bool = False,
-    raw_string: bool = False,
 ) -> tuple[str, dict]:
     """Update a Fabric resource element using a JMESPath query.
 
     Args:
         resource_def: Resource definition dictionary to modify.
         query: JMESPath expression specifying the path to update.
-        input: New value to set. JSON parsed unless raw_string is True.
+        input: New value to set.
         decode_encode: If True, decode/encode base64 payloads. Default False.
-        raw_string: If True, treat input as literal string. Default False.
 
     Returns:
         Tuple of (json_payload, updated_def) where json_payload is the JSON string
         and updated_def is the updated dictionary.
     """
-    if not raw_string:
-        try:
-            input = json.loads(input)
-        except (TypeError, json.JSONDecodeError):
-            # If it's not a JSON string, keep it as is
-            pass
+    try:
+        input = json.loads(input)
+    except (TypeError, json.JSONDecodeError):
+        # If it's not a JSON string, keep it as is
+        pass
 
     # Decode > replace > encode
     if decode_encode:

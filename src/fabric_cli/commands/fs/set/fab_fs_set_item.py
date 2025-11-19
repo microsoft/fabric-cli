@@ -19,7 +19,6 @@ from fabric_cli.utils import fab_ui as utils_ui
 def exec(item: Item, args: Namespace) -> None:
     force = args.force
     query = args.query
-    raw_string = args.raw_string
 
     query_value = item.extract_friendly_name_path_or_default(query)
 
@@ -49,11 +48,7 @@ def exec(item: Item, args: Namespace) -> None:
             definition = json.loads(def_response.text)
 
             json_payload, updated_def = _update_element(
-                definition,
-                query_value,
-                args.input,
-                decode_encode=True,
-                raw_string=raw_string,
+                definition, query_value, args.input, decode_encode=True
             )
 
             definition_base64_to_update, _ = utils_set.extract_json_schema(updated_def)
@@ -65,11 +60,7 @@ def exec(item: Item, args: Namespace) -> None:
             item_metadata = json.loads(item_api.get_item(args, item_uri=True).text)
 
             json_payload, updated_metadata = _update_element(
-                item_metadata,
-                query_value,
-                args.input,
-                decode_encode=False,
-                raw_string=raw_string,
+                item_metadata, query_value, args.input, decode_encode=False
             )
 
             update_payload_dict = utils_set.extract_updated_properties(
@@ -94,7 +85,6 @@ def _update_element(
     query_value: str,
     input_value: str,
     decode_encode: bool,
-    raw_string: bool,
 ) -> tuple[str, dict]:
     try:
         return utils_set.update_fabric_element(
@@ -102,7 +92,6 @@ def _update_element(
             query_value,
             input_value,
             decode_encode=decode_encode,
-            raw_string=raw_string,
         )
     except (ValueError, KeyError, IndexError):
         raise FabricCLIError(

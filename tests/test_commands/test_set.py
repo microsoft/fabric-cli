@@ -51,7 +51,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
         upsert_item_to_cache.assert_not_called()
 

@@ -9,7 +9,7 @@ Set a workspace or item property.
 **Usage:**
 
 ```
-fab set <path> -q <jmespath_query> -i <input_value> [--raw-string] [-f]
+fab set <path> -q <jmespath_query> -i <input_value> [-f]
 ```
 
 **Parameters:**
@@ -17,7 +17,6 @@ fab set <path> -q <jmespath_query> -i <input_value> [--raw-string] [-f]
 - `<path>`: Path to the resource.
 - `-q, --query <jmespath_query>`: JMESPath query to the property.
 - `-i, --input <input_value>`: Input value to set.
-- `--raw-string`: Keep input as literal string without JSON parsing. Use when setting item definition properties that expect JSON-encoded strings. Only relevant for set item command. Optional.
 - `-f, --force`: Force set without confirmation. Optional.
 
 **Example:**
@@ -25,6 +24,24 @@ fab set <path> -q <jmespath_query> -i <input_value> [--raw-string] [-f]
 ```bash
 fab set ws1.Workspace -q displayName -i "New Name" -f
 ```
+
+## JSON Input
+
+When providing JSON input in command-line mode, different shells process quotes and escape characters before passing them to the CLI.
+
+### Best Practice
+
+**surround JSON input with single quotes (`'`). In PowerShell escape inner double quotes with backslashes (`\"`)**
+
+=== "PowerShell"
+    ```powershell
+    fab set item.Resource -q query -i '{\"key\":\"value\"}'
+    ```
+
+=== "Bash/Zsh"
+    ```bash
+    fab set item.Resource -q query -i '{"key":"value"}'
+    ```
 
 ## Setting Item Properties
 
@@ -45,6 +62,7 @@ Any explicit path (specified via the `-q` / `--query` command argument) to prope
 - Only one property path can be specified per `--query` argument
 - Paths must map directly to JSON paths **without** filters or wildcards
 - Properties can be added one level deep from existing paths returned by [`get`](get.md), provided they are valid according to the item's schema. Nested properties must be created incrementally (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
+- Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
 
 **Supported - Single property path:**
 
@@ -59,13 +77,6 @@ fab set ws1/notebook1.Notebook -q lakehouse -i "lakehouse1.Lakehouse" -f
 #  This will NOT work - multiple paths cannot be specified in a single -query argument
 fab set ws1/notebook1.Notebook -q "lakehouse, environment" -i "lakehouse1.Lakehouse, env1.Environment" -f
 ```
-
-!!! tip "Setting multiple properties"
-    To set multiple properties, execute separate `set` commands for each property:
-    ```bash
-    fab set ws1/notebook1.Notebook -q lakehouse -i "lakehouse1.Lakehouse" -f
-    fab set ws1/notebook1.Notebook -q environment -i "env1.Environment" -f
-    ```
 
 ### Common Item-Specific Definition Property Paths
 
