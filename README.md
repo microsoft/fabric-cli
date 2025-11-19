@@ -18,10 +18,8 @@ pip install ms-fabric-cli
 fab auth login
 
 # Start exploring
-fab ls                           # List workspaces and items
-fab cd MyWorkspace.workspace     # Navigate to a workspace
-fab ls -l                        # List items with details
-fab get MyNotebook.notebook      # Get item properties
+fab ls                                                           # List workspaces
+fab get <workspace-name>.Workspace/<item-name>.<item-type>       # Get item properties (e.g., ws1.Workspace/nb1.Notebook)
 ```
 
 ## ✨ Key Features

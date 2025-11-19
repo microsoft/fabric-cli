@@ -359,33 +359,41 @@ def check_required_params(params, required_params):
             )
 
 
-def _validate_credential_params(cred_type, provided_cred_params):
-    ignored_params = []
-    params = {}
+def _get_params_per_cred_type(cred_type, is_on_premises_gateway):
     match cred_type:
         case "Anonymous" | "WindowsWithoutImpersonation" | "WorkspaceIdentity":
-            param_keys = []
+            return []
         case "Basic" | "Windows":
-            param_keys = ["username", "password"]
+            if is_on_premises_gateway:
+                return ["values"]
+            else:
+                return ["username", "password"]
         case "Key":
-            param_keys = ["key"]
+            return ["key"]
         case "OAuth2":
             raise FabricCLIError(
                 "OAuth2 credential type is not supported",
                 fab_constant.ERROR_NOT_SUPPORTED,
             )
         case "ServicePrincipal":
-            param_keys = [
+            return [
                 "servicePrincipalClientId",
                 "servicePrincipalSecret",
                 "tenantId",
             ]
         case "SharedAccessSignature":
-            param_keys = ["token"]
+            return ["token"]
         case _:
             utils_ui.print_warning(
                 f"Unsupported credential type {cred_type}. Skipping validation"
             )
+            return []
+    
+
+def _validate_credential_params(cred_type, provided_cred_params, is_on_premises_gateway):
+    ignored_params = []
+    params = {}
+    param_keys = _get_params_per_cred_type(cred_type, is_on_premises_gateway)
 
     missing_params = [
         key for key in param_keys if key.lower() not in provided_cred_params
@@ -405,11 +413,45 @@ def _validate_credential_params(cred_type, provided_cred_params):
         utils_ui.print_warning(
             f"Ignoring unsupported parameters for credential type {cred_type}: {ignored_params}"
         )
+    if is_on_premises_gateway:
+        provided_cred_params["values"] = _validate_and_get_on_premises_gateway_credential_values(provided_cred_params.get("values"))
 
     for key in param_keys:
         params[key] = provided_cred_params[key.lower()]
 
     return params
+
+def _validate_and_get_on_premises_gateway_credential_values(cred_values):
+    for item in cred_values:
+        if not isinstance(item, dict):
+            raise FabricCLIError(
+                ErrorMessages.Common.invalid_onpremises_gateway_values(),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        
+    param_values_keys = ["gatewayId", "encryptedCredentials"]
+    missing_params = [
+        key for key in param_values_keys 
+        if not all(key.lower() in {k.lower() for k in item.keys()} for item in cred_values)
+    ]
+    if len(missing_params) > 0:
+        raise FabricCLIError(
+            ErrorMessages.Common.missing_onpremises_gateway_parameters(missing_params),
+            fab_constant.ERROR_INVALID_INPUT,
+    )
+
+    ignored_params = [
+        key
+        for item in cred_values
+        for key in item.keys()
+        if key not in [k.lower() for k in param_values_keys]
+    ]
+    if len(ignored_params) > 0:
+        utils_ui.print_warning(
+            f"Ignoring unsupported parameters for on-premises gateway: {ignored_params}"
+    )
+
+    return [{key: item[key.lower()] for key in param_values_keys if key.lower() in item} for item in cred_values]
 
 
 def get_connection_config_from_params(payload, con_type, con_type_def, params):
@@ -537,13 +579,6 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
             fab_constant.ERROR_INVALID_INPUT,
         )
 
-    if missing_params:
-        missing_params_str = ", ".join(missing_params)
-        raise FabricCLIError(
-            f"Missing parameter(s) {missing_params_str} for creation method {c_method}",
-            fab_constant.ERROR_INVALID_INPUT,
-        )
-
     connection_request["connectionDetails"] = {
         "type": con_type,
         "creationMethod": creation_method["name"],
@@ -563,6 +598,14 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
          "password": "********"
        }
     }
+    or in case of OnPremisesGateway:
+    "credentialDetails": {
+        .....,
+        "credentials": {
+        "credentialType": "Basic",
+        "values": [{gatewayId: "gatewayId", encryptedCredentials: "**********"}] 
+        }
+        }
     """
     sup_cred_types = ", ".join(con_type_def["supportedCredentialTypes"])
     if not params.get("credentialdetails"):
@@ -603,7 +646,8 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     if "skiptestconnection" in provided_cred_params:
         provided_cred_params.pop("skiptestconnection")
 
-    connection_params = _validate_credential_params(cred_type, provided_cred_params)
+    is_on_premises_gateway = connection_request.get("connectivityType").lower() == "onpremisesgateway"
+    connection_params = _validate_credential_params(cred_type, provided_cred_params, is_on_premises_gateway)
 
     connection_request["credentialDetails"] = {
         "singleSignOnType": singleSignOnType,
@@ -612,6 +656,9 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         "credentials": connection_params,
     }
     connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
+
+    if is_on_premises_gateway:
+        connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get("values")
 
     return connection_request
 

@@ -10,6 +10,10 @@ from fabric_cli.core import fab_constant
 class CommonErrors:
 
     @staticmethod
+    def invalid_entries_format() -> str:
+        return "Invalid entries format"
+    
+    @staticmethod
     def invalid_jmespath_query() -> str:
         return f"Invalid jmespath query (https://jmespath.org)"
 
@@ -212,3 +216,13 @@ class CommonErrors:
     @staticmethod
     def invalid_set_item_query(query_path: str) -> str:
         return f"Invalid query. Either '{query_path}' is not a valid query or the item does not contain the specified path"
+    
+    @staticmethod
+    def missing_onpremises_gateway_parameters(
+        missing_params: list,
+    ) -> str:
+        return  f"Missing parameters for credential values in OnPremisesGateway connectivity type: {missing_params}"
+
+    @staticmethod
+    def invalid_onpremises_gateway_values() -> str:
+        return "Values must be a list of JSON objects, each containing 'gatewayId' and 'encryptedCredentials' keys"
