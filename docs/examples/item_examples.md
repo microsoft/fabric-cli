@@ -134,6 +134,15 @@ Show items with comprehensive metadata.
 fab ls ws1.Workspace -l
 ```
 
+#### Query List Items in Workspace
+
+```
+fab ls ws1.Workspace -q [].name
+fab ls ws1.Workspace -q [].{name:name,id:id}
+fab ls ws1.Workspace -q [?contains(name, 'Notebook')]
+fab ls ws1.Workspace -l -q [?contains(name, 'Dataflow')].{name:name, id:id}
+```
+
 #### List Item Contents
 
 Browse contents of items that support folder structures.

@@ -38,6 +38,10 @@ fab acl ls ws1.Workspace
 
 # List detailed workspace permissions
 fab acl ls ws1.Workspace -l
+
+# List specific columns using query parameter
+fab acl ls ws1.Workspace -q identity           # Show only identity column
+fab acl ls ws1.Workspace -q "identity name"    # Show identity and name columns
 ```
 
 #### List Item Permissions
@@ -47,6 +51,10 @@ fab acl ls ws1.Workspace/lh1.Lakehouse
 
 # List detailed item permissions
 fab acl ls ws1.Workspace/lh1.Lakehouse -l
+
+# List specific columns for item permissions
+fab acl ls ws1.Workspace/lh1.Lakehouse -q [].type     # Show only type column
+fab acl ls ws1.Workspace/lh1.Lakehouse -q [].{name:name,type:type}   # Show type and name columns
 ```
 
 #### List OneLake RBAC Permissions

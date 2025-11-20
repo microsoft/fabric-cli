@@ -1035,15 +1035,15 @@ class TestCP:
 
 
 # region Helper Methods
-def ls(path, long=False, all=False):
-    args = _build_ls_args(path, long, all)
+def ls(path, long=False, all=False, query=None):
+    args = _build_ls_args(path, long, all, query)
     context = handle_context.get_command_context(args.path)
     fab_ls.exec_command(args, context)
 
 
-def _build_ls_args(path, long, all):
+def _build_ls_args(path, long, all, query):
     return argparse.Namespace(
-        command="ls", command_path="ls", path=path, long=long, all=all
+        command="ls", command_path="ls", path=path, long=long, all=all, query=query
     )
 
 

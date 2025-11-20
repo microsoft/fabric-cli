@@ -81,11 +81,10 @@ def _ls_acls_workspace(workspace: Workspace, args: Namespace) -> None:
                     }
                 )
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
-            columns = (
-                ["acl", "identity", "type", "objectId", "name"]
-                if show_all
-                else ["acl", "identity", "type"]
-            )
+            columns = ["acl", "identity", "type"]
+            
+            if show_all:
+                columns.extend(["objectId", "name"])
 
             utils_ls.format_and_print_output(
                 data=sorted_acls,
@@ -132,11 +131,11 @@ def _ls_acls_gateway(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            columns = (
-                ["id", "role", "principalId", "principalType"]
-                if show_all
-                else ["role", "principalId", "principalType"]
-            )
+            
+            columns = ["role", "principalId", "principalType"]
+            if show_all:
+                columns.insert(0, "id")
+
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
@@ -169,11 +168,10 @@ def _ls_acls_connection(connection: VirtualWorkspaceItem, args: Namespace) -> No
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            columns = (
-                ["id", "role", "principalId", "principalType"]
-                if show_all
-                else ["role", "principalId", "principalType"]
-            )
+            
+            columns = ["role", "principalId", "principalType"]
+            if show_all:
+                columns.insert(0, "id")
 
             utils_ls.format_and_print_output(
                 data=sorted_acls,
@@ -221,11 +219,11 @@ def _ls_acls_item(item: Item, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
-            columns = (
-                ["acl", "identity", "type", "id", "name"]
-                if show_all
-                else ["acl", "identity", "type"]
-            )
+            
+            columns = ["acl", "identity", "type"]
+            if show_all:
+                columns = ["id", "name"] + columns
+
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
@@ -292,11 +290,9 @@ def _ls_acls_onelake(context: OneLakeItem, args: Namespace) -> None:
                     )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
-            columns = (
-                ["acl", "identity", "type", "details"]
-                if show_all
-                else ["acl", "identity", "type"]
-            )
+            columns = ["acl", "identity", "type"]
+            if show_all:
+                columns = ["id", "name"] + columns
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,
