@@ -222,7 +222,7 @@ def _ls_acls_item(item: Item, args: Namespace) -> None:
             
             columns = ["acl", "identity", "type"]
             if show_all:
-                columns.insert(0, ["id", "name"])
+                columns = ["id", "name"] + columns
 
             utils_ls.format_and_print_output(
                 data=sorted_acls,
@@ -292,7 +292,7 @@ def _ls_acls_onelake(context: OneLakeItem, args: Namespace) -> None:
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
             columns = ["acl", "identity", "type"]
             if show_all:
-                columns.insert(0, ["id", "name"])
+                columns = ["id", "name"] + columns
             utils_ls.format_and_print_output(
                 data=sorted_acls,
                 columns=columns,

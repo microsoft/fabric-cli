@@ -17,7 +17,8 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
         "# list lakehouse tables",
         "$ ls ws1.Workspace/lh1.Lakehouse/Tables\n",
         "# list items with name matching a pattern",
-        "$ ls -q \"contains(name, 'report')\"",
+        "$ ls -q [].name",
+        "$ ls -q [?contains(name, 'Report')]\n",
     ]
 
     ls_parser = subparsers.add_parser(

@@ -94,6 +94,7 @@ def print_output_format(
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
+    show_key_value_list: bool = False,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
