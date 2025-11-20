@@ -3,6 +3,7 @@
 
 import os
 from argparse import Namespace
+from copy import deepcopy
 from typing import Optional, Union
 
 from fabric_cli.client import fab_api_item as item_api
@@ -89,6 +90,7 @@ def export_single_item(
     item_uri: Optional[bool] = False,
 ) -> dict:
     item_def = {}
+    args = deepcopy(args)
 
     if args.force or fab_ui.prompt_confirm(
         "Item definition is exported without its sensitivity label. Are you sure?"
@@ -99,8 +101,18 @@ def export_single_item(
 
         args.from_path = item.path.strip("/")
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
-        args.format = definition_format_mapping.get(item_type, "")
-
+        if _export_format := getattr(args, "format", None):
+            if _export_format not in (".py", ".ipynb"):
+                raise FabricCLIError(
+                    "Invalid format. Only '.py' and '.ipynb' are supported.",
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+            elif _export_format == ".py":
+                args.format = "?format=fabricGitSource"
+            else:
+                args.format = "?format=ipynb"
+        else:
+            args.format = definition_format_mapping.get(item_type, "")
         item_def = item_api.get_item_withdefinition(args, item_uri)
 
         if decode:
