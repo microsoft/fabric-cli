@@ -6,6 +6,8 @@ import json
 import os
 import re
 import time
+import shutil
+import tempfile
 from unittest.mock import patch
 
 import pytest
@@ -522,30 +524,36 @@ class TestJobs:
             "default_lakehouse_workspace_id": workspace_id,
         }
         nb_path = os.path.join(items_path, "example.Notebook")
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
+
+        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
+
+        nb_json = json.loads(open(temp_nb_content_path).read())
         nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
-
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
         fb_notebook = handle_context.get_command_context(notebook.full_path)
         notebook_id = fb_notebook.id
         ws_id = fb_notebook.parent.id
 
         pipeline_path = os.path.join(items_path, "example.DataPipeline")
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
+
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         # Execute command
         cli_executor.exec_command(f"job run {pipeline.full_path}")
@@ -571,12 +579,15 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.Notebook",
         )
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
-        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
+
+        nb_json = json.loads(open(temp_nb_content_path).read())
+        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
 
         _params = [
             "string_param:string=new_value",
@@ -605,18 +616,21 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.DataPipeline",
         )
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
+
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         _params = [
             "string_param:string=new_value",
@@ -660,12 +674,14 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.Notebook",
         )
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
-        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
+        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        nb_json = json.loads(open(temp_nb_content_path).read())
+        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
 
         # Execute command
@@ -702,18 +718,20 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.DataPipeline",
         )
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
+        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         # Execute command
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
