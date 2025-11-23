@@ -35,6 +35,11 @@ Retrieve a list of configuration keys and values
 fab config ls
 ```
 
+Filter the configuration list using JMESPath
+
+```
+fab config ls -q  [?setting=='mode']
+```
 
 ## Set Configuration Settings
 

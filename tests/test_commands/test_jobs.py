@@ -845,6 +845,7 @@ def job_run_list(path, schedule=False):
         command_path=f"job list",
         path=path,
         schedule=schedule,
+        query=None,
     )
     context = handle_context.get_command_context(args.path)
     assert isinstance(context, Item)
