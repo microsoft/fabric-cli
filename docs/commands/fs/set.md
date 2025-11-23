@@ -1,6 +1,18 @@
 # `set` Command
 
-Set a workspace or item property.
+Set a resource property.
+
+**Supported Resources:**
+
+- Workspace
+- Item
+- Capacity
+- Domain
+- Connection
+- Gateway
+- Spark Pool
+- Folder
+- Shortcut
 
 !!! info "Setting domain properties requires tenant-level Fabric Administrator privileges"
 
@@ -32,7 +44,7 @@ fab set ws1.Workspace -q displayName -i "New Name" -f
 - If the property path doesn't exist on the item definition, it will be added, provided it's valid according to the item's schema. The `set` command supports creation of 1 level at a time (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
 - Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
 
-## Set Item Support
+## Support
 
 ### Input
 
@@ -53,25 +65,35 @@ When providing JSON input in command-line mode, different shells process quotes 
 
 ### Query
 
-The following queries are supported:
+The following table shows supported queries per resource type:
 
-#### Item Metadata
+| Resource | Supported Queries |
+|----------------|-------------------|
+| **Item** | `displayName`, `description`, `properties` (`.VariableLibrary` only), `definition`, `definition.<path within the definition>` |
+| **Workspace** | `displayName`, `description`, `sparkSettings`, `sparkSettings.<path within sparkSettings>` |
+| **Capacity** | `sku.name` |
+| **Domain** | `displayName`, `description`, `contributorsScope` |
+| **Connection** | `displayName`, `privacyLevel`, `credentialDetails`, `credentialDetails.<path within credentialDetails>` |
+| **Gateway** | `displayName`, `allowCloudConnectionRefresh`, `allowCustomConnectors`, `capacityId`, `inactivityMinutesBeforeSleep`, `numberOfMemberGateways` |
+| **Spark Pool** | `name`, `nodeSize`, `autoScale.enabled`, `autoScale.minNodeCount`, `autoScale.maxNodeCount` |
+| **Folder** | `displayName` |
+| **Shortcut** | `name`, `target`, `target.<path within target>` |
 
-- `displayName` - The display name of the item (all item types)
-- `description` - The description of the item (all item types)
-- `properties` - Custom properties (`.VariableLibrary` only)
+**Notes:**
 
-#### Item Definition
-
-- Any explicit path to properties within the item's `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions).
+- For nested properties, use dot notation to specify the full path (e.g., `sparkSettings.automaticLog.enabled`)
+- For **Items**, you can set any explicit path within the `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions)
+- Paths must map directly to JSON paths **without** filters or wildcards
 
 #### Item-Specific Definition Property Path Name
 
 These are friendly names that map to specific paths in the item's definition structure. When using the `set` command, you can use these names directly (as the `-query` / `--q` argument value) as they map to the correct definition paths:
 
-- **Notebook**: `lakehouse`, `environment`, `warehouse`
-- **Report**: `semanticModelId` (applies only to [Report definition.pbir version 1](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report?tabs=v1%2Cdesktop#definitionpbir). For other versions, check the correct property path in the Report definition documentation)
-- **SparkJobDefinition**: `payload`
+| Item Type | Friendly Names | Notes |
+|-----------|----------------|-------|
+| **Notebook** | `lakehouse`, `environment`, `warehouse` | |
+| **Report** | `semanticModelId` | Applies only to [Report definition.pbir version 1](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report?tabs=v1%2Cdesktop#definitionpbir). For other versions, check the correct property path in the Report definition documentation |
+| **SparkJobDefinition** | `payload` | |
 
 !!! warning "Note on friendly names"
 
