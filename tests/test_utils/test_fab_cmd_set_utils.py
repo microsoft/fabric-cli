@@ -14,7 +14,7 @@ from fabric_cli.utils.fab_cmd_set_utils import (
 from fabric_cli.utils.fab_jmespath import has_filter_or_wildcard
 
 
-def test_update_fabric_element_with_json_input():
+def test_update_fabric_element_with_json_input_success():
     resource_def = {"definition": {"parts": [{"x": "old_value"}]}}
 
     json_string_input = '{"transparency":{"Value":"70D"}}'

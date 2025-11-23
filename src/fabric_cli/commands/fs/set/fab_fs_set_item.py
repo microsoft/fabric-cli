@@ -37,7 +37,7 @@ def exec(item: Item, args: Namespace) -> None:
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
 
-            json_payload, updated_def = _update_element(
+            updated_def = _update_element(
                 definition, query_value, args.input, decode_encode=True
             )
 
@@ -49,7 +49,7 @@ def exec(item: Item, args: Namespace) -> None:
         else:
             item_metadata = json.loads(item_api.get_item(args, item_uri=True).text)
 
-            json_payload, updated_metadata = _update_element(
+            updated_metadata = _update_element(
                 item_metadata, query_value, args.input, decode_encode=False
             )
 
@@ -75,15 +75,16 @@ def _update_element(
     query_value: str,
     input_value: str,
     decode_encode: bool,
-) -> tuple[str, dict]:
+) -> dict:
     try:
-        return utils_set.update_fabric_element(
+        _, updated_def = utils_set.update_fabric_element(
             resource_def,
             query_value,
             input_value,
             decode_encode=decode_encode,
         )
-    except Exception:
+        return updated_def
+    except (ValueError, KeyError, IndexError):
         raise FabricCLIError(
             CommonErrors.invalid_set_item_query(query_value),
             fab_constant.ERROR_INVALID_QUERY,
