@@ -56,16 +56,11 @@ def delete_item(
 
 
 def get_item_withdefinition(args: Namespace, item_uri: Optional[bool] = False) -> dict:
-    """https://learn.microsoft.com/en-us/rest/api/fabric/core/items/get-item-definition"""
     response = get_item(args, item_uri)
     item = json.loads(response.text)
 
-    args.uri = f"workspaces/{args.ws_id}/items/{args.id}/getDefinition{args.format}"
-    args.method = "post"
-    args.wait = True  # Wait for the details to be retrieved
-
     try:
-        def_response = fabric_api.do_request(args)
+        def_response = get_item_definition(args)
         definition = json.loads(def_response.text)
         if isinstance(definition, dict):
             item.update(definition)
@@ -77,7 +72,10 @@ def get_item_withdefinition(args: Namespace, item_uri: Optional[bool] = False) -
             )
     except FabricCLIError as ex:
         # Case where user can view the item but not its definitions we will return the item without definitions
-        if ex.status_code == fab_constant.ERROR_UNAUTHORIZED or ex.status_code == fab_constant.ERROR_FORBIDDEN:
+        if (
+            ex.status_code == fab_constant.ERROR_UNAUTHORIZED
+            or ex.status_code == fab_constant.ERROR_FORBIDDEN
+        ):
             return item
         else:
             raise ex
@@ -100,9 +98,24 @@ def get_item(
     return fabric_api.do_request(args)
 
 
-def update_item_definition(args: Namespace, payload: str) -> ApiResponse:
+def get_item_definition(args: Namespace) -> ApiResponse:
+    """https://learn.microsoft.com/en-us/rest/api/fabric/core/items/get-item-definition"""
+    args.uri = f"workspaces/{args.ws_id}/items/{args.id}/getDefinition{args.format}"
+    args.method = "post"
+    args.wait = True
+
+    return fabric_api.do_request(args)
+
+
+def update_item_definition(
+    args: Namespace, payload: str, item_uri: Optional[bool] = False
+) -> ApiResponse:
     """https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition"""
-    args.uri = f"workspaces/{args.ws_id}/items/{args.id}/updateDefinition"
+    if item_uri:
+        args.uri = f"workspaces/{args.ws_id}/{args.item_uri}/{args.id}/updateDefinition"
+    else:
+        args.uri = f"workspaces/{args.ws_id}/items/{args.id}/updateDefinition"
+
     args.method = "post"
 
     return fabric_api.do_request(args, data=payload)

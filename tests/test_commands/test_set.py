@@ -16,7 +16,6 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import (
     ItemType,
-    ITMutablePropMap,
     VirtualItemContainerType,
     VirtualWorkspaceType,
 )
@@ -29,12 +28,20 @@ from tests.test_commands.utils import cli_path_join
 class TestSET:
     # region Item
     def test_set_item_invalid_query_failure(
-        self, item_factory, cli_executor, assert_fabric_cli_error, upsert_item_to_cache
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        upsert_item_to_cache,
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
 
         # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
         upsert_item_to_cache.reset_mock()
 
         # Execute command
@@ -43,12 +50,16 @@ class TestSET:
         )
 
         # Assert
-        assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
-        )
+        assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
         upsert_item_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @pytest.mark.parametrize(
+        "metadata_to_set,should_upsert_to_cache",
+        [
+            ("description", False),
+            ("displayName", True),
+        ],
+    )
     def test_set_item_metadata_success(
         self,
         item_factory,
@@ -59,6 +70,7 @@ class TestSET:
         metadata_to_set,
         vcr_instance,
         cassette_name,
+        should_upsert_to_cache,
     ):
         self._test_set_metadata_success(
             item_factory(ItemType.NOTEBOOK),
@@ -69,9 +81,9 @@ class TestSET:
             cli_executor,
             vcr_instance,
             cassette_name,
+            should_upsert_to_cache,
         )
 
-    @pytest.mark.skip()
     def test_set_item_report_definition_semantic_model_id_success(
         self,
         item_factory,
@@ -79,6 +91,7 @@ class TestSET:
         mock_questionary_print,
         mock_print_done,
         upsert_item_to_cache,
+        workspace,
     ):
         # Setup
         report = item_factory(
@@ -93,27 +106,53 @@ class TestSET:
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
         upsert_item_to_cache.reset_mock()
-        property_alias = "semanticModelId"
+
+        property_path = (
+            "definition.parts[0].payload.datasetReference.byConnection.connectionString"
+        )
+
+        new_connection_string = f"Data Source=pbiazure://api.powerbi.com;Initial Catalog={workspace.display_name}/{new_semantic_model.display_name};semanticmodelid={new_semantic_model_id}"
 
         # Execute command
         cli_executor.exec_command(
-            f"set {report.full_path} --query {property_alias} --input {new_semantic_model_id} --force"
+            f'set {report.full_path} --query {property_path} --input "{new_connection_string}" --force'
         )
 
         # Assert
         mock_print_done.assert_called_once()
-        upsert_item_to_cache.assert_called_once()
+        upsert_item_to_cache.assert_not_called()
+        get(report.full_path, query=property_path)
+        assert new_semantic_model_id in str(mock_questionary_print.call_args[0][0])
 
-        property_name = next(
-            (
-                kvp[property_alias]
-                for kvp in ITMutablePropMap.get(ItemType.REPORT)
-                if property_alias in kvp
-            ),
-            None,
+    def test_set_item_variable_library_properties_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        upsert_item_to_cache,
+    ):
+        # Setup - Create a new variable library
+        variable_library = item_factory(ItemType.VARIABLE_LIBRARY)
+        # cli_executor.exec_command(f"create {workspace.full_path} v.VariableLibrary")
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        upsert_item_to_cache.reset_mock()
+
+        # Execute command - Set properties with activeValueSetName
+        cli_executor.exec_command(
+            f'set {variable_library.full_path} --query properties --input \'{{"activeValueSetName":"Default value set"}}\' --force'
         )
-        get(report.full_path, query=property_name)
-        assert mock_questionary_print.call_args[0][0] == new_semantic_model_id
+
+        # Assert
+        mock_print_done.assert_called_once()
+        upsert_item_to_cache.assert_not_called()
+
+        # Verify the property was set correctly
+        get(variable_library.full_path, query="properties.activeValueSetName")
+        assert "Default value set" in str(mock_questionary_print.call_args[0][0])
 
     # endregion
 
@@ -132,7 +171,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
         upsert_workspace_to_cache.assert_not_called()
 
@@ -222,7 +261,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
         upsert_spark_pool_to_cache.assert_not_called()
 
@@ -294,7 +333,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
 
     @pytest.mark.parametrize("query, input", [("sku.name", "F4")])
@@ -351,7 +390,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
 
     @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
@@ -546,7 +585,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
 
     # endregion
@@ -649,6 +688,7 @@ class TestSET:
         cli_executor,
         vcr_instance,
         cassette_name,
+        should_upsert_to_cache=True,
     ):
         # Setup
         new_metadata_value = generate_random_string(vcr_instance, cassette_name)
@@ -666,7 +706,7 @@ class TestSET:
 
         # Assert
         mock_print_done.assert_called_once()
-        if upsert_entity_to_cache:
+        if upsert_entity_to_cache and should_upsert_to_cache:
             upsert_entity_to_cache.assert_called_once()
 
         new_entity = entity

@@ -157,6 +157,8 @@ fab ls ws1.Workspace/sem1.SemanticModel
 
 ### Update Item
 
+For detailed information on updating item properties, including limitations and property paths, see the [`set` command documentation](../commands/fs/set.md#setting-item-properties).
+
 #### Update Display Name
 
 Change the display name of an item.
@@ -191,32 +193,46 @@ Delete an item without confirmation prompts.
 fab rm ws1.Workspace/lh1.Lakehouse -f
 ```
 
-### Update Item Properties
+### Set Item Properties
 
-**Configurable Properties by Item Type:**
-
-- All supported items: `displayName`, `description`
-- Notebook: `lakehouse`, `environment`, `warehouse`
-- Report: `semanticModelId`
-- SparkJobDefinition: `payload`
-
-#### Set default lakehouse, environment, or warehouse for a notebook.
+#### Set default lakehouse
 
 ```
-# Set default lakehouse
-fab set ws1.Workspace/nb1.Notebook -q lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
+fab set ws1.Workspace/nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
+```
 
-# Set default environment
+#### Set Default Environment for a Notebook
+
+```
 fab set ws1.Workspace/nb1.Notebook -q environment -i '{"environmentId": "00000000-0000-0000-0000-000000000002", "workspaceId": "00000000-0000-0000-0000-000000000000"}'
+```
 
-# Set default warehouse
+#### Set Default Warehouse for a Notebook
+
+```
 fab set ws1.Workspace/nb1.Notebook -q warehouse -i '{"known_warehouses": [{"id": "00000000-0000-0000-0000-000000000003", "type": "Datawarehouse"}], "default_warehouse": "00000000-0000-0000-0000-000000000003"}'
 ```
 
 #### Rebind Report to Semantic Model
 
+For Report PBIR definition version 1:
+
 ```
-fab set ws1.Workspace/rep1.Report -q semanticModelId -i "00000000-0000-0000-0000-000000000000
+fab set ws1.Workspace/rep1.Report -q semanticModelId -i "00000000-0000-0000-0000-000000000000"
+```
+
+For Report PBIR definition version 2:
+
+```
+fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReference.byConnection.ConnectionString -i "ConnectionStringPrefix....semanticmodelid=00000000-0000-0000-0000-000000000000"
+```
+
+#### Update Notebook Cell Code
+
+Update the default lakehouse in a specific notebook.
+
+```
+fab set nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse.default_lakehouse -i 00000000-0000-0000-0000-000000000001
 ```
 
 
