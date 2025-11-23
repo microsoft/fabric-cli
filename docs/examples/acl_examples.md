@@ -41,7 +41,7 @@ fab acl ls ws1.Workspace -l
 
 # List specific columns using query parameter
 fab acl ls ws1.Workspace -q identity           # Show only identity column
-fab acl ls ws1.Workspace -q "identity name"    # Show identity and name columns
+fab acl ls ws1.Workspace -q [].[identity,type]    # Show identity and name columns
 ```
 
 #### List Item Permissions

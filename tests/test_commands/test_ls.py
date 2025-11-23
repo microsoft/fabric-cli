@@ -217,7 +217,7 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: JMESPath object syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -l -q "[].{{displayName: name, itemID: id}}"')
+        cli_executor.exec_command(f'ls {workspace.full_path} -l -q [].{{displayName: name, itemID: id}}')
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [notebook1.display_name, notebook2.display_name, notebook3.display_name],

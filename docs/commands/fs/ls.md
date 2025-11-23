@@ -22,6 +22,9 @@ fab ls <path> [-l] [-a] [-q <query>]
 ```
 fab ls ws1.Workspace
 fab ls -l
-fab ls ws1.Workspace -q [].[?contains(name, 'report')]
-fab ls -q [].[?type=='Lakehouse']
+
+# Using JEMSPath to filter items within ws1 workspace
+fab ls -l -q [].{name:name}
+fab ls ws1.Workspace -q [?contains(name, 'report')]
+fab ls -l -q [?id=='123456']
 ```

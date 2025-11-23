@@ -27,6 +27,11 @@ List all configuration settings and their current values.
 fab config ls
 ```
 
+Filter the configuration list using JMESPath
+
+```
+fab config ls -q  [?setting=='mode']
+```
 ---
 
 ### get
