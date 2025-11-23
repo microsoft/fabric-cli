@@ -36,6 +36,35 @@ def search(
             )
 
 
+def has_filter_or_wildcard(expression: str) -> bool:
+    """Check if a JMESPath expression contains filters or wildcards.
+
+    Args:
+        expression: The JMESPath expression to check.
+
+    Returns:
+        True if the expression contains filters or wildcards, False otherwise.
+
+    Examples:
+        >>> has_filter_or_wildcard("items[*].name")
+        True
+        >>> has_filter_or_wildcard("items[?price > 100]")
+        True
+        >>> has_filter_or_wildcard("items[].name")
+        True
+        >>> has_filter_or_wildcard("config.settings.name")
+        False
+    """
+    return any(
+        [
+            "*" in expression,  # Wildcard projection
+            "[?" in expression,  # Filter expression
+            "[]" in expression,  # Flatten operator
+            "||" in expression,  # Or expression (can return multiple)
+        ]
+    )
+
+
 def replace(data: Any, expression: Any, new_value: Any) -> Any:
     """
     Replace the value of a property or subtree in a JSON structure using JMESPath.

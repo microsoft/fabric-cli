@@ -25,60 +25,47 @@ fab set <path> -q <jmespath_query> -i <input_value> [-f]
 fab set ws1.Workspace -q displayName -i "New Name" -f
 ```
 
-## JSON Input
+## Limitations
+
+- Only one property path can be specified per `--query` argument
+- Paths must map directly to JSON paths **without** filters or wildcards
+- If the property path doesn't exist on the item definition, it will be added, provided it's valid according to the item's schema. The `set` command supports creation of 1 level at a time (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
+- Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
+
+## Set Item Support
+
+### Input
 
 When providing JSON input in command-line mode, different shells process quotes and escape characters before passing them to the CLI.
 
-### Best Practice
 
-**surround JSON input with single quotes (`'`). In PowerShell escape inner double quotes with backslashes (`\"`)**
-
-=== "PowerShell"
-    ```powershell
-    fab set item.Resource -q query -i '{\"key\":\"value\"}'
-    ```
+**Best Practice:** Surround JSON input with single quotes (`'`). Some shells may require escaping inner double quotes with backslashes (`\"`)
 
 === "Bash/Zsh"
     ```bash
     fab set item.Resource -q query -i '{"key":"value"}'
     ```
 
-## Setting Item Properties
+=== "PowerShell"
+    ```powershell
+    fab set item.Resource -q query -i '{\"key\":\"value\"}'
+    ```
 
-The `set` command supports updating properties in two categories for items:
+### Query
 
-### 1. Item Metadata
+The following queries are supported:
+
+#### Item Metadata
 
 - `displayName` - The display name of the item (all item types)
 - `description` - The description of the item (all item types)
 - `properties` - Custom properties (`.VariableLibrary` only)
 
-### 2. Item Definition
+#### Item Definition
 
-Any explicit path (specified via the `-q` / `--query` command argument) to properties within the item's `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions).
+- Any explicit path to properties within the item's `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions).
 
-### Limitations
-
-- Only one property path can be specified per `--query` argument
-- Paths must map directly to JSON paths **without** filters or wildcards
-- Properties can be added one level deep from existing paths returned by [`get`](get.md), provided they are valid according to the item's schema. Nested properties must be created incrementally (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
-- Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
-
-**Supported - Single property path:**
-
-```bash
-# Setting a single property path
-fab set ws1/notebook1.Notebook -q lakehouse -i "lakehouse1.Lakehouse" -f
-```
-
-**Not Supported - Multiple property paths in one `-query`:**
-
-```bash
-#  This will NOT work - multiple paths cannot be specified in a single -query argument
-fab set ws1/notebook1.Notebook -q "lakehouse, environment" -i "lakehouse1.Lakehouse, env1.Environment" -f
-```
-
-### Common Item-Specific Definition Property Paths
+#### Item-Specific Definition Property Path Name
 
 These are friendly names that map to specific paths in the item's definition structure. When using the `set` command, you can use these names directly (as the `-query` / `--q` argument value) as they map to the correct definition paths:
 
@@ -86,5 +73,7 @@ These are friendly names that map to specific paths in the item's definition str
 - **Report**: `semanticModelId` (applies only to [Report definition.pbir version 1](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report?tabs=v1%2Cdesktop#definitionpbir). For other versions, check the correct property path in the Report definition documentation)
 - **SparkJobDefinition**: `payload`
 
-!!! note "Note on friendly names"
-    These friendly names may be deprecated in a future release. For forward compatibility, consider using explicit JSON paths within the item's `definition` structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions).
+!!! warning "Note on friendly names"
+
+    These friendly names may be deprecated in a future release. We strongly recommend using explicit JSON paths within the item's definition structure according to [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions) rather than friendly names.
+

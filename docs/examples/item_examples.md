@@ -193,17 +193,12 @@ Delete an item without confirmation prompts.
 fab rm ws1.Workspace/lh1.Lakehouse -f
 ```
 
-### Update Item Properties
+### Set Item Properties
 
-
-#### Set default lakehouse, environment, or warehouse for a notebook.
-
-```
-
-# Set default lakehouse
+#### Set default lakehouse
 
 ```
-fab set ws1.Workspace/nb1.Notebook -q lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
+fab set ws1.Workspace/nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
 ```
 
 #### Set Default Environment for a Notebook
@@ -234,10 +229,10 @@ fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReferenc
 
 #### Update Notebook Cell Code
 
-Update the code in a specific notebook cell.
+Update the default lakehouse in a specific notebook.
 
 ```
-fab set nb1.Notebook -q definition.parts[0].payload.cells[0].source[0] -i "someCode"
+fab set nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse.default_lakehouse -i 00000000-0000-0000-0000-000000000001
 ```
 
 

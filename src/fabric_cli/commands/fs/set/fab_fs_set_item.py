@@ -22,7 +22,7 @@ def exec(item: Item, args: Namespace) -> None:
 
     query_value = item.extract_friendly_name_path_or_default(query)
 
-    utils_set.validate_item_query(query_value)
+    utils_set.validate_item_query(query_value, item)
 
     utils_set.print_set_warning()
     if force or utils_ui.prompt_confirm():
@@ -32,17 +32,7 @@ def exec(item: Item, args: Namespace) -> None:
         args.id = item.id
         args.item_uri = format_mapping.get(item.item_type, "items")
 
-        if query_value == fab_constant.ITEM_QUERY_DEFINITION or query_value.startswith(
-            f"{fab_constant.ITEM_QUERY_DEFINITION}."
-        ):
-            if not item.check_command_support(Command.FS_EXPORT):
-                raise FabricCLIError(
-                    CommonErrors.definition_update_not_supported_for_item_type(
-                        str(item.item_type)
-                    ),
-                    fab_constant.ERROR_UNSUPPORTED_COMMAND,
-                )
-
+        if query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION):
             args.format = definition_format_mapping.get(item.item_type, "")
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
@@ -72,7 +62,7 @@ def exec(item: Item, args: Namespace) -> None:
 
             item_api.update_item(args, item_update_payload, item_uri=True)
 
-            if fab_constant.ITEM_QUERY_DISPLAY_NAME in updated_metadata:
+            if fab_constant.ITEM_QUERY_DISPLAY_NAME in update_payload_dict:
                 new_item_name = updated_metadata[fab_constant.ITEM_QUERY_DISPLAY_NAME]
                 item._name = new_item_name
                 utils_mem_store.upsert_item_to_cache(item)
@@ -93,7 +83,7 @@ def _update_element(
             input_value,
             decode_encode=decode_encode,
         )
-    except (ValueError, KeyError, IndexError):
+    except Exception:
         raise FabricCLIError(
             CommonErrors.invalid_set_item_query(query_value),
             fab_constant.ERROR_INVALID_QUERY,

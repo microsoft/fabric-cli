@@ -10,26 +10,42 @@ from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 
-def validate_item_query(query_value: str) -> None:
+def validate_item_query(query_value: str, item=None) -> None:
     """Validate that a query string is allowed for item metadata modification.
 
     Args:
         query_value: Query string to validate. Must be an allowed metadata key,
-            or start with "definition." or "properties.".
+            or start with "definition." or "properties.". Must not contain
+            filters or wildcards.
+        item: Optional Item object to validate command support for definition queries.
 
     Raises:
-        FabricCLIError: If the query is not in an allowed format.
+        FabricCLIError: If the query is not in an allowed format, contains
+            filters/wildcards, or if definition update is not supported for the item type.
     """
-    if not (
-        query_value in fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS
-        or query_value == fab_constant.ITEM_QUERY_DEFINITION
-        or query_value.startswith(f"{fab_constant.ITEM_QUERY_DEFINITION}.")
-        or query_value.startswith(f"{fab_constant.ITEM_QUERY_PROPERTIES}.")
-    ):
+    allowed_keys = fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS + [
+        fab_constant.ITEM_QUERY_DEFINITION
+    ]
+    validate_expression(query_value, allowed_keys)
+
+    # Check for filters or wildcards
+    if utils_jmespath.has_filter_or_wildcard(query_value):
         raise FabricCLIError(
-            CommonErrors.invalid_item_set_query(query_value),
+            CommonErrors.query_contains_filters_or_wildcards(query_value),
             fab_constant.ERROR_INVALID_QUERY,
         )
+
+    # Validate item command support for definition queries
+    if item and (query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION)):
+        from fabric_cli.core.fab_commands import Command
+
+        if not item.check_command_support(Command.FS_EXPORT):
+            raise FabricCLIError(
+                CommonErrors.definition_update_not_supported_for_item_type(
+                    str(item.item_type)
+                ),
+                fab_constant.ERROR_UNSUPPORTED_COMMAND,
+            )
 
 
 def validate_expression(expression: str, allowed_keys: list[str]) -> None:
@@ -39,7 +55,7 @@ def validate_expression(expression: str, allowed_keys: list[str]) -> None:
         allowed_expressions = "\n  ".join(allowed_keys)
         raise FabricCLIError(
             f"Invalid query '{expression}'\n\nAvailable queries:\n  {allowed_expressions}",
-            fab_constant.ERROR_INVALID_INPUT,
+            fab_constant.ERROR_INVALID_QUERY,
         )
 
 
