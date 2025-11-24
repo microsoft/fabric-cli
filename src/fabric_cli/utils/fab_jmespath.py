@@ -169,7 +169,7 @@ def is_simple_path_expression(expr: str) -> bool:
         return False
 
 
-def _is_simple_path_ast_tree(node: dict) -> bool:
+def _is_simple_path_ast_tree(node: Any) -> bool:
     """Recursively check if a parsed JMESPath AST tree represents a simple path.
 
     This function traverses the entire AST tree starting from the given node,
