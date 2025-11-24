@@ -78,7 +78,7 @@ def format_and_print_output(
 ) -> None:
     # Project the columns requested by the user based on JMESPath if query is provided else project the columns requested based on item type
     if getattr(args, "query", None):
-        fab_util.process_nargs(args.query)
+        args.query = fab_util.process_nargs(args.query)
         filtered_data = utils_jmespath.search(data, args.query)
     else: 
         filtered_data = [{key: item[key] for key in columns if key in item} for item in data]
