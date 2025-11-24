@@ -23,13 +23,11 @@ from fabric_cli.core.fab_exceptions import (
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
-from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
-
-
 
 
 def do_request(
@@ -91,10 +89,12 @@ def do_request(
 
     # Get token
     from fabric_cli.core.fab_auth import FabAuth
+
     token = FabAuth().get_access_token(scope)
 
     # Build headers
     from fabric_cli.core.fab_context import Context as FabContext
+
     ctxt_cmd = FabContext().command
     headers = {
         "Authorization": "Bearer " + str(token),
@@ -355,10 +355,10 @@ def _poll_operation(
     args.method = "get"
     args.wait = False
     args.params = {}
-    
+
     initial_interval = get_polling_interval(original_response.headers)
     time.sleep(initial_interval)
-    
+
     while True:
         response = do_request(args, hostname=hostname)
 
@@ -373,9 +373,14 @@ def _poll_operation(
                         original_response.status_code = 200
                         return original_response
                     elif scope == fab_constant.SCOPE_FABRIC_DEFAULT:
-                        return _fetch_operation_result(
-                            args, uri, response, original_response
-                        )
+                        location_header = response.headers.get("Location", "")
+                        if location_header:
+                            return _fetch_operation_result(
+                                args, uri, response, original_response
+                            )
+
+                        original_response.status_code = 200
+                        return original_response
                 elif status == "Failed":
                     fab_logger.log_progress(status)
                     raise FabricCLIError(
