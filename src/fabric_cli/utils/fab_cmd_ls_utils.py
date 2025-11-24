@@ -76,10 +76,12 @@ def format_and_print_output(
     columns: list[str] = [],
     hidden_data=None,
 ) -> None:
-    
-    args.query = fab_util.process_nargs(getattr(args, "query", None))
     # Project the columns requested by the user based on JMESPath if query is provided else project the columns requested based on item type
-    filtered_data = utils_jmespath.search(data, args.query) if args.query else [{key: item[key] for key in columns if key in item} for item in data]
+    if getattr(args, "query", None):
+        fab_util.process_nargs(args.query)
+        filtered_data = utils_jmespath.search(data, args.query)
+    else: 
+        filtered_data = [{key: item[key] for key in columns if key in item} for item in data]
 
     utils_ui.print_output_format(
         args, show_headers=show_details, data=filtered_data, hidden_data=hidden_data
