@@ -90,15 +90,6 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         fab_learnmore=["_"],
     )
 
-    parser_ls.add_argument(
-        "-q",
-        "--query",
-        metavar="",
-        nargs="+",
-        required=False,
-        help="JMESPath query to filter. Optional",
-    )
-
     parser_ls.usage = f"{utils_error_parser.get_usage_prog(parser_ls)}"
     parser_ls.set_defaults(func=config.list_configs)
 
