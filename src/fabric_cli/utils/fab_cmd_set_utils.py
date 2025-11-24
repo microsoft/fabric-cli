@@ -28,8 +28,7 @@ def validate_item_query(query_value: str, item=None) -> None:
     ]
     validate_expression(query_value, allowed_keys)
 
-    # Check for filters or wildcards
-    if utils_jmespath.has_filter_or_wildcard(query_value):
+    if not utils_jmespath.is_simple_path_expression(query_value):
         raise FabricCLIError(
             CommonErrors.query_contains_filters_or_wildcards(query_value),
             fab_constant.ERROR_INVALID_QUERY,

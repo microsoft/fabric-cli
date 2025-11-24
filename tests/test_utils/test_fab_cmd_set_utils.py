@@ -11,7 +11,6 @@ from fabric_cli.utils.fab_cmd_set_utils import (
     update_fabric_element,
     validate_item_query,
 )
-from fabric_cli.utils.fab_jmespath import has_filter_or_wildcard
 
 
 def test_update_fabric_element_with_json_input_success():
@@ -55,30 +54,6 @@ def test_extract_updated_properties_top_level_query_replaces_json_object_success
 
     assert "k" in update_payload_dict
     assert update_payload_dict["k"]["k2"]["k3"] == "value"
-
-
-def test_has_filter_or_wildcard_with_wildcard():
-    assert has_filter_or_wildcard("items[*].name") is True
-
-
-def test_has_filter_or_wildcard_with_filter():
-    assert has_filter_or_wildcard("items[?price > 100]") is True
-
-
-def test_has_filter_or_wildcard_with_flatten():
-    assert has_filter_or_wildcard("items[].name") is True
-
-
-def test_has_filter_or_wildcard_with_or_expression():
-    assert has_filter_or_wildcard("name || displayName") is True
-
-
-def test_has_filter_or_wildcard_without_filters():
-    assert has_filter_or_wildcard("config.settings.name") is False
-
-
-def test_has_filter_or_wildcard_with_array_index():
-    assert has_filter_or_wildcard("items[0].name") is False
 
 
 def test_validate_item_query_with_wildcard_failure():
