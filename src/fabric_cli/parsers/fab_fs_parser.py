@@ -429,27 +429,23 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         "# assign a custom pool",
         "$ set ws2r.workspace -q sparkSettings.pool.defaultPool -i <inline_json_w_id_name_type> -f",
     ]
-    set_learnmore = [
-        "Tip: Run `set <path> -q check -i empty` to see updatable  properties (e.g. set ws1.Workspace -q check -i empty)"
-    ]
 
     set_parser = subparsers.add_parser(
         "set",
         help=fab_constant.COMMAND_FS_SET_DESCRIPTION,
         fab_examples=set_examples,
-        fab_learnmore=set_learnmore,
+        fab_learnmore=["_"],
     )
     set_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     set_parser.add_argument(
         "-q",
         "--query",
-        nargs="+",
         metavar="",
         required=True,
         help="JSON path to filter",
     )
     set_parser.add_argument(
-        "-i", "--input", nargs="+", required=True, help="Input path for replace"
+        "-i", "--input", nargs="+", required=True, help="Input value to set"
     )
     set_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"

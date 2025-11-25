@@ -6,7 +6,45 @@ import json
 
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_jmespath as utils_jmespath
+
+
+def validate_item_query(query_value: str, item=None) -> None:
+    """Validate that a query string is allowed for item metadata modification.
+
+    Args:
+        query_value: Query string to validate. Must be an allowed metadata key,
+            or start with "definition." or "properties.". Must not contain
+            filters or wildcards.
+        item: Optional Item object to validate command support for definition queries.
+
+    Raises:
+        FabricCLIError: If the query is not in an allowed format, contains
+            filters/wildcards, or if definition update is not supported for the item type.
+    """
+    allowed_keys = fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS + [
+        fab_constant.ITEM_QUERY_DEFINITION
+    ]
+    validate_expression(query_value, allowed_keys)
+
+    if not utils_jmespath.is_simple_path_expression(query_value):
+        raise FabricCLIError(
+            CommonErrors.query_contains_filters_or_wildcards(query_value),
+            fab_constant.ERROR_INVALID_QUERY,
+        )
+
+    # Validate item command support for definition queries
+    if item and (query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION)):
+        from fabric_cli.core.fab_commands import Command
+
+        if not item.check_command_support(Command.FS_EXPORT):
+            raise FabricCLIError(
+                CommonErrors.definition_update_not_supported_for_item_type(
+                    str(item.item_type)
+                ),
+                fab_constant.ERROR_UNSUPPORTED_COMMAND,
+            )
 
 
 def validate_expression(expression: str, allowed_keys: list[str]) -> None:
@@ -16,7 +54,7 @@ def validate_expression(expression: str, allowed_keys: list[str]) -> None:
         allowed_expressions = "\n  ".join(allowed_keys)
         raise FabricCLIError(
             f"Invalid query '{expression}'\n\nAvailable queries:\n  {allowed_expressions}",
-            fab_constant.ERROR_INVALID_INPUT,
+            fab_constant.ERROR_INVALID_QUERY,
         )
 
 
@@ -35,8 +73,23 @@ def ensure_notebook_dependency(decoded_item_def: dict, query: str) -> dict:
 
 
 def update_fabric_element(
-    resource_def: dict, query: str, input: str, decode_encode: bool = False
+    resource_def: dict,
+    query: str,
+    input: str,
+    decode_encode: bool = False,
 ) -> tuple[str, dict]:
+    """Update a Fabric resource element using a JMESPath query.
+
+    Args:
+        resource_def: Resource definition dictionary to modify.
+        query: JMESPath expression specifying the path to update.
+        input: New value to set.
+        decode_encode: If True, decode/encode base64 payloads. Default False.
+
+    Returns:
+        Tuple of (json_payload, updated_def) where json_payload is the JSON string
+        and updated_def is the updated dictionary.
+    """
     try:
         input = json.loads(input)
     except (TypeError, json.JSONDecodeError):
@@ -73,6 +126,16 @@ def extract_json_schema(schema: dict, definition: bool = True) -> tuple:
         definition_properties = {"definition": schema.get("definition", {})}
 
     return definition_properties, name_description_properties
+
+
+def extract_updated_properties(updated_data: dict, query_path: str) -> dict:
+    result = {}
+    top_level_key = query_path.split(".")[0]
+
+    if top_level_key in updated_data:
+        result[top_level_key] = updated_data[top_level_key]
+
+    return result
 
 
 def _encode_payload(item_def: dict) -> dict:

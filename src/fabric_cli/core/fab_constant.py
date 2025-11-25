@@ -258,6 +258,7 @@ ERROR_INVALID_PROPERTY = "InvalidProperty"
 ERROR_INVALID_DETLA_TABLE = "InvalidDeltaTable"
 ERROR_INVALID_QUERY_FIELDS = "InvalidQueryFields"
 ERROR_INVALID_WORKSPACE_TYPE = "InvalidWorkspaceType"
+ERROR_INVALID_QUERY = "InvalidQuery"
 ERROR_INTERNAL_SERVER_ERROR = "InternalServerError"
 ERROR_UNSUPPORTED_ITEM_TYPE = "UnsupportedItemType"
 ERROR_UNSUPPORTED_COMMAND = "UnsupportedCommand"
@@ -317,3 +318,16 @@ ITEM_METADATA_PROPERTIES = {
     "workspaceId",
     "folderId",
 }
+
+# Item set constants
+ITEM_QUERY_DEFINITION = "definition"
+ITEM_QUERY_PROPERTIES = "properties"
+ITEM_QUERY_DISPLAY_NAME = "displayName"
+ITEM_QUERY_DESCRIPTION = "description"
+
+# Allowed metadata keys for item set operations
+ITEM_SET_ALLOWED_METADATA_KEYS = [
+    ITEM_QUERY_DISPLAY_NAME,
+    ITEM_QUERY_DESCRIPTION,
+    ITEM_QUERY_PROPERTIES,
+]
