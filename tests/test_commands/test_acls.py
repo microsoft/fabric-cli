@@ -270,7 +270,7 @@ class TestACLs:
     ):
 
         # Test 1: Array projection for single field
-        cli_executor.exec_command(f"acl ls {workspace.full_path} -q '[*].identity'")
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [*].identity")
         mock_questionary_print.assert_called()
         assert any(test_data.admin.upn in call.args[0] for call in mock_questionary_print.mock_calls)
 
@@ -281,7 +281,7 @@ class TestACLs:
         mock_questionary_print.assert_called()
         call_args = mock_questionary_print.mock_calls[0].args[0]
         assert test_data.admin.upn in call_args and "User" in call_args
-        
+
         mock_questionary_print.reset_mock()
 
         # Test 3: Object projection with field aliases

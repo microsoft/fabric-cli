@@ -50,6 +50,7 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
         "-q",
         "--query",
         metavar="",
+        nargs="+",
         required=False,
         help="JMESPath query to filter. Optional",
     )
