@@ -20,7 +20,7 @@ steps:
   - script: |
       python -m pip install --upgrade pip
       python -m pip install ms-fabric-cli
-      fab config set fab_encryption_fallback_enabled true
+      fab config set encryption_fallback_enabled true
       fab auth login -u $(ARM_CLIENT_ID) --tenant $(ARM_TENANT_ID) --federated-token $(ARM_ID_TOKEN)
       fab ls
     displayName: 'Fabric CLI'
