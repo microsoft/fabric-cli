@@ -7,7 +7,6 @@ import os
 import re
 import time
 import shutil
-import tempfile
 from unittest.mock import patch
 
 import pytest
@@ -506,7 +505,7 @@ class TestJobs:
         mock_questionary_print.assert_called()
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
 
-    def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print):
+    def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
         fb_lakehouse = handle_context.get_command_context(lakehouse.full_path)
@@ -525,7 +524,7 @@ class TestJobs:
         }
         nb_path = os.path.join(items_path, "example.Notebook")
 
-        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
         temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
         shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
 
@@ -540,7 +539,7 @@ class TestJobs:
 
         pipeline_path = os.path.join(items_path, "example.DataPipeline")
 
-        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
         temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
         shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
 
@@ -563,7 +562,7 @@ class TestJobs:
         mock_questionary_print.assert_called()
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
 
-    def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print):
+    def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
         fb_lakehouse = handle_context.get_command_context(lakehouse.full_path)
@@ -580,7 +579,7 @@ class TestJobs:
             "data/sample_items/example.Notebook",
         )
 
-        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
         temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
         shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
 
@@ -617,7 +616,7 @@ class TestJobs:
             "data/sample_items/example.DataPipeline",
         )
 
-        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
         temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
         shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
 
@@ -658,6 +657,7 @@ class TestJobs:
         cli_executor,
         assert_fabric_cli_error,
         mock_fab_ui_print_error,
+        tmp_path
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
@@ -674,7 +674,7 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.Notebook",
         )
-        temp_nb_path = os.path.join(tempfile.gettempdir(), "example.Notebook")
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
         temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
         shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
 
@@ -718,7 +718,7 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.DataPipeline",
         )
-        temp_pipeline_path = os.path.join(tempfile.gettempdir(), "example.DataPipeline")
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
         temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
         shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
 
