@@ -54,7 +54,7 @@ fab acl ls ws1.Workspace/lh1.Lakehouse -l
 
 # List specific columns for item permissions
 fab acl ls ws1.Workspace/lh1.Lakehouse -q [].type     # Show only type column
-fab acl ls ws1.Workspace/lh1.Lakehouse -q '[].{name: name, type: type}'   # Show type and name columns
+fab acl ls ws1.Workspace/lh1.Lakehouse -q '[].{name: name, type: type}'   # Show type and type columns
 ```
 
 #### List OneLake RBAC Permissions
