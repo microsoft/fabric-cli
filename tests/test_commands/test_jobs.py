@@ -933,7 +933,9 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
-        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {fabric_item.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(fabric_item.full_path, schedule=True)

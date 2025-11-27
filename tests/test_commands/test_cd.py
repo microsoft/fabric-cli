@@ -53,7 +53,7 @@ class TestCD:
             "]",
             ";",
             # ":", need to fix tests in Windows
-            "'",
+            "\\'",
             #'"', need to fix tests in Windows
             # "<", need to fix tests in Windows
             # ">", need to fix tests in Windows
@@ -80,7 +80,7 @@ class TestCD:
         # Assert
         mock_print_done.assert_called_once()
         assert isinstance(Context().context, Workspace)
-        assert Context().context.name == workspace.name
+        assert Context().context.name == workspace.name.replace("\\'", "'")
 
     def test_cd_item_success(self, item_factory, mock_print_done, cli_executor):
         # Setup
