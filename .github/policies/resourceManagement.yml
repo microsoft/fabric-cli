@@ -199,3 +199,64 @@ configuration:
           - addReply:
               reply: >
                 This issue has been triaged and identified as a **bug**. Our team will review and prioritize it accordingly.
+
+      - description: Auto-label new PRs for review
+        if:
+          - payloadType: Pull_Request
+          - isAction:
+              action: Opened
+        then:
+          - addLabel:
+              label: pending review
+
+      - description: Reviewer leaves feedback; request author action
+        if:
+          - isPullRequest: true
+          - or:
+            - payloadType: Issue_Comment
+            - payloadType: Pull_Request_Review_Comment
+            - payloadType: Pull_Request_Review
+          - not:
+              commentContains:
+                pattern: '^/skip-feedback'
+                isRegex: true
+          - or:
+            - activitySenderHasPermission:
+                permission: Admin
+            - activitySenderHasPermission:
+                permission: Write
+          - not:
+              isActivitySender:
+                issueAuthor: true
+          - not:
+              hasLabel:
+                label: needs author feedback
+        then:
+          - addLabel:
+              label: needs author feedback
+          - removeLabel:
+              label: pending review
+          - addReply:
+              reply: >
+                Feedback has been provided that requires the author's attention.
+
+                ${issueAuthor}, please review the comments and provide a response.
+
+      - description: Author replies to PR feedback
+        if:
+          - isPullRequest: true
+          - payloadType: Issue_Comment
+          - isAction:
+              action: Created
+          - isActivitySender:
+              issueAuthor: true
+          - hasLabel:
+              label: needs author feedback
+        then:
+          - removeLabel:
+              label: needs author feedback
+          - addLabel:
+              label: pending review
+          - addReply:
+              reply: >
+                Thank you for your response, ${issueAuthor}. The review will continue.
