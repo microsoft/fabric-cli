@@ -255,7 +255,9 @@ class TestJobs:
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
         # Execute command
-        cli_executor.exec_command(f"job run-sch {notebook.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {notebook.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(notebook.full_path, schedule=True)
@@ -311,7 +313,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run-sch {notebook.full_path} --type weekly -i {input_config}"
+            f'job run-sch {notebook.full_path} --type weekly -i "{input_config}"'
         )
 
         # Assert
@@ -402,7 +404,7 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-04-28T00:00:00', 'endDateTime': '2024-04-30T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
         cli_executor.exec_command(
-            f"job run-update {notebook.full_path} --id {schedule_id} --type weekly -i {input_config}"
+            f'job run-update {notebook.full_path} --id {schedule_id} --type weekly -i "{input_config}"'
         )
 
         # Assert
@@ -584,7 +586,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -627,7 +629,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -667,7 +669,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -680,7 +682,7 @@ class TestJobs:
         _params = ["int_param:int=string_value"]
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -716,7 +718,7 @@ class TestJobs:
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -730,7 +732,7 @@ class TestJobs:
         _params = ['obj_param:object={"key":{"key":2},"key":"value"']
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -777,7 +779,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --config {json.dumps(conf)} --params string_param:string=new_value"
+            f"job run {notebook.full_path} --config '{json.dumps(conf)}' --params string_param:string=new_value"
         )
 
         # Extract the arguments passed to the mock
