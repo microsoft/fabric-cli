@@ -285,11 +285,13 @@ class TestACLs:
         mock_questionary_print.reset_mock()
 
         # Test 3: Object projection with field aliases
-        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [].{{principalInfo: identity, accessLevel: acl}}")
+        cli_executor.exec_command(
+            f"acl ls {workspace.full_path} -q '[].{{principalInfo: identity, accessLevel: acl}}'"
+        )
         mock_questionary_print.assert_called()
         call_args = mock_questionary_print.mock_calls[0].args[0]
         assert "principalInfo" in call_args and "accessLevel" in call_args
-        
+
         # Cleanup test ACL entry
         _cleanup_acl(cli_executor, workspace.full_path,  test_data.service_principal.id)
 

@@ -7,9 +7,9 @@ import time
 
 import pytest
 
-from fabric_cli.core.fab_exceptions import FabricCLIError
 import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import OutputStatus
 from fabric_cli.core.fab_types import (
     ItemType,
@@ -204,7 +204,7 @@ class TestLS:
         notebook1 = item_factory(ItemType.NOTEBOOK)
         notebook2 = item_factory(ItemType.NOTEBOOK)
         notebook3 = item_factory(ItemType.NOTEBOOK)
-        
+
         # Test 1: Basic JMESPath syntax
         cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
         mock_questionary_print.assert_called()
@@ -217,7 +217,9 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: JMESPath object syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -l -q [].{{displayName: name, itemID: id}}')
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -l -q '[].{{displayName: name, itemID: id}}'"
+        )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [notebook1.display_name, notebook2.display_name, notebook3.display_name],
@@ -244,7 +246,7 @@ class TestLS:
 
         mock_questionary_print.reset_mock()
 
-         # Test 4: JMESPath object syntax without -l should not have id in the result
+        # Test 4: JMESPath object syntax without -l should not have id in the result
         cli_executor.exec_command(f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -256,7 +258,9 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 5: JMESPath query filters specific value
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [?name==\'{notebook1.name}\'].name')
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -q \"[?name=='{notebook1.name}'].name\""
+        )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [f'{notebook1.name}'],
@@ -272,10 +276,9 @@ class TestLS:
 
         mock_questionary_print.reset_mock()
 
-        # Test 6: Invalid query format 
-        cli_executor.exec_command(f'ls {workspace.full_path} -q name type')
+        # Test 6: Invalid query format
+        cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
         assert_fabric_cli_error(fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
-
 
     def test_ls_item_show_hidden_from_config_success(
         self,
