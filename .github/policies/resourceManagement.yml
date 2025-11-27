@@ -211,7 +211,6 @@ configuration:
 
       - description: Reviewer leaves feedback; request author action
         if:
-          - isPullRequest: true
           - or:
             - payloadType: Pull_Request_Review_Comment
             - payloadType: Pull_Request_Review
@@ -243,7 +242,6 @@ configuration:
 
       - description: Author replies to PR feedback
         if:
-          - isPullRequest: true
           - payloadType: Issue_Comment
           - isAction:
               action: Created
