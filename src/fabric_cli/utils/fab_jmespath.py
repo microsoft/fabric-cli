@@ -129,3 +129,80 @@ def _get_json_paths(json_obj, current_path="", depth=0, max_depth=4):
         paths.append(current_path)
 
     return paths
+
+
+def is_simple_path_expression(expr: str) -> bool:
+    """Check if a JMESPath expression is a simple explicit path.
+
+    Simple explicit paths are direct field access or numeric index only,
+    without filters, wildcards, slices, or functions.
+
+    Args:
+        expr: The JMESPath expression to check.
+
+    Returns:
+        True if the expression is a simple explicit path, False otherwise.
+
+    Examples:
+        >>> is_simple_path_expression("displayName")
+        True
+        >>> is_simple_path_expression("a.b[0].c")
+        True
+        >>> is_simple_path_expression("foo['bar-baz']")
+        True
+        >>> is_simple_path_expression("items[*].id")
+        False
+        >>> is_simple_path_expression("a.b[?name > 3]")
+        False
+        >>> is_simple_path_expression("length(items)")
+        False
+        >>> is_simple_path_expression("a.b[:2]")
+        False
+        >>> is_simple_path_expression("[foo, bar]")
+        False
+    """
+    try:
+        compiled = jmespath.compile(expr)
+        parsed = compiled.parsed
+        return _is_simple_path_ast_tree(parsed)
+    except Exception:
+        return False
+
+
+def _is_simple_path_ast_tree(node: Any) -> bool:
+    """Recursively check if a parsed JMESPath AST tree represents a simple path.
+
+    This function traverses the entire AST tree starting from the given node,
+    checking that all nodes in the tree represent simple path operations only.
+
+    Args:
+        node: Root node of the JMESPath AST tree to validate.
+
+    Returns:
+        True if the entire tree represents simple field/index access only.
+    """
+    node_type = node.get("type")
+
+    if node_type == "field":
+        # Simple field access like "displayName"
+        return True
+
+    elif node_type == "index":
+        # Numeric array index like [0]
+        # Check that index is a literal number, not an expression
+        index_value = node.get("value")
+        return isinstance(index_value, int)
+
+    elif node_type == "index_expression":
+        # Array indexing like parts[0] which creates an index_expression node
+        # with children: [field_node, index_node]
+        children = node.get("children", [])
+        return all(_is_simple_path_ast_tree(child) for child in children)
+
+    elif node_type == "subexpression":
+        # Nested path like "a.b.c"
+        # Both children must be simple
+        children = node.get("children", [])
+        return all(_is_simple_path_ast_tree(child) for child in children)
+
+    return False
