@@ -237,7 +237,7 @@ fab set nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakeho
 
 
 ## Item Operations
-### Copy Items
+### Copy Item
 
 !!! info "When you copy an item definition, the sensitivity label is not a part of the definition"
 
@@ -276,7 +276,7 @@ fab cp ws1.Workspace/source.Item ws2.Workspace/dest.Folder
 ```
 
 
-### Move Items
+### Move Item
 
 !!! info "When you move item definition, the sensitivity label is not a part of the definition"
 
@@ -304,7 +304,7 @@ Move an item into a folder, preserving its original name.
 fab mv ws1.Workspace/nb.Notebook ws2.Workspace/dest.Folder
 ```
 
-### Import and Export
+### Export Item
 
 
 !!! info "When you export item definition, the sensitivity label is not a part of the definition"
@@ -334,6 +334,8 @@ Export item definition directly to a Lakehouse Files location.
 fab export ws1.Workspace/nb1.Notebook -o /ws1.Workspace/lh1.Lakehouse/Files/exports
 ```
 
+### Import Item
+
 #### Import from Local
 
 Import an item definition from a local directory into the workspace.
@@ -342,14 +344,7 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-Import a notebook from Python file format instead of default format.
-
-```
-fab import ws1.Workspace/nb1_python.Notebook -i /tmp/notebook.py --format py
-```
-
 **Supported Import Formats:** `.ipynb` (default) and `.py`.
-
 
 
 ### Start/Stop Mirrored Databases
