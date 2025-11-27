@@ -214,10 +214,6 @@ configuration:
           - or:
             - payloadType: Pull_Request_Review_Comment
             - payloadType: Pull_Request_Review
-          - not:
-              commentContains:
-                pattern: '^/skip-feedback'
-                isRegex: true
           - or:
             - activitySenderHasPermission:
                 permission: Admin
@@ -242,7 +238,7 @@ configuration:
 
       - description: Author replies to PR feedback
         if:
-          - payloadType: Issue_Comment
+          - payloadType: Pull_Request_Review_Comment
           - isAction:
               action: Created
           - isActivitySender:
