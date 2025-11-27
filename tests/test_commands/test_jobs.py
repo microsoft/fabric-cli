@@ -6,6 +6,10 @@ import json
 import os
 import re
 import time
+import shutil
+from unittest.mock import patch
+
+import pytest
 
 import fabric_cli.commands.fs.fab_fs_set as fab_fs_set
 import fabric_cli.commands.jobs.fab_jobs_run as fab_jobs_run
@@ -14,6 +18,7 @@ import fabric_cli.commands.jobs.fab_jobs_run_list as fab_jobs_run_list
 import fabric_cli.commands.jobs.fab_jobs_run_sch as fab_jobs_run_sch
 import fabric_cli.commands.jobs.fab_jobs_run_status as fab_jobs_run_status
 import fabric_cli.commands.jobs.fab_jobs_run_update as fab_jobs_run_update
+import fabric_cli.commands.jobs.fab_jobs_run_rm as fab_jobs_run_rm
 import fabric_cli.core.fab_state_config as state_config
 import fabric_cli.utils.fab_cmd_job_utils as utils_job
 from fabric_cli.core import fab_constant as constant
@@ -21,7 +26,6 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
-
 
 class TestJobs:
     # region JOB RUN
@@ -503,7 +507,7 @@ class TestJobs:
         mock_questionary_print.assert_called()
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
 
-    def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print):
+    def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
         fb_lakehouse = handle_context.get_command_context(lakehouse.full_path)
@@ -521,30 +525,36 @@ class TestJobs:
             "default_lakehouse_workspace_id": workspace_id,
         }
         nb_path = os.path.join(items_path, "example.Notebook")
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
+
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
+
+        nb_json = json.loads(open(temp_nb_content_path).read())
         nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
-
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
         fb_notebook = handle_context.get_command_context(notebook.full_path)
         notebook_id = fb_notebook.id
         ws_id = fb_notebook.parent.id
 
         pipeline_path = os.path.join(items_path, "example.DataPipeline")
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
+
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         # Execute command
         cli_executor.exec_command(f"job run {pipeline.full_path}")
@@ -554,7 +564,7 @@ class TestJobs:
         mock_questionary_print.assert_called()
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
 
-    def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print):
+    def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
         fb_lakehouse = handle_context.get_command_context(lakehouse.full_path)
@@ -570,12 +580,15 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.Notebook",
         )
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
-        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
+
+        nb_json = json.loads(open(temp_nb_content_path).read())
+        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
 
         _params = [
             "string_param:string=new_value",
@@ -604,18 +617,21 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.DataPipeline",
         )
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
+
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         _params = [
             "string_param:string=new_value",
@@ -643,6 +659,7 @@ class TestJobs:
         cli_executor,
         assert_fabric_cli_error,
         mock_fab_ui_print_error,
+        tmp_path
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
@@ -659,12 +676,14 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.Notebook",
         )
-        nb_content_path = os.path.join(nb_path, "notebook-content.ipynb")
-        nb_json = json.loads(open(nb_content_path).read())
-        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
-        json.dump(nb_json, open(nb_content_path, "w"))
+        temp_nb_path = os.path.join(tmp_path, "example.Notebook")
+        temp_nb_content_path = os.path.join(temp_nb_path, "notebook-content.ipynb")
+        shutil.copytree(nb_path, temp_nb_path, dirs_exist_ok=True)
 
-        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        nb_json = json.loads(open(temp_nb_content_path).read())
+        nb_json["metadata"]["dependencies"]["lakehouse"] = lakehouse_dependency
+        json.dump(nb_json, open(temp_nb_content_path, "w"))
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=temp_nb_path)
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
 
         # Execute command
@@ -701,18 +720,20 @@ class TestJobs:
             os.path.dirname(os.path.realpath(__file__)),
             "data/sample_items/example.DataPipeline",
         )
-        pipeline_content_path = os.path.join(pipeline_path, "pipeline-content.json")
+        temp_pipeline_path = os.path.join(tmp_path, "example.DataPipeline")
+        temp_pipeline_content_path = os.path.join(temp_pipeline_path, "pipeline-content.json")
+        shutil.copytree(pipeline_path, temp_pipeline_path, dirs_exist_ok=True)
 
-        pipeline_json = json.loads(open(pipeline_content_path).read())
+        pipeline_json = json.loads(open(temp_pipeline_content_path).read())
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "notebookId"
         ] = notebook_id
         pipeline_json["properties"]["activities"][0]["typeProperties"][
             "workspaceId"
         ] = ws_id
-        json.dump(pipeline_json, open(pipeline_content_path, "w"))
+        json.dump(pipeline_json, open(temp_pipeline_content_path, "w"))
 
-        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=pipeline_path)
+        pipeline = item_factory(ItemType.DATA_PIPELINE, content_path=temp_pipeline_path)
 
         # Execute command
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
@@ -804,6 +825,131 @@ class TestJobs:
         calls = mock_questionary_print.call_args_list
         assert calls[-1].args[0] == "∟ Job instance status: Completed"
 
+    def test_run_schedule_rm_invalid_param_types_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+    ):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Test unexisting schedule removal
+        cli_executor.exec_command(f"job run-rm {notebook.full_path} --id 00000000-0000-0000-0000-000000000000 --force")
+
+        assert_fabric_cli_error(
+            constant.ERROR_NOT_FOUND,
+            "The requested resource could not be found",
+        )
+        
+        # Test bad item path
+        cli_executor.exec_command(f"job run-rm /bad_path/ --id 00000000-0000-0000-0000-000000000000 --force")
+
+        assert_fabric_cli_error(
+            constant.ERROR_NOT_FOUND,
+            "The requested resource could not be found",
+        )
+
+
+    @pytest.mark.parametrize("item_type",
+                             [(ItemType.NOTEBOOK),
+                              (ItemType.DATA_PIPELINE),
+                              (ItemType.SPARK_JOB_DEFINITION)])
+    def test_run_schedule_rm_success(self, cli_executor, item_factory, mock_questionary_print, item_type):
+        # Create item
+        item_full_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f"data/sample_items/example.{item_type.value}",
+        )
+        fabric_item = item_factory(item_type, content_path=item_full_path)
+
+        # Init schedule
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+
+        time.sleep(2)
+        job_run_list(fabric_item.full_path, schedule=True)
+        scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        # Remove schedules with rm command
+        cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id} --force")
+
+        # Check schedule removal
+        mock_questionary_print.reset_mock()
+        job_run_list(fabric_item.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
+    def test_run_schedule_rm_without_force_success(self, cli_executor, item_factory, mock_questionary_confirm, mock_questionary_print, mock_print_warning):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        fabric_item = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Init schedules for notebook
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+
+        time.sleep(2)
+        job_run_list(fabric_item.full_path, schedule=True)
+        scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        # Execute command without --force
+        cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id}")
+
+        # Ask confirmation
+        mock_questionary_confirm.assert_called()
+        
+        # Check confirmation message
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}'. This action cannot be undone."
+
+        # Check schedule removal
+        mock_questionary_print.reset_mock()
+        job_run_list(fabric_item.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) == 0
+
+    def test_run_schedule_rm_without_force_cancel_operation_success(self, cli_executor, item_factory, assert_fabric_cli_error, mock_questionary_print, mock_print_warning):
+        # Setup notebook and without schedule
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        fabric_item = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+
+        # Init schedules for notebook
+        config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
+        input_config = "{'enabled': true, 'configuration': " + config + "}"
+
+        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+
+        time.sleep(2)
+        job_run_list(fabric_item.full_path, schedule=True)
+        scheduled_id = mock_questionary_print.call_args_list[-1].args[0].split()[0]
+
+        with patch("questionary.confirm") as mock_confirm:
+            mock_confirm.return_value.ask.return_value = False
+
+            # Execute command without --force
+            cli_executor.exec_command(f"job run-rm {fabric_item.full_path} --id {scheduled_id}")
+
+        mock_print_warning.assert_called_once()
+
+        # Check confirmation message
+        assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}'. This action cannot be undone."
+
+        # The schedule should still exist
+        mock_questionary_print.reset_mock()
+        job_run_list(fabric_item.full_path, schedule=True)
+        assert len(mock_questionary_print.call_args_list) != 0
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):
