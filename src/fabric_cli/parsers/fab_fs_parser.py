@@ -433,6 +433,7 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         "set",
         help=fab_constant.COMMAND_FS_SET_DESCRIPTION,
         fab_examples=set_examples,
+        fab_learnmore=["_"],
     )
     set_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     set_parser.add_argument(
@@ -444,7 +445,7 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
         help="JSON path to filter",
     )
     set_parser.add_argument(
-        "-i", "--input", nargs="+", required=True, help="Input path for replace"
+        "-i", "--input", nargs="+", required=True, help="Input value to set"
     )
     set_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
