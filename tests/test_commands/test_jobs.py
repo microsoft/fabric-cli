@@ -5,8 +5,8 @@ import argparse
 import json
 import os
 import re
-import time
 import shutil
+import time
 from unittest.mock import patch
 
 import pytest
@@ -15,10 +15,10 @@ import fabric_cli.commands.fs.fab_fs_set as fab_fs_set
 import fabric_cli.commands.jobs.fab_jobs_run as fab_jobs_run
 import fabric_cli.commands.jobs.fab_jobs_run_cancel as fab_jobs_run_cancel
 import fabric_cli.commands.jobs.fab_jobs_run_list as fab_jobs_run_list
+import fabric_cli.commands.jobs.fab_jobs_run_rm as fab_jobs_run_rm
 import fabric_cli.commands.jobs.fab_jobs_run_sch as fab_jobs_run_sch
 import fabric_cli.commands.jobs.fab_jobs_run_status as fab_jobs_run_status
 import fabric_cli.commands.jobs.fab_jobs_run_update as fab_jobs_run_update
-import fabric_cli.commands.jobs.fab_jobs_run_rm as fab_jobs_run_rm
 import fabric_cli.core.fab_state_config as state_config
 import fabric_cli.utils.fab_cmd_job_utils as utils_job
 from fabric_cli.core import fab_constant as constant
@@ -26,6 +26,7 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
+
 
 class TestJobs:
     # region JOB RUN
@@ -259,7 +260,9 @@ class TestJobs:
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
         # Execute command
-        cli_executor.exec_command(f"job run-sch {notebook.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {notebook.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(notebook.full_path, schedule=True)
@@ -315,7 +318,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run-sch {notebook.full_path} --type weekly -i {input_config}"
+            f'job run-sch {notebook.full_path} --type weekly -i "{input_config}"'
         )
 
         # Assert
@@ -406,7 +409,7 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-04-28T00:00:00', 'endDateTime': '2024-04-30T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
         cli_executor.exec_command(
-            f"job run-update {notebook.full_path} --id {schedule_id} --type weekly -i {input_config}"
+            f'job run-update {notebook.full_path} --id {schedule_id} --type weekly -i "{input_config}"'
         )
 
         # Assert
@@ -597,7 +600,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -643,7 +646,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -686,7 +689,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -699,7 +702,7 @@ class TestJobs:
         _params = ["int_param:int=string_value"]
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --params {','.join(_params)}"
+            f"job run {notebook.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -737,7 +740,7 @@ class TestJobs:
         _params = ["string_param:string=new_value", "wrong_param:nonvalid=10"]
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -751,7 +754,7 @@ class TestJobs:
         _params = ['obj_param:object={"key":{"key":2},"key":"value"']
         mock_fab_ui_print_error.reset_mock()
         cli_executor.exec_command(
-            f"job run {pipeline.full_path} --params {','.join(_params)}"
+            f"job run {pipeline.full_path} --params '{','.join(_params)}'"
         )
 
         # Assert
@@ -798,7 +801,7 @@ class TestJobs:
 
         # Execute command
         cli_executor.exec_command(
-            f"job run {notebook.full_path} --config {json.dumps(conf)} --params string_param:string=new_value"
+            f"job run {notebook.full_path} --config '{json.dumps(conf)}' --params string_param:string=new_value"
         )
 
         # Extract the arguments passed to the mock
@@ -843,7 +846,7 @@ class TestJobs:
             constant.ERROR_NOT_FOUND,
             "The requested resource could not be found",
         )
-        
+
         # Test bad item path
         cli_executor.exec_command(f"job run-rm /bad_path/ --id 00000000-0000-0000-0000-000000000000 --force")
 
@@ -851,7 +854,6 @@ class TestJobs:
             constant.ERROR_NOT_FOUND,
             "The requested resource could not be found",
         )
-
 
     @pytest.mark.parametrize("item_type",
                              [(ItemType.NOTEBOOK),
@@ -869,7 +871,9 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
-        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {fabric_item.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(fabric_item.full_path, schedule=True)
@@ -895,7 +899,9 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
-        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {fabric_item.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(fabric_item.full_path, schedule=True)
@@ -906,7 +912,7 @@ class TestJobs:
 
         # Ask confirmation
         mock_questionary_confirm.assert_called()
-        
+
         # Check confirmation message
         assert mock_print_warning.call_args_list[0][0][0] == f"You are about to delete schedule '{scheduled_id}' from '{fabric_item.name}'. This action cannot be undone."
 
@@ -927,7 +933,9 @@ class TestJobs:
         config = "{'type': 'Cron', 'startDateTime': '2024-01-23T00:00:00', 'endDateTime': '2024-10-07T23:59:00', 'localTimeZoneId': 'Central Standard Time', 'interval': 10}"
         input_config = "{'enabled': true, 'configuration': " + config + "}"
 
-        cli_executor.exec_command(f"job run-sch {fabric_item.full_path} -i {input_config}")
+        cli_executor.exec_command(
+            f'job run-sch {fabric_item.full_path} -i "{input_config}"'
+        )
 
         time.sleep(2)
         job_run_list(fabric_item.full_path, schedule=True)

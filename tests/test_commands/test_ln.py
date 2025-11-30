@@ -64,7 +64,7 @@ class TestLN:
 
         # Act
         cli_executor.exec_command(
-            f"ln {shortcut_path} --type oneLake --input {input} --force"
+            f"ln {shortcut_path} --type oneLake --input '{input}' --force"
         )
 
         # Assert

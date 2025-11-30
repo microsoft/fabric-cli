@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import html
+import shlex
 
 from prompt_toolkit import HTML, PromptSession
 from prompt_toolkit.cursor_shapes import CursorShape
@@ -38,7 +39,7 @@ class InteractiveCLI:
         """Process the user command."""
         fab_logger.print_log_file_path()
 
-        command_parts = command.strip().split()  # Split the command into parts
+        command_parts = shlex.split(command.strip())  # Split the command into parts
 
         # Handle special commands first
         if command in fab_constant.INTERACTIVE_QUIT_COMMANDS:

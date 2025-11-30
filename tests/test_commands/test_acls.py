@@ -261,6 +261,40 @@ class TestACLs:
         # Clean up
         _cleanup_acl(cli_executor, workspace.full_path, spn_id)
 
+    def test_acls_ls_workspace_query_success(
+        self,
+        workspace,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+        test_data: StaticTestData,
+    ):
+
+        # Test 1: Array projection for single field
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [*].identity")
+        mock_questionary_print.assert_called()
+        assert any(test_data.admin.upn in call.args[0] for call in mock_questionary_print.mock_calls)
+
+        mock_questionary_print.reset_mock()
+
+        # Test 2: Multiple fields using array syntax
+        cli_executor.exec_command(f"acl ls {workspace.full_path} -q [].[identity,type]")
+        mock_questionary_print.assert_called()
+        call_args = mock_questionary_print.mock_calls[0].args[0]
+        assert test_data.admin.upn in call_args and "User" in call_args
+
+        mock_questionary_print.reset_mock()
+
+        # Test 3: Object projection with field aliases
+        cli_executor.exec_command(
+            f"acl ls {workspace.full_path} -q '[].{{principalInfo: identity, accessLevel: acl}}'"
+        )
+        mock_questionary_print.assert_called()
+        call_args = mock_questionary_print.mock_calls[0].args[0]
+        assert "principalInfo" in call_args and "accessLevel" in call_args
+
+        # Cleanup test ACL entry
+        _cleanup_acl(cli_executor, workspace.full_path,  test_data.service_principal.id)
+
     def test_acls_ls_workspace_long_success(
         self,
         workspace,

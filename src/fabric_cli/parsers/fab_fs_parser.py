@@ -15,7 +15,10 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
         "# list all workspaces with details",
         "$ ls -l\n",
         "# list lakehouse tables",
-        "$ ls ws1.Workspace/lh1.Lakehouse/Tables",
+        "$ ls ws1.Workspace/lh1.Lakehouse/Tables\n",
+        "# list items with name matching a pattern",
+        "$ ls -q [].name",
+        "$ ls -q [?contains(name, 'Report')]\n",
     ]
 
     ls_parser = subparsers.add_parser(
@@ -42,6 +45,13 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         action="store_true",
         help="Show all. Optional",
+    )
+    ls_parser.add_argument(
+        "-q",
+        "--query",
+        metavar="",
+        required=False,
+        help="JMESPath query to filter. Optional",
     )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"
