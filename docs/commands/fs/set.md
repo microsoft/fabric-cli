@@ -66,14 +66,7 @@ The following table shows supported queries per resource type:
 
 <a id="definition-paths"></a>
 !!! note "Setting Item Definition Properties"
-    For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties. The `<path>` placeholder represents any valid property path within your item's definition structure.
-    
-    **Examples:**
-    
-    - `definition.parts[0].name`
-    - `definition.someProperty.nestedValue`
-    - `definition.config.settings`
-    
+    For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties (e.g. `definition.parts[0].property`).
     Paths must map directly to JSON paths **without** filters or wildcards. Refer to the [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions) for the complete definition structure.
 
 #### Item-Specific Definition Path Aliasing
