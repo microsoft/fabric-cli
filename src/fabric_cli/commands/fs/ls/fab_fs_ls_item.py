@@ -22,9 +22,9 @@ def exec(workspace: Workspace, args):
     )
 
     utils_ls.format_and_print_output(
-        sorted_elements_dict,
-        args,
-        show_details,
-        sorted_elements_dict[0].keys() if sorted_elements_dict else [],
-        VirtualItemContainerType if show_hidden else None,
+        data=sorted_elements_dict,
+        args=args,
+        show_details=show_details,
+        columns=sorted_elements_dict[0].keys() if sorted_elements_dict else [],
+        hidden_data=VirtualItemContainerType if show_hidden else None,
     )

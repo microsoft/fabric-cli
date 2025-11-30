@@ -251,8 +251,8 @@ def display_help(
 # ascii Display
 
 
-def get_visual_length(entry: Any, field: Any) -> int:
-    return _get_visual_length(str(entry.get(field, "") if isinstance(entry, dict) else entry))
+def get_visual_length(entry: dict, field: Any) -> int:
+    return _get_visual_length(str(entry.get(field, "")))
 
 
 # Prints a list of entries in Unix-like format based on specified fields
@@ -468,7 +468,7 @@ def _format_unix_style_entry(
     formatted = ""
     # Dynamically format based on the fields provided
     for i, field in enumerate(fields):
-        value = str(entry.get(field, "") if isinstance(entry, dict) else entry)
+        value = str(entry.get(field, ""))
         # Adjust spacing for better alignment
         length = len(value)
         visual_length = _get_visual_length(value)
