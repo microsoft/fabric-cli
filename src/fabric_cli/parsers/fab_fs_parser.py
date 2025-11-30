@@ -439,7 +439,6 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
     set_parser.add_argument(
         "-q",
         "--query",
-        nargs="+",
         metavar="",
         required=True,
         help="JSON path to filter",
