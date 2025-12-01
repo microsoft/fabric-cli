@@ -56,7 +56,7 @@ class TestAPI:
 
         # Execute command
         cli_executor.exec_command(
-            f"api workspaces/{workspace_id}/roleAssignments --method post --input {input} --show_headers"
+            f"api workspaces/{workspace_id}/roleAssignments --method post --input '{input}' --show_headers"
         )
 
         # Assert
