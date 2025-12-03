@@ -95,12 +95,12 @@ fab api -A azure subscriptions/00000000-0000-0000-0000-000000000000/providers/Mi
 
 Interact with the [Power BI REST API](https://learn.microsoft.com/rest/api/power-bi/) using the Power BI audience for legacy Power BI operations.
 
-### Get Datasets in a Workspace
+### Get a Workspace details
 
-Retrieve all datasets within a specific Power BI workspace.
+Retrieve Power BI workspace details.
 
 ```
-fab api -A powerbi groups/00000000-0000-0000-0000-000000000000/datasets
+fab api -A powerbi groups/<group_id>
 ```
 
 ### List Power BI groups
