@@ -168,7 +168,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
             sys.exit(2)
 
 
-def main():
+def _create_parser_and_subparsers():
+    """Create parser and subparsers for reuse in interactive mode transition"""
     parser = CustomArgumentParser(description="Fabric CLI")
 
     # -c option for command line execution
@@ -224,6 +225,12 @@ def main():
     )
     version_parser.set_defaults(func=fab_ui.print_version)
 
+    return parser, subparsers
+
+
+def main():
+    parser, subparsers = _create_parser_and_subparsers()
+    
     argcomplete.autocomplete(parser, default_completer=None)
 
     args = parser.parse_args()
