@@ -108,5 +108,5 @@ fab api -A powerbi groups
 Retrieve Power BI workspace details.
 
 ```
-fab api -A powerbi groups/<group_id>
+fab api -A powerbi groups/00000000-0000-0000-0000-000000000000
 ```
