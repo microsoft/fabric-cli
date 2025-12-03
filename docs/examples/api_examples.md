@@ -95,18 +95,18 @@ fab api -A azure subscriptions/00000000-0000-0000-0000-000000000000/providers/Mi
 
 Interact with the [Power BI REST API](https://learn.microsoft.com/rest/api/power-bi/) using the Power BI audience for legacy Power BI operations.
 
-### Get a Workspace details
-
-Retrieve Power BI workspace details.
-
-```
-fab api -A powerbi groups/<group_id>
-```
-
 ### List Power BI groups
 
 List all accessible Power BI workspaces.
 
 ```
 fab api -A powerbi groups
+```
+
+### Get a Workspace details
+
+Retrieve Power BI workspace details.
+
+```
+fab api -A powerbi groups/<group_id>
 ```
