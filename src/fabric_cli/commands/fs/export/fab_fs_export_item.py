@@ -101,18 +101,19 @@ def export_single_item(
 
         args.from_path = item.path.strip("/")
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
-        if _export_format := getattr(args, "format", None):
-            if _export_format not in (".py", ".ipynb"):
-                raise FabricCLIError(
-                    "Invalid format. Only '.py' and '.ipynb' are supported.",
-                    fab_constant.ERROR_INVALID_INPUT,
-                )
-            elif _export_format == ".py":
-                args.format = "?format=fabricGitSource"
-            else:
-                args.format = "?format=ipynb"
+
+        valid_export_formats = definition_format_mapping.get(item_type, {"default": ""})
+        export_format = (
+            args.format if getattr(args, "format", None) is not None else "default"
+        )
+        if export_format not in valid_export_formats:
+            raise FabricCLIError(
+                f"Invalid format. Only the following formats are supported: {list(valid_export_formats.keys())}.",
+                fab_constant.ERROR_INVALID_INPUT,
+            )
         else:
-            args.format = definition_format_mapping.get(item_type, "")
+            args.format = valid_export_formats[export_format]
+
         item_def = item_api.get_item_withdefinition(args, item_uri)
 
         if decode:
