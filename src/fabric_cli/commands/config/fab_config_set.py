@@ -68,72 +68,9 @@ def _set_config(args: Namespace, key: str, value: Any, verbose: bool = True) -> 
         utils_ui.print_output_format(
             args, message=f"Configuration '{key}' set to '{value}'"
         )
-    current_mode = fab_state_config.get_config(fab_constant.FAB_MODE)
 
-    # Clean up context files when changing mode
     if key == fab_constant.FAB_MODE:
-        from fabric_cli.core.fab_context import Context
-
-        Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
-
-    # Enhanced mode transition handling
-    if key == fab_constant.FAB_MODE:
-        if (current_mode == fab_constant.FAB_MODE_INTERACTIVE
-            and previous_mode == fab_constant.FAB_MODE_COMMANDLINE):
-            # Handle command_line → interactive transition
-            if _is_user_authenticated():
-                utils_ui.print("Switching to interactive mode...")
-                _start_interactive_mode(args)
-            else:
-                utils_ui.print("Please login first to use interactive mode")
-                
-        elif (current_mode == fab_constant.FAB_MODE_COMMANDLINE
-              and previous_mode == fab_constant.FAB_MODE_INTERACTIVE):
-            # Handle interactive → command_line transition
-            utils_ui.print("Exiting interactive mode. Goodbye!")
-            os._exit(0)
-
-
-def _is_user_authenticated() -> bool:
-    """Check if user has valid authentication tokens"""
-    try:
-        from fabric_cli.core.fab_auth import FabAuth
-        auth = FabAuth()
-        # Try to get a token without interactive renewal
-        token = auth.get_access_token(
-            fab_constant.SCOPE_FABRIC_DEFAULT,
-            interactive_renew=False
-        )
-        return token is not None
-    except FabricCLIError as e:
-        # Handle specific authentication errors
-        if e.status_code in [
-            fab_constant.ERROR_UNAUTHORIZED,
-            fab_constant.ERROR_AUTHENTICATION_FAILED,
-        ]:
-            return False
-        raise e
-    except Exception:
-        return False
-
-
-def _start_interactive_mode(args: Namespace) -> None:
-    """Launch interactive mode with current parser context"""
-    try:
-        # Import parser setup from main module
-        from fabric_cli.main import _create_parser_and_subparsers
-        
-        parser, subparsers = _create_parser_and_subparsers()
-        
-        from fabric_cli.core.fab_interactive import InteractiveCLI
-        interactive_cli = InteractiveCLI(parser, subparsers)
-        interactive_cli.start_interactive()
-        
-    except (KeyboardInterrupt, EOFError):
-        utils_ui.print("Interactive mode cancelled.")
-    except Exception as e:
-        utils_ui.print(f"Failed to start interactive mode: {str(e)}")
-        utils_ui.print("Please restart the CLI to use interactive mode.")
+        _handle_fab_config_mode(previous_mode, value)
 
 
 def _set_capacity(args: Namespace, value: str) -> None:
@@ -153,3 +90,20 @@ def _set_capacity(args: Namespace, value: str) -> None:
             ErrorMessages.Config.invalid_capacity(value),
             fab_constant.ERROR_INVALID_INPUT,
         )
+
+
+def _handle_fab_config_mode(previous_mode: str, current_mode: str) -> None:
+        from fabric_cli.core.fab_context import Context
+        # Clean up context files when changing mode
+        Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
+        
+        if (current_mode == fab_constant.FAB_MODE_INTERACTIVE
+            and previous_mode == fab_constant.FAB_MODE_COMMANDLINE):
+            utils_ui.print("Switching to interactive mode...")
+            from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
+            start_interactive_mode()
+                
+        elif (current_mode == fab_constant.FAB_MODE_COMMANDLINE
+              and previous_mode == fab_constant.FAB_MODE_INTERACTIVE):
+            utils_ui.print("Exiting interactive mode. Goodbye!")
+            os._exit(0)

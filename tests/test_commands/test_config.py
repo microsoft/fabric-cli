@@ -175,12 +175,11 @@ class TestConfig:
     # endregion
 
     # region config MODE SWITCHING
-    def test_success_config_set_mode_interactive_authenticated_success(
+    def test_config_set_mode_interactive_success(
         self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
     ):
-        """Test successful transition from command_line to interactive mode when authenticated"""
-        with patch("fabric_cli.commands.config.fab_config_set._is_user_authenticated", return_value=True), \
-             patch("fabric_cli.commands.config.fab_config_set._start_interactive_mode") as mock_start_interactive:
+        """Test successful transition from command_line to interactive mode"""
+        with patch("fabric_cli.commands.config.fab_config_set._start_interactive_mode") as mock_start_interactive:
             
             mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
             
@@ -191,24 +190,6 @@ class TestConfig:
             mock_questionary_print.assert_called()
             mock_start_interactive.assert_called_once()
             assert mock_questionary_print.call_args[0][0] == 'Switching to interactive mode...'
-
-
-    def test_config_set_mode_interactive_user_not_authenticated_failure(
-        self, mock_fab_set_state_config, mock_questionary_print, cli_executor: CLIExecutor
-    ):
-        """Test transition from command_line to interactive mode when not authenticated"""
-        with patch("fabric_cli.commands.config.fab_config_set._is_user_authenticated", return_value=False), \
-             patch("fabric_cli.commands.config.fab_config_set._start_interactive_mode") as mock_start_interactive:
-            
-            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
-
-            # Execute command
-            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_INTERACTIVE}")
-
-            # Assert
-            mock_questionary_print.assert_called()
-            assert mock_questionary_print.call_args[0][0] == "Please login first to use interactive mode"
-            mock_start_interactive.assert_not_called()
 
     def test_config_set_mode_command_line_from_interactive_success(
         self, mock_fab_set_state_config, mock_questionary_print, cli_executor: CLIExecutor
@@ -225,63 +206,6 @@ class TestConfig:
             assert mock_questionary_print.call_args[0][0] == "Exiting interactive mode. Goodbye!"
             mock_exit.assert_called_once_with(0)
 
-    def test_is_user_authenticated_with_valid_token_success(self):
-        """Test _is_user_authenticated returns True when user has valid token"""
-        from fabric_cli.commands.config.fab_config_set import _is_user_authenticated
-        
-        with patch("fabric_cli.core.fab_auth.FabAuth") as mock_fab_auth:
-            mock_auth_instance = MagicMock()
-            mock_auth_instance.get_access_token.return_value = "valid_token"
-            mock_fab_auth.return_value = mock_auth_instance
-            
-            result = _is_user_authenticated()
-            
-            assert result is True
-            mock_auth_instance.get_access_token.assert_called_once_with(
-                constant.SCOPE_FABRIC_DEFAULT, interactive_renew=False
-            )
-
-    def test_is_user_authenticated_with_no_token_failure(self):
-        """Test _is_user_authenticated returns False when user has no token"""
-        from fabric_cli.commands.config.fab_config_set import _is_user_authenticated
-        
-        with patch("fabric_cli.core.fab_auth.FabAuth") as mock_fab_auth:
-            mock_auth_instance = MagicMock()
-            mock_auth_instance.get_access_token.return_value = None
-            mock_fab_auth.return_value = mock_auth_instance
-            
-            result = _is_user_authenticated()
-            
-            assert result is False
-
-    def test_is_user_authenticated_with_authentication_error_failure(self):
-        """Test _is_user_authenticated returns False when authentication fails"""
-        from fabric_cli.commands.config.fab_config_set import _is_user_authenticated
-        
-        with patch("fabric_cli.core.fab_auth.FabAuth") as mock_fab_auth:
-            mock_auth_instance = MagicMock()
-            mock_auth_instance.get_access_token.side_effect = FabricCLIError(
-                "Authentication failed", constant.ERROR_AUTHENTICATION_FAILED
-            )
-            mock_fab_auth.return_value = mock_auth_instance
-            
-            result = _is_user_authenticated()
-            
-            assert result is False
-
-    def test_is_user_authenticated_with_unexpected_error_failure(self):
-        """Test _is_user_authenticated returns False on unexpected error"""
-        from fabric_cli.commands.config.fab_config_set import _is_user_authenticated
-        
-        with patch("fabric_cli.core.fab_auth.FabAuth") as mock_fab_auth:
-            mock_auth_instance = MagicMock()
-            mock_auth_instance.get_access_token.side_effect = Exception("Unexpected error")
-            mock_fab_auth.return_value = mock_auth_instance
-            
-            result = _is_user_authenticated()
-            
-            assert result is False
-
     def test_start_interactive_mode_success(self):
         """Test _start_interactive_mode successfully launches interactive CLI"""
         from fabric_cli.commands.config.fab_config_set import _start_interactive_mode
@@ -289,67 +213,11 @@ class TestConfig:
         
         args = Namespace()
         
-        with patch("fabric_cli.main._create_parser_and_subparsers") as mock_create_parser, \
-             patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
-            
-            mock_parser = MagicMock()
-            mock_subparsers = MagicMock()
-            mock_create_parser.return_value = (mock_parser, mock_subparsers)
-            
-            mock_cli_instance = MagicMock()
-            mock_interactive_cli.return_value = mock_cli_instance
+        with patch("fabric_cli.utils.fab_cmd_config_utils.start_interactive_mode") as mock_start_interactive:
             
             _start_interactive_mode(args)
             
             # Assert
-            mock_create_parser.assert_called_once()
-            mock_interactive_cli.assert_called_once_with(mock_parser, mock_subparsers)
-            mock_cli_instance.start_interactive.assert_called_once()
-
-    def test_start_interactive_mode_keyboard_interrupt_success(self, mock_questionary_print):
-        """Test _start_interactive_mode handles KeyboardInterrupt gracefully"""
-        from fabric_cli.commands.config.fab_config_set import _start_interactive_mode
-        from argparse import Namespace
-        
-        args = Namespace()
-        
-        with patch("fabric_cli.main._create_parser_and_subparsers") as mock_create_parser, \
-             patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
-            
-            mock_parser = MagicMock()
-            mock_subparsers = MagicMock()
-            mock_create_parser.return_value = (mock_parser, mock_subparsers)
-            
-            mock_cli_instance = MagicMock()
-            mock_cli_instance.start_interactive.side_effect = KeyboardInterrupt()
-            mock_interactive_cli.return_value = mock_cli_instance
-            
-            _start_interactive_mode(args)
-            
-            # Assert
-            mock_questionary_print.call_args[0][0] == "Interactive mode cancelled."
-
-    def test_start_interactive_mode_exception_handling_failure(self, mock_questionary_print):
-        """Test _start_interactive_mode handles general exceptions"""
-        from fabric_cli.commands.config.fab_config_set import _start_interactive_mode
-        from argparse import Namespace
-        
-        args = Namespace()
-        
-        with patch("fabric_cli.main._create_parser_and_subparsers") as mock_create_parser, \
-             patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
-            
-            mock_parser = MagicMock()
-            mock_subparsers = MagicMock()
-            mock_create_parser.return_value = (mock_parser, mock_subparsers)
-            
-            mock_cli_instance = MagicMock()
-            mock_cli_instance.start_interactive.side_effect = Exception("Test error")
-            mock_interactive_cli.return_value = mock_cli_instance
-            
-            _start_interactive_mode(args)
-            
-            # Assert
-            mock_questionary_print.call_args[0][0] == "Please restart the CLI to use interactive mode."
+            mock_start_interactive.assert_called_once()
 
     # endregion
