@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import argparse
-import re
 import sys
 
 import argcomplete
@@ -11,18 +9,7 @@ from fabric_cli.commands.auth import fab_auth as login
 from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.parsers import fab_acls_parser as acls_parser
-from fabric_cli.parsers import fab_api_parser as api_parser
 from fabric_cli.parsers import fab_auth_parser as auth_parser
-from fabric_cli.parsers import fab_config_parser as config_parser
-from fabric_cli.parsers import fab_describe_parser as describe_parser
-from fabric_cli.parsers import fab_extension_parser as extension_parser
-from fabric_cli.parsers import fab_fs_parser as fs_parser
-from fabric_cli.parsers import fab_global_params
-from fabric_cli.parsers import fab_jobs_parser as jobs_parser
-from fabric_cli.parsers import fab_labels_parser as labels_parser
-from fabric_cli.parsers import fab_tables_parser as tables_parser
-from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
 from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
