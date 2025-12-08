@@ -73,6 +73,8 @@ def add_type_specific_payload(item: Item, args, payload):
                     "EventHouse not provided in params. Creating one first"
                 )
 
+                _initialize_batch_collection_for_dependency_creation(args)
+
                 # Create a new Event House first
                 _eventhouse = Item(
                     f"{item.short_name}_auto",
@@ -127,6 +129,8 @@ def add_type_specific_payload(item: Item, args, payload):
                 fab_logger.log_warning(
                     "Semantic Model not provided in params. Creating one first"
                 )
+
+                _initialize_batch_collection_for_dependency_creation(args)
 
                 # Create a new Semantic Model first
                 _semantic_model = Item(
@@ -754,3 +758,11 @@ def find_mpe_connection(managed_private_endpoint, targetprivatelinkresourceid):
         return conn
 
     return None
+
+def _initialize_batch_collection_for_dependency_creation(args):
+    if not hasattr(args, 'output_batch'):
+        args.output_batch = {
+            'items': [],
+            'names': [],
+            'is_batching': True
+        }

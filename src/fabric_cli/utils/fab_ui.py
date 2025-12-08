@@ -296,6 +296,8 @@ def print_entries_unix_style(
     for entry in _entries:
         print_grey(_format_unix_style_entry(entry, fields, widths), to_stderr=False)
 
+    print_grey("", to_stderr=False)  # Empty line after entries
+
 
 # Others
 
@@ -365,9 +367,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         print_grey("------------------------------")
         _print_raw_data(output_result.hidden_data)
 
+        
     if output_result.message:
-        print_done(output_result.message)
-
+        print_done(f"{output_result.message}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
