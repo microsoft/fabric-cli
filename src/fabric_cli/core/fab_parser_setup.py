@@ -165,6 +165,10 @@ class CustomArgumentParser(argparse.ArgumentParser):
             sys.exit(2)
 
 
+# Global parser instances
+_global_parser = None
+_global_subparsers = None
+
 def create_parser_and_subparsers():
     """Create parser and subparsers for reuse across CLI modes"""
     parser = CustomArgumentParser(description="Fabric CLI")
@@ -224,20 +228,12 @@ def create_parser_and_subparsers():
 
     return parser, subparsers
 
+def get_global_parser_and_subparsers():
+    """Get singleton parser and subparsers instances"""
+    global _global_parser, _global_subparsers
+    
+    if _global_parser is None:
+        _global_parser, _global_subparsers = create_parser_and_subparsers()
+    
+    return _global_parser, _global_subparsers
 
-def start_interactive_mode(parser=None, subparsers=None):
-    """Launch interactive mode with shared parser context"""
-    try:
-        # Create parsers if not provided
-        if parser is None or subparsers is None:
-            parser, subparsers = create_parser_and_subparsers()
-        
-        from fabric_cli.core.fab_interactive import InteractiveCLI
-        interactive_cli = InteractiveCLI(parser, subparsers)
-        interactive_cli.start_interactive()
-        
-    except (KeyboardInterrupt, EOFError):
-        fab_ui.print("Interactive mode cancelled.")
-    except Exception as e:
-        fab_ui.print(f"Failed to start interactive mode: {str(e)}")
-        fab_ui.print("Please restart the CLI to use interactive mode.")

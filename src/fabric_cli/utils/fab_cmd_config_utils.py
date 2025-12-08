@@ -4,15 +4,13 @@
 from fabric_cli.utils import fab_ui
 
 
-def start_interactive_mode(parser=None, subparsers=None):
-    """Launch interactive mode with shared parser context"""
+def start_interactive_mode():
+    """Launch interactive mode using global parser instances"""
     try:
-        # Create parsers if not provided
-        if parser is None or subparsers is None:
-            from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
-            parser, subparsers = create_parser_and_subparsers()
-        
+        from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
         from fabric_cli.core.fab_interactive import InteractiveCLI
+        
+        parser, subparsers = get_global_parser_and_subparsers()
         interactive_cli = InteractiveCLI(parser, subparsers)
         interactive_cli.start_interactive()
         

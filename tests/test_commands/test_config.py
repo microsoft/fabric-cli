@@ -1,11 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import patch
 
 import fabric_cli.core.fab_constant as constant
-from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
@@ -179,7 +177,7 @@ class TestConfig:
         self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
     ):
         """Test successful transition from command_line to interactive mode"""
-        with patch("fabric_cli.commands.config.fab_config_set._start_interactive_mode") as mock_start_interactive:
+        with patch("fabric_cli.utils.fab_cmd_config_utils.start_interactive_mode") as mock_start_interactive:
             
             mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
             
@@ -188,7 +186,7 @@ class TestConfig:
 
             # Assert
             mock_questionary_print.assert_called()
-            mock_start_interactive.assert_called_once()
+            mock_start_interactive.assert_called_once_with()
             assert mock_questionary_print.call_args[0][0] == 'Switching to interactive mode...'
 
     def test_config_set_mode_command_line_from_interactive_success(
@@ -207,17 +205,21 @@ class TestConfig:
             mock_exit.assert_called_once_with(0)
 
     def test_start_interactive_mode_success(self):
-        """Test _start_interactive_mode successfully launches interactive CLI"""
-        from fabric_cli.commands.config.fab_config_set import _start_interactive_mode
-        from argparse import Namespace
-        
-        args = Namespace()
-        
-        with patch("fabric_cli.utils.fab_cmd_config_utils.start_interactive_mode") as mock_start_interactive:
+        """Test mode switching creates parsers and launches interactive CLI"""
+        with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers, \
+             patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
             
-            _start_interactive_mode(args)
+            mock_parser = object()
+            mock_subparsers = object()
+            mock_get_parsers.return_value = (mock_parser, mock_subparsers)
             
-            # Assert
-            mock_start_interactive.assert_called_once()
+            mock_cli_instance = mock_interactive_cli.return_value
+            
+            from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
+            start_interactive_mode()
+            
+            mock_get_parsers.assert_called_once()
+            mock_interactive_cli.assert_called_once_with(mock_parser, mock_subparsers)
+            mock_cli_instance.start_interactive.assert_called_once()
 
     # endregion

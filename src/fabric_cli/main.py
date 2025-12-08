@@ -13,11 +13,11 @@ from fabric_cli.parsers import fab_auth_parser as auth_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
 from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
-from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
 
 def main():
-    parser, subparsers = create_parser_and_subparsers()
+    parser, subparsers = get_global_parser_and_subparsers()
     
     argcomplete.autocomplete(parser, default_completer=None)
 
@@ -36,7 +36,7 @@ def main():
                     == fab_constant.FAB_MODE_INTERACTIVE
                 ):
                     # Use shared interactive mode startup
-                    start_interactive_mode(parser, subparsers)
+                    start_interactive_mode()
 
         if args.command == "auth" and args.auth_command == "logout":
             login.logout(args)
