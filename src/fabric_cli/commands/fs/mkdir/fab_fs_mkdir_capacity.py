@@ -71,7 +71,7 @@ def exec(capacity: VirtualWorkspaceItem, args: Namespace) -> None:
 
     response = capacity_api.create_capacity(args, payload=json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{capacity.name}' created")
+        utils_ui.print_output_format(args, message=f"'{capacity.name}' created", data=json.loads(response.text), show_headers=True)
 
         # In here we use a different approach since the id responded by the API is not the same as the id we use in the code
         # The id in the response is the fully qualified azure resource ID for the resource
