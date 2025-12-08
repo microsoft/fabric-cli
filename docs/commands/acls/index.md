@@ -28,13 +28,14 @@ List access control entries for a workspace, item, or OneLake resource.
 **Usage:**
 
 ```
-fab acl ls <path> [-l]
+fab acl ls <path> [-l] [-q <query>]
 ```
 
 **Parameters:**
 
 - `<path>`: Path to the resource.
 - `-l, --long`: Show detailed output. Optional.
+- `-q, --query`: JMESPath query to filter results. Optional.
 
 **Examples:**
 
@@ -42,6 +43,7 @@ fab acl ls <path> [-l]
 fab acl ls workspace1.workspace
 fab acl ls lh1.lakehouse -l
 fab acl ls /Files/data -l
+fab acl ls workspace1.workspace -q [].[?role=='Admin']
 ```
 
 ---
