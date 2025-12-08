@@ -1839,6 +1839,91 @@ class TestMkdir:
 
     # endregion
 
+    # region Batch Output Tests
+    def test_mkdir_single_item_creation_batch_output_structure_success(
+        self, workspace, cli_executor, mock_print_done, mock_questionary_print, vcr_instance, cassette_name
+    ):
+        """Test that single item creation uses batched output structure."""
+        # Setup
+        lakehouse_display_name = generate_random_string(vcr_instance, cassette_name)
+        lakehouse_full_path = cli_path_join(
+            workspace.full_path, f"{lakehouse_display_name}.{ItemType.LAKEHOUSE}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(f"mkdir {lakehouse_full_path}")
+
+        # Assert - verify output structure
+        mock_print_done.assert_called_once()
+        call_args = mock_print_done.call_args
+        assert lakehouse_display_name in call_args[0][0]
+        assert "created" in call_args[0][0]
+
+        # Verify headers and values in mock_questionary_print.mock_calls
+        # Look for the table output with headers
+        output_calls = [str(call) for call in mock_questionary_print.mock_calls]
+        table_output = "\n".join(output_calls)
+        
+        # Check for standard table headers
+        assert "id" in table_output or "ID" in table_output
+        assert "type" in table_output or "Type" in table_output
+        assert "displayName" in table_output or "DisplayName" in table_output
+        assert "workspaceId" in table_output or "WorkspaceId" in table_output
+        
+        # Check for actual values
+        assert lakehouse_display_name in table_output
+        assert "Lakehouse" in table_output
+        assert workspace.id in table_output
+
+        # Cleanup
+        rm(lakehouse_full_path)
+
+    def test_mkdir_dependency_creation_batched_output_kql_database_success(
+        self, workspace, cli_executor, mock_print_done, mock_questionary_print, vcr_instance, cassette_name
+    ):
+        """Test that KQL Database creation with EventHouse dependency produces batched output."""
+        # Setup
+        kqldatabase_display_name = generate_random_string(vcr_instance, cassette_name)
+        kqldatabase_full_path = cli_path_join(
+            workspace.full_path, f"{kqldatabase_display_name}.{ItemType.KQL_DATABASE}"
+        )
+
+        # Execute command (this will create EventHouse dependency automatically)
+        cli_executor.exec_command(f"mkdir {kqldatabase_full_path}")
+
+        # Assert - should have two print_done calls (one consolidated output with both items)
+        # The current implementation may still have separate calls, but data should be collected
+        assert mock_print_done.call_count >= 1
+
+        
+        # Verify both items are mentioned in output
+        all_calls = [call.args[0] for call in mock_print_done.call_args_list]
+        all_output = " ".join(all_calls)
+        assert f"'{kqldatabase_display_name}_auto.{ItemType.EVENTHOUSE.value}' and '{kqldatabase_display_name}.{ItemType.KQL_DATABASE.value}' created" in all_output
+
+        # Verify headers and values in mock_questionary_print.mock_calls for batched output
+        output_calls = [str(call) for call in mock_questionary_print.mock_calls]
+        table_output = "\n".join(output_calls)
+        
+        # Check for standard table headers (should appear once for consolidated table)
+        assert "id" in table_output or "ID" in table_output
+        assert "type" in table_output or "Type" in table_output
+        assert "displayName" in table_output or "DisplayName" in table_output
+        assert "workspaceId" in table_output or "WorkspaceId" in table_output
+        
+        # Check for both item values in the output
+        assert kqldatabase_display_name in table_output
+        assert f"{kqldatabase_display_name}_auto" in table_output  # EventHouse dependency name
+        assert "KQLDatabase" in table_output or "KQL_DATABASE" in table_output
+        assert "Eventhouse" in table_output or "EVENTHOUSE" in table_output
+        assert workspace.id in table_output
+
+        # Cleanup - removing parent eventhouse removes the kqldatabase as well
+        eventhouse_full_path = kqldatabase_full_path.removesuffix(".KQLDatabase") + "_auto.Eventhouse"
+        rm(eventhouse_full_path)
+
+    # endregion
+
 
 # region Helper Methods
 def mkdir(path, params=["run=true"]):
