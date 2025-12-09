@@ -134,6 +134,15 @@ Show items with comprehensive metadata.
 fab ls ws1.Workspace -l
 ```
 
+#### Query List Items in Workspace
+
+```
+fab ls ws1.Workspace -q [].name
+fab ls ws1.Workspace -q [].{name:name,id:id}
+fab ls ws1.Workspace -q [?contains(name, 'Notebook')]
+fab ls ws1.Workspace -l -q [?contains(name, 'Dataflow')].{name:name, id:id}
+```
+
 #### List Item Contents
 
 Browse contents of items that support folder structures.
@@ -157,7 +166,7 @@ fab ls ws1.Workspace/sem1.SemanticModel
 
 ### Update Item
 
-For detailed information on updating item properties, including limitations and property paths, see the [`set` command documentation](../commands/fs/set.md#setting-item-properties).
+For detailed information on updating item properties, including limitations and property paths, see the [`set` command documentation](../commands/fs/set.md#query-support).
 
 #### Update Display Name
 
@@ -227,17 +236,9 @@ For Report PBIR definition version 2:
 fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReference.byConnection.ConnectionString -i "ConnectionStringPrefix....semanticmodelid=00000000-0000-0000-0000-000000000000"
 ```
 
-#### Update Notebook Cell Code
-
-Update the default lakehouse in a specific notebook.
-
-```
-fab set nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse.default_lakehouse -i 00000000-0000-0000-0000-000000000001
-```
-
 
 ## Item Operations
-### Copy Items
+### Copy Item
 
 !!! info "When you copy an item definition, the sensitivity label is not a part of the definition"
 
@@ -276,7 +277,7 @@ fab cp ws1.Workspace/source.Item ws2.Workspace/dest.Folder
 ```
 
 
-### Move Items
+### Move Item
 
 !!! info "When you move item definition, the sensitivity label is not a part of the definition"
 
@@ -304,7 +305,7 @@ Move an item into a folder, preserving its original name.
 fab mv ws1.Workspace/nb.Notebook ws2.Workspace/dest.Folder
 ```
 
-### Import and Export
+### Export Item
 
 
 !!! info "When you export item definition, the sensitivity label is not a part of the definition"
@@ -334,6 +335,8 @@ Export item definition directly to a Lakehouse Files location.
 fab export ws1.Workspace/nb1.Notebook -o /ws1.Workspace/lh1.Lakehouse/Files/exports
 ```
 
+### Import Item
+
 #### Import from Local
 
 Import an item definition from a local directory into the workspace.
@@ -342,14 +345,7 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-Import a notebook from Python file format instead of default format.
-
-```
-fab import ws1.Workspace/nb1_python.Notebook -i /tmp/notebook.py --format py
-```
-
 **Supported Import Formats:** `.ipynb` (default) and `.py`.
-
 
 
 ### Start/Stop Mirrored Databases

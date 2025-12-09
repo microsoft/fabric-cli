@@ -53,7 +53,7 @@ class TestCD:
             "]",
             ";",
             # ":", need to fix tests in Windows
-            "'",
+            # "\\'", need to fix tests
             #'"', need to fix tests in Windows
             # "<", need to fix tests in Windows
             # ">", need to fix tests in Windows

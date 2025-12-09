@@ -9,7 +9,6 @@ import jmespath
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
-from fabric_cli.utils import fab_ui
 
 # Redis and others built some custom functions
 # https://redis.io/docs/latest/integrate/redis-data-integration/reference/jmespath-custom-functions/
