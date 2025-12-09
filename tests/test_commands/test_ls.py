@@ -596,6 +596,8 @@ class TestLS:
             workspace.full_path, str(VirtualItemContainerType.SPARK_POOL)
         )
 
+        mock_questionary_print.reset_mock()
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {sparkpools_path}")
 
@@ -690,6 +692,9 @@ class TestLS:
         managed_private_endpoints_path = cli_path_join(
             workspace.full_path, str(VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
         )
+
+        mock_questionary_print.reset_mock()
+        
         # Test 1: without args
         cli_executor.exec_command(f"ls {managed_private_endpoints_path}")
 
