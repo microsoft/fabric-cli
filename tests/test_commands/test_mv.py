@@ -545,7 +545,7 @@ class TestMV:
             # Assert
             mock_print_done.assert_called()
             assert any(
-                call.args[0] == "Move completed" for call in mock_print_done.mock_calls
+                call.args[0] == "Move completed\n" for call in mock_print_done.mock_calls
             )
 
             mock_questionary_print.reset_mock()
