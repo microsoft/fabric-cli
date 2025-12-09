@@ -144,7 +144,7 @@ def print_done(text: str, to_stderr: bool = False) -> None:
     # Escape the text to avoid HTML injection and parsing issues
     escaped_text = html.escape(text)
     _safe_print_formatted_text(
-        f"<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
+        f"\n<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
     )
 
 
@@ -295,8 +295,6 @@ def print_entries_unix_style(
 
     for entry in _entries:
         print_grey(_format_unix_style_entry(entry, fields, widths), to_stderr=False)
-
-    print_grey("", to_stderr=False)  # Empty line after entries
 
 
 # Others

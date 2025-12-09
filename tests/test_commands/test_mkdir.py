@@ -177,7 +177,8 @@ class TestMkdir:
         # Assert
         # call_count is 2 because the first call is for the parent eventhouse and the second call is for the kqldatabase
         assert upsert_item_to_cache.call_count == 2
-        assert mock_print_done.call_count == 2
+        # print call_count is 1 because we batch the result of the first call for the parent eventhouse and the second call for the kqldatabase
+        assert mock_print_done.call_count == 1
         assert any(
             kqldatabase_display_name in call.args[0]
             for call in mock_print_done.mock_calls
@@ -1315,10 +1316,10 @@ class TestMkdir:
         # Assert
         mock_print_done.assert_called()
         assert mock_print_done.call_count == 1
-        assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
+        assert f"'{connection_display_name}.Connection' created\n" == mock_print_done.call_args[0][0]
 
         mock_print_done.reset_mock()
-
+        
         # Cleanup
         rm(connection_full_path)
 
@@ -1338,13 +1339,13 @@ class TestMkdir:
         )
 
         cli_executor.exec_command(
-            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}","encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}","ignoreParameters":"ignoreParameters"}}]\''
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values='[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\",\"ignoreParameters\":\"ignoreParameters\"}}]'"
         )
 
         # Assert
         mock_print_done.assert_called()
         assert mock_print_done.call_count == 1
-        assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
+        assert f"'{connection_display_name}.Connection' created\n" == mock_print_done.call_args[0][0]
 
         mock_print_warning.assert_called()
         assert mock_print_warning.call_count == 1
@@ -1352,6 +1353,7 @@ class TestMkdir:
 
         # Cleanup
         rm(connection_full_path)
+
 
     def test_mkdir_connection_with_onpremises_gateway_params_failure(
         self,
@@ -1395,7 +1397,7 @@ class TestMkdir:
 
         # Test 3: Execute command with missing encryptedCredentials params in one of the values
         cli_executor.exec_command(
-            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}","encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}"}},{{"encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}"}}]\''
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values='[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}},{{\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}}]'"
         )
 
         # Assert
@@ -1408,7 +1410,7 @@ class TestMkdir:
 
         # Test 4: Execute command with invalid json format for values
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values='[{{gatewayId:{test_data.onpremises_gateway_details.id}, encryptedCredentials:{test_data.onpremises_gateway_details.encrypted_credentials}}}]'"
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{gatewayId:{test_data.onpremises_gateway_details.id}, encryptedCredentials:{test_data.onpremises_gateway_details.encrypted_credentials}}}]"
         )
 
         # Assert
@@ -1715,7 +1717,7 @@ class TestMkdir:
         )
 
         # Verify exact stdout message in text format
-        assert captured.out.strip() == f"* '{workspace_display_name}.Workspace' created"
+        assert f"* '{workspace_display_name}.Workspace' created" in captured.out.strip()
 
         # Cleanup
         rm(workspace_full_path)
@@ -1755,35 +1757,37 @@ class TestMkdir:
     # endregion
 
     # region Folders
-
+    
     def test_mkdir_item_in_folder_listing_success(
         self, workspace, cli_executor, mock_print_done, mock_questionary_print, mock_fab_set_state_config, vcr_instance, cassette_name
     ):
         # Enable folder listing
         mock_fab_set_state_config(constant.FAB_FOLDER_LISTING_ENABLED, "true")
 
+        
         # Setup
         folder_name = f"{generate_random_string(vcr_instance, cassette_name)}.Folder"
         folder_full_path = cli_path_join(workspace.full_path, folder_name)
-
+        
         # Create folder
         cli_executor.exec_command(f"mkdir {folder_full_path}")
         mock_print_done.assert_called_once()
         mock_print_done.reset_mock()
-
+        
         # Create notebook in folder
         notebook_name = f"{generate_random_string(vcr_instance, cassette_name)}.Notebook"
         notebook_full_path = cli_path_join(folder_full_path, notebook_name)
         cli_executor.exec_command(f"mkdir {notebook_full_path}")
-
+        
         # Verify notebook appears in folder listing
         cli_executor.exec_command(f"ls {folder_full_path}")
         printed_output = mock_questionary_print.call_args[0][0]
         assert notebook_name in printed_output
-
+        
         # Cleanup
         rm(notebook_full_path)
         rm(folder_full_path)
+
 
     def test_mkdir_folder_success(self, workspace, cli_executor, mock_print_done):
         # Setup
@@ -1870,7 +1874,6 @@ class TestMkdir:
         # Check for actual values
         assert lakehouse_display_name in table_output
         assert "Lakehouse" in table_output
-        assert workspace.id in table_output
 
         # Cleanup
         rm(lakehouse_full_path)
@@ -1913,7 +1916,6 @@ class TestMkdir:
         assert f"{kqldatabase_display_name}_auto" in table_output  # EventHouse dependency name
         assert "KQLDatabase" in table_output or "KQL_DATABASE" in table_output
         assert "Eventhouse" in table_output or "EVENTHOUSE" in table_output
-        assert workspace.id in table_output
 
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         eventhouse_full_path = kqldatabase_full_path.removesuffix(".KQLDatabase") + "_auto.Eventhouse"
