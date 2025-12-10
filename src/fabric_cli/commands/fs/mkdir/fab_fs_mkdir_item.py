@@ -63,17 +63,19 @@ def exec(item: Item, args: Namespace) -> str | None:
     if response.status_code in (200, 201):
         data = json.loads(response.text)
         
-        if hasattr(args, 'output_batch') and args.output_batch['is_batching']:
+        if hasattr(args, 'output_batch'):
             # Collect operation data for batch output
             args.output_batch['items'].append(data)
             args.output_batch['names'].append(item.name)
             
             # Only print consolidated output at the end of root operation
             if is_root_operation:
-                names_list = "' and '".join(args.output_batch['names'])
+                names = args.output_batch['names']
+                names_list = f"'{names[0]}' and '{names[1]}'" if len(names) == 2 else "'" + "', '".join(names[:-1]) + f"' and '{names[-1]}'"
+                
                 utils_ui.print_output_format(
                     args,
-                    message=f"'{names_list}' created",
+                    message=f"{names_list} created",
                     data=args.output_batch['items'],
                     show_headers=True
                 )

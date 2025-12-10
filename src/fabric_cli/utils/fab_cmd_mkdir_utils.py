@@ -763,6 +763,5 @@ def _initialize_batch_collection_for_dependency_creation(args):
     if not hasattr(args, 'output_batch'):
         args.output_batch = {
             'items': [],
-            'names': [],
-            'is_batching': True
+            'names': []
         }
