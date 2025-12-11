@@ -100,7 +100,7 @@ def _handle_fab_config_mode(previous_mode: str, current_mode: str) -> None:
         if (current_mode == fab_constant.FAB_MODE_INTERACTIVE
             and previous_mode == fab_constant.FAB_MODE_COMMANDLINE):
             utils_ui.print("Switching to interactive mode...")
-            from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
+            from fabric_cli.core.fab_interactive import start_interactive_mode
             start_interactive_mode()
                 
         elif (current_mode == fab_constant.FAB_MODE_COMMANDLINE

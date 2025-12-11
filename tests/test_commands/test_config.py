@@ -177,7 +177,7 @@ class TestConfig:
         self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
     ):
         """Test successful transition from command_line to interactive mode"""
-        with patch("fabric_cli.utils.fab_cmd_config_utils.start_interactive_mode") as mock_start_interactive:
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
             
             mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
             
@@ -215,7 +215,7 @@ class TestConfig:
             
             mock_cli_instance = mock_interactive_cli.return_value
             
-            from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
+            from fabric_cli.core.fab_interactive import start_interactive_mode
             start_interactive_mode()
             
             mock_get_parsers.assert_called_once()

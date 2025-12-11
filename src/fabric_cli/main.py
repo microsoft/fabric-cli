@@ -12,7 +12,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.parsers import fab_auth_parser as auth_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
-from fabric_cli.utils.fab_cmd_config_utils import start_interactive_mode
+from fabric_cli.core.fab_interactive import start_interactive_mode
 from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
 
