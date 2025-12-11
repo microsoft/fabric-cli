@@ -95,9 +95,8 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
 
     response = gateway_api.create_gateway(args, payload=json.dumps(payload))
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{gateway.name}' created")
-
         data = json.loads(response.text)
+        utils_ui.print_output_format(args, message=f"'{gateway.name}' created", data=data, show_headers=True)
         gateway._id = data["id"]
 
         # Add to mem_store

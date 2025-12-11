@@ -83,10 +83,9 @@ def exec(spark_pool: VirtualItem, args: Namespace) -> None:
     utils_ui.print_grey(f"Creating a new Spark Pool...")
     response = sparkpool_api.create_spark_pool(args, payload=json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{spark_pool.name}' created")
-
         data = json.loads(response.text)
         spark_pool._id = data["id"]
 
         # Add to mem_store
         utils_mem_store.upsert_spark_pool_to_cache(spark_pool)
+        utils_ui.print_output_format(args, message=f"'{spark_pool.name}' created", data=data, show_headers=True)

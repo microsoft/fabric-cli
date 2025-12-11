@@ -136,7 +136,7 @@ class TestExport:
             mock_print_done.assert_called()
             mock_print_warning.assert_called_once()
             assert any(
-                call.args[0] == "2 items exported successfully"
+                call.args[0] == "2 items exported successfully\n"
                 for call in mock_print_done.mock_calls
             )
 

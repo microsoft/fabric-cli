@@ -92,7 +92,7 @@ class TestLabels:
         cli_executor.exec_command(command_str)
         # Assert
         mock_print_done.assert_called()
-        assert mock_print_done.call_args[0][0] == "Label set"
+        assert mock_print_done.call_args[0][0] == "Label set\n"
 
     def test_labels_set_without_force_success(
         self, item_factory, cli_executor, mock_print_done, test_data: StaticTestData
@@ -111,7 +111,7 @@ class TestLabels:
             cli_executor.exec_command(command_str)
         # Assert
         mock_print_done.assert_called()
-        assert mock_print_done.call_args[0][0] == "Label set"
+        assert mock_print_done.call_args[0][0] == "Label set\n"
 
     def test_labels_set_invalid_label_name_failure(
         self,

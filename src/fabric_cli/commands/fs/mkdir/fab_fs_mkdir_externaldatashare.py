@@ -71,9 +71,7 @@ def exec(external_data_share: VirtualItem, args: Namespace) -> None:
             item.name, external_data_share.id
         )
 
-        utils_ui.print_output_format(
-            args, message=f"'{external_data_share.name}' created"
-        )
+        utils_ui.print_output_format(args, message=f"'{external_data_share.name}' created", data=data, show_headers=True)
 
         # Add to mem_store
         utils_mem_store.upsert_external_data_share_to_cache(external_data_share, item)

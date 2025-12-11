@@ -17,7 +17,7 @@ class TestCD:
         cli_executor.exec_command("cd /")
 
         # Assert
-        mock_print_done.assert_called_once_with("Switched to root")
+        mock_print_done.assert_called_once_with("Switched to root\n")
         assert isinstance(Context().context, Tenant)
 
     def test_cd_workspace_success(self, workspace, mock_print_done, cli_executor):
