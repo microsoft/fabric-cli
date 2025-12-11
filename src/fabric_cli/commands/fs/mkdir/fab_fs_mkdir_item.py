@@ -63,7 +63,7 @@ def exec(item: Item, args: Namespace) -> str | None:
     if response.status_code in (200, 201):
         data = json.loads(response.text)
         
-        if hasattr(args, 'output_batch'):
+        if not is_root_operation:
             # Collect operation data for batch output
             args.output_batch['items'].append(data)
             args.output_batch['names'].append(item.name)
