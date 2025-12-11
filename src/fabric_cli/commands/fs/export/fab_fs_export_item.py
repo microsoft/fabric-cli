@@ -3,6 +3,7 @@
 
 import os
 from argparse import Namespace
+from copy import deepcopy
 from typing import Optional, Union
 
 from fabric_cli.client import fab_api_item as item_api
@@ -12,6 +13,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType, definition_format_mapping
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
+from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_cmd_export_utils as utils_export
 from fabric_cli.utils import fab_item_util, fab_mem_store, fab_storage, fab_ui
 
@@ -89,6 +91,7 @@ def export_single_item(
     item_uri: Optional[bool] = False,
 ) -> dict:
     item_def = {}
+    args = deepcopy(args)
 
     if args.force or fab_ui.prompt_confirm(
         "Item definition is exported without its sensitivity label. Are you sure?"
@@ -99,7 +102,20 @@ def export_single_item(
 
         args.from_path = item.path.strip("/")
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
-        args.format = definition_format_mapping.get(item_type, "")
+
+        valid_export_formats = definition_format_mapping.get(item_type, {"default": ""})
+        export_format = (
+            args.format if getattr(args, "format", None) is not None else "default"
+        )
+        if export_format not in valid_export_formats:
+            raise FabricCLIError(
+                ErrorMessages.Export.invalid_export_format(
+                    list(valid_export_formats.keys())
+                ),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        else:
+            args.format = valid_export_formats[export_format]
 
         item_def = item_api.get_item_withdefinition(args, item_uri)
 
