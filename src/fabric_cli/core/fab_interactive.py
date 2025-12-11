@@ -114,3 +114,19 @@ class InteractiveCLI:
             except (EOFError, KeyboardInterrupt):
                 utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
                 break
+
+
+def start_interactive_mode():
+    """Launch interactive mode using global parser instances"""
+    try:
+        from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
+        
+        parser, subparsers = get_global_parser_and_subparsers()
+        interactive_cli = InteractiveCLI(parser, subparsers)
+        interactive_cli.start_interactive()
+        
+    except (KeyboardInterrupt, EOFError):
+        utils_ui.print("Interactive mode cancelled.")
+    except Exception as e:
+        utils_ui.print(f"Failed to start interactive mode: {str(e)}")
+        utils_ui.print("Please restart the CLI to use interactive mode.")
