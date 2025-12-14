@@ -309,7 +309,7 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
     export_parser.add_argument(
         "--format",
         metavar="",
-        help="Export format. Optional, supported for notebooks (.ipynb, .py)",
+        help="Export format. Optional",
     )
     export_parser.add_argument(
         "-f",
