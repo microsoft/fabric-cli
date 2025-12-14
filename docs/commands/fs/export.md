@@ -11,7 +11,7 @@ Export an item.
 **Usage:**
 
 ```
-fab export <path> -o <output_path> [-a] [-f]
+fab export <path> -o <output_path> [-a] [--format <format>] [-f]
 ```
 
 **Parameters:**
@@ -19,7 +19,7 @@ fab export <path> -o <output_path> [-a] [-f]
 - `<path>`: Path to the item to export.
 - `-o, --output <output_path>`: Output directory path.
 - `-a, --all`: Export all items. Optional.
-- `--format <format>`: Format of the export. Supported for Notebooks (`.ipynb`, `.py`). Optional.
+- `--format <format>`: Format of the export. Supported for items allowing multiple export formats, currently only Notebooks (`.ipynb`, `.py`). Optional.
 - `-f, --force`: Force export without confirmation. Optional.
 
 **Example:**
