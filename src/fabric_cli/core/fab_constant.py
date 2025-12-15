@@ -92,11 +92,8 @@ FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
 FAB_CHECK_UPDATES = "check_updates"
-FAB_PYPI_CACHE_TIMESTAMP = "pypi_cache_timestamp"
-FAB_PYPI_LATEST_VERSION = "pypi_latest_version"
 
 # Version check settings
-VERSION_CHECK_INTERVAL_HOURS = 24 * 7  # Check once a week
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
 VERSION_CHECK_TIMEOUT_SECONDS = 3
 
@@ -120,8 +117,6 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_FOLDER_LISTING_ENABLED: ["false", "true"],
     FAB_WS_PRIVATE_LINKS_ENABLED: ["false", "true"],
     FAB_CHECK_UPDATES: ["false", "true"],
-    FAB_PYPI_CACHE_TIMESTAMP: [],
-    FAB_PYPI_LATEST_VERSION: [],
     # Add more keys and their respective allowed values as needed
 }
 
