@@ -6,7 +6,7 @@ hide:
 # Release Notes
 
 
-## [v1.3.0](https://pypi.org/project/ms-fabric-cli/v1.3.0) - December 15, 2025
+## [v1.3.1](https://pypi.org/project/ms-fabric-cli/v1.3.1) - December 15, 2025
 
 ### ✨ New Functionality
 

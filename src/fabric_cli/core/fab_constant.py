@@ -27,7 +27,7 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.3.0"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
 
 # Scopes
 SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
