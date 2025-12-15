@@ -97,8 +97,7 @@ def _handle_fab_config_mode(previous_mode: str, current_mode: str) -> None:
         # Clean up context files when changing mode
         Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
         
-        if (current_mode == fab_constant.FAB_MODE_INTERACTIVE
-            and previous_mode == fab_constant.FAB_MODE_COMMANDLINE):
+        if current_mode == fab_constant.FAB_MODE_INTERACTIVE:
             utils_ui.print("Switching to interactive mode...")
             from fabric_cli.core.fab_interactive import start_interactive_mode
             start_interactive_mode()
