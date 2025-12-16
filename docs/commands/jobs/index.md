@@ -20,6 +20,7 @@ The `job` commands provide tools for starting, running, monitoring, and scheduli
 | `job run-status`| Get job run details       | `job run-status <path> [--id <id>] [--schedule]`                      |
 | `job run-sch`   | Schedule a job            | `job run-sch <path> [-i <json_inline_or_path>*] [--type <type>] [--interval <interval>] [--days <days>]` |
 | `job run-update`| Update a scheduled job    | `job run-update <path> [--id <id>] [-i <json_inline_or_path>] [--type <type>] [--enable/--disable]` |
+| `job run-rm`    | Delete a scheduled job    | `job run-rm <path> [--id <scheduled-id>] [--force]` |
 
 ---
 
@@ -158,6 +159,24 @@ fab job run-cancel <path> --id <job_id> [--wait]
 - `<path>`: Path to the resource.
 - `--id`: Job ID to cancel.
 - `-w, --wait`: Wait for cancellation to complete. Optional.
+
+---
+
+### run-rm
+
+Remove a scheduled job.
+
+**Usage:**
+
+```
+fab job run-rm <path> --id <scheduled-id> [-f]
+```
+
+**Parameters:**
+
+- `<path>`: Path to the resource.
+- `--id`: Schedule ID to remove.
+- `-f, --force`: Bypass confirmation prompt. Optional.
 
 ---
 

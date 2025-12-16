@@ -16,7 +16,6 @@ from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.utils import cli_path_join
 
-
 new_name_index = 1
 
 
@@ -305,6 +304,27 @@ class TestImport:
             mock_print_grey,
             upsert_item_to_cache,
             ItemType.NOTEBOOK,
+            cli_executor,
+        )
+
+    def test_import_create_new_sqldb_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SQL_DATABASE,
             cli_executor,
         )
 
@@ -842,7 +862,9 @@ def _import_create_new_item_success(
         item.display_name, item.display_name + "_new_" + str(new_name_index)
     )
     new_name_index += 1
-    new_item_path = item_path.replace(item.display_name, item.display_name + "_new_" + str(new_name_index))
+    new_item_path = item_path.replace(
+        item.display_name, item.display_name + "_new_" + str(new_name_index)
+    )
     with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
         cli_executor.exec_command(
             f"import {new_item_path} --input {str(tmp_path)}/{item.name} --force"

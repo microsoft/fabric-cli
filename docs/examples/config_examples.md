@@ -35,7 +35,6 @@ Retrieve a list of configuration keys and values
 fab config ls
 ```
 
-
 ## Set Configuration Settings
 
 ### Enable/Disable Cache

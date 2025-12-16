@@ -27,7 +27,7 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.2.0"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
 
 # Scopes
 SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
@@ -256,7 +256,9 @@ ERROR_INVALID_OPERATION = "InvalidOperation"
 ERROR_INVALID_PATH = "InvalidPath"
 ERROR_INVALID_PROPERTY = "InvalidProperty"
 ERROR_INVALID_DETLA_TABLE = "InvalidDeltaTable"
+ERROR_INVALID_QUERY_FIELDS = "InvalidQueryFields"
 ERROR_INVALID_WORKSPACE_TYPE = "InvalidWorkspaceType"
+ERROR_INVALID_QUERY = "InvalidQuery"
 ERROR_INTERNAL_SERVER_ERROR = "InternalServerError"
 ERROR_UNSUPPORTED_ITEM_TYPE = "UnsupportedItemType"
 ERROR_UNSUPPORTED_COMMAND = "UnsupportedCommand"
@@ -316,3 +318,16 @@ ITEM_METADATA_PROPERTIES = {
     "workspaceId",
     "folderId",
 }
+
+# Item set constants
+ITEM_QUERY_DEFINITION = "definition"
+ITEM_QUERY_PROPERTIES = "properties"
+ITEM_QUERY_DISPLAY_NAME = "displayName"
+ITEM_QUERY_DESCRIPTION = "description"
+
+# Allowed metadata keys for item set operations
+ITEM_SET_ALLOWED_METADATA_KEYS = [
+    ITEM_QUERY_DISPLAY_NAME,
+    ITEM_QUERY_DESCRIPTION,
+    ITEM_QUERY_PROPERTIES,
+]
