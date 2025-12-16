@@ -228,4 +228,27 @@ class TestExport:
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
+    def test_export_notebook_default_format_success(
+        self, item_factory, cli_executor, mock_print_done, tmp_path
+    ):
+        # Setup
+        notebook = item_factory(ItemType.NOTEBOOK)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"export {notebook.full_path} --output {str(tmp_path)} --force"
+        )
+
+        # Assert
+        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        assert export_path.is_dir()
+        files = list(export_path.iterdir())
+        assert len(files) == 2
+        assert any(file.suffix == ".ipynb" for file in files)
+        assert any(file.name == ".platform" for file in files)
+        mock_print_done.assert_called_once()
+
     # endregion
