@@ -31,6 +31,8 @@ jobs:
           fi
 
       - name: Create Release with GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release create ${{ steps.set_vars.outputs.tag_name }} \
             --title "${{ steps.set_vars.outputs.tag_name }}" \
