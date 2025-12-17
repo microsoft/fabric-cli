@@ -1,0 +1,37 @@
+name: 🚀 Create GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to release (e.g., v1.2.0)'
+        required: true
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up release variables
+        id: set_vars
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "tag_name=$VERSION" >> $GITHUB_OUTPUT
+          echo "changelog_file_path=.changes/${VERSION}.md" >> $GITHUB_OUTPUT
+
+      - name: Validate release notes file
+        run: |
+          if [ ! -f "${{ steps.set_vars.outputs.changelog_file_path }}" ]; then
+            echo "Error: Release notes file not found at ${{ steps.set_vars.outputs.changelog_file_path }}"
+            exit 1
+          fi
+
+      - name: Create Release with GitHub CLI
+        run: |
+          gh release create ${{ steps.set_vars.outputs.tag_name }} \
+            --title "${{ steps.set_vars.outputs.tag_name }}" \
+            --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}"
