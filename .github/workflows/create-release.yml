@@ -6,10 +6,6 @@ on:
       version:
         description: 'The version to release (e.g., v1.2.0)'
         required: true
-      commit_sha:
-        description: 'Optional: Commit SHA to create the tag on. If not provided, the tag will be created on the latest commit of the current branch (HEAD)'
-        required: false
-        default: ''
 
 jobs:
   create-release:
@@ -19,151 +15,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required to access full commit history for validation
-
-      - name: Display workflow information
-        run: |
-          if [ -n "${{ github.event.inputs.commit_sha }}" ]; then
-            TARGET_INFO="- **Target Commit:** \`${{ github.event.inputs.commit_sha }}\`"
-          else
-            TARGET_INFO="- **Target Commit:** Latest commit on current branch (HEAD)"
-          fi
-          
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          # 🚀 Create Release Workflow
-          
-          ## ℹ️ Workflow Information
-          - **Version:** ${{ github.event.inputs.version }}
-          $TARGET_INFO
-          
-          EOF
-
-      - name: Validate commit SHA (if provided)
-        if: ${{ github.event.inputs.commit_sha != '' }}
-        run: |
-          COMMIT_SHA="${{ github.event.inputs.commit_sha }}"
-          if ! git rev-parse --verify "$COMMIT_SHA^{commit}" >/dev/null 2>&1; then
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ❌ Error: Invalid Commit SHA
-          
-          The provided commit SHA \`$COMMIT_SHA\` is not valid or does not exist in this repository.
-          
-          ### 📝 Troubleshooting
-          - Verify the commit SHA exists in the repository
-          - Ensure you are using the full commit SHA (or at least 7 characters)
-          - Check that the commit is in the current branch history
-          
-          EOF
-            echo "Error: Invalid commit SHA: $COMMIT_SHA"
-            exit 1
-          fi
-          echo "✅ Commit SHA validated successfully: $COMMIT_SHA"
 
       - name: Set up release variables
         id: set_vars
         run: |
           VERSION="${{ github.event.inputs.version }}"
-          COMMIT_SHA="${{ github.event.inputs.commit_sha }}"
-          
-          # Use provided commit SHA or default to HEAD
-          if [ -n "$COMMIT_SHA" ]; then
-            TARGET_COMMIT="$COMMIT_SHA"
-          else
-            TARGET_COMMIT="HEAD"
-          fi
-          
           echo "tag_name=$VERSION" >> $GITHUB_OUTPUT
           echo "changelog_file_path=.changes/${VERSION}.md" >> $GITHUB_OUTPUT
-          echo "target_commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
-          
-          # Get the actual commit SHA for display
-          ACTUAL_SHA=$(git rev-parse "$TARGET_COMMIT")
-          echo "actual_sha=$ACTUAL_SHA" >> $GITHUB_OUTPUT
-          
-          echo "✅ Release variables set:"
-          echo "  - Tag name: $VERSION"
-          echo "  - Target commit: $ACTUAL_SHA"
-          echo "  - Changelog file: .changes/${VERSION}.md"
 
       - name: Validate release notes file
         run: |
-          CHANGELOG_FILE="${{ steps.set_vars.outputs.changelog_file_path }}"
-          if [ ! -f "$CHANGELOG_FILE" ]; then
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ❌ Error: Release Notes File Not Found
-          
-          The release notes file was not found at the expected location:
-          
-          \`\`\`
-          $CHANGELOG_FILE
-          \`\`\`
-          
-          ### 📝 What to do:
-          1. Ensure you have created the changelog file for version \`${{ steps.set_vars.outputs.tag_name }}\`
-          2. The file should be located at: \`.changes/${{ steps.set_vars.outputs.tag_name }}.md\`
-          3. You can use \`changie batch <version>\` to generate the changelog file
-          
-          ### 📂 Available changelog files:
-          \`\`\`
-          $(ls -1 .changes/*.md 2>/dev/null || echo "No changelog files found")
-          \`\`\`
-          
-          EOF
-            echo "Error: Release notes file not found at $CHANGELOG_FILE"
+          if [ ! -f "${{ steps.set_vars.outputs.changelog_file_path }}" ]; then
+            echo "Error: Release notes file not found at ${{ steps.set_vars.outputs.changelog_file_path }}"
             exit 1
           fi
-          echo "✅ Release notes file found at: $CHANGELOG_FILE"
 
       - name: Create Release with GitHub CLI
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## 🏗️ Creating Release
-          
-          Creating release with the following details:
-          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
-          - **Target Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
-          - **Notes File:** \`${{ steps.set_vars.outputs.changelog_file_path }}\`
-          
-          EOF
-          
-          # Create the release with the target commit
-          if gh release create ${{ steps.set_vars.outputs.tag_name }} \
+          gh release create ${{ steps.set_vars.outputs.tag_name }} \
             --title "${{ steps.set_vars.outputs.tag_name }}" \
-            --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}" \
-            --target "${{ steps.set_vars.outputs.target_commit }}"; then
-            
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ✅ Release Created Successfully!
-          
-          🎉 **Release \`${{ steps.set_vars.outputs.tag_name }}\` has been created!**
-          
-          ### 📋 Release Details:
-          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
-          - **Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
-          - **Release URL:** [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.set_vars.outputs.tag_name }})
-          
-          EOF
-          else
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ❌ Error: Failed to Create Release
-          
-          The GitHub CLI failed to create the release. This could be due to:
-          
-          ### 🔍 Common Issues:
-          - A release with tag \`${{ steps.set_vars.outputs.tag_name }}\` already exists
-          - Insufficient permissions to create releases
-          - Network connectivity issues
-          - Invalid release notes format
-          
-          ### 📝 Next Steps:
-          1. Check if the tag already exists: \`git tag -l '${{ steps.set_vars.outputs.tag_name }}'\`
-          2. Verify you have the necessary permissions to create releases
-          3. Review the workflow run logs for detailed error messages
-          
-          EOF
-            echo "Error: Failed to create release"
-            exit 1
-          fi
+            --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}"
