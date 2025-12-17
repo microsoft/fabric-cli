@@ -113,11 +113,8 @@ jobs:
             echo "Error: Release notes file not found at $CHANGELOG_FILE"
             exit 1
           fi
-          echo "✅ Release notes file found at: $CHANGELOG_FILE"
 
       - name: Create Release with GitHub CLI
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 🏗️ Creating Release
