@@ -898,9 +898,13 @@ class TestAuth:
 
         mock_print_done.assert_called_once()
 
-    def test_auth_status(self, mock_fab_auth, mock_questionary_print):
+    def test_auth_status(self, mock_fab_auth, capsys):
         # Arrange
-        args = MagicMock()
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format=None,
+        )
         with patch(
             "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
             return_value={
@@ -913,32 +917,16 @@ class TestAuth:
             fab_auth.status(args)
 
             # Assert
-            assert any(
-                "Account" in call.args[0] for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "Tenant ID" in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "App ID" in call.args[0] for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "Token (fabric/powerbi)" in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "Token (storage)" in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "Token (azure)" in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                "mock************************************" in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+            captured = capsys.readouterr()
+            assert "account" in captured.out.lower()
+            assert "tenant" in captured.out.lower()
+            assert "app" in captured.out.lower()
+            assert "token" in captured.out.lower()
+            assert "mocked_upn" in captured.out
+            assert "mocked_appid" in captured.out
+            assert "mocke_oid" in captured.out
+            assert "mocked_tenant_id" in captured.out
+            assert "mock************************************" in captured.out
 
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys

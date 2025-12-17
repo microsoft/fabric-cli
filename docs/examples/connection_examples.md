@@ -51,7 +51,7 @@ fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connect
 Create a connection that uses a specific on-premises gateway with encrypted credentials for secure access
 
 ```
-fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.values=[{"gatewayId":"<gatewayId>", "encryptedCredentials": "<encryptedCredentials>"}]
+fab create .connections/conn.Connection -P gateway=MyVnetGateway.Gateway,connectionDetails.type=SQL,connectionDetails.parameters.server=<server>,connectionDetails.parameters.database=sales,credentialDetails.type=Basic,credentialDetails.values='[{"gatewayId":"<gatewayId>", "encryptedCredentials": "<encryptedCredentials>"}]'
 ```
 
 #### Create Connection with All Parameters

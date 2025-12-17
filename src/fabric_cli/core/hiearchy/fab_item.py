@@ -51,33 +51,14 @@ class Item(_BaseItem):
     def folder_id(self) -> str | None:
         return self.parent.id if isinstance(self.parent, Folder) else None
 
-    def get_mutable_properties(self) -> List[str]:
+    def extract_friendly_name_path_or_default(self, key: str) -> str:
         item_type = self.item_type
-        properties = []
 
         if item_type in ITMutablePropMap:
-            properties = [list(prop.keys())[0] for prop in ITMutablePropMap[item_type]]
-        # folderId is not supported in the API
-        return properties + ["displayName", "description"]
-
-    def get_property_value(self, key: str) -> str:
-        item_type = self.item_type
-        properties = [
-            {"displayName": "displayName"},
-            {"description": "description"},
-        ]
-
-        if item_type in ITMutablePropMap:
-            properties = ITMutablePropMap[item_type] + properties
-
-        for prop in properties:
-            if key in prop:
-                return prop[key]
-
-        raise FabricCLIError(
-            ErrorMessages.Hierarchy.key_not_found_in_properties(key),
-            fab_constant.ERROR_INVALID_PROPERTY,
-        )
+            for prop in ITMutablePropMap[item_type]:
+                if key in prop:
+                    return prop[key]
+        return key
 
     @property
     def parent(self) -> Workspace | Folder:
@@ -137,6 +118,7 @@ class Item(_BaseItem):
                 | ItemType.VARIABLE_LIBRARY
                 | ItemType.GRAPHQLAPI
                 | ItemType.DATAFLOW
+                | ItemType.SQL_DATABASE
             ):
                 return {
                     "type": str(self.item_type),

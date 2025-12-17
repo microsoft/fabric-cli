@@ -1309,7 +1309,7 @@ class TestMkdir:
 
         # Execute command with gateway and OnPremisesGateway connectivity type
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}}]"
+            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}","encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}"}}]\''
         )
 
         # Assert
@@ -1318,7 +1318,7 @@ class TestMkdir:
         assert f"'{connection_display_name}.Connection' created" == mock_print_done.call_args[0][0]
 
         mock_print_done.reset_mock()
-        
+
         # Cleanup
         rm(connection_full_path)
 
@@ -1338,7 +1338,7 @@ class TestMkdir:
         )
 
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\",\"ignoreParameters\":\"ignoreParameters\"}}]"
+            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}","encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}","ignoreParameters":"ignoreParameters"}}]\''
         )
 
         # Assert
@@ -1352,7 +1352,6 @@ class TestMkdir:
 
         # Cleanup
         rm(connection_full_path)
-
 
     def test_mkdir_connection_with_onpremises_gateway_params_failure(
         self,
@@ -1383,7 +1382,7 @@ class TestMkdir:
 
         # Test 2: Execute command with missing encryptedCredentials params
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\"}}]"
+            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}"}}]\''
         )
 
         # Assert
@@ -1396,7 +1395,7 @@ class TestMkdir:
 
         # Test 3: Execute command with missing encryptedCredentials params in one of the values
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{\"gatewayId\":\"{test_data.onpremises_gateway_details.id}\",\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}},{{\"encryptedCredentials\":\"{test_data.onpremises_gateway_details.encrypted_credentials}\"}}]"
+            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'[{{"gatewayId":"{test_data.onpremises_gateway_details.id}","encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}"}},{{"encryptedCredentials":"{test_data.onpremises_gateway_details.encrypted_credentials}"}}]\''
         )
 
         # Assert
@@ -1409,7 +1408,7 @@ class TestMkdir:
 
         # Test 4: Execute command with invalid json format for values
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=[{{gatewayId:{test_data.onpremises_gateway_details.id}, encryptedCredentials:{test_data.onpremises_gateway_details.encrypted_credentials}}}]"
+            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values='[{{gatewayId:{test_data.onpremises_gateway_details.id}, encryptedCredentials:{test_data.onpremises_gateway_details.encrypted_credentials}}}]'"
         )
 
         # Assert
@@ -1422,7 +1421,7 @@ class TestMkdir:
 
         # Test 5: Execute command with invalid values as string array
         cli_executor.exec_command(
-            f"mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=['gatewayId', 'encryptedCredentials']"
+            f'mkdir {connection_full_path} -P gatewayId={test_data.onpremises_gateway_details.id},connectionDetails.type=SQL,connectivityType=OnPremisesGateway,connectionDetails.parameters.server={test_data.sql_server.server}.database.windows.net,connectionDetails.parameters.database={test_data.sql_server.database},credentialDetails.type=Basic,credentialDetails.values=\'["gatewayId", "encryptedCredentials"]\''
         )
 
         # Assert
@@ -1756,37 +1755,35 @@ class TestMkdir:
     # endregion
 
     # region Folders
-    
+
     def test_mkdir_item_in_folder_listing_success(
         self, workspace, cli_executor, mock_print_done, mock_questionary_print, mock_fab_set_state_config, vcr_instance, cassette_name
     ):
         # Enable folder listing
         mock_fab_set_state_config(constant.FAB_FOLDER_LISTING_ENABLED, "true")
 
-        
         # Setup
         folder_name = f"{generate_random_string(vcr_instance, cassette_name)}.Folder"
         folder_full_path = cli_path_join(workspace.full_path, folder_name)
-        
+
         # Create folder
         cli_executor.exec_command(f"mkdir {folder_full_path}")
         mock_print_done.assert_called_once()
         mock_print_done.reset_mock()
-        
+
         # Create notebook in folder
         notebook_name = f"{generate_random_string(vcr_instance, cassette_name)}.Notebook"
         notebook_full_path = cli_path_join(folder_full_path, notebook_name)
         cli_executor.exec_command(f"mkdir {notebook_full_path}")
-        
+
         # Verify notebook appears in folder listing
         cli_executor.exec_command(f"ls {folder_full_path}")
         printed_output = mock_questionary_print.call_args[0][0]
         assert notebook_name in printed_output
-        
+
         # Cleanup
         rm(notebook_full_path)
         rm(folder_full_path)
-
 
     def test_mkdir_folder_success(self, workspace, cli_executor, mock_print_done):
         # Setup

@@ -7,7 +7,7 @@ List workspaces, items, and files.
 **Usage:**
 
 ```
-fab ls <path> [-l] [-a]
+fab ls <path> [-l] [-a] [-q <query>]
 ```
 
 **Parameters:**
@@ -15,9 +15,16 @@ fab ls <path> [-l] [-a]
 - `<path>`: Path to list. Optional.
 - `-l, --long`: Show detailed output. Optional.
 - `-a, --all`: Show hidden entities. Optional.
+- `-q, --query`: JMESPath query to filter results. Optional.
 
-**Example:**
+**Examples:**
 
 ```
 fab ls ws1.Workspace
+fab ls -l
+
+# Using JEMSPath to filter items within ws1 workspace
+fab ls -l -q [].{name:name}
+fab ls ws1.Workspace -q [?contains(name, 'report')]
+fab ls -l -q [?id=='123456']
 ```
