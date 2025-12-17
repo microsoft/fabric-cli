@@ -88,82 +88,13 @@ jobs:
 
       - name: Validate release notes file
         run: |
-          CHANGELOG_FILE="${{ steps.set_vars.outputs.changelog_file_path }}"
-          if [ ! -f "$CHANGELOG_FILE" ]; then
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ❌ Error: Release Notes File Not Found
-          
-          The release notes file was not found at the expected location:
-          
-          \`\`\`
-          $CHANGELOG_FILE
-          \`\`\`
-          
-          ### 📝 What to do:
-          1. Ensure you have created the changelog file for version \`${{ steps.set_vars.outputs.tag_name }}\`
-          2. The file should be located at: \`.changes/${{ steps.set_vars.outputs.tag_name }}.md\`
-          3. You can use \`changie batch <version>\` to generate the changelog file
-          
-          ### 📂 Available changelog files:
-          \`\`\`
-          $(ls -1 .changes/*.md 2>/dev/null || echo "No changelog files found")
-          \`\`\`
-          
-          EOF
-            echo "Error: Release notes file not found at $CHANGELOG_FILE"
+          if [ ! -f "${{ steps.set_vars.outputs.changelog_file_path }}" ]; then
+            echo "Error: Release notes file not found at ${{ steps.set_vars.outputs.changelog_file_path }}"
             exit 1
           fi
-          echo "✅ Release notes file found at: $CHANGELOG_FILE"
 
       - name: Create Release with GitHub CLI
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## 🏗️ Creating Release
-          
-          Creating release with the following details:
-          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
-          - **Target Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
-          - **Notes File:** \`${{ steps.set_vars.outputs.changelog_file_path }}\`
-          
-          EOF
-          
-          # Create the release with the target commit
-          if gh release create ${{ steps.set_vars.outputs.tag_name }} \
+          gh release create ${{ steps.set_vars.outputs.tag_name }} \
             --title "${{ steps.set_vars.outputs.tag_name }}" \
-            --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}" \
-            --target "${{ steps.set_vars.outputs.target_commit }}"; then
-            
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ✅ Release Created Successfully!
-          
-          🎉 **Release \`${{ steps.set_vars.outputs.tag_name }}\` has been created!**
-          
-          ### 📋 Release Details:
-          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
-          - **Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
-          - **Release URL:** [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.set_vars.outputs.tag_name }})
-          
-          EOF
-          else
-            cat >> $GITHUB_STEP_SUMMARY << EOF
-          ## ❌ Error: Failed to Create Release
-          
-          The GitHub CLI failed to create the release. This could be due to:
-          
-          ### 🔍 Common Issues:
-          - A release with tag \`${{ steps.set_vars.outputs.tag_name }}\` already exists
-          - Insufficient permissions to create releases
-          - Network connectivity issues
-          - Invalid release notes format
-          
-          ### 📝 Next Steps:
-          1. Check if the tag already exists: \`git tag -l '${{ steps.set_vars.outputs.tag_name }}'\`
-          2. Verify you have the necessary permissions to create releases
-          3. Review the workflow run logs for detailed error messages
-          
-          EOF
-            echo "Error: Failed to create release"
-            exit 1
-          fi
+            --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}"
