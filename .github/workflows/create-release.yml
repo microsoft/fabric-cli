@@ -115,6 +115,8 @@ jobs:
           fi
 
       - name: Create Release with GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY << EOF
           ## 🏗️ Creating Release
