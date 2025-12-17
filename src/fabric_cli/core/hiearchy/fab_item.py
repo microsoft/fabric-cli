@@ -118,6 +118,7 @@ class Item(_BaseItem):
                 | ItemType.VARIABLE_LIBRARY
                 | ItemType.GRAPHQLAPI
                 | ItemType.DATAFLOW
+                | ItemType.SQL_DATABASE
             ):
                 return {
                     "type": str(self.item_type),
