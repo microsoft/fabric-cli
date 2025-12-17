@@ -104,10 +104,11 @@ def export_single_item(
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
 
         valid_export_formats = definition_format_mapping.get(item_type, {"default": ""})
-        export_format = (
+        export_format_param = (
             args.format if getattr(args, "format", None) is not None else "default"
-        )
-        if export_format not in valid_export_formats:
+        )            
+        if export_format_param not in valid_export_formats:
+            valid_export_formats.pop("default")
             raise FabricCLIError(
                 ErrorMessages.Export.invalid_export_format(
                     list(valid_export_formats.keys())
@@ -115,7 +116,7 @@ def export_single_item(
                 fab_constant.ERROR_INVALID_INPUT,
             )
         else:
-            args.format = valid_export_formats[export_format]
+            args.format = valid_export_formats[export_format_param]
 
         item_def = item_api.get_item_withdefinition(args, item_uri)
 

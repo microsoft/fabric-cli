@@ -5,4 +5,5 @@
 class ExportErrors:
     @staticmethod
     def invalid_export_format(valid_formats: list[str]) -> str:
-        return f"Invalid format. Only the following formats are supported: {valid_formats}."
+        message = "Only the following formats are supported: " + ", ".join(valid_formats) if len(valid_formats) else "No formats are supported"
+        return f"Invalid format. {message}"

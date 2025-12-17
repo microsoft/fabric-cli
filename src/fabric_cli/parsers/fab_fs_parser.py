@@ -308,6 +308,7 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
     )
     export_parser.add_argument(
         "--format",
+        required=False,
         metavar="",
         help="Export format. Optional",
     )
