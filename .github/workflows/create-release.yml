@@ -28,31 +28,37 @@ jobs:
 
       - name: Display workflow information
         run: |
-          echo "# 🚀 Create Release Workflow" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## ℹ️ Workflow Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
           if [ -n "${{ github.event.inputs.commit_sha }}" ]; then
-            echo "- **Target Commit:** \`${{ github.event.inputs.commit_sha }}\`" >> $GITHUB_STEP_SUMMARY
+            TARGET_INFO="- **Target Commit:** \`${{ github.event.inputs.commit_sha }}\`"
           else
-            echo "- **Target Commit:** Latest commit on current branch (HEAD)" >> $GITHUB_STEP_SUMMARY
+            TARGET_INFO="- **Target Commit:** Latest commit on current branch (HEAD)"
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # 🚀 Create Release Workflow
+          
+          ## ℹ️ Workflow Information
+          - **Version:** ${{ github.event.inputs.version }}
+          $TARGET_INFO
+          
+          EOF
 
       - name: Validate commit SHA (if provided)
         if: ${{ github.event.inputs.commit_sha != '' }}
         run: |
           COMMIT_SHA="${{ github.event.inputs.commit_sha }}"
           if ! git rev-parse --verify "$COMMIT_SHA^{commit}" >/dev/null 2>&1; then
-            echo "## ❌ Error: Invalid Commit SHA" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The provided commit SHA \`$COMMIT_SHA\` is not valid or does not exist in this repository." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📝 Troubleshooting" >> $GITHUB_STEP_SUMMARY
-            echo "- Verify the commit SHA exists in the repository" >> $GITHUB_STEP_SUMMARY
-            echo "- Ensure you are using the full commit SHA (or at least 7 characters)" >> $GITHUB_STEP_SUMMARY
-            echo "- Check that the commit is in the current branch history" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ❌ Error: Invalid Commit SHA
+          
+          The provided commit SHA \`$COMMIT_SHA\` is not valid or does not exist in this repository.
+          
+          ### 📝 Troubleshooting
+          - Verify the commit SHA exists in the repository
+          - Ensure you are using the full commit SHA (or at least 7 characters)
+          - Check that the commit is in the current branch history
+          
+          EOF
             echo "Error: Invalid commit SHA: $COMMIT_SHA"
             exit 1
           fi
@@ -88,24 +94,26 @@ jobs:
         run: |
           CHANGELOG_FILE="${{ steps.set_vars.outputs.changelog_file_path }}"
           if [ ! -f "$CHANGELOG_FILE" ]; then
-            echo "## ❌ Error: Release Notes File Not Found" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The release notes file was not found at the expected location:" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "$CHANGELOG_FILE" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📝 What to do:" >> $GITHUB_STEP_SUMMARY
-            echo "1. Ensure you have created the changelog file for version \`${{ steps.set_vars.outputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "2. The file should be located at: \`.changes/${{ steps.set_vars.outputs.tag_name }}.md\`" >> $GITHUB_STEP_SUMMARY
-            echo "3. You can use \`changie batch <version>\` to generate the changelog file" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📂 Available changelog files:" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            ls -1 .changes/*.md 2>/dev/null || echo "No changelog files found" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ❌ Error: Release Notes File Not Found
+          
+          The release notes file was not found at the expected location:
+          
+          \`\`\`
+          $CHANGELOG_FILE
+          \`\`\`
+          
+          ### 📝 What to do:
+          1. Ensure you have created the changelog file for version \`${{ steps.set_vars.outputs.tag_name }}\`
+          2. The file should be located at: \`.changes/${{ steps.set_vars.outputs.tag_name }}.md\`
+          3. You can use \`changie batch <version>\` to generate the changelog file
+          
+          ### 📂 Available changelog files:
+          \`\`\`
+          $(ls -1 .changes/*.md 2>/dev/null || echo "No changelog files found")
+          \`\`\`
+          
+          EOF
             echo "Error: Release notes file not found at $CHANGELOG_FILE"
             exit 1
           fi
@@ -115,13 +123,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "## 🏗️ Creating Release" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Creating release with the following details:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Target Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Notes File:** \`${{ steps.set_vars.outputs.changelog_file_path }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🏗️ Creating Release
+          
+          Creating release with the following details:
+          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
+          - **Target Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
+          - **Notes File:** \`${{ steps.set_vars.outputs.changelog_file_path }}\`
+          
+          EOF
           
           # Create the release with the target commit
           if gh release create ${{ steps.set_vars.outputs.tag_name }} \
@@ -129,31 +139,35 @@ jobs:
             --notes-file "${{ steps.set_vars.outputs.changelog_file_path }}" \
             --target "${{ steps.set_vars.outputs.target_commit }}"; then
             
-            echo "## ✅ Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 **Release \`${{ steps.set_vars.outputs.tag_name }}\` has been created!**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📋 Release Details:" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Release URL:** [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.set_vars.outputs.tag_name }})" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ✅ Release Created Successfully!
+          
+          🎉 **Release \`${{ steps.set_vars.outputs.tag_name }}\` has been created!**
+          
+          ### 📋 Release Details:
+          - **Tag:** \`${{ steps.set_vars.outputs.tag_name }}\`
+          - **Commit:** \`${{ steps.set_vars.outputs.actual_sha }}\`
+          - **Release URL:** [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.set_vars.outputs.tag_name }})
+          
+          EOF
           else
-            echo "## ❌ Error: Failed to Create Release" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The GitHub CLI failed to create the release. This could be due to:" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 🔍 Common Issues:" >> $GITHUB_STEP_SUMMARY
-            echo "- A release with tag \`${{ steps.set_vars.outputs.tag_name }}\` already exists" >> $GITHUB_STEP_SUMMARY
-            echo "- Insufficient permissions to create releases" >> $GITHUB_STEP_SUMMARY
-            echo "- Network connectivity issues" >> $GITHUB_STEP_SUMMARY
-            echo "- Invalid release notes format" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📝 Next Steps:" >> $GITHUB_STEP_SUMMARY
-            echo "1. Check if the tag already exists: \`git tag -l '${{ steps.set_vars.outputs.tag_name }}'\`" >> $GITHUB_STEP_SUMMARY
-            echo "2. Verify you have the necessary permissions to create releases" >> $GITHUB_STEP_SUMMARY
-            echo "3. Review the workflow run logs for detailed error messages" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ❌ Error: Failed to Create Release
+          
+          The GitHub CLI failed to create the release. This could be due to:
+          
+          ### 🔍 Common Issues:
+          - A release with tag \`${{ steps.set_vars.outputs.tag_name }}\` already exists
+          - Insufficient permissions to create releases
+          - Network connectivity issues
+          - Invalid release notes format
+          
+          ### 📝 Next Steps:
+          1. Check if the tag already exists: \`git tag -l '${{ steps.set_vars.outputs.tag_name }}'\`
+          2. Verify you have the necessary permissions to create releases
+          3. Review the workflow run logs for detailed error messages
+          
+          EOF
             echo "Error: Failed to create release"
             exit 1
           fi
