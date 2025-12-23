@@ -78,7 +78,6 @@ def check_and_notify_update() -> None:
 
     # Display notification if update available
     if latest_version and _is_pypi_version_newer(latest_version):
-        fab_logger.log_debug(f"New version available: {latest_version}")
         msg = (
             f"\n[notice] A new release of fab is available: {__version__} → {latest_version}\n"
             "[notice] To update, run: pip install --upgrade ms-fabric-cli\n"
