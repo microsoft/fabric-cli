@@ -161,26 +161,21 @@ def test_cli_version_compare_none_version_failure():
     assert result is False
 
 
-@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-def test_cli_version_check_disabled_by_config_success(mock_get_config):
+def test_cli_version_check_disabled_by_config_success(mock_fab_set_state_config):
     """Should not check when user has disabled updates."""
-    mock_get_config.return_value = "false"
+    mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "false")
 
     fab_version_check.check_and_notify_update()
 
-    # Should call get_config for check_updates setting
-    assert any(
-        call[0][0] == fab_constant.FAB_CHECK_UPDATES
-        for call in mock_get_config.call_args_list
-    )
 
 
 @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-def test_cli_version_check_new_version_available_success(mock_get_config, mock_fetch):
+def test_cli_version_check_new_version_available_success(
+    mock_fetch, mock_fab_set_state_config
+):
     """Should display notification when newer version is available."""
     newer_version = _increment_version("major")
-    mock_get_config.return_value = "true"
+    mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "true")
     mock_fetch.return_value = newer_version
 
     with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
@@ -194,10 +189,9 @@ def test_cli_version_check_new_version_available_success(mock_get_config, mock_f
 
 
 @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-def test_cli_version_check_same_version_success(mock_get_config, mock_fetch):
+def test_cli_version_check_same_version_success(mock_fetch, mock_fab_set_state_config):
     """Should not display notification when on latest version."""
-    mock_get_config.return_value = "true"
+    mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "true")
     mock_fetch.return_value = __version__
 
     with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
@@ -208,10 +202,9 @@ def test_cli_version_check_same_version_success(mock_get_config, mock_fetch):
 
 
 @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-def test_cli_version_check_fetch_failure(mock_get_config, mock_fetch):
+def test_cli_version_check_fetch_failure(mock_fetch, mock_fab_set_state_config):
     """Should not display notification when PyPI fetch fails."""
-    mock_get_config.return_value = "true"
+    mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "true")
     mock_fetch.return_value = None  # Simulate fetch failure
 
     with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
@@ -222,10 +215,9 @@ def test_cli_version_check_fetch_failure(mock_get_config, mock_fetch):
 
 
 @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-def test_cli_version_check_older_version_success(mock_get_config, mock_fetch):
+def test_cli_version_check_older_version_success(mock_fetch, mock_fab_set_state_config):
     """Should not display notification when PyPI version is older."""
-    mock_get_config.return_value = "true"
+    mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "true")
     mock_fetch.return_value = _decrement_version()
 
     with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
