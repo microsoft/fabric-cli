@@ -123,44 +123,36 @@ class InteractiveCLI:
             return
 
         self._is_running = True
+        
         try:
             utils_ui.print("\nWelcome to the Fabric CLI ⚡")
             utils_ui.print("Type 'help' for help. \n")
 
             while True:
-                try:
-                    context = Context().context
-                    pwd_context = f"/{context.path.strip('/')}"
+                context = Context().context
+                pwd_context = f"/{context.path.strip('/')}"
 
-                    prompt_text = HTML(
-                        f"<prompt>fab</prompt><detail>:</detail><context>{html.escape(pwd_context)}</context><detail>$</detail> "
-                    )
+                prompt_text = HTML(
+                    f"<prompt>fab</prompt><detail>:</detail><context>{html.escape(pwd_context)}</context><detail>$</detail> "
+                )
 
-                    user_input = self.session.prompt(
-                        prompt_text,
-                        style=self.custom_style,
-                        cursor=CursorShape.BLINKING_BEAM,
-                        enable_history_search=True,
-                    )
-                    should_exit = self.handle_command(user_input)
-                    if should_exit:  # Check if the command was to exit
-                        break
-
-                except (EOFError, KeyboardInterrupt):
-                    utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
+                user_input = self.session.prompt(
+                    prompt_text,
+                    style=self.custom_style,
+                    cursor=CursorShape.BLINKING_BEAM,
+                    enable_history_search=True,
+                )
+                should_exit = self.handle_command(user_input)
+                if should_exit:  # Check if the command was to exit
                     break
+
+        except (EOFError, KeyboardInterrupt):
+            utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
         finally:
             self._is_running = False
 
 
 def start_interactive_mode():
     """Launch interactive mode using singleton pattern"""
-    try:
-        interactive_cli = InteractiveCLI.get_instance()
-        interactive_cli.start_interactive()
-        
-    except (KeyboardInterrupt, EOFError):
-        utils_ui.print("Interactive mode cancelled.")
-    except Exception as e:
-        utils_ui.print(f"Failed to start interactive mode: {str(e)}")
-        utils_ui.print("Please restart the CLI to use interactive mode.")
+    interactive_cli = InteractiveCLI.get_instance()
+    interactive_cli.start_interactive()
