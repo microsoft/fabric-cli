@@ -51,180 +51,185 @@ def _decrement_version() -> str:
     return "0.0.0"
 
 
-class TestFetchLatestVersionFromPyPI:
-    """Test _fetch_latest_version_from_pypi logic."""
+@patch("fabric_cli.utils.fab_version_check.requests.get")
+def test_cli_version_fetch_pypi_success(mock_get):
+    """Should return version when PyPI request succeeds."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"info": {"version": "2.0.0"}}
+    mock_get.return_value = mock_response
 
-    @patch("fabric_cli.utils.fab_version_check.requests.get")
-    def test_fetch_success(self, mock_get):
-        """Should return version when PyPI request succeeds."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"info": {"version": "2.0.0"}}
-        mock_get.return_value = mock_response
+    result = fab_version_check._fetch_latest_version_from_pypi()
 
-        result = fab_version_check._fetch_latest_version_from_pypi()
-
-        assert result == "2.0.0"
-        mock_get.assert_called_once_with(
-            fab_constant.VERSION_CHECK_PYPI_URL,
-            timeout=fab_constant.VERSION_CHECK_TIMEOUT_SECONDS,
-        )
-
-    @patch("fabric_cli.utils.fab_version_check.requests.get")
-    def test_fetch_failure(self, mock_get):
-        """Should return None when PyPI request fails (network error)."""
-        mock_get.side_effect = requests.ConnectionError("Network error")
-
-        result = fab_version_check._fetch_latest_version_from_pypi()
-
-        assert result is None
-
-    @patch("fabric_cli.utils.fab_version_check.requests.get")
-    def test_fetch_failure_http_error(self, mock_get):
-        """Should return None when PyPI returns non-200 status code."""
-        mock_response = MagicMock()
-        mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
-        mock_get.return_value = mock_response
-
-        result = fab_version_check._fetch_latest_version_from_pypi()
-
-        assert result is None
-
-    @patch("fabric_cli.utils.fab_version_check.requests.get")
-    def test_fetch_failure_invalid_json(self, mock_get):
-        """Should return None when PyPI returns invalid JSON."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.raise_for_status.return_value = None
-        mock_response.json.side_effect = ValueError("Invalid JSON")
-        mock_get.return_value = mock_response
-
-        result = fab_version_check._fetch_latest_version_from_pypi()
-
-        assert result is None
-
-    @patch("fabric_cli.utils.fab_version_check.requests.get")
-    def test_fetch_failure_missing_keys(self, mock_get):
-        """Should return None when PyPI response is missing expected keys."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {"data": {}}  # Missing "info" key
-        mock_get.return_value = mock_response
-
-        result = fab_version_check._fetch_latest_version_from_pypi()
-
-        assert result is None
+    assert result == "2.0.0"
+    mock_get.assert_called_once_with(
+        fab_constant.VERSION_CHECK_PYPI_URL,
+        timeout=fab_constant.VERSION_CHECK_TIMEOUT_SECONDS,
+    )
 
 
-class TestIsPyPIVersionNewer:
-    """Test _is_pypi_version_newer logic."""
+@patch("fabric_cli.utils.fab_version_check.requests.get")
+def test_cli_version_fetch_pypi_network_error_failure(mock_get):
+    """Should return None when PyPI request fails (network error)."""
+    mock_get.side_effect = requests.ConnectionError("Network error")
 
-    def test_newer_major_version(self):
-        """Should return True when major version is newer."""
-        result = fab_version_check._is_pypi_version_newer(_increment_version("major"))
-        assert result is True
+    result = fab_version_check._fetch_latest_version_from_pypi()
 
-    def test_newer_minor_version(self):
-        """Should return True when minor version is newer."""
-        result = fab_version_check._is_pypi_version_newer(_increment_version("minor"))
-        assert result is True
-
-    def test_newer_patch_version(self):
-        """Should return True when patch version is newer."""
-        result = fab_version_check._is_pypi_version_newer(_increment_version("patch"))
-        assert result is True
-
-    def test_same_version(self):
-        """Should return False when versions are the same."""
-        result = fab_version_check._is_pypi_version_newer(__version__)
-        assert result is False
-
-    def test_older_version(self):
-        """Should return False when latest is older."""
-        result = fab_version_check._is_pypi_version_newer(_decrement_version())
-        assert result is False
-
-    def test_invalid_version_format(self):
-        """Should return False when version format is invalid."""
-        result = fab_version_check._is_pypi_version_newer("invalid.version")
-        assert result is False
-
-    def test_none_version(self):
-        """Should return False when version is None."""
-        result = fab_version_check._is_pypi_version_newer(None)
-        assert result is False
+    assert result is None
 
 
-class TestCheckAndNotifyUpdate:
-    """Test check_and_notify_update main function."""
+@patch("fabric_cli.utils.fab_version_check.requests.get")
+def test_cli_version_fetch_pypi_http_error_failure(mock_get):
+    """Should return None when PyPI returns non-200 status code."""
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+    mock_response.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
+    mock_get.return_value = mock_response
 
-    @patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-    def test_disabled_by_config(self, mock_get_config):
-        """Should not check when user has disabled updates."""
-        mock_get_config.return_value = "false"
+    result = fab_version_check._fetch_latest_version_from_pypi()
 
+    assert result is None
+
+
+@patch("fabric_cli.utils.fab_version_check.requests.get")
+def test_cli_version_fetch_pypi_invalid_json_failure(mock_get):
+    """Should return None when PyPI returns invalid JSON."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.side_effect = ValueError("Invalid JSON")
+    mock_get.return_value = mock_response
+
+    result = fab_version_check._fetch_latest_version_from_pypi()
+
+    assert result is None
+
+
+@patch("fabric_cli.utils.fab_version_check.requests.get")
+def test_cli_version_fetch_pypi_missing_keys_failure(mock_get):
+    """Should return None when PyPI response is missing expected keys."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = {"data": {}}  # Missing "info" key
+    mock_get.return_value = mock_response
+
+    result = fab_version_check._fetch_latest_version_from_pypi()
+
+    assert result is None
+
+
+def test_cli_version_compare_newer_major_success():
+    """Should return True when major version is newer."""
+    result = fab_version_check._is_pypi_version_newer(_increment_version("major"))
+    assert result is True
+
+
+def test_cli_version_compare_newer_minor_success():
+    """Should return True when minor version is newer."""
+    result = fab_version_check._is_pypi_version_newer(_increment_version("minor"))
+    assert result is True
+
+
+def test_cli_version_compare_newer_patch_success():
+    """Should return True when patch version is newer."""
+    result = fab_version_check._is_pypi_version_newer(_increment_version("patch"))
+    assert result is True
+
+
+def test_cli_version_compare_same_version_failure():
+    """Should return False when versions are the same."""
+    result = fab_version_check._is_pypi_version_newer(__version__)
+    assert result is False
+
+
+def test_cli_version_compare_older_version_failure():
+    """Should return False when latest is older."""
+    result = fab_version_check._is_pypi_version_newer(_decrement_version())
+    assert result is False
+
+
+def test_cli_version_compare_invalid_format_failure():
+    """Should return False when version format is invalid."""
+    result = fab_version_check._is_pypi_version_newer("invalid.version")
+    assert result is False
+
+
+def test_cli_version_compare_none_version_failure():
+    """Should return False when version is None."""
+    result = fab_version_check._is_pypi_version_newer(None)
+    assert result is False
+
+
+@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
+def test_cli_version_check_disabled_by_config_success(mock_get_config):
+    """Should not check when user has disabled updates."""
+    mock_get_config.return_value = "false"
+
+    fab_version_check.check_and_notify_update()
+
+    # Should call get_config for check_updates setting
+    assert any(
+        call[0][0] == fab_constant.FAB_CHECK_UPDATES
+        for call in mock_get_config.call_args_list
+    )
+
+
+@patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
+@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
+def test_cli_version_check_new_version_available_success(mock_get_config, mock_fetch):
+    """Should display notification when newer version is available."""
+    newer_version = _increment_version("major")
+    mock_get_config.return_value = "true"
+    mock_fetch.return_value = newer_version
+
+    with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
         fab_version_check.check_and_notify_update()
 
-        # Should call get_config for check_updates setting
-        assert any(
-            call[0][0] == fab_constant.FAB_CHECK_UPDATES
-            for call in mock_get_config.call_args_list
-        )
+        # Should display notification
+        mock_ui.print_grey.assert_called()
+        call_msg = str(mock_ui.print_grey.call_args)
+        assert newer_version in call_msg
+        assert "pip install --upgrade" in call_msg
 
-    @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-    @patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-    def test_new_version_available(self, mock_get_config, mock_fetch):
-        """Should display notification when newer version is available."""
-        newer_version = _increment_version("major")
-        mock_get_config.return_value = "true"
-        mock_fetch.return_value = newer_version
 
-        with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
-            fab_version_check.check_and_notify_update()
+@patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
+@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
+def test_cli_version_check_same_version_success(mock_get_config, mock_fetch):
+    """Should not display notification when on latest version."""
+    mock_get_config.return_value = "true"
+    mock_fetch.return_value = __version__
 
-            # Should display notification
-            mock_ui.print_grey.assert_called()
-            call_msg = str(mock_ui.print_grey.call_args)
-            assert newer_version in call_msg
-            assert "pip install --upgrade" in call_msg
+    with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
+        fab_version_check.check_and_notify_update()
 
-    @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-    @patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-    def test_same_version(self, mock_get_config, mock_fetch):
-        """Should not display notification when on latest version."""
-        mock_get_config.return_value = "true"
-        mock_fetch.return_value = __version__
+        # Should not display notification
+        mock_ui.print_grey.assert_not_called()
 
-        with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
-            fab_version_check.check_and_notify_update()
 
-            # Should not display notification
-            mock_ui.print_grey.assert_not_called()
+@patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
+@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
+def test_cli_version_check_fetch_failure(mock_get_config, mock_fetch):
+    """Should not display notification when PyPI fetch fails."""
+    mock_get_config.return_value = "true"
+    mock_fetch.return_value = None  # Simulate fetch failure
 
-    @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-    @patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-    def test_fetch_fails(self, mock_get_config, mock_fetch):
-        """Should not display notification when PyPI fetch fails."""
-        mock_get_config.return_value = "true"
-        mock_fetch.return_value = None  # Simulate fetch failure
+    with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
+        fab_version_check.check_and_notify_update()
 
-        with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
-            fab_version_check.check_and_notify_update()
+        # Should not display notification
+        mock_ui.print_grey.assert_not_called()
 
-            # Should not display notification
-            mock_ui.print_grey.assert_not_called()
 
-    @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
-    @patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
-    def test_older_version(self, mock_get_config, mock_fetch):
-        """Should not display notification when PyPI version is older."""
-        mock_get_config.return_value = "true"
-        mock_fetch.return_value = _decrement_version()
+@patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
+@patch("fabric_cli.utils.fab_version_check.fab_state_config.get_config")
+def test_cli_version_check_older_version_success(mock_get_config, mock_fetch):
+    """Should not display notification when PyPI version is older."""
+    mock_get_config.return_value = "true"
+    mock_fetch.return_value = _decrement_version()
 
-        with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
-            fab_version_check.check_and_notify_update()
+    with patch("fabric_cli.utils.fab_version_check.fab_ui") as mock_ui:
+        fab_version_check.check_and_notify_update()
 
-            # Should not display notification
-            mock_ui.print_grey.assert_not_called()
+        # Should not display notification
+        mock_ui.print_grey.assert_not_called()
