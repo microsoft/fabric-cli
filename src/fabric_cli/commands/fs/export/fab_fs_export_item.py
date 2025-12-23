@@ -103,20 +103,27 @@ def export_single_item(
         args.from_path = item.path.strip("/")
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
 
-        valid_export_formats = definition_format_mapping.get(item_type, {"default": ""})
-        export_format_param = (
-            args.format if getattr(args, "format", None) is not None else "default"
-        )            
+        # Get definition_format_mapping for item without default fallback
+        valid_export_formats = definition_format_mapping.get(item_type, {})
+        # Get export_format_param from args without default
+        export_format_param = getattr(args, "format", None)
+        
         if export_format_param not in valid_export_formats:
-            valid_export_formats.pop("default")
-            raise FabricCLIError(
-                ErrorMessages.Export.invalid_export_format(
-                    list(valid_export_formats.keys())
-                ),
-                fab_constant.ERROR_INVALID_INPUT,
-            )
+             # Export format not in definition_format_mapping
+            if not export_format_param:
+                # Empty format param - use default formats if exists
+                args.format = valid_export_formats.get("default", "")
+            else:
+                # Non-empty format param but not supported
+                available_formats = [k for k in valid_export_formats.keys() if k != "default"]
+                raise FabricCLIError(
+                    ErrorMessages.Export.invalid_export_format(available_formats),
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
         else:
+            # Export format is explicitly supported
             args.format = valid_export_formats[export_format_param]
+           
 
         item_def = item_api.get_item_withdefinition(args, item_uri)
 
