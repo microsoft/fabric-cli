@@ -16,6 +16,21 @@ from fabric_cli.utils import fab_util as utils
 
 
 def exec(item: Item, args: Namespace) -> str | None:
+    """Execute the creation of a Microsoft Fabric item.
+    
+    Handles two scenarios based on is_root_operation:
+    - **Root operation** (is_root_operation = True): User-initiated standalone creation.
+      Shows individual output, handles dependencies, and cleans up batch collection.
+    - **Batch operation** (is_root_operation = False): Part of dependency creation chain.
+      Operates silently, collects results for consolidated output by root operation.
+    
+    Args:
+        item (Item): The Fabric item to be created
+        args (Namespace): Command arguments, may contain 'output_batch' for batch operations
+    
+    Returns:
+        str | None: Created item ID if successful, None if failed
+    """
     # Determine if this is part of a batch operation
     is_root_operation = not hasattr(args, 'output_batch')
 
