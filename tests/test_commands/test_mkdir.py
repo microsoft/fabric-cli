@@ -1168,6 +1168,68 @@ class TestMkdir:
         upsert_managed_private_endpoint_to_cache.assert_not_called()
         spy_create_managed_private_endpoint.assert_not_called()
 
+    def test_mkdir_managed_private_endpoint_forbidden_azure_access_pending_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        vcr_instance,
+        cassette_name,
+        upsert_managed_private_endpoint_to_cache,
+        spy_create_managed_private_endpoint,
+        test_data: StaticTestData,
+    ):
+        """Test that when Azure access is forbidden during find_mpe_connection, the state is set to Pending."""
+        # Setup
+        managed_private_endpoint_display_name = generate_random_string(
+            vcr_instance, cassette_name
+        )
+        type = VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT
+        managed_private_endpoint_full_path = cli_path_join(
+            workspace.full_path,
+            str(type),
+            f"{managed_private_endpoint_display_name}.{str(VICMap[type])}",
+        )
+        subscription_id = test_data.azure_subscription_id
+        resource_group = test_data.azure_resource_group
+        sql_server = test_data.sql_server.server
+
+        # Create a mock exception that simulates Forbidden access to Azure
+        class MockForbiddenException(Exception):
+            def __init__(self):
+                super().__init__()
+                self.status_code = "Forbidden"
+                self.message = ErrorMessages.Common.forbidden()
+
+        # Mock find_mpe_connection to raise Forbidden exception
+        with patch(
+            "fabric_cli.utils.fab_cmd_mkdir_utils.find_mpe_connection"
+        ) as mock_find_mpe:
+            mock_find_mpe.side_effect = MockForbiddenException()
+
+            # Execute command
+            cli_executor.exec_command(
+                f"mkdir {managed_private_endpoint_full_path} -P targetPrivateLinkResourceId=/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.Sql/servers/{sql_server},targetSubresourceType=sqlServer"
+            )
+
+            # Assert
+            spy_create_managed_private_endpoint.assert_called_once()
+            mock_print_done.assert_called_once()
+            upsert_managed_private_endpoint_to_cache.assert_called_once()
+            assert (
+                managed_private_endpoint_display_name in mock_print_done.call_args[0][0]
+            )
+            assert (
+                f"'{managed_private_endpoint_display_name}.{str(VICMap[type])}' created. Pending approval on Azure side"
+                == mock_print_done.call_args[0][0]
+            )
+
+            # Verify that find_mpe_connection was called and threw the forbidden exception
+            mock_find_mpe.assert_called_once()
+
+        # Cleanup
+        rm(managed_private_endpoint_full_path)
+
     # endregion
 
     # region ExternalDataShare

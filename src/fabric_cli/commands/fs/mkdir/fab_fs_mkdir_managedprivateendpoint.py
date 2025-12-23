@@ -11,6 +11,7 @@ from fabric_cli.client import (
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualItem
+from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_cmd_mkdir_utils as mkdir_utils
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
@@ -86,16 +87,19 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                     # Wait exponentially
                     time.sleep(2**iteration)
                     iteration += 1
-            except Exception:
-                state = "Failed"
+            except Exception as exc:
+                if exc.status_code =='Forbidden' and exc.message == ErrorMessages.Common.forbidden():
+                    state = "Pending"
+                else:
+                    state = "Failed"
                 break
 
-        if state != "Succeeded":
+        if state not in ["Succeeded", "Pending"]:
             raise FabricCLIError(
                 f"Managed Private Endpoint was created on Fabric but encountered an issue on Azure provisioning. State: {state}",
                 fab_constant.ERROR_OPERATION_FAILED,
             )
-        result_message = f"'{managed_private_endpoint.name}' created"
+        result_message = f"'{managed_private_endpoint.name}' created. {'Pending approval on Azure side' if state == 'Pending' else ''}"
 
         if params.get("autoapproveenabled", "false").lower() == "true":
 
