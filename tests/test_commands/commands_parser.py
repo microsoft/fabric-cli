@@ -8,7 +8,7 @@ from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.history import InMemoryHistory
 
 from fabric_cli.core.fab_interactive import InteractiveCLI
-from fabric_cli.main import CustomArgumentParser
+from fabric_cli.core.fab_parser_setup import CustomArgumentParser
 from fabric_cli.parsers.fab_acls_parser import register_parser as register_acls_parser
 from fabric_cli.parsers.fab_api_parser import register_parser as register_api_parser
 from fabric_cli.parsers.fab_config_parser import (

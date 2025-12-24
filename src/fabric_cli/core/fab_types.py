@@ -560,6 +560,10 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
-    ItemType.SPARK_JOB_DEFINITION: "?format=SparkJobDefinitionV1",
-    ItemType.NOTEBOOK: "?format=ipynb",
+    ItemType.SPARK_JOB_DEFINITION: {"default": "?format=SparkJobDefinitionV1"},
+    ItemType.NOTEBOOK: {
+        "default": "?format=ipynb",
+        ".py": "?format=fabricGitSource",
+        ".ipynb": "?format=ipynb",
+    },
 }
