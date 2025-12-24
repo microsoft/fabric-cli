@@ -239,9 +239,6 @@ class TestConfig:
             
             from fabric_cli.core import fab_interactive
             
-            # Reset singleton state first
-            fab_interactive.InteractiveCLI.reset_instance()
-            
             mock_cli_instance = mock_interactive_cli.return_value
             mock_cli_instance._is_running = True
             
@@ -250,16 +247,10 @@ class TestConfig:
             # Should call InteractiveCLI() and then start_interactive should print message
             mock_interactive_cli.assert_called_once()
             mock_cli_instance.start_interactive.assert_called_once()
-            
-            # Reset singleton state
-            fab_interactive.InteractiveCLI.reset_instance()
 
     def test_interactive_cli_singleton_pattern(self):
         """Test that InteractiveCLI follows singleton pattern"""
         from fabric_cli.core.fab_interactive import InteractiveCLI
-        
-        # Reset singleton state
-        InteractiveCLI.reset_instance()
         
         with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
             mock_parser = type('MockParser', (), {'set_mode': lambda self, mode: None})()
@@ -272,8 +263,5 @@ class TestConfig:
             
             # Should be the same instance
             assert instance1 is instance2
-            
-            # Reset singleton state
-            InteractiveCLI.reset_instance()
 
     # endregion
