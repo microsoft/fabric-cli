@@ -36,8 +36,8 @@ def exec(folder: Folder, args: Namespace) -> str | None:
 
     response = folder_api.create_folder(args, json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{folder.name}' created")
         data = json.loads(response.text)
+        utils_ui.print_output_format(args, message=f"'{folder.name}' created", data=data, show_headers=True)
         if data is not None and data.get("id"):
             _folder_id = data["id"]
             folder._id = _folder_id
