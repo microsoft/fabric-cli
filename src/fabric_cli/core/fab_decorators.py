@@ -21,9 +21,6 @@ def singleton(class_):
         if class_ not in instances:
             instances[class_] = class_(*args, **kwargs)
         return instances[class_]
-
-    # Add a reset method to the decorator function for testing purposes
-    getinstance.reset_instance = lambda: instances.pop(class_, None)
     
     return getinstance
 
