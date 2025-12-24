@@ -16,6 +16,37 @@ from fabric_cli.utils import fab_util as utils
 
 
 def exec(item: Item, args: Namespace) -> str | None:
+    """
+    Execute the creation of a Microsoft Fabric item.
+
+    This method supports items that may require creating additional dependent
+    artifacts (e.g., a Report that implicitly creates a SemanticModel).  
+    Output behavior differs depending on whether the current call represents the
+    user‑requested creation or an internally triggered dependency.
+
+    Two execution modes:
+    - **Root operation** (`is_root_operation=True`):  
+    Represents the item explicitly requested by the user.  
+    Handles creation of the item and any required dependencies.  
+    Collects and returns a consolidated output for all created artifacts.
+
+    - **Dependency operation** (`is_root_operation=False`):  
+    Represents an item created implicitly as part of another item's dependency chain.  
+    Runs silently and contributes its result to the root operation’s batch output,  
+    without producing standalone output.
+
+    Args:
+        item (Item): The Fabric item to be created.
+        args (Namespace): Command arguments. May include `output_batch` used to
+            accumulate results during dependency operations.
+
+    Returns:
+        str | None: The created item ID for root operations, or None for dependency
+        operations or failed creations.
+    """
+    # Determine if this is part of a batch operation
+    is_root_operation = not hasattr(args, 'output_batch')
+
     # Params
     params = args.params
     required_params, optional_params = mkdir_utils.get_params_per_item_type(item)
@@ -58,8 +89,30 @@ def exec(item: Item, args: Namespace) -> str | None:
 
     response = item_api.create_item(args, json_payload, item_uri=True)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{item.name}' created")
         data = json.loads(response.text)
+        
+        if hasattr(args, 'output_batch'):
+            # Collect operation data for batch output
+            args.output_batch['items'].append(data)
+            args.output_batch['names'].append(item.name)
+            
+            # Only print consolidated output at the end of root operation
+            if is_root_operation:
+                names = args.output_batch['names']
+                names_list = f"'{names[0]}' and '{names[1]}'" if len(names) == 2 else "'" + "', '".join(names[:-1]) + f"' and '{names[-1]}'"
+                
+                utils_ui.print_output_format(
+                    args,
+                    message=f"{names_list} created",
+                    data=args.output_batch['items'],
+                    show_headers=True
+                )
+                # Clean up
+                delattr(args, 'output_batch')
+        else:
+            # Standard single item output for non-batched scenarios
+            utils_ui.print_output_format(args, message=f"'{item.name}' created", data=data, show_headers=True)
+            
         if data is not None and data.get("id"):
             _item_id = data["id"]
             item._id = _item_id
