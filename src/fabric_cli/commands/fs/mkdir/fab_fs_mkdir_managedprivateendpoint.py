@@ -87,7 +87,7 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                     # Wait exponentially
                     time.sleep(2**iteration)
                     iteration += 1
-            except Exception as exc:
+            except FabricCLIError as exc:
                 if (
                     exc.status_code == fab_constant.ERROR_FORBIDDEN
                     or exc.message == ErrorMessages.Common.forbidden()

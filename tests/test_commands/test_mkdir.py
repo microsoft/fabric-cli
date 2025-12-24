@@ -21,6 +21,7 @@ from fabric_cli.client import (
 )
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import (
     ItemType,
     VICMap,
@@ -1194,18 +1195,13 @@ class TestMkdir:
         resource_group = test_data.azure_resource_group
         sql_server = test_data.sql_server.server
 
-        # Create a mock exception that simulates Forbidden access to Azure
-        class MockForbiddenException(Exception):
-            def __init__(self):
-                super().__init__()
-                self.status_code = "Forbidden"
-                self.message = ErrorMessages.Common.forbidden()
-
-        # Mock find_mpe_connection to raise Forbidden exception
         with patch(
             "fabric_cli.utils.fab_cmd_mkdir_utils.find_mpe_connection"
         ) as mock_find_mpe:
-            mock_find_mpe.side_effect = MockForbiddenException()
+            mock_find_mpe.side_effect = FabricCLIError(
+                ErrorMessages.Common.forbidden(),
+                constant.ERROR_FORBIDDEN,
+            )
 
             # Execute command
             cli_executor.exec_command(
@@ -1216,9 +1212,6 @@ class TestMkdir:
             spy_create_managed_private_endpoint.assert_called_once()
             mock_print_done.assert_called_once()
             upsert_managed_private_endpoint_to_cache.assert_called_once()
-            assert (
-                managed_private_endpoint_display_name in mock_print_done.call_args[0][0]
-            )
             assert (
                 f"'{managed_private_endpoint_display_name}.{str(VICMap[type])}' created. Private endpoint provisioning in Azure is pending approval"
                 == mock_print_done.call_args[0][0]
