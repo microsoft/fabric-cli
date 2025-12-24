@@ -135,4 +135,4 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                     fab_constant.ERROR_OPERATION_FAILED,
                 )
 
-    utils_ui.print_output_format(args, message=result_message)
+    utils_ui.print_output_format(args, message=result_message, data=data, show_headers=True)

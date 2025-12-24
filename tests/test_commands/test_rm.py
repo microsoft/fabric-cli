@@ -252,7 +252,8 @@ class TestRM:
         )
         mkdir(notebook.full_path)
         mock_print_done.reset_mock()
-
+        mock_questionary_print.reset_mock()
+        
         with (
             patch("questionary.checkbox") as mock_checkbox,
             patch("questionary.confirm") as mock_confirm,
@@ -270,7 +271,7 @@ class TestRM:
             mock_questionary_print.assert_called()
             mock_print_done.assert_called()
             _assert_strings_in_mock_calls(
-                ["1 items deleted successfully"], True, mock_print_done.mock_calls
+                ["1 items deleted successfully\n"], True, mock_print_done.mock_calls
             )
             _assert_strings_in_mock_calls(
                 [notebook.display_name], True, mock_print_done.mock_calls

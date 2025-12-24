@@ -49,9 +49,8 @@ def exec(domain: VirtualWorkspaceItem, args: Namespace) -> None:
 
     response = domain_api.create_domain(args, payload=json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{domain.name}' created")
-
         data = json.loads(response.text)
+        utils_ui.print_output_format(args, message=f"'{domain.name}' created", data=data, show_headers=True)
 
         domain._id = data["id"]
 
