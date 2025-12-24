@@ -20,6 +20,7 @@ The `job` commands provide tools for starting, running, monitoring, and scheduli
 | `job run-status`| Get job run details       | `job run-status <path> [--id <id>] [--schedule]`                      |
 | `job run-sch`   | Schedule a job            | `job run-sch <path> [-i <json_inline_or_path>*] [--type <type>] [--interval <interval>] [--days <days>]` |
 | `job run-update`| Update a scheduled job    | `job run-update <path> [--id <id>] [-i <json_inline_or_path>] [--type <type>] [--enable/--disable]` |
+| `job run-rm`    | Delete a scheduled job    | `job run-rm <path> [--id <scheduled-id>] [--force]` |
 
 ---
 

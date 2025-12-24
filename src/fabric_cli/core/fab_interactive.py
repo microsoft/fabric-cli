@@ -17,7 +17,21 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 
 class InteractiveCLI:
-    def __init__(self, parser, subparsers):
+    _instance = None
+
+    def __new__(cls, parser=None, subparsers=None):
+        if cls._instance is None:
+            cls._instance = super(InteractiveCLI, cls).__new__(cls)
+            # Initialize the instance immediately after creation
+            cls._instance._init_instance(parser, subparsers)
+        return cls._instance
+
+    def _init_instance(self, parser=None, subparsers=None):
+        """Initialize the singleton instance"""
+        if parser is None or subparsers is None:
+            from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
+            parser, subparsers = get_global_parser_and_subparsers()
+            
         self.parser = parser
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
         self.subparsers = subparsers
@@ -31,6 +45,21 @@ class InteractiveCLI:
                 ("input", "fg:white"),  # Input color
             ]
         )
+        self._is_running = False
+
+    def __init__(self, parser=None, subparsers=None):
+        # __init__ is called after __new__, but we've already initialized in __new__
+        pass
+
+    @classmethod
+    def get_instance(cls, parser=None, subparsers=None):
+        """Get or create the singleton instance"""
+        return cls(parser, subparsers)
+
+    @classmethod
+    def reset_instance(cls):
+        """Reset the singleton instance (mainly for testing)"""
+        cls._instance = None
 
     def init_session(self, session_history: InMemoryHistory) -> PromptSession:
         return PromptSession(history=session_history)
@@ -89,11 +118,17 @@ class InteractiveCLI:
 
     def start_interactive(self):
         """Start the interactive mode using prompt_toolkit for input."""
-        utils_ui.print("\nWelcome to the Fabric CLI ⚡")
-        utils_ui.print("Type 'help' for help. \n")
+        if self._is_running:
+            utils_ui.print("Interactive mode is already running.")
+            return
 
-        while True:
-            try:
+        self._is_running = True
+        
+        try:
+            utils_ui.print("\nWelcome to the Fabric CLI ⚡")
+            utils_ui.print("Type 'help' for help. \n")
+
+            while True:
                 context = Context().context
                 pwd_context = f"/{context.path.strip('/')}"
 
@@ -111,6 +146,13 @@ class InteractiveCLI:
                 if should_exit:  # Check if the command was to exit
                     break
 
-            except (EOFError, KeyboardInterrupt):
-                utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
-                break
+        except (EOFError, KeyboardInterrupt):
+            utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
+        finally:
+            self._is_running = False
+
+
+def start_interactive_mode():
+    """Launch interactive mode using singleton pattern"""
+    interactive_cli = InteractiveCLI.get_instance()
+    interactive_cli.start_interactive()
