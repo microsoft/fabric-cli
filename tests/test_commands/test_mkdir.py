@@ -1220,7 +1220,7 @@ class TestMkdir:
                 managed_private_endpoint_display_name in mock_print_done.call_args[0][0]
             )
             assert (
-                f"'{managed_private_endpoint_display_name}.{str(VICMap[type])}' created. Pending approval on Azure side"
+                f"'{managed_private_endpoint_display_name}.{str(VICMap[type])}' created. Private endpoint provisioning in Azure is pending approval"
                 == mock_print_done.call_args[0][0]
             )
 

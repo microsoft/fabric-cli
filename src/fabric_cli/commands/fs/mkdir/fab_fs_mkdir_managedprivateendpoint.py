@@ -88,7 +88,10 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                     time.sleep(2**iteration)
                     iteration += 1
             except Exception as exc:
-                if exc.status_code =='Forbidden' and exc.message == ErrorMessages.Common.forbidden():
+                if (
+                    exc.status_code == fab_constant.ERROR_FORBIDDEN
+                    or exc.message == ErrorMessages.Common.forbidden()
+                ):
                     state = "Pending"
                 else:
                     state = "Failed"
@@ -99,7 +102,7 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                 f"Managed Private Endpoint was created on Fabric but encountered an issue on Azure provisioning. State: {state}",
                 fab_constant.ERROR_OPERATION_FAILED,
             )
-        result_message = f"'{managed_private_endpoint.name}' created. {'Pending approval on Azure side' if state == 'Pending' else ''}"
+        result_message = f"'{managed_private_endpoint.name}' created. {'Private endpoint provisioning in Azure is pending approval' if state == 'Pending' else ''}"
 
         if params.get("autoapproveenabled", "false").lower() == "true":
 
