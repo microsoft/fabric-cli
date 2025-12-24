@@ -9,9 +9,23 @@ from fabric_cli.core.fab_constant import (
     EXIT_CODE_AUTHORIZATION_REQUIRED,
     EXIT_CODE_ERROR,
 )
-from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_ui
+
+
+def singleton(class_):
+    """Singleton decorator that ensures only one instance of a class exists."""
+    instances = {}
+
+    def getinstance(*args, **kwargs):
+        if class_ not in instances:
+            instances[class_] = class_(*args, **kwargs)
+        return instances[class_]
+
+    # Add a reset method to the decorator function for testing purposes
+    getinstance.reset_instance = lambda: instances.pop(class_, None)
+    
+    return getinstance
 
 
 def handle_exceptions():
@@ -51,6 +65,8 @@ def set_command_context():
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            # Import Context locally to avoid circular import
+            from fabric_cli.core.fab_context import Context
             Context().command = args[0].command_path
             return func(*args, **kwargs)
 

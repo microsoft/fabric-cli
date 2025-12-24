@@ -420,7 +420,7 @@ def interactive_cli(
     # Mock the get_global_parser_and_subparsers function to return our mocks
     with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
         mock_get_parsers.return_value = (mock_parser, mock_subparsers)
-        cli = InteractiveCLI.get_instance()
+        cli = InteractiveCLI()
         yield cli
         # Reset after test
         InteractiveCLI.reset_instance()
