@@ -10,22 +10,12 @@ import sys
 import psutil
 
 from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core.fab_decorators import singleton
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_element import FabricElement
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
-
-
-def singleton(class_):
-    instances = {}
-
-    def getinstance(*args, **kwargs):
-        if class_ not in instances:
-            instances[class_] = class_(*args, **kwargs)
-        return instances[class_]
-
-    return getinstance
 
 
 @singleton

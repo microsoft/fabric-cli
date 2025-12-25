@@ -12,22 +12,15 @@ from prompt_toolkit.styles import Style
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_context import Context
+from fabric_cli.core.fab_decorators import singleton
 from fabric_cli.utils import fab_commands
 from fabric_cli.utils import fab_ui as utils_ui
 
 
+@singleton
 class InteractiveCLI:
-    _instance = None
-
-    def __new__(cls, parser=None, subparsers=None):
-        if cls._instance is None:
-            cls._instance = super(InteractiveCLI, cls).__new__(cls)
-            # Initialize the instance immediately after creation
-            cls._instance._init_instance(parser, subparsers)
-        return cls._instance
-
-    def _init_instance(self, parser=None, subparsers=None):
-        """Initialize the singleton instance"""
+    def __init__(self, parser=None, subparsers=None):
+        """Initialize the interactive CLI."""
         if parser is None or subparsers is None:
             from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
             parser, subparsers = get_global_parser_and_subparsers()
@@ -46,20 +39,6 @@ class InteractiveCLI:
             ]
         )
         self._is_running = False
-
-    def __init__(self, parser=None, subparsers=None):
-        # __init__ is called after __new__, but we've already initialized in __new__
-        pass
-
-    @classmethod
-    def get_instance(cls, parser=None, subparsers=None):
-        """Get or create the singleton instance"""
-        return cls(parser, subparsers)
-
-    @classmethod
-    def reset_instance(cls):
-        """Reset the singleton instance (mainly for testing)"""
-        cls._instance = None
 
     def init_session(self, session_history: InMemoryHistory) -> PromptSession:
         return PromptSession(history=session_history)
@@ -154,5 +133,5 @@ class InteractiveCLI:
 
 def start_interactive_mode():
     """Launch interactive mode using singleton pattern"""
-    interactive_cli = InteractiveCLI.get_instance()
+    interactive_cli = InteractiveCLI()
     interactive_cli.start_interactive()
