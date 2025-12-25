@@ -26,9 +26,7 @@ def exec(folder: Folder, args: Namespace) -> None:
         args.output = None
         folder_def = get_folder.exec(folder, args, verbose=False)
 
-        _, updated_def = utils_set.update_fabric_element(
-            folder_def, query, args.input, decode_encode=False
-        )
+        updated_def = utils_set.update_fabric_element(folder_def, query, args.input)
 
         def _prep_for_updated_def(data):
             data.pop("id", None)  # Remove 'id' if it exists

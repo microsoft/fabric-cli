@@ -30,8 +30,8 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
     if args.force or utils_ui.prompt_confirm():
 
         # Read new values from the user and retrieve updated shortcut definition with the new values.
-        _, updated_def = utils_set.update_fabric_element(
-            shortcut_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            shortcut_def, query, args.input, extract_updated_only=False
         )
 
         # Check if the new name matches the existing name

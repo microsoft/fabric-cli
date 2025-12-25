@@ -26,28 +26,22 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         args.output = None
         vwsi_domain_def = get_domain.exec(virtual_ws_item, args, verbose=False)
 
-        _, updated_def = utils_set.update_fabric_element(
-            vwsi_domain_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_domain_def, query, args.input
         )
 
-        def _prep_for_updated_def(data):
-            data.pop("id", None)  # Remove 'id' if it exists
-            data.pop("type", None)  # Remove 'type' if it exists
-            data.pop("name", None)  # Remove 'name' if it exists
-            data.pop("tags", None)  # Remove 'tags' if it exists
-            return json.dumps(data, indent=4)
-
-        domain_update_def = _prep_for_updated_def(updated_def)
         args.name = virtual_ws_item.short_name
         args.id = virtual_ws_item.id
 
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = domain_api.update_domain(args, domain_update_def)
+        response = domain_api.update_domain(args, updated_def)
 
         if response.status_code == 200:
-            # Update mem_store
-            new_domain_name = updated_def["displayName"]
-            virtual_ws_item._name = new_domain_name
-            utils_mem_store.upsert_domain_to_cache(virtual_ws_item)
+            if "displayName" in updated_def:
+                # Update mem_store
+                new_domain_name = updated_def["displayName"]
+                virtual_ws_item._name = new_domain_name
+                utils_mem_store.upsert_domain_to_cache(virtual_ws_item)
 
             utils_ui.print_output_format(args, message="Domain updated")
+

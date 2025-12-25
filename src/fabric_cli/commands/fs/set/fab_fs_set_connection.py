@@ -25,9 +25,10 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
         args.deep_traversal = True
         args.output = None
         vwsi_connection_def = get_connection.exec(connection, args, verbose=False)
+        connectivity_type = vwsi_connection_def.get("connectivityType", "")
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vwsi_connection_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_connection_def, query, args.input
         )
 
         def _prep_for_updated_def(data):
@@ -36,6 +37,7 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
             data.pop(
                 "connectionDetails", None
             )  # Remove 'connectionDetails' if it exists
+            data["connectivityType"] = connectivity_type # Add 'type' back
             return json.dumps(data, indent=4)
 
         connection_update_def = _prep_for_updated_def(updated_def)

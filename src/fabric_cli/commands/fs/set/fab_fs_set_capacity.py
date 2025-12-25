@@ -29,8 +29,8 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         args.output = None
         vwsi_capacity_def = get_capacity.exec(virtual_ws_item, args, verbose=False)
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vwsi_capacity_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_capacity_def, query, args.input
         )
 
         def _prep_for_updated_def(data):

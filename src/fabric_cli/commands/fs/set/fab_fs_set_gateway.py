@@ -35,8 +35,8 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
         args.output = None
         vwsi_gateway_def = get_gateway.exec(gateway, args, verbose=False)
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vwsi_gateway_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_gateway_def, query, args.input
         )
 
         def _prep_for_updated_def(data):

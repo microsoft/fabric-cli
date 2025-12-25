@@ -31,9 +31,7 @@ def exec(workspace: Workspace, args: Namespace) -> None:
     utils_set.print_set_warning()
     if args.force or utils_ui.prompt_confirm():
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            workspace_def, query, args.input, decode_encode=False
-        )
+        updated_def = utils_set.update_fabric_element(workspace_def, query, args.input)
 
         definition_base64_to_update, name_description_properties = (
             utils_set.extract_json_schema(updated_def, definition=False)

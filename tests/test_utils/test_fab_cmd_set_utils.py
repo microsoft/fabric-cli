@@ -9,6 +9,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils.fab_cmd_set_utils import (
     extract_updated_properties,
     update_fabric_element,
+    update_item_definition,
     validate_item_query,
 )
 
@@ -18,21 +19,53 @@ def test_update_fabric_element_with_json_input_success():
 
     json_string_input = '{"transparency":{"Value":"70D"}}'
 
-    json_payload, updated_def = update_fabric_element(
+    updated_def = update_fabric_element(
         resource_def=resource_def,
         query="definition.parts[0].x",
         input=json_string_input,
-        decode_encode=False,
     )
 
+    # update_fabric_element now extracts only the top-level key from query
+    assert "definition" in updated_def
     assert isinstance(updated_def["definition"]["parts"][0]["x"], dict)
     assert updated_def["definition"]["parts"][0]["x"]["transparency"]["Value"] == "70D"
 
-    parsed_payload = json.loads(json_payload)
-    assert isinstance(parsed_payload["definition"]["parts"][0]["x"], dict)
-    assert (
-        parsed_payload["definition"]["parts"][0]["x"]["transparency"]["Value"] == "70D"
+
+def test_update_item_definition_with_base64_payload_success():
+    import base64
+
+    # Create a simple item definition with a base64 encoded payload
+    payload_data = {"key": "old_value"}
+    encoded_payload = base64.b64encode(json.dumps(payload_data).encode("utf-8")).decode(
+        "utf-8"
     )
+
+    item_def = {
+        "definition": {
+            "parts": [{"path": "notebook.ipynb", "payload": encoded_payload}]
+        }
+    }
+
+    updated_def = update_item_definition(
+        item_def=item_def,
+        query="definition.parts[0].payload.key",
+        input="new_value",
+    )
+
+    # Verify the payload is re-encoded
+    assert "payload" in updated_def["definition"]["parts"][0]
+    assert updated_def["definition"]["parts"][0]["payloadType"] == "InlineBase64"
+
+    # Verify the format is set for ipynb files
+    assert updated_def["definition"]["format"] == "ipynb"
+
+    # Decode and verify the update was applied
+    decoded = json.loads(
+        base64.b64decode(updated_def["definition"]["parts"][0]["payload"]).decode(
+            "utf-8"
+        )
+    )
+    assert decoded["key"] == "new_value"
 
 
 def test_extract_updated_properties_preserves_sibling_properties_success():

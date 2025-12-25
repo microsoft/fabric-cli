@@ -31,8 +31,8 @@ def exec(virtual_item: VirtualItem, args: Namespace) -> None:
         args.output = None
         vi_spark_pool_def = get_sparkpool.exec(virtual_item, args, verbose=False)
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vi_spark_pool_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vi_spark_pool_def, query, args.input
         )
 
         def _prep_for_updated_def(data):
@@ -48,8 +48,9 @@ def exec(virtual_item: VirtualItem, args: Namespace) -> None:
         response = sparkpool_api.update_spark_pool(args, spark_pool_update_def)
 
         if response.status_code == 200:
-            # Update mem_store
-            virtual_item._name = updated_def["name"]
-            utils_mem_store.upsert_spark_pool_to_cache(virtual_item)
+            if "name" in updated_def:
+                # Update mem_store
+                virtual_item._name = updated_def["name"]
+                utils_mem_store.upsert_spark_pool_to_cache(virtual_item)
 
             utils_ui.print_output_format(args, message="Spark Pool updated")

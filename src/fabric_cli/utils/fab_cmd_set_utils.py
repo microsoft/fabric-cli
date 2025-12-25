@@ -76,19 +76,55 @@ def update_fabric_element(
     resource_def: dict,
     query: str,
     input: str,
-    decode_encode: bool = False,
-) -> tuple[str, dict]:
+    extract_updated_only: bool = True,
+) -> dict:
     """Update a Fabric resource element using a JMESPath query.
 
     Args:
         resource_def: Resource definition dictionary to modify.
         query: JMESPath expression specifying the path to update.
         input: New value to set.
-        decode_encode: If True, decode/encode base64 payloads. Default False.
+        extract_updated_only: If True, returns only the modified properties extracted
+            by the query path. If False, returns the entire updated resource definition.
+            Defaults to True for backward compatibility.
 
     Returns:
-        Tuple of (json_payload, updated_def) where json_payload is the JSON string
-        and updated_def is the updated dictionary.
+        Updated dictionary.
+    """
+    try:
+        input = json.loads(input)
+    except (TypeError, json.JSONDecodeError):
+        # If it's not a JSON string, keep it as is
+        pass
+
+    updated_def = utils_jmespath.replace(resource_def, query, input)
+
+    if extract_updated_only:
+        # Extract only the updated properties based on the query path
+        return extract_updated_properties(updated_def, query)
+    else:
+        # Return the entire updated resource definition
+        return updated_def
+
+
+def update_item_definition(
+    item_def: dict,
+    query: str,
+    input: str,
+) -> dict:
+    """Update an item definition using a JMESPath query with base64 decode/encode.
+
+    This method is specifically designed for updating item definitions that contain
+    base64-encoded payloads. It decodes the payload, applies the update, and then
+    re-encodes it.
+
+    Args:
+        item_def: Item definition dictionary to modify.
+        query: JMESPath expression specifying the path to update.
+        input: New value to set.
+
+    Returns:
+        Updated dictionary with encoded payloads.
     """
     try:
         input = json.loads(input)
@@ -97,17 +133,12 @@ def update_fabric_element(
         pass
 
     # Decode > replace > encode
-    if decode_encode:
-        decoded_item_def = _decode_payload(resource_def)
-        decoded_item_def = ensure_notebook_dependency(decoded_item_def, query)
-        updated_item_def = utils_jmespath.replace(decoded_item_def, query, input)
-        updated_def = _encode_payload(updated_item_def)
-        json_payload = json.dumps(updated_def)
-    else:
-        updated_def = utils_jmespath.replace(resource_def, query, input)
-        json_payload = json.dumps(updated_def)
+    decoded_item_def = _decode_payload(item_def)
+    decoded_item_def = ensure_notebook_dependency(decoded_item_def, query)
+    updated_item_def = utils_jmespath.replace(decoded_item_def, query, input)
+    updated_def = _encode_payload(updated_item_def)
 
-    return json_payload, updated_def
+    return updated_def
 
 
 def print_set_warning() -> None:
