@@ -34,21 +34,9 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
             shortcut_def, query, args.input, decode_encode=False
         )
 
-        # Check if the new name matches the existing name
-        new_name = updated_def.get("name", "")
-        if new_name == current_name:
-            raise FabricCLIError(
-                f"The new name matches the existing name. No changes will be made",
-                fab_constant.ERROR_INVALID_INPUT,
-            )
-
-        if "target" in updated_def and "type" in updated_def["target"]:
-            del updated_def["target"]["type"]
-        json_payload = updated_def
-
         # Create a new shortcut with the updated values
-        args.shortcutConflictPolicy = "Abort"
-        shortcut_api.create_shortcut(args, json_payload)
+        args.shortcutConflictPolicy = "OverwriteOnly"
+        shortcut_api.create_shortcut(args, updated_def)
 
         # Delete the old shortcut
         rm_onelake.shortcut_file_or_folder(
