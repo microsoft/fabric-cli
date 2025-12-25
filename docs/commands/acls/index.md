@@ -57,7 +57,7 @@ fab acl ls ws1.workspace/lh1.lakehouse/Files/data
 
 ### get
 
-Get detailed ACL information with optional filtering for workspace, ite, gateway, connection or OneLake resource.
+Get detailed ACL information with optional filtering for workspace, item, gateway, connection or OneLake resource.
 
 
 !!! info "Retrieving ACLs for an item requires tenant-level Fabric Administrator"
