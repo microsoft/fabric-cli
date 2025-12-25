@@ -37,7 +37,7 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
             data.pop(
                 "connectionDetails", None
             )  # Remove 'connectionDetails' if it exists
-            data["connectivityType"] = connectivity_type # Add 'type' back
+            data["connectivityType"] = connectivity_type  # Add 'type' back
             return json.dumps(data, indent=4)
 
         connection_update_def = _prep_for_updated_def(updated_def)
@@ -48,7 +48,8 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
 
         if response.status_code == 200:
             # Update mem_store
-            connection._name = updated_def["displayName"]
-            utils_mem_store.upsert_connection_to_cache(connection)
+            if "displayName" in updated_def:
+                connection._name = updated_def["displayName"]
+                utils_mem_store.upsert_connection_to_cache(connection)
 
             utils_ui.print_output_format(args, message="Connection updated")
