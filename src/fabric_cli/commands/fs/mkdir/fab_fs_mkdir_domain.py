@@ -19,7 +19,7 @@ def exec(domain: VirtualWorkspaceItem, args: Namespace) -> None:
     ):
         return
 
-    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
     utils_ui.print_grey(f"Creating a new Domain...")
 
     payload = {"displayName": f"{domain.short_name}"}
@@ -50,7 +50,9 @@ def exec(domain: VirtualWorkspaceItem, args: Namespace) -> None:
     response = domain_api.create_domain(args, payload=json_payload)
     if response.status_code in (200, 201):
         data = json.loads(response.text)
-        utils_ui.print_output_format(args, message=f"'{domain.name}' created", data=data, show_headers=True)
+        utils_ui.print_output_format(
+            args, message=f"'{domain.name}' created", data=data, show_headers=True
+        )
 
         domain._id = data["id"]
 
