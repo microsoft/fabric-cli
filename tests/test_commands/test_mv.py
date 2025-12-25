@@ -395,7 +395,7 @@ class TestMV:
             # Assert
             mock_print_done.assert_called()
             assert any(
-                call.args[0] == "Move completed" for call in mock_print_done.mock_calls
+                call.args[0] == "Move completed\n" for call in mock_print_done.mock_calls
             )
 
             mock_questionary_print.reset_mock()
@@ -545,7 +545,7 @@ class TestMV:
             # Assert
             mock_print_done.assert_called()
             assert any(
-                call.args[0] == "Move completed" for call in mock_print_done.mock_calls
+                call.args[0] == "Move completed\n" for call in mock_print_done.mock_calls
             )
 
             mock_questionary_print.reset_mock()
@@ -764,15 +764,15 @@ class TestMV:
 
 
 # region Helper Methods
-def ls(path, long=False, all=False):
-    args = _build_ls_args(path, long, all)
+def ls(path, long=False, all=False, query=None):
+    args = _build_ls_args(path, long, all, query)
     context = handle_context.get_command_context(args.path)
     fab_ls.exec_command(args, context)
 
 
-def _build_ls_args(path, long, all):
+def _build_ls_args(path, long, all, query):
     return argparse.Namespace(
-        command="ls", command_path="ls", path=path, long=long, all=all
+        command="ls", command_path="ls", path=path, long=long, all=all, query=query
     )
 
 

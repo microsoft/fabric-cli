@@ -9,12 +9,14 @@ import pytest
 
 import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import OutputStatus
 from fabric_cli.core.fab_types import (
     ItemType,
     VirtualItemContainerType,
     VirtualWorkspaceType,
 )
+from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
@@ -189,6 +191,94 @@ class TestLS:
         _assert_strings_in_mock_calls(
             self._virtual_workspace_items, True, mock_questionary_print.mock_calls
         )
+
+    def test_ls_query_filter_success(
+        self,
+        workspace,
+        item_factory,
+        mock_questionary_print,
+        assert_fabric_cli_error,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup items with different names and types
+        notebook1 = item_factory(ItemType.NOTEBOOK)
+        notebook2 = item_factory(ItemType.NOTEBOOK)
+        notebook3 = item_factory(ItemType.NOTEBOOK)
+
+        # Test 1: Basic JMESPath syntax
+        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 2: JMESPath object syntax
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -l -q '[].{{displayName: name, itemID: id}}'"
+        )
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+        # Verify renamed fields
+        _assert_strings_in_mock_calls(
+            ["displayName", "itemID"],
+            True,
+            mock_questionary_print.mock_calls,
+            require_all_in_same_args=True
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
+        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+        _assert_strings_in_mock_calls(
+            [f"['{notebook1.name}']", f"['{notebook2.name}']", f"['{notebook3.name}']"],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 4: JMESPath object syntax without -l should not have id in the result
+        cli_executor.exec_command(f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [f'{notebook1.name}   None', f'{notebook2.name}   None', f'{notebook3.name}   None'],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 5: JMESPath query filters specific value
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -q \"[?name=='{notebook1.name}'].name\""
+        )
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [f'{notebook1.name}'],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        _assert_strings_in_mock_calls(
+            [f'{notebook2.name}', f'{notebook3.name}'],
+            False,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 6: Invalid query format
+        cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
+        assert_fabric_cli_error(fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
 
     def test_ls_item_show_hidden_from_config_success(
         self,
@@ -506,6 +596,8 @@ class TestLS:
             workspace.full_path, str(VirtualItemContainerType.SPARK_POOL)
         )
 
+        mock_questionary_print.reset_mock()
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {sparkpools_path}")
 
@@ -600,6 +692,9 @@ class TestLS:
         managed_private_endpoints_path = cli_path_join(
             workspace.full_path, str(VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
         )
+
+        mock_questionary_print.reset_mock()
+        
         # Test 1: without args
         cli_executor.exec_command(f"ls {managed_private_endpoints_path}")
 

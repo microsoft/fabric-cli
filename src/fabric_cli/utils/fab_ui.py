@@ -3,7 +3,6 @@
 
 import builtins
 import html
-import json
 import sys
 import unicodedata
 from argparse import Namespace
@@ -95,7 +94,7 @@ def print_output_format(
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
-    # print_callback: bool = True,
+    show_key_value_list: bool = False,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -105,6 +104,7 @@ def print_output_format(
         data: Optional data to include in output
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
+        show_key_value_list: Whether to show output in key-value list format (default: False)
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -121,6 +121,7 @@ def print_output_format(
         data=data,
         hidden_data=hidden_data,
         show_headers=show_headers,
+        show_key_value_list=show_key_value_list,
     )
 
     # Get format from output or config
@@ -143,7 +144,7 @@ def print_done(text: str, to_stderr: bool = False) -> None:
     # Escape the text to avoid HTML injection and parsing issues
     escaped_text = html.escape(text)
     _safe_print_formatted_text(
-        f"<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
+        f"\n<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
     )
 
 
@@ -250,7 +251,7 @@ def display_help(
 # ascii Display
 
 
-def get_visual_length(entry: Any, field: Any) -> int:
+def get_visual_length(entry: dict, field: Any) -> int:
     return _get_visual_length(str(entry.get(field, "")))
 
 
@@ -354,7 +355,12 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
             or show_headers
         ):
             data_keys = output.result.get_data_keys() if output_result.data else []
-            print_entries_unix_style(output_result.data, data_keys, header=show_headers)
+            if len(data_keys) > 0:
+                print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
+            else:
+                _print_raw_data(output_result.data)
+        elif output.show_key_value_list:
+            _print_entries_key_value_list_style(output_result.data)
         else:
             _print_raw_data(output_result.data)
 
@@ -362,9 +368,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         print_grey("------------------------------")
         _print_raw_data(output_result.hidden_data)
 
+        
     if output_result.message:
-        print_done(output_result.message)
-
+        print_done(f"{output_result.message}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
@@ -486,3 +492,76 @@ def _get_visual_length(string: str) -> int:
         else:
             length += 1
     return length
+
+
+def _print_entries_key_value_list_style(entries: Any) -> None:
+    """Print entries in a key-value list format with formatted keys.
+    
+    Args:
+        entries: Dictionary or list of dictionaries to print
+        
+    Example output:
+        Logged In: true
+        Account: johndoe@example.com
+    """
+    if isinstance(entries, dict):
+        _entries = [entries]
+    elif isinstance(entries, list):
+        if not entries:
+            return
+        _entries = entries
+    else:
+        raise FabricCLIError(
+            ErrorMessages.Common.invalid_entries_format(),
+            fab_constant.ERROR_INVALID_ENTRIES_FORMAT,
+        )
+
+    for i, entry in enumerate(_entries):
+        for key, value in entry.items():
+            pretty_key = _format_key_to_convert_to_title_case(key)
+            print_grey(f"{pretty_key}: {value}", to_stderr=False)
+        if i < len(_entries) - 1:
+            print_grey("", to_stderr=False)  # Empty line between entries
+
+
+def _format_key_to_convert_to_title_case(key: str) -> str:
+    """Convert a snake_case key to a Title Case name.
+    
+    Args:
+        key: The key to format in snake_case format (e.g. 'user_id', 'account_name')
+        
+    Returns:
+        str: Formatted to title case name (e.g. 'User ID', 'Account Name')
+        
+    Raises:
+        ValueError: If the key is not in the expected underscore-separated format
+    """
+    # Allow letters, numbers, and underscores only
+    if not key.replace('_', '').replace(' ', '').isalnum():
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    # Check for invalid patterns (camelCase, spaces mixed with underscores, etc.)
+    if ' ' in key and '_' in key:
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    # Check for camelCase pattern (uppercase letters not at the start)
+    if any(char.isupper() for char in key[1:]) and '_' not in key:
+        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+    
+    pretty = key.replace('_', ' ').title().strip()
+
+    return _check_special_cases(pretty)
+
+
+def _check_special_cases(pretty: str) -> str:
+    """Check for special cases and replace them with the correct value."""
+    # Here add special cases for specific keys that need to be formatted differently
+    special_cases = {
+        "Id": "ID",
+        "Powerbi": "PowerBI",
+    }
+
+    for case_key, case_value in special_cases.items():
+        pretty = pretty.replace(case_key.title(), case_value)
+
+    return pretty

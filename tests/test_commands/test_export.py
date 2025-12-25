@@ -136,7 +136,7 @@ class TestExport:
             mock_print_done.assert_called()
             mock_print_warning.assert_called_once()
             assert any(
-                call.args[0] == "2 items exported successfully"
+                call.args[0] == "2 items exported successfully\n"
                 for call in mock_print_done.mock_calls
             )
 
@@ -183,4 +183,93 @@ class TestExport:
         # Assert
         assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
 
-    # endregion
+    def test_export_notebook_py_format_success(
+        self, item_factory, cli_executor, mock_print_done, tmp_path
+    ):
+        # Setup
+        notebook = item_factory(ItemType.NOTEBOOK)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"export {notebook.full_path} --output {str(tmp_path)} --format .py --force"
+        )
+
+        # Assert
+        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        assert export_path.is_dir()
+        files = list(export_path.iterdir())
+        assert len(files) == 2
+        assert any(file.suffix == ".py" for file in files)
+        assert any(file.name == ".platform" for file in files)
+        mock_print_done.assert_called_once()
+
+    def test_export_notebook_default_format_success(
+        self, item_factory, cli_executor, mock_print_done, tmp_path
+    ):
+        # Setup
+        notebook = item_factory(ItemType.NOTEBOOK)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command without format (should use default format from definition_format_mapping)
+        cli_executor.exec_command(
+            f"export {notebook.full_path} --output {str(tmp_path)} --force"
+        )
+
+        # Assert - should use default format which is "?format=ipynb" resulting in .ipynb file
+        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        assert export_path.is_dir()
+        files = list(export_path.iterdir())
+        assert len(files) == 2
+        assert any(file.suffix == ".ipynb" for file in files)  # Default format should be .ipynb
+        assert any(file.name == ".platform" for file in files)
+        mock_print_done.assert_called_once()
+
+    def test_export_notebook_invalid_format_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_print_done,
+        tmp_path,
+    ):
+        # Setup
+        notebook = item_factory(ItemType.NOTEBOOK)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"export {notebook.full_path} --output {str(tmp_path)} --format .txt --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT, "Invalid format. Only the following formats are supported: .py, .ipynb")
+
+    def test_export_report_no_format_support_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_print_done,
+        tmp_path,
+    ):
+        # Setup
+        report = item_factory(ItemType.REPORT)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command - Report doesn't have any format support in definition_format_mapping
+        cli_executor.exec_command(
+            f"export {report.full_path} --output {str(tmp_path)} --format .txt --force"
+        )
+
+        # Assert - should fail with error indicating no formats are supported
+        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT, "No formats are supported")
+        

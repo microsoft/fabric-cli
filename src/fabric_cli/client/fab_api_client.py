@@ -406,9 +406,14 @@ def _poll_operation(
                         original_response.status_code = 200
                         return original_response
                     elif scope == fab_constant.SCOPE_FABRIC_DEFAULT:
-                        return _fetch_operation_result(
-                            args, uri, response, original_response
-                        )
+                        location_header = response.headers.get("Location", "")
+                        if location_header:
+                            return _fetch_operation_result(
+                                args, uri, response, original_response
+                            )
+
+                        original_response.status_code = 200
+                        return original_response
                 elif status == "Failed":
                     fab_logger.log_progress(status)
                     raise FabricCLIError(

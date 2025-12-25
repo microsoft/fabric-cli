@@ -171,3 +171,109 @@ class TestConfig:
             mock_print_done.assert_called_once()
 
     # endregion
+
+    # region config MODE SWITCHING
+    def test_config_set_mode_interactive_success(
+        self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
+    ):
+        """Test successful transition to interactive mode"""
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
+            
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
+            
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_INTERACTIVE}")
+
+            # Assert
+            mock_questionary_print.assert_called()
+            mock_start_interactive.assert_called_once_with()
+            assert mock_questionary_print.call_args[0][0] == 'Switching to interactive mode...'
+
+    def test_config_set_mode_interactive_from_interactive_success(
+        self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
+    ):
+        """Test setting interactive mode while already in interactive mode"""
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
+            
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_INTERACTIVE)
+            
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_INTERACTIVE}")
+
+            # Assert
+            mock_questionary_print.assert_called()
+            mock_start_interactive.assert_called_once_with()
+            assert mock_questionary_print.call_args[0][0] == 'Switching to interactive mode...'
+
+    def test_config_set_mode_command_line_from_interactive_success(
+        self, mock_fab_set_state_config, mock_questionary_print, cli_executor: CLIExecutor
+    ):
+        """Test transition from interactive to command_line mode"""
+        with patch("os._exit") as mock_exit:
+
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_INTERACTIVE)
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_COMMANDLINE}")
+
+            # Assert
+            mock_questionary_print.assert_called()
+            assert mock_questionary_print.call_args[0][0] == "Exiting interactive mode. Goodbye!"
+            mock_exit.assert_called_once_with(0)
+
+    def test_start_interactive_mode_success(self):
+        """Test mode switching creates singleton and launches interactive CLI"""
+        with patch("fabric_cli.core.fab_interactive.InteractiveCLI.get_instance") as mock_get_instance:
+            
+            mock_cli_instance = mock_get_instance.return_value
+            
+            from fabric_cli.core.fab_interactive import start_interactive_mode
+            start_interactive_mode()
+            
+            mock_get_instance.assert_called_once()
+            mock_cli_instance.start_interactive.assert_called_once()
+
+    def test_start_interactive_mode_already_running(self):
+        """Test that calling start_interactive_mode when already running prints message"""
+        with patch("fabric_cli.core.fab_interactive.InteractiveCLI.get_instance") as mock_get_instance, \
+             patch("fabric_cli.core.fab_interactive.utils_ui") as mock_utils_ui:
+            
+            from fabric_cli.core import fab_interactive
+            
+            # Reset singleton state first
+            fab_interactive.InteractiveCLI.reset_instance()
+            
+            mock_cli_instance = mock_get_instance.return_value
+            mock_cli_instance._is_running = True
+            
+            fab_interactive.start_interactive_mode()
+            
+            # Should call get_instance and then start_interactive should print message
+            mock_get_instance.assert_called_once()
+            mock_cli_instance.start_interactive.assert_called_once()
+            
+            # Reset singleton state
+            fab_interactive.InteractiveCLI.reset_instance()
+
+    def test_interactive_cli_singleton_pattern(self):
+        """Test that InteractiveCLI follows singleton pattern"""
+        from fabric_cli.core.fab_interactive import InteractiveCLI
+        
+        # Reset singleton state
+        InteractiveCLI.reset_instance()
+        
+        with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
+            mock_parser = type('MockParser', (), {'set_mode': lambda self, mode: None})()
+            mock_subparsers = object()
+            mock_get_parsers.return_value = (mock_parser, mock_subparsers)
+            
+            # Create two instances
+            instance1 = InteractiveCLI.get_instance()
+            instance2 = InteractiveCLI.get_instance()
+            
+            # Should be the same instance
+            assert instance1 is instance2
+            
+            # Reset singleton state
+            InteractiveCLI.reset_instance()
+
+    # endregion

@@ -134,6 +134,15 @@ Show items with comprehensive metadata.
 fab ls ws1.Workspace -l
 ```
 
+#### Query List Items in Workspace
+
+```
+fab ls ws1.Workspace -q [].name
+fab ls ws1.Workspace -q [].{name:name,id:id}
+fab ls ws1.Workspace -q [?contains(name, 'Notebook')]
+fab ls ws1.Workspace -l -q [?contains(name, 'Dataflow')].{name:name, id:id}
+```
+
 #### List Item Contents
 
 Browse contents of items that support folder structures.
@@ -156,6 +165,8 @@ fab ls ws1.Workspace/sem1.SemanticModel
 [^1]: Requires explicit enablement
 
 ### Update Item
+
+For detailed information on updating item properties, including limitations and property paths, see the [`set` command documentation](../commands/fs/set.md#query-support).
 
 #### Update Display Name
 
@@ -191,37 +202,43 @@ Delete an item without confirmation prompts.
 fab rm ws1.Workspace/lh1.Lakehouse -f
 ```
 
-### Update Item Properties
+### Set Item Properties
 
-**Configurable Properties by Item Type:**
-
-- All supported items: `displayName`, `description`
-- Notebook: `lakehouse`, `environment`, `warehouse`
-- Report: `semanticModelId`
-- SparkJobDefinition: `payload`
-
-#### Set default lakehouse, environment, or warehouse for a notebook.
+#### Set default lakehouse
 
 ```
-# Set default lakehouse
-fab set ws1.Workspace/nb1.Notebook -q lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
+fab set ws1.Workspace/nb1.Notebook -q definition.parts[0].payload.metadata.dependencies.lakehouse -i '{"known_lakehouses": [{"id": "00000000-0000-0000-0000-000000000001"}],"default_lakehouse": "00000000-0000-0000-0000-000000000001", "default_lakehouse_name": "lh1","default_lakehouse_workspace_id": "00000000-0000-0000-0000-000000000000"}'
+```
 
-# Set default environment
+#### Set Default Environment for a Notebook
+
+```
 fab set ws1.Workspace/nb1.Notebook -q environment -i '{"environmentId": "00000000-0000-0000-0000-000000000002", "workspaceId": "00000000-0000-0000-0000-000000000000"}'
+```
 
-# Set default warehouse
+#### Set Default Warehouse for a Notebook
+
+```
 fab set ws1.Workspace/nb1.Notebook -q warehouse -i '{"known_warehouses": [{"id": "00000000-0000-0000-0000-000000000003", "type": "Datawarehouse"}], "default_warehouse": "00000000-0000-0000-0000-000000000003"}'
 ```
 
 #### Rebind Report to Semantic Model
 
+For Report PBIR definition version 1:
+
 ```
-fab set ws1.Workspace/rep1.Report -q semanticModelId -i "00000000-0000-0000-0000-000000000000
+fab set ws1.Workspace/rep1.Report -q semanticModelId -i "00000000-0000-0000-0000-000000000000"
+```
+
+For Report PBIR definition version 2:
+
+```
+fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReference.byConnection.ConnectionString -i "ConnectionStringPrefix....semanticmodelid=00000000-0000-0000-0000-000000000000"
 ```
 
 
 ## Item Operations
-### Copy Items
+### Copy Item
 
 !!! info "When you copy an item definition, the sensitivity label is not a part of the definition"
 
@@ -260,7 +277,7 @@ fab cp ws1.Workspace/source.Item ws2.Workspace/dest.Folder
 ```
 
 
-### Move Items
+### Move Item
 
 !!! info "When you move item definition, the sensitivity label is not a part of the definition"
 
@@ -288,7 +305,7 @@ Move an item into a folder, preserving its original name.
 fab mv ws1.Workspace/nb.Notebook ws2.Workspace/dest.Folder
 ```
 
-### Import and Export
+### Export Item
 
 
 !!! info "When you export item definition, the sensitivity label is not a part of the definition"
@@ -318,6 +335,8 @@ Export item definition directly to a Lakehouse Files location.
 fab export ws1.Workspace/nb1.Notebook -o /ws1.Workspace/lh1.Lakehouse/Files/exports
 ```
 
+### Import Item
+
 #### Import from Local
 
 Import an item definition from a local directory into the workspace.
@@ -326,14 +345,7 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-Import a notebook from Python file format instead of default format.
-
-```
-fab import ws1.Workspace/nb1_python.Notebook -i /tmp/notebook.py --format py
-```
-
 **Supported Import Formats:** `.ipynb` (default) and `.py`.
-
 
 
 ### Start/Stop Mirrored Databases

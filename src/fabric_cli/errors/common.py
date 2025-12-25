@@ -4,12 +4,22 @@
 
 from typing import Optional
 
+from fabric_cli.core import fab_constant
+
 
 class CommonErrors:
 
     @staticmethod
+    def invalid_entries_format() -> str:
+        return "Invalid entries format"
+
+    @staticmethod
     def invalid_jmespath_query() -> str:
         return f"Invalid jmespath query (https://jmespath.org)"
+
+    @staticmethod
+    def invalid_parameter(invalid_query_fields: list, valid_columns: list) -> str:
+        return f"Invalid query field(s): {', '.join(invalid_query_fields)}. Available fields: {', '.join(valid_columns)}"
 
     @staticmethod
     def invalid_hostname(hostname: str) -> str:
@@ -177,7 +187,9 @@ class CommonErrors:
         return "Invalid destination, expected file or writable folder"
 
     @staticmethod
-    def cannot_write_in_folder(root_folder: str, item_type: str, supported_folders: str) -> str:
+    def cannot_write_in_folder(
+        root_folder: str, item_type: str, supported_folders: str
+    ) -> str:
         return f"Cannot write in folder '{root_folder}' for {item_type}. Only {supported_folders} folders are supported"
 
     @staticmethod
@@ -191,13 +203,34 @@ class CommonErrors:
         supported_creation_methods: list,
     ) -> str:
         return f"Missing connection creation method and parameters. Please indicate either one of the following creation methods: {supported_creation_methods}, or provide parameters for automatic selection"
-    
+
+    @staticmethod
+    def definition_update_not_supported_for_item_type(item_type: str) -> str:
+        return f"Item type '{item_type}' does not support definition updates"
+
+    @staticmethod
+    def invalid_item_set_query(query_value: str) -> str:
+        return (
+            f"Invalid query '{query_value}'. Allowed queries for items are: "
+            f"{', '.join(fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS)}, "
+            f"'{fab_constant.ITEM_QUERY_DEFINITION}', '{fab_constant.ITEM_QUERY_DEFINITION}.*', "
+            f"or '{fab_constant.ITEM_QUERY_PROPERTIES}.*'"
+        )
+
+    @staticmethod
+    def invalid_set_item_query(query_path: str) -> str:
+        return f"Invalid query. Either '{query_path}' is not a valid query or the item does not contain the specified path"
+
     @staticmethod
     def missing_onpremises_gateway_parameters(
         missing_params: list,
     ) -> str:
-        return  f"Missing parameters for credential values in OnPremisesGateway connectivity type: {missing_params}"
+        return f"Missing parameters for credential values in OnPremisesGateway connectivity type: {missing_params}"
 
     @staticmethod
     def invalid_onpremises_gateway_values() -> str:
         return "Values must be a list of JSON objects, each containing 'gatewayId' and 'encryptedCredentials' keys"
+
+    @staticmethod
+    def query_contains_filters_or_wildcards(query_value: str) -> str:
+        return f"Query '{query_value}' contains filters or wildcards which are not supported for set item command"

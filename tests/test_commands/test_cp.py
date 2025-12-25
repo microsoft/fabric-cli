@@ -64,7 +64,7 @@ class TestCP:
             mock_print_warning.assert_called_once()
             assert any(
                 call.args[0]
-                == f"2 items copied successfully from {ws1.full_path} to {ws2.full_path}"
+                == f"2 items copied successfully from {ws1.full_path} to {ws2.full_path}\n"
                 for call in mock_print_done.mock_calls
             )
 
@@ -146,7 +146,7 @@ class TestCP:
             mock_print_warning.assert_called_once()
             assert any(
                 call.args[0]
-                == f"2 items and 1 folders copied successfully from {ws1.full_path} to {ws2.full_path}"
+                == f"2 items and 1 folders copied successfully from {ws1.full_path} to {ws2.full_path}\n"
                 for call in mock_print_done.mock_calls
             )
 
@@ -254,7 +254,7 @@ class TestCP:
             mock_print_warning.assert_called_once()
             assert any(
                 call.args[0]
-                == f"2 items copied successfully from {ws1.full_path} to {f2.full_path}"
+                == f"2 items copied successfully from {ws1.full_path} to {f2.full_path}\n"
                 for call in mock_print_done.mock_calls
             )
 
@@ -1035,15 +1035,15 @@ class TestCP:
 
 
 # region Helper Methods
-def ls(path, long=False, all=False):
-    args = _build_ls_args(path, long, all)
+def ls(path, long=False, all=False, query=None):
+    args = _build_ls_args(path, long, all, query)
     context = handle_context.get_command_context(args.path)
     fab_ls.exec_command(args, context)
 
 
-def _build_ls_args(path, long, all):
+def _build_ls_args(path, long, all, query):
     return argparse.Namespace(
-        command="ls", command_path="ls", path=path, long=long, all=all
+        command="ls", command_path="ls", path=path, long=long, all=all, query=query
     )
 
 

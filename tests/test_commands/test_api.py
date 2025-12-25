@@ -56,7 +56,7 @@ class TestAPI:
 
         # Execute command
         cli_executor.exec_command(
-            f"api workspaces/{workspace_id}/roleAssignments --method post --input {input} --show_headers"
+            f"api workspaces/{workspace_id}/roleAssignments --method post --input '{input}' --show_headers"
         )
 
         # Assert
@@ -200,6 +200,8 @@ def _build_api_args(endpoint, method, params, input, audience, headers, show_hea
 
 
 def _get_workspace_id(workspace, mock_questionary_print) -> str:
+    mock_questionary_print.reset_mock()
+
     api("workspaces", "get")
 
     # Extract the arguments passed to the mock
@@ -219,6 +221,8 @@ def _get_workspace_id(workspace, mock_questionary_print) -> str:
 
 
 def _get_item_id(workspace_id, item, mock_questionary_print) -> str:
+    mock_questionary_print.reset_mock()
+    
     api(f"workspaces/{workspace_id}/items", "get")
 
     # Extract the arguments passed to the mock

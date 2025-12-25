@@ -7,8 +7,8 @@ from argparse import Namespace
 from fabric_cli.client import fab_api_capacity as capacity_api
 from fabric_cli.client import fab_api_workspace as workspace_api
 from fabric_cli.core.hiearchy.fab_hiearchy import VirtualWorkspaceItem
-from fabric_cli.utils import fab_ui as utils_ui
-
+from fabric_cli.utils import fab_ui as utils_ui, fab_util
+from fabric_cli.utils import fab_jmespath as utils_jmespath
 
 def sort_elements(
     elements: list[dict[str, str]], key: str = "name"
@@ -76,10 +76,12 @@ def format_and_print_output(
     columns: list[str] = [],
     hidden_data=None,
 ) -> None:
-
-    filtered_data = [
-        {key: item[key] for key in columns if key in item} for item in data
-    ]
+    # Project the columns requested by the user based on JMESPath if query is provided else project the columns requested based on item type
+    if getattr(args, "query", None):
+        args.query = fab_util.process_nargs(args.query)
+        filtered_data = utils_jmespath.search(data, args.query)
+    else: 
+        filtered_data = [{key: item[key] for key in columns if key in item} for item in data]
 
     utils_ui.print_output_format(
         args, show_headers=show_details, data=filtered_data, hidden_data=hidden_data
