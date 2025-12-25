@@ -12,7 +12,7 @@ from fabric_cli.utils import fab_mem_store as utils_mem_store
 def exec(
     virtual_ws_item: VirtualWorkspaceItem, args: Namespace, force_delete: bool
 ) -> None:
-    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
     args.id = virtual_ws_item.id
     args.name = virtual_ws_item.name
     if domain_api.delete_domain(args, force_delete):

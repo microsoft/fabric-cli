@@ -26,13 +26,11 @@ from fabric_cli.utils import fab_ui
 
 def exec_command(args: Namespace, context: FabricElement) -> None:
     if isinstance(context, Workspace):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
         _ls_acls_workspace(context, args)
     elif isinstance(context, Item):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
         _ls_acls_item(context, args)
     elif isinstance(context, VirtualWorkspaceItem):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
         _ls_acls_vwitem(context, args)
     elif (
         # OneLake security only supporting Lakehouse items
@@ -82,7 +80,7 @@ def _ls_acls_workspace(workspace: Workspace, args: Namespace) -> None:
                 )
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
             columns = ["acl", "identity", "type"]
-            
+
             if show_all:
                 columns.extend(["objectId", "name"])
 
@@ -131,7 +129,7 @@ def _ls_acls_gateway(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            
+
             columns = ["role", "principalId", "principalType"]
             if show_all:
                 columns.insert(0, "id")
@@ -168,7 +166,7 @@ def _ls_acls_connection(connection: VirtualWorkspaceItem, args: Namespace) -> No
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["role"])
-            
+
             columns = ["role", "principalId", "principalType"]
             if show_all:
                 columns.insert(0, "id")
@@ -219,7 +217,7 @@ def _ls_acls_item(item: Item, args: Namespace) -> None:
                 )
 
             sorted_acls = sorted(sorted_acls, key=lambda acl: acl["acl"])
-            
+
             columns = ["acl", "identity", "type"]
             if show_all:
                 columns = ["id", "name"] + columns
