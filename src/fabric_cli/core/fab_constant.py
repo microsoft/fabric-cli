@@ -64,7 +64,8 @@ AUTH_KEYS = {
     IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
 }
 
-FAB_HOST_APP_ENV_VAR = "FABRIC_CLI_HOST_APP"
+FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
+FAB_HOST_APP_VERSION_ENV_VAR = "FAB_HOST_APP_VERSION"
 
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"

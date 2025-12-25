@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.client.fab_api_client import (
-    _get_host_app_suffix,
+    _get_host_app,
     _transform_workspace_url_for_private_link_if_needed,
     do_request,
 )
@@ -311,32 +311,88 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
 
 
 @pytest.mark.parametrize(
-    "host_app_env, expected_suffix",
+    "host_app_env, host_app_version_env, expected_suffix",
     [
-        ("VSCode-Extension", "; HostApp/VSCode-Extension"),  # Valid, correct case
-        ("vscode-extension", "; HostApp/VSCode-Extension"),  # Valid, lower case
-        ("VSCodE-ExTenSion", "; HostApp/VSCode-Extension"),  # Valid, mixed case
         (
-            "Azure-DevOps-Pipeline",
-            "; HostApp/Azure-DevOps-Pipeline",
-        ),  # Valid, correct case
+            "Fabric-AzureDevops-Extension",
+            None,
+            " host-app/fabric-azuredevops-extension",
+        ),
         (
-            "azure-devops-pipeline",
-            "; HostApp/Azure-DevOps-Pipeline",
-        ),  # Valid, lower case
-        ("Invalid-App", ""),  # Invalid
-        ("", ""),  # Empty
-        (None, ""),  # Not set
+            "Fabric-AzureDevops-Extension",
+            "1.2.0",
+            " host-app/fabric-azuredevops-extension/1.2.0",
+        ),
+        (
+            "fabric-azuredevops-extension",
+            "1.2.0",
+            " host-app/fabric-azuredevops-extension/1.2.0",
+        ),
+        ("Invalid-App", "1.0.0", ""),
+        ("", None, ""),
+        (None, None, ""),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2.0.4",  # Invalid format
+            " host-app/fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2.a",  # Invalid format
+            " host-app/fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "a.b.c",  # Invalid format
+            " host-app/fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1",  # valid format
+            " host-app/fabric-azuredevops-extension/1",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2",  # valid format
+            " host-app/fabric-azuredevops-extension/1.2",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0",  # valid format
+            " host-app/fabric-azuredevops-extension/1.0.0",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-rc.1",  # valid format
+            " host-app/fabric-azuredevops-extension/1.0.0-rc.1",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-alpha",  # valid format
+            " host-app/fabric-azuredevops-extension/1.0.0-alpha",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-beta",  # valid format
+            " host-app/fabric-azuredevops-extension/1.0.0-beta",
+        ),
     ],
 )
-def test_get_host_app_suffix(host_app_env, expected_suffix, monkeypatch):
-    """Test the _get_host_app_suffix helper function."""
+def test_get_host_app(host_app_env, host_app_version_env, expected_suffix, monkeypatch):
+    """Test the _get_host_app helper function."""
     if host_app_env is not None:
         monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
     else:
         monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
 
-    result = _get_host_app_suffix()
+    if host_app_version_env is not None:
+        monkeypatch.setenv(
+            fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, host_app_version_env
+        )
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, raising=False)
+
+    result = _get_host_app()
 
     assert result == expected_suffix
 
@@ -346,27 +402,27 @@ def setup_default_private_links(mock_fab_set_state_config):
     mock_fab_set_state_config(fab_constant.FAB_WS_PRIVATE_LINKS_ENABLED, "true")
 
 
+@patch("platform.python_version", return_value="3.11.5")
 @patch("platform.release", return_value="5.4.0")
-@patch("platform.machine", return_value="x86_64")
 @patch("platform.system", return_value="Linux")
 @patch("requests.Session.request")
 @patch("fabric_cli.core.fab_auth.FabAuth")
 @patch("fabric_cli.core.fab_context.Context")
 @pytest.mark.parametrize(
-    "host_app_env, expected_suffix",
+    "host_app_env, host_app_version_env, expected_suffix",
     [
-        (None, ""),  # No env var set
-        ("VSCode-Extension", "; HostApp/VSCode-Extension"),  # Valid and allowed
+        (None, None, ""),
         (
-            "Azure-DevOps-Pipeline",
-            "; HostApp/Azure-DevOps-Pipeline",
-        ),  # Valid and allowed
+            "Fabric-AzureDevops-Extension",
+            None,
+            " host-app/fabric-azuredevops-extension",
+        ),
         (
-            "vscode-extension",
-            "; HostApp/VSCode-Extension",
-        ),  # Valid and allowed (case-insensitive)
-        ("Invalid-App", ""),  # Invalid and not in allowlist
-        ("", ""),  # Empty value
+            "Fabric-AzureDevops-Extension",
+            "1.2.0",
+            " host-app/fabric-azuredevops-extension/1.2.0",
+        ),
+        ("Invalid-App", "1.0.0", ""),
     ],
 )
 def test_do_request_user_agent_header(
@@ -374,9 +430,10 @@ def test_do_request_user_agent_header(
     mock_auth,
     mock_request,
     mock_system,
-    mock_machine,
     mock_release,
+    mock_python_version,
     host_app_env,
+    host_app_version_env,
     expected_suffix,
     monkeypatch,
 ):
@@ -385,6 +442,13 @@ def test_do_request_user_agent_header(
         monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
     else:
         monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
+
+    if host_app_version_env is not None:
+        monkeypatch.setenv(
+            fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, host_app_version_env
+        )
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, raising=False)
 
     # Configure mocks
     mock_auth.return_value.get_access_token.return_value = "dummy-token"
@@ -418,7 +482,7 @@ def test_do_request_user_agent_header(
 
     base_user_agent = (
         f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} "
-        f"(test-command; Linux; x86_64; 5.4.0)"
+        f"(test-command; Linux/5.4.0; Python/3.11.5)"
     )
     expected_user_agent = base_user_agent + expected_suffix
 
