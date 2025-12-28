@@ -29,17 +29,20 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
     utils_set.print_set_warning()
     if args.force or utils_ui.prompt_confirm():
 
-        # Read new values from the user and retrieve updated shortcut definition with the new values.
         _, updated_def = utils_set.update_fabric_element(
             shortcut_def, query, args.input, decode_encode=False
         )
 
-        # Create a new shortcut with the updated values
-        args.shortcutConflictPolicy = "OverwriteOnly"
-        shortcut_api.create_shortcut(args, updated_def)
+        new_name = updated_def.get("name", "")
+        if new_name != current_name:
+            args.shortcutConflictPolicy = "Abort"
+            shortcut_api.create_shortcut(args, updated_def)
 
-        # Delete the old shortcut
-        rm_onelake.shortcut_file_or_folder(
-            onelake, args, force_delete=True, verbose=False
-        )
+            rm_onelake.shortcut_file_or_folder(
+                onelake, args, force_delete=True, verbose=False
+            )
+        else:
+            args.shortcutConflictPolicy = "OverwriteOnly"
+            shortcut_api.create_shortcut(args, updated_def)
+
         utils_ui.print_output_format(args, message="Shortcut updated")
