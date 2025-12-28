@@ -631,44 +631,6 @@ class TestSET:
 
         rm(new_shortcut_path)
 
-    def test_set_onelake_shortcut_target_itemid_only_success(
-        self,
-        workspace,
-        item_factory,
-        cli_executor,
-        mock_questionary_print,
-        mock_print_done,
-    ):
-        lakehouse1 = item_factory(ItemType.LAKEHOUSE)
-        lakehouse2 = item_factory(ItemType.LAKEHOUSE)
-        lakehouse3 = item_factory(ItemType.LAKEHOUSE)
-
-        shortcut_name = "targetUpdateShortcut"
-        shortcut_path = cli_path_join(
-            lakehouse1.full_path, "Files", f"{shortcut_name}.Shortcut"
-        )
-        target_path = cli_path_join(lakehouse2.full_path, "Files")
-        ln(shortcut_path, target=target_path)
-
-        lakehouse3_id = _get_id(lakehouse3.full_path, mock_questionary_print)
-
-        mock_questionary_print.reset_mock()
-        mock_print_done.reset_mock()
-
-        cli_executor.exec_command(
-            f"set {shortcut_path} --query target.oneLake.itemId --input {lakehouse3_id} --force"
-        )
-
-        mock_print_done.assert_called_once()
-
-        get(shortcut_path, query="name")
-        assert mock_questionary_print.call_args[0][0] == shortcut_name
-
-        get(shortcut_path, query="target.oneLake.itemId")
-        assert mock_questionary_print.call_args[0][0] == lakehouse3_id
-
-        rm(shortcut_path)
-
     def test_set_onelake_shortcut_target_itemid_success(
         self,
         workspace,
@@ -676,14 +638,12 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        vcr_instance,
-        cassette_name,
     ):
         lakehouse1 = item_factory(ItemType.LAKEHOUSE)
         lakehouse2 = item_factory(ItemType.LAKEHOUSE)
         lakehouse3 = item_factory(ItemType.LAKEHOUSE)
 
-        original_shortcut_name = "originalBothShortcut"
+        original_shortcut_name = "targetUpdateShortcut"
         shortcut_path = cli_path_join(
             lakehouse1.full_path, "Files", f"{original_shortcut_name}.Shortcut"
         )
