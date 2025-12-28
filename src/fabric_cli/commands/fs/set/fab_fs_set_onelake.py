@@ -33,6 +33,9 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
             shortcut_def, query, args.input, decode_encode=False
         )
 
+        if "target" in updated_def and "type" in updated_def["target"]:
+            del updated_def["target"]["type"]
+
         new_name = updated_def.get("name", "")
         if new_name != current_name:
             args.shortcutConflictPolicy = "Abort"

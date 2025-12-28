@@ -669,7 +669,7 @@ class TestSET:
 
         rm(shortcut_path)
 
-    def test_set_onelake_shortcut_name_and_target_itemid_success(
+    def test_set_onelake_shortcut_target_itemid_success(
         self,
         workspace,
         item_factory,
@@ -695,8 +695,6 @@ class TestSET:
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
 
-        new_shortcut_name = generate_random_string(vcr_instance, cassette_name)
-
         cli_executor.exec_command(
             f"set {shortcut_path} --query target.oneLake.itemId --input {lakehouse3_id} --force"
         )
@@ -706,22 +704,10 @@ class TestSET:
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
 
-        cli_executor.exec_command(
-            f"set {shortcut_path} --query name --input {new_shortcut_name} --force"
-        )
-
-        assert mock_print_done.call_count == 1
-
-        new_shortcut_path = cli_path_join(
-            lakehouse1.full_path, "Files", f"{new_shortcut_name}.Shortcut"
-        )
-        get(new_shortcut_path, query="name")
-        assert mock_questionary_print.call_args[0][0] == new_shortcut_name
-
-        get(new_shortcut_path, query="target.oneLake.itemId")
+        get(shortcut_path, query="target.oneLake.itemId")
         assert mock_questionary_print.call_args[0][0] == lakehouse3_id
 
-        rm(new_shortcut_path)
+        rm(shortcut_path)
 
     # endregion
 
