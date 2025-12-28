@@ -144,7 +144,7 @@ def print_done(text: str, to_stderr: bool = False) -> None:
     # Escape the text to avoid HTML injection and parsing issues
     escaped_text = html.escape(text)
     _safe_print_formatted_text(
-        f"<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
+        f"\n<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
     )
 
 
@@ -368,9 +368,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         print_grey("------------------------------")
         _print_raw_data(output_result.hidden_data)
 
+        
     if output_result.message:
-        print_done(output_result.message)
-
+        print_done(f"{output_result.message}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """

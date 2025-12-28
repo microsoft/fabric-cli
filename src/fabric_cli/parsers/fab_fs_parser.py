@@ -317,6 +317,11 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
         help="Export all. Optional",
     )
     export_parser.add_argument(
+        "--format",
+        metavar="",
+        help="Export format. Optional",
+    )
+    export_parser.add_argument(
         "-f",
         "--force",
         required=False,
