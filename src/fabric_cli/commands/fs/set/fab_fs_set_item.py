@@ -22,7 +22,7 @@ def exec(item: Item, args: Namespace) -> None:
 
     query_value = item.extract_friendly_name_path_or_default(query)
 
-    # utils_set.validate_item_query(query_value, item)
+    utils_set.validate_item_query(query_value, item)
 
     utils_set.print_set_warning()
     if force or utils_ui.prompt_confirm():
