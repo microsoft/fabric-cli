@@ -78,6 +78,8 @@ class FabricCLIOutput:
         data: Optional[Any] = None,
         hidden_data: Optional[Any] = None,
         show_key_value_list: bool = False,
+        folders_data: Optional[Any] = None,
+        items_data: Optional[Any] = None,
     ):
         """Initialize a new FabricCLIOutput instance.
 
@@ -91,6 +93,8 @@ class FabricCLIOutput:
             data: The main output data to be displayed
             hidden_data: Additional data shown only when --all flag or FAB_SHOW_HIDDEN is true
             show_key_value_list: Whether to show output in key-value list format
+            folders_data: Optional folders data to display separately from items
+            items_data: Optional items data to display separately from folders
 
         Note:
             The data parameter is always converted to a list format internally.
@@ -103,6 +107,8 @@ class FabricCLIOutput:
         self._output_format_type = output_format_type
         self._show_headers = show_headers
         self._show_key_value_list = show_key_value_list
+        self._folders_data = folders_data
+        self._items_data = items_data
 
         self._result = OutputResult(
             data=data,
@@ -130,6 +136,14 @@ class FabricCLIOutput:
     @property
     def show_key_value_list(self) -> bool:
         return self._show_key_value_list
+
+    @property
+    def folders_data(self) -> Optional[Any]:
+        return self._folders_data
+
+    @property
+    def items_data(self) -> Optional[Any]:
+        return self._items_data
 
     def to_json(self, indent: int = 4) -> str:
         try:

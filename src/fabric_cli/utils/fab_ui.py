@@ -95,6 +95,8 @@ def print_output_format(
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
     show_key_value_list: bool = False,
+    folders_data: Optional[Any] = None,
+    items_data: Optional[Any] = None,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -105,6 +107,8 @@ def print_output_format(
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
         show_key_value_list: Whether to show output in key-value list format (default: False)
+        folders_data: Optional folders data to display separately from items
+        items_data: Optional items data to display separately from folders
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -122,12 +126,19 @@ def print_output_format(
         hidden_data=hidden_data,
         show_headers=show_headers,
         show_key_value_list=show_key_value_list,
+        folders_data=folders_data,
+        items_data=items_data,
     )
 
     # Get format from output or config
     format_type = output.output_format_type or fab_state_config.get_config(
         fab_constant.FAB_OUTPUT_FORMAT
     )
+    
+    # Default to text if format_type is still None
+    if format_type is None:
+        format_type = "text"
+    
     match format_type:
         case "json":
             _print_output_format_json(output.to_json())
@@ -346,7 +357,30 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         )
 
     show_headers = output.show_headers
-    if output_result.data:
+    
+    # Check if we need to display folders and items separately
+    if output.folders_data is not None and output.items_data is not None:
+        # Display folders first
+        if output.folders_data:
+            data_keys = list(output.folders_data[0].keys()) if output.folders_data else []
+            if len(data_keys) > 0:
+                print_entries_unix_style(output.folders_data, data_keys, header=(len(data_keys) > 1 or show_headers))
+            else:
+                _print_raw_data(output.folders_data)
+        
+        # Add divider between folders and items (only if both have content)
+        if output.folders_data and output.items_data:
+            print_grey("------------------------------")
+        
+        # Display items
+        if output.items_data:
+            data_keys = list(output.items_data[0].keys()) if output.items_data else []
+            if len(data_keys) > 0:
+                print_entries_unix_style(output.items_data, data_keys, header=(len(data_keys) > 1 or show_headers))
+            else:
+                _print_raw_data(output.items_data)
+    elif output_result.data:
+        # Original behavior when folders/items are not separated
         # ls command and command pass show_headers = True (like job run-status) need special print handler
         entries_unix_style_command = ["ls", "dir"]
         if (

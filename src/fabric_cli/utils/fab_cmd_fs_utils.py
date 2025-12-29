@@ -90,3 +90,31 @@ def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
         {key: getattr(item, key) for key in columns if hasattr(item, key)}
         for item in sorted_elements
     ]
+
+
+def sort_ws_elements_with_separation(
+    ws_elements: list[Union[Item, Folder]], show_details
+) -> tuple[list[dict], list[dict]]:
+    """
+    Sort workspace elements and separate folders from items.
+    
+    Returns:
+        tuple: (folders_dict, items_dict) - Two lists of dictionaries
+    """
+    if not ws_elements:
+        return [], []
+
+    sorted_elements = item_utils.sort_ws_elems_by_config(ws_elements)
+    columns = ["name", "id"] if show_details else ["name"]
+
+    folders = []
+    items = []
+    
+    for element in sorted_elements:
+        element_dict = {key: getattr(element, key) for key in columns if hasattr(element, key)}
+        if isinstance(element, Folder):
+            folders.append(element_dict)
+        else:
+            items.append(element_dict)
+    
+    return folders, items
