@@ -75,8 +75,6 @@ def format_and_print_output(
     show_details: bool,
     columns: list[str] = [],
     hidden_data=None,
-    folders_data: list[dict] = None,
-    items_data: list[dict] = None,
 ) -> None:
     # Project the columns requested by the user based on JMESPath if query is provided else project the columns requested based on item type
     if getattr(args, "query", None):
@@ -90,6 +88,4 @@ def format_and_print_output(
         show_headers=show_details, 
         data=filtered_data, 
         hidden_data=hidden_data,
-        folders_data=folders_data,
-        items_data=items_data,
     )

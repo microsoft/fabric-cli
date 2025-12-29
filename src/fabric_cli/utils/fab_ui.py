@@ -95,8 +95,6 @@ def print_output_format(
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
     show_key_value_list: bool = False,
-    folders_data: Optional[Any] = None,
-    items_data: Optional[Any] = None,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -107,8 +105,6 @@ def print_output_format(
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
         show_key_value_list: Whether to show output in key-value list format (default: False)
-        folders_data: Optional folders data to display separately from items
-        items_data: Optional items data to display separately from folders
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -141,7 +137,7 @@ def print_output_format(
         case "json":
             _print_output_format_json(output.to_json())
         case "text":
-            _print_output_format_result_text(output, folders_data=folders_data, items_data=items_data)
+            _print_output_format_result_text(output)
         case _:
             raise FabricCLIError(
                 ErrorMessages.Common.output_format_not_supported(str(format_type)),
@@ -338,7 +334,7 @@ def _safe_print_formatted_text(
         _print_fallback(escaped_text, e, to_stderr)
 
 
-def _print_output_format_result_text(output: FabricCLIOutput, folders_data: Optional[Any] = None, items_data: Optional[Any] = None) -> None:
+def _print_output_format_result_text(output: FabricCLIOutput) -> None:
     # if there is no result to print it means something went wrong
     output_result = output.result
     if all(
@@ -365,28 +361,13 @@ def _print_output_format_result_text(output: FabricCLIOutput, folders_data: Opti
         ):
             data_keys = output.result.get_data_keys() if output_result.data else []
             if len(data_keys) > 0:
-                # Check if we need to display folders and items separately
-                if folders_data is not None and items_data is not None:
-                    # Display folders first
-                    if folders_data:
-                        print_entries_unix_style(folders_data, data_keys, header=(len(data_keys) > 1 or show_headers))
-                    
-                    # Add divider between folders and items (only if both have content)
-                    if folders_data and items_data:
-                        print_grey("------------------------------")
-                    
-                    # Display items
-                    if items_data:
-                        print_entries_unix_style(items_data, data_keys, header=(len(data_keys) > 1 or show_headers))
-                else:
-                    # Original behavior
-                    print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
+                print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
             else:
-                _print_raw_data(output_result.data, folders_data=folders_data, items_data=items_data)
+                _print_raw_data(output_result.data)
         elif output.show_key_value_list:
             _print_entries_key_value_list_style(output_result.data)
         else:
-            _print_raw_data(output_result.data, folders_data=folders_data, items_data=items_data)
+            _print_raw_data(output_result.data)
 
     if output_result.hidden_data:
         print_grey("------------------------------")
@@ -396,7 +377,7 @@ def _print_output_format_result_text(output: FabricCLIOutput, folders_data: Opti
     if output_result.message:
         print_done(f"{output_result.message}\n")
 
-def _print_raw_data(data: list[Any], to_stderr: bool = False, folders_data: Optional[Any] = None, items_data: Optional[Any] = None) -> None:
+def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
     Print raw data without headers/formatting using appropriate display strategy.
     
@@ -408,8 +389,6 @@ def _print_raw_data(data: list[Any], to_stderr: bool = False, folders_data: Opti
     Args:
         data: List of data items to print
         to_stderr: Whether to output to stderr (True) or stdout (False)
-        folders_data: Optional folders data to display separately from items
-        items_data: Optional items data to display separately from folders
     
     Returns:
         None
@@ -418,32 +397,11 @@ def _print_raw_data(data: list[Any], to_stderr: bool = False, folders_data: Opti
     if not data:
         return
 
-    # Check if we need to display folders and items separately
-    if folders_data is not None and items_data is not None:
-        # Display folders first
-        if folders_data:
-            if isinstance(folders_data[0], dict):
-                _print_dict(folders_data, to_stderr)
-            else:
-                _print_simple_items(folders_data, to_stderr)
-        
-        # Add divider between folders and items (only if both have content)
-        if folders_data and items_data:
-            print_grey("------------------------------")
-        
-        # Display items
-        if items_data:
-            if isinstance(items_data[0], dict):
-                _print_dict(items_data, to_stderr)
-            else:
-                _print_simple_items(items_data, to_stderr)
+    # Determine formatting strategy based on data structure
+    if isinstance(data[0], dict):
+        _print_dict(data, to_stderr)
     else:
-        # Original behavior when folders/items are not separated
-        # Determine formatting strategy based on data structure
-        if isinstance(data[0], dict):
-            _print_dict(data, to_stderr)
-        else:
-            _print_simple_items(data, to_stderr)
+        _print_simple_items(data, to_stderr)
 
 
 def _print_dict(data: list[Any], to_stderr: bool) -> None:

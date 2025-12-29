@@ -94,15 +94,16 @@ def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
 
 def sort_ws_elements_with_separation(
     ws_elements: list[Union[Item, Folder]], show_details
-) -> tuple[list[dict], list[dict]]:
+) -> list[dict]:
     """
-    Sort workspace elements and separate folders from items.
+    Sort workspace elements with folders first, then items.
+    If both folders and items exist, inserts a divider entry between them.
     
     Returns:
-        tuple: (folders_dict, items_dict) - Two lists of dictionaries
+        list: Single list with folders first, optional divider, then items
     """
     if not ws_elements:
-        return [], []
+        return []
 
     sorted_elements = item_utils.sort_ws_elems_by_config(ws_elements)
     columns = ["name", "id"] if show_details else ["name"]
@@ -117,4 +118,17 @@ def sort_ws_elements_with_separation(
         else:
             items.append(element_dict)
     
-    return folders, items
+    # Build result: folders first, then divider if both exist, then items
+    result = folders.copy()
+    
+    # Add divider entry if we have both folders and items
+    if folders and items:
+        # Check if output format is text (will be checked in UI layer)
+        divider_entry = {"name": "------------------------------"}
+        if show_details:
+            divider_entry["id"] = ""
+        result.append(divider_entry)
+    
+    result.extend(items)
+    
+    return result
