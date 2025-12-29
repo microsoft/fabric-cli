@@ -126,8 +126,6 @@ def print_output_format(
         hidden_data=hidden_data,
         show_headers=show_headers,
         show_key_value_list=show_key_value_list,
-        folders_data=folders_data,
-        items_data=items_data,
     )
 
     # Get format from output or config
@@ -143,7 +141,7 @@ def print_output_format(
         case "json":
             _print_output_format_json(output.to_json())
         case "text":
-            _print_output_format_result_text(output)
+            _print_output_format_result_text(output, folders_data=folders_data, items_data=items_data)
         case _:
             raise FabricCLIError(
                 ErrorMessages.Common.output_format_not_supported(str(format_type)),
@@ -340,7 +338,7 @@ def _safe_print_formatted_text(
         _print_fallback(escaped_text, e, to_stderr)
 
 
-def _print_output_format_result_text(output: FabricCLIOutput) -> None:
+def _print_output_format_result_text(output: FabricCLIOutput, folders_data: Optional[Any] = None, items_data: Optional[Any] = None) -> None:
     # if there is no result to print it means something went wrong
     output_result = output.result
     if all(
@@ -368,27 +366,27 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
             data_keys = output.result.get_data_keys() if output_result.data else []
             if len(data_keys) > 0:
                 # Check if we need to display folders and items separately
-                if output.folders_data is not None and output.items_data is not None:
+                if folders_data is not None and items_data is not None:
                     # Display folders first
-                    if output.folders_data:
-                        print_entries_unix_style(output.folders_data, data_keys, header=(len(data_keys) > 1 or show_headers))
+                    if folders_data:
+                        print_entries_unix_style(folders_data, data_keys, header=(len(data_keys) > 1 or show_headers))
                     
                     # Add divider between folders and items (only if both have content)
-                    if output.folders_data and output.items_data:
+                    if folders_data and items_data:
                         print_grey("------------------------------")
                     
                     # Display items
-                    if output.items_data:
-                        print_entries_unix_style(output.items_data, data_keys, header=(len(data_keys) > 1 or show_headers))
+                    if items_data:
+                        print_entries_unix_style(items_data, data_keys, header=(len(data_keys) > 1 or show_headers))
                 else:
                     # Original behavior
                     print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
             else:
-                _print_raw_data(output_result.data, folders_data=output.folders_data, items_data=output.items_data)
+                _print_raw_data(output_result.data, folders_data=folders_data, items_data=items_data)
         elif output.show_key_value_list:
             _print_entries_key_value_list_style(output_result.data)
         else:
-            _print_raw_data(output_result.data, folders_data=output.folders_data, items_data=output.items_data)
+            _print_raw_data(output_result.data, folders_data=folders_data, items_data=items_data)
 
     if output_result.hidden_data:
         print_grey("------------------------------")
