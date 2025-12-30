@@ -15,6 +15,9 @@ from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils import fab_util as utils
 
+# Divider used to separate folders and items in workspace listings
+DIVIDER = "------------------------------"
+
 
 def select_workspace_items(from_context):
     ws_elems: list[Item | Folder] = get_ws_elements(from_context)
@@ -111,8 +114,6 @@ def sort_ws_elements_with_seperation_by_type_order(
     """
     if not ws_elements:
         return []
-
-    divider_name = "------------------------------"
     
     result = []
     first_group = True
@@ -122,7 +123,7 @@ def sort_ws_elements_with_seperation_by_type_order(
         if group:
             group_dicts = sort_ws_elements(group, show_details)
             if not first_group:
-                divider = {"name": divider_name}
+                divider = {"name": DIVIDER}
                 if show_details:
                     divider["id"] = ""
                 result.append(divider)
