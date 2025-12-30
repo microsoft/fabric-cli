@@ -105,30 +105,22 @@ def sort_ws_elements_with_separation(
     if not ws_elements:
         return []
 
-    sorted_elements = item_utils.sort_ws_elems_by_config(ws_elements)
-    columns = ["name", "id"] if show_details else ["name"]
+    type_order = [Folder, Item]
+    divider_name = "------------------------------"
+    
+    result = []
+    first_group = True
 
-    folders = []
-    items = []
-    
-    for element in sorted_elements:
-        element_dict = {key: getattr(element, key) for key in columns if hasattr(element, key)}
-        if isinstance(element, Folder):
-            folders.append(element_dict)
-        else:
-            items.append(element_dict)
-    
-    # Build result: folders first, then divider if both exist, then items
-    result = folders.copy()
-    
-    # Add divider entry if we have both folders and items
-    if folders and items:
-        # Check if output format is text (will be checked in UI layer)
-        divider_entry = {"name": "------------------------------"}
-        if show_details:
-            divider_entry["id"] = ""
-        result.append(divider_entry)
-    
-    result.extend(items)
-    
+    for typ in type_order:
+        group = [el for el in ws_elements if isinstance(el, typ)]
+        if group:
+            group_dicts = sort_ws_elements(group, show_details)
+            if not first_group:
+                divider = {"name": divider_name}
+                if show_details:
+                    divider["id"] = ""
+                result.append(divider)
+            result.extend(group_dicts)
+            first_group = False
+
     return result
