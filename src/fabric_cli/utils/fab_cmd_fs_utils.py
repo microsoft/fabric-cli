@@ -92,20 +92,26 @@ def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
     ]
 
 
-def sort_ws_elements_with_separation(
-    ws_elements: list[Union[Item, Folder]], show_details
+def sort_ws_elements_with_seperation_by_type_order(
+    ws_elements: list[Union[Item, Folder]], 
+    show_details: bool,
+    type_order: list
 ) -> list[dict]:
     """
-    Sort workspace elements with folders first, then items.
-    If both folders and items exist, inserts a divider entry between them.
+    Groups elements by type according to type_order, sorts each group using sort_ws_elements,
+    and inserts a divider between non-empty groups.
+    
+    Args:
+        ws_elements: List of workspace elements (Items and Folders)
+        show_details: Whether to include detailed columns
+        type_order: List of types in the order they should appear (e.g., [Folder, Item])
     
     Returns:
-        list: Single list with folders first, optional divider, then items
+        list: Single list with elements grouped by type, with dividers between groups
     """
     if not ws_elements:
         return []
 
-    type_order = [Folder, Item]
     divider_name = "------------------------------"
     
     result = []

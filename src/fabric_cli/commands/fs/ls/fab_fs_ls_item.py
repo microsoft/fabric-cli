@@ -23,8 +23,8 @@ def exec(workspace: Workspace, args):
     
     # Use separation if folder listing is enabled
     if folder_listing_enabled and ws_elements:
-        sorted_elements_dict = utils_fs.sort_ws_elements_with_separation(
-            ws_elements, show_details
+        sorted_elements_dict = utils_fs.sort_ws_elements_with_seperation_by_type_order(
+            ws_elements, show_details, type_order=[Folder, Item]
         )
     else:
         sorted_elements_dict = utils_fs.sort_ws_elements(ws_elements, show_details)
