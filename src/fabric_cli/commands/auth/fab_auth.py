@@ -200,7 +200,6 @@ def init(args: Namespace) -> Any:
             # User cancelled the authentication process
             return False
 
-    # Check for CLI updates after successful authentication
     fab_version_check.check_and_notify_update()
 
     return True

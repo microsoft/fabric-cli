@@ -52,7 +52,7 @@ def _is_pypi_version_newer(pypi_version: str) -> bool:
         pypi_parts = tuple(int(x) for x in pypi_version.split("."))
         return pypi_parts > current_parts
     except (ValueError, AttributeError):
-        # Conservative: don't show notification if we can't reliably parse versions
+        # Conservative: don't show notification version could not be parsed
         return False
 
 
@@ -66,17 +66,14 @@ def check_and_notify_update() -> None:
     - Displays notification if an update is available
     - Fails silently if PyPI is unreachable
     """
-    # Check if user has disabled update checks
     check_enabled = fab_state_config.get_config(fab_constant.FAB_CHECK_UPDATES)
     if check_enabled == "false":
         fab_logger.log_debug("Version check disabled by user configuration")
         return
 
-    # Check PyPI for latest version
     fab_logger.log_debug("Checking PyPI for latest version")
     latest_version = _fetch_latest_version_from_pypi()
 
-    # Display notification if update available
     if latest_version and _is_pypi_version_newer(latest_version):
         msg = (
             f"\n[notice] A new release of fab is available: {__version__} → {latest_version}\n"

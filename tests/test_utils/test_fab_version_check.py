@@ -180,7 +180,6 @@ def test_cli_version_check_new_version_available_success(
 
     fab_version_check.check_and_notify_update()
 
-    # Should display notification
     mock_questionary_print.assert_called()
     call_msg = str(mock_questionary_print.call_args)
     assert newer_version in call_msg
@@ -197,7 +196,6 @@ def test_cli_version_check_same_version_success(
 
     fab_version_check.check_and_notify_update()
 
-    # Should not display notification
     mock_questionary_print.assert_not_called()
 
 
@@ -211,7 +209,6 @@ def test_cli_version_check_fetch_failure(
 
     fab_version_check.check_and_notify_update()
 
-    # Should not display notification
     mock_questionary_print.assert_not_called()
 
 
@@ -225,5 +222,4 @@ def test_cli_version_check_older_version_success(
 
     fab_version_check.check_and_notify_update()
 
-    # Should not display notification
     mock_questionary_print.assert_not_called()
