@@ -90,7 +90,7 @@ def print_version(args=None):
 
 def print_output_format(
     args: Namespace,
-    message: Optional[str] = None,
+    message: Optional[str | bool] = None,
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
@@ -124,10 +124,10 @@ def print_output_format(
         show_key_value_list=show_key_value_list,
     )
 
-    # Get format from output or config
+    # Get format from output or config, default to text
     format_type = output.output_format_type or fab_state_config.get_config(
         fab_constant.FAB_OUTPUT_FORMAT
-    )
+    ) or "text"
     match format_type:
         case "json":
             _print_output_format_json(output.to_json())
@@ -369,8 +369,10 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         _print_raw_data(output_result.hidden_data)
 
         
-    if output_result.message:
-        print_done(f"{output_result.message}\n")
+    if output_result.message is not None:
+        # Convert boolean messages to string for text output
+        message_str = str(output_result.message).lower() if isinstance(output_result.message, bool) else output_result.message
+        print_done(f"{message_str}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
