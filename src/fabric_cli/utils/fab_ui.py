@@ -124,10 +124,10 @@ def print_output_format(
         show_key_value_list=show_key_value_list,
     )
 
-    # Get format from output or config, default to text
+    # Get format from output or config
     format_type = output.output_format_type or fab_state_config.get_config(
         fab_constant.FAB_OUTPUT_FORMAT
-    ) or "text"
+    )
     match format_type:
         case "json":
             _print_output_format_json(output.to_json())
