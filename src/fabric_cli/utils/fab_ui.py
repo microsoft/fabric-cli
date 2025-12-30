@@ -128,11 +128,6 @@ def print_output_format(
     format_type = output.output_format_type or fab_state_config.get_config(
         fab_constant.FAB_OUTPUT_FORMAT
     )
-    
-    # Default to text if format_type is still None
-    if format_type is None:
-        format_type = "text"
-    
     match format_type:
         case "json":
             _print_output_format_json(output.to_json())
