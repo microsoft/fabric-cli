@@ -328,6 +328,21 @@ def _safe_print_formatted_text(
     except (RuntimeError, AttributeError, Exception) as e:
         _print_fallback(escaped_text, e, to_stderr)
 
+def _format_message_for_text(message: str | bool) -> str:
+    """Format a message value for text output.
+    
+    Converts boolean values to lowercase string representation.
+    
+    Args:
+        message: The message to format (string or boolean)
+        
+    Returns:
+        String representation of the message
+    """
+    if isinstance(message, bool):
+        return str(message).lower()
+    return message
+
 
 def _print_output_format_result_text(output: FabricCLIOutput) -> None:
     # if there is no result to print it means something went wrong
@@ -371,7 +386,7 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         
     if output_result.message is not None:
         # Convert boolean messages to string for text output
-        message_str = str(output_result.message).lower() if isinstance(output_result.message, bool) else output_result.message
+        message_str = _format_message_for_text(output_result.message)
         print_done(f"{message_str}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
