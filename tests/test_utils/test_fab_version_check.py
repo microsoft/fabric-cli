@@ -161,12 +161,18 @@ def test_cli_version_compare_none_version_failure():
     assert result is False
 
 
-def test_cli_version_check_disabled_by_config_success(mock_fab_set_state_config):
-    """Should not check when user has disabled updates."""
+@patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
+def test_cli_version_check_disabled_by_config_success(
+    mock_fetch, mock_fab_set_state_config, mock_questionary_print
+):
+    """Should not display notification when update checks are disabled by config."""
+    newer_version = _increment_version("major")
     mock_fab_set_state_config(fab_constant.FAB_CHECK_UPDATES, "false")
+    mock_fetch.return_value = newer_version
 
     fab_version_check.check_and_notify_update()
 
+    mock_questionary_print.assert_not_called()
 
 
 @patch("fabric_cli.utils.fab_version_check._fetch_latest_version_from_pypi")
