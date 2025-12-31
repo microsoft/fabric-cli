@@ -414,5 +414,13 @@ def interactive_cli(
     mock_parser, mock_subparsers, mock_in_memory_history, mock_prompt_session
 ):
     """Create InteractiveCLI instance with mocked dependencies."""
-    cli = InteractiveCLI(mock_parser, mock_subparsers)
-    return cli
+    # Reset singleton state before each test
+    InteractiveCLI.reset_instance()
+    
+    # Mock the get_global_parser_and_subparsers function to return our mocks
+    with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
+        mock_get_parsers.return_value = (mock_parser, mock_subparsers)
+        cli = InteractiveCLI.get_instance()
+        yield cli
+        # Reset after test
+        InteractiveCLI.reset_instance()
