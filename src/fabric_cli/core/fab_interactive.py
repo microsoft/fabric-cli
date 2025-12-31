@@ -61,6 +61,12 @@ class InteractiveCLI:
         elif command in fab_constant.INTERACTIVE_VERSION_COMMANDS:
             utils_ui.print_version()
             return False  # Do not exit
+        elif command.strip() == "fab":
+            utils_ui.print("You are already in interactive mode. Type 'help' for available commands.")
+            return False  # Stay in interactive mode
+        elif not command.strip():
+            # Handle empty input gracefully - just continue
+            return False
 
         # Interactive mode
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
@@ -87,11 +93,19 @@ class InteractiveCLI:
                         utils_ui.print(
                             f"No function associated with the command: {command.strip()}"
                         )
-                except SystemExit:
+                except SystemExit as e:
                     # Catch SystemExit raised by ArgumentParser and prevent exiting
+                    # This handles cases like --help or invalid arguments in interactive mode
+                    if e.code != 0:
+                        utils_ui.print(f"Command failed with exit code: {e.code}")
+                    return
+                except Exception as e:
+                    # Handle unexpected errors in command execution
+                    utils_ui.print(f"Error executing command: {str(e)}")
                     return
             else:
-                self.parser.error(f"invalid choice: '{command.strip()}'")
+                # Handle invalid commands more gracefully in interactive mode
+                self.parser.error(f"invalid choice: '{command.strip()}'. Type 'help' for available commands.")
 
         return False
 
@@ -108,25 +122,40 @@ class InteractiveCLI:
             utils_ui.print("Type 'help' for help. \n")
 
             while True:
-                context = Context().context
-                pwd_context = f"/{context.path.strip('/')}"
+                try:
+                    context = Context().context
+                    pwd_context = f"/{context.path.strip('/')}"
 
-                prompt_text = HTML(
-                    f"<prompt>fab</prompt><detail>:</detail><context>{html.escape(pwd_context)}</context><detail>$</detail> "
-                )
+                    prompt_text = HTML(
+                        f"<prompt>fab</prompt><detail>:</detail><context>{html.escape(pwd_context)}</context><detail>$</detail> "
+                    )
 
-                user_input = self.session.prompt(
-                    prompt_text,
-                    style=self.custom_style,
-                    cursor=CursorShape.BLINKING_BEAM,
-                    enable_history_search=True,
-                )
-                should_exit = self.handle_command(user_input)
-                if should_exit:  # Check if the command was to exit
-                    break
+                    user_input = self.session.prompt(
+                        prompt_text,
+                        style=self.custom_style,
+                        cursor=CursorShape.BLINKING_BEAM,
+                        enable_history_search=True,
+                    )
+                    should_exit = self.handle_command(user_input)
+                    if should_exit:  # Check if the command was to exit
+                        break
+
+                except KeyboardInterrupt:
+                    # Handle Ctrl+C gracefully during command input
+                    utils_ui.print("\nUse 'quit' or 'exit' to leave interactive mode.")
+                    continue
+                except Exception as e:
+                    # Handle unexpected errors during prompt processing
+                    utils_ui.print(f"Error in interactive session: {str(e)}")
+                    utils_ui.print("Session will continue. Type 'quit' to exit safely.")
+                    continue
 
         except (EOFError, KeyboardInterrupt):
             utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
+        except Exception as e:
+            # Handle critical errors that would terminate the session
+            utils_ui.print(f"\nCritical error in interactive mode: {str(e)}")
+            utils_ui.print(fab_constant.INTERACTIVE_EXIT_MESSAGE)
         finally:
             self._is_running = False
 
