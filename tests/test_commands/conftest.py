@@ -499,7 +499,6 @@ def virtual_workspace_item_factory(
 
 def mkdir(element_full_path, params=None):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
-    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="mkdir",
         command_path="mkdir",
@@ -513,7 +512,6 @@ def mkdir(element_full_path, params=None):
 
 def rm(element_full_path):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
-    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="rm",
         command_path="rm",
@@ -527,7 +525,6 @@ def rm(element_full_path):
 
 def import_cmd(element_full_path, content_path, format=None):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
-    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="import",
         command_path="import",
@@ -555,9 +552,9 @@ def delete_cassette_if_record_mode_all(vcr_instance, cassette_name):
 
 
 # region mock fixtures
-@pytest.fixture(autouse=True)
-def setup_default_format(mock_fab_set_state_config):
-    mock_fab_set_state_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
+@pytest.fixture(autouse=True, scope="class")
+def setup_default_format():
+    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
 
 
 @pytest.fixture(autouse=True)
