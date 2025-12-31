@@ -385,7 +385,6 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
 
         
     if output_result.message is not None:
-        # Convert boolean messages to string for text output
         message_str = _format_message_for_text(output_result.message)
         print_done(f"{message_str}\n")
 

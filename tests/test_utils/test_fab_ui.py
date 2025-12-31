@@ -787,27 +787,22 @@ def test_print_output_format_boolean_message_json_success(
     mock_fab_set_state_config, capsys
 ):
     """Test that boolean message values are properly serialized as JSON booleans, not strings."""
-    # Setup
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
     args = Namespace(command="exists", output_format="json")
 
-    # Test with True boolean
     ui.print_output_format(args, message=True)
     captured = capsys.readouterr()
     output_true = json.loads(captured.out)
     
-    # Assert that message is a boolean true, not the string "true"
     assert "result" in output_true
     assert "message" in output_true["result"]
     assert output_true["result"]["message"] is True
     assert isinstance(output_true["result"]["message"], bool)
     
-    # Test with False boolean
     ui.print_output_format(args, message=False)
     captured = capsys.readouterr()
     output_false = json.loads(captured.out)
     
-    # Assert that message is a boolean false, not the string "false"
     assert "result" in output_false
     assert "message" in output_false["result"]
     assert output_false["result"]["message"] is False
@@ -816,21 +811,15 @@ def test_print_output_format_boolean_message_json_success(
 
 def test_print_output_format_boolean_message_text_success(capsys):
     """Test that boolean message values are properly converted to strings for text output."""
-    # Setup
     args = Namespace(command="exists", output_format="text")
 
-    # Test with True boolean
     ui.print_output_format(args, message=True)
     captured = capsys.readouterr()
     
-    # Assert that message is converted to string "true"
-    # Output goes to stdout (captured.out), not stderr
     assert "true" in captured.out.lower()
     
-    # Test with False boolean
     ui.print_output_format(args, message=False)
     captured = capsys.readouterr()
     
-    # Assert that message is converted to string "false"
     assert "false" in captured.out.lower()
 

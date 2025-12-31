@@ -4,7 +4,6 @@
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.data.static_test_data import StaticTestData
-import json
 
 
 class TestExists:

@@ -499,12 +499,12 @@ def virtual_workspace_item_factory(
 
 def mkdir(element_full_path, params=None):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
+    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="mkdir",
         command_path="mkdir",
         path=element_full_path,
         params=params if params else ["run=true"],
-        output_format="text",
     )
 
     context = handle_context.get_command_context(args.path, False)
@@ -513,12 +513,12 @@ def mkdir(element_full_path, params=None):
 
 def rm(element_full_path):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
+    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="rm",
         command_path="rm",
         path=element_full_path,
         force=True,
-        output_format="text",
     )
 
     context = handle_context.get_command_context(args.path)
@@ -527,6 +527,7 @@ def rm(element_full_path):
 
 def import_cmd(element_full_path, content_path, format=None):
     state_config.set_config(fab_constant.FAB_CACHE_ENABLED, "false")
+    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     args = argparse.Namespace(
         command="import",
         command_path="import",
@@ -534,7 +535,6 @@ def import_cmd(element_full_path, content_path, format=None):
         input=content_path,
         force=True,
         format=format,
-        output_format="text",
     )
 
     context = handle_context.get_command_context(args.path, raise_error=False)
