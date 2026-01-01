@@ -22,9 +22,12 @@ class InteractiveCLI:
     def __init__(self, parser=None, subparsers=None):
         """Initialize the interactive CLI."""
         if parser is None or subparsers is None:
-            from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
+            from fabric_cli.core.fab_parser_setup import (
+                get_global_parser_and_subparsers,
+            )
+
             parser, subparsers = get_global_parser_and_subparsers()
-            
+
         self.parser = parser
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
         self.subparsers = subparsers
@@ -47,28 +50,27 @@ class InteractiveCLI:
         """Process the user command."""
         fab_logger.print_log_file_path()
 
-        command_parts = shlex.split(command.strip())  # Split the command into parts
+        command_parts = shlex.split(command.strip())
 
-        # Handle special commands first
         if command in fab_constant.INTERACTIVE_QUIT_COMMANDS:
             utils_ui.print(fab_constant.INTERACTIVE_EXIT_MESSAGE)
-            return True  # Exit
+            return True
         elif command in fab_constant.INTERACTIVE_HELP_COMMANDS:
             utils_ui.display_help(
                 fab_commands.COMMANDS, "Usage: <command> <subcommand> [flags]"
             )
-            return False  # Do not exit
+            return False
         elif command in fab_constant.INTERACTIVE_VERSION_COMMANDS:
             utils_ui.print_version()
-            return False  # Do not exit
+            return False
         elif command.strip() == "fab":
-            utils_ui.print("You are already in interactive mode. Type 'help' for available commands.")
-            return False  # Stay in interactive mode
+            utils_ui.print(
+                "In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands."
+            )
+            return False
         elif not command.strip():
-            # Handle empty input gracefully - just continue
             return False
 
-        # Interactive mode
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
 
         # Now check for subcommands
@@ -93,18 +95,9 @@ class InteractiveCLI:
                         utils_ui.print(
                             f"No function associated with the command: {command.strip()}"
                         )
-                except SystemExit as e:
-                    # Catch SystemExit raised by ArgumentParser and prevent exiting
-                    # This handles cases like --help or invalid arguments in interactive mode
-                    if e.code != 0:
-                        utils_ui.print(f"Command failed with exit code: {e.code}")
-                    return
-                except Exception as e:
-                    # Handle unexpected errors in command execution
-                    utils_ui.print(f"Error executing command: {str(e)}")
+                except SystemExit:
                     return
             else:
-                # Handle invalid commands more gracefully in interactive mode
                 self.parser.error(f"invalid choice: '{command.strip()}'. Type 'help' for available commands.")
 
         return False
@@ -116,7 +109,7 @@ class InteractiveCLI:
             return
 
         self._is_running = True
-        
+
         try:
             utils_ui.print("\nWelcome to the Fabric CLI ⚡")
             utils_ui.print("Type 'help' for help. \n")

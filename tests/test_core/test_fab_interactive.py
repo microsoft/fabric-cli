@@ -105,7 +105,7 @@ class TestInteractiveCLI:
 
         # Verify it stays in interactive mode and shows message
         assert result is False
-        mock_print_ui.assert_called_with("You are already in interactive mode. Type 'help' for available commands.")
+        mock_print_ui.assert_called_with("In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands.")
         mock_print_log_file_path.assert_called_once()
 
 
@@ -321,17 +321,15 @@ class TestInteractiveCLI:
         assert any("input" in rule for rule in style_rules)
 
     # Test fab + enter automatic mode switching
-    def test_main_no_args_starts_interactive_mode(self):
+    def test_main_no_args_starts_interactive_mode_success(self):
         """Test that running 'fab' without arguments automatically enters interactive mode."""
         with patch("fabric_cli.main._start_auto_repl") as mock_start_auto_repl:
             import sys
 
             from fabric_cli.main import main
 
-            # Mock sys.argv to simulate 'fab' with no arguments
             with patch.object(sys, 'argv', ['fab']):
                 with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
-                    # Create mock parser that returns no command when no args provided
                     mock_parser = type('MockParser', (), {
                         'parse_args': lambda: type('Args', (), {
                             'command': None,
@@ -347,7 +345,7 @@ class TestInteractiveCLI:
                     
                     mock_start_auto_repl.assert_called_once()
 
-    def test_start_auto_repl_calls_interactive_mode(self):
+    def test_start_auto_repl_calls_interactive_mode_success(self):
         """Test that _start_auto_repl properly calls start_interactive_mode."""
         with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
             from fabric_cli.main import _start_auto_repl
@@ -356,13 +354,12 @@ class TestInteractiveCLI:
             
             mock_start_interactive.assert_called_once()
 
-    def test_start_auto_repl_handles_exceptions(self):
+    def test_start_auto_repl_handles_exceptions_success(self):
         """Test that _start_auto_repl handles exceptions gracefully."""
         with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive, \
              patch("fabric_cli.utils.fab_ui.print_output_error") as mock_print_error, \
              patch("sys.exit") as mock_exit:
             
-            # Make start_interactive_mode raise an exception
             mock_start_interactive.side_effect = Exception("Test error")
             
             from fabric_cli.main import _start_auto_repl
@@ -372,7 +369,7 @@ class TestInteractiveCLI:
             mock_print_error.assert_called_once()
             mock_exit.assert_called_once()
 
-    def test_fab_command_in_interactive_mode_shows_message(
+    def test_fab_command_in_interactive_mode_shows_message_success(
         self, interactive_cli, mock_print_ui, mock_print_log_file_path
     ):
         """Test that running 'fab' while already in interactive mode shows informative message."""
@@ -380,10 +377,10 @@ class TestInteractiveCLI:
 
         # Verify it stays in interactive mode and shows message
         assert result is False
-        mock_print_ui.assert_called_with("You are already in interactive mode. Type 'help' for available commands.")
+        mock_print_ui.assert_called_with("In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands.")
         mock_print_log_file_path.assert_called_once()
 
-    def test_interactive_cli_singleton_pattern(self):
+    def test_interactive_cli_singleton_pattern_success(self):
         """Test that InteractiveCLI follows singleton pattern"""
         from fabric_cli.core.fab_interactive import InteractiveCLI
     
