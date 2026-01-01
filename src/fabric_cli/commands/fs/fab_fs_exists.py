@@ -34,7 +34,7 @@ def exec_command(args: Namespace, context: FabricElement) -> None:
 
 # Workspaces and Items
 def _check_if_element_exists(element: FabricElement, args: Namespace) -> None:
-    text_message = fab_constant.INFO_EXISTS_TRUE if element.id else fab_constant.INFO_EXISTS_FALSE
+    text_message = True if element.id else False
     utils_ui.print_output_format(args, message=text_message)
 
 
@@ -49,10 +49,9 @@ def _check_if_onelake_file_or_directory_exists(
     args.directory = f"{workspace_id}/?recursive=false&resource=filesystem&directory={item_id}/{local_path}&getShortcutMetadata=true"
     try:
         onelake_api.list_tables_files_recursive(args)
-        utils_ui.print_output_format(args, message=fab_constant.INFO_EXISTS_TRUE)
+        utils_ui.print_output_format(args, message=True)
     except FabricCLIError as e:
         if e.status_code == fab_constant.ERROR_NOT_FOUND:
-            utils_ui.print_output_format(args, message=fab_constant.INFO_EXISTS_FALSE
-            )
+            utils_ui.print_output_format(args, message=False)
         else:
             raise e

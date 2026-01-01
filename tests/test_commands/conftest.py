@@ -552,9 +552,9 @@ def delete_cassette_if_record_mode_all(vcr_instance, cassette_name):
 
 
 # region mock fixtures
-@pytest.fixture(autouse=True)
-def setup_default_format(mock_fab_set_state_config):
-    mock_fab_set_state_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
+@pytest.fixture(autouse=True, scope="class")
+def setup_default_format():
+    state_config.set_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
 
 
 @pytest.fixture(autouse=True)

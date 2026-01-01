@@ -21,7 +21,7 @@ class OutputResult:
         self,
         data: Optional[Any],
         hidden_data: Optional[List[Any]],
-        message: Optional[str],
+        message: Optional[str | bool],
         error_code: Optional[str] = None,
     ):
         self._data = data if isinstance(data, list) else ([data] if data else None)
@@ -40,7 +40,7 @@ class OutputResult:
         return self._hidden_data
 
     @property
-    def message(self) -> Optional[str]:
+    def message(self) -> Optional[str | bool]:
         return self._message
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,7 +73,7 @@ class FabricCLIOutput:
         output_format_type=None,
         show_headers=False,
         status: OutputStatus = OutputStatus.Success,
-        message: Optional[str] = None,
+        message: Optional[str | bool] = None,
         error_code: Optional[str] = None,
         data: Optional[Any] = None,
         hidden_data: Optional[Any] = None,

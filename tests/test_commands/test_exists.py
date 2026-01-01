@@ -16,7 +16,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_item_exists_success(
         self, item_factory, mock_print_done, cli_executor
@@ -32,7 +32,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_virtual_workspace_item_capacity_exists_success(
         self, mock_print_done, cli_executor, test_data: StaticTestData
@@ -44,7 +44,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_onelake_exists_success(
         self, item_factory, mock_print_done, cli_executor
@@ -60,7 +60,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_item_doesnt_exist_success(
         self, item_factory, mock_print_done, cli_executor
@@ -77,7 +77,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
+        assert "false" in mock_print_done.call_args[0][0]
 
     def test_exists_onelake_doesnt_exist_success(
         self, item_factory, mock_print_done, cli_executor
@@ -95,7 +95,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
+        assert "false" in mock_print_done.call_args[0][0]
 
     def test_exists_folder_exists_success(
         self, folder_factory, mock_print_done, cli_executor
@@ -111,7 +111,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_subfolder_exists_success(
         self, folder_factory, mock_print_done, cli_executor
@@ -128,7 +128,7 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        assert "true" in mock_print_done.call_args[0][0]
 
     def test_exists_folder_doesnt_exist_success(
         self, workspace, mock_print_done, cli_executor
@@ -143,6 +143,6 @@ class TestExists:
 
         # Assert
         mock_print_done.assert_called_once()
-        assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
+        assert "false" in mock_print_done.call_args[0][0]
 
     # endregion

@@ -90,7 +90,7 @@ def print_version(args=None):
 
 def print_output_format(
     args: Namespace,
-    message: Optional[str] = None,
+    message: Optional[str | bool] = None,
     data: Optional[Any] = None,
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
@@ -328,6 +328,21 @@ def _safe_print_formatted_text(
     except (RuntimeError, AttributeError, Exception) as e:
         _print_fallback(escaped_text, e, to_stderr)
 
+def _format_message_for_text(message: str | bool) -> str:
+    """Format a message value for text output.
+    
+    Converts boolean values to lowercase string representation.
+    
+    Args:
+        message: The message to format (string or boolean)
+        
+    Returns:
+        String representation of the message
+    """
+    if isinstance(message, bool):
+        return str(message).lower()
+    return message
+
 
 def _print_output_format_result_text(output: FabricCLIOutput) -> None:
     # if there is no result to print it means something went wrong
@@ -369,8 +384,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         _print_raw_data(output_result.hidden_data)
 
         
-    if output_result.message:
-        print_done(f"{output_result.message}\n")
+    if output_result.message is not None:
+        message_str = _format_message_for_text(output_result.message)
+        print_done(f"{message_str}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
