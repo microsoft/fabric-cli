@@ -57,7 +57,9 @@ def exec(item: Item, args: Namespace) -> None:
             item_api.update_item(args, item_update_payload, item_uri=True)
 
             if fab_constant.ITEM_QUERY_DISPLAY_NAME in update_payload_dict:
-                new_item_name = update_payload_dict[fab_constant.ITEM_QUERY_DISPLAY_NAME]
+                new_item_name = update_payload_dict[
+                    fab_constant.ITEM_QUERY_DISPLAY_NAME
+                ]
                 item._name = new_item_name
                 utils_mem_store.upsert_item_to_cache(item)
 
@@ -69,7 +71,6 @@ def _update_item_definition(
     query_value: str,
     input_value: str,
 ) -> dict:
-    """Update item definition with base64 decode/encode."""
     try:
         updated_def = utils_set.update_item_definition(
             item_def,
@@ -89,7 +90,6 @@ def _update_item_metadata(
     query_value: str,
     input_value: str,
 ) -> dict:
-    """Update item metadata without base64 encoding."""
     try:
         return utils_set.update_fabric_element(
             item_metadata,
