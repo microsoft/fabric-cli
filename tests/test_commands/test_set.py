@@ -228,7 +228,6 @@ class TestSET:
         )
 
         # Assert
-        # Cache is only updated when displayName changes, not for other properties
         upsert_workspace_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
