@@ -34,14 +34,10 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         args.id = virtual_ws_item.id
 
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = domain_api.update_domain(args, updated_def)
+        response = domain_api.update_domain(args, json.dumps(updated_def, indent=4))
 
         if response.status_code == 200:
-            if "displayName" in updated_def:
-                # Update mem_store
-                new_domain_name = updated_def["displayName"]
-                virtual_ws_item._name = new_domain_name
-                utils_mem_store.upsert_domain_to_cache(virtual_ws_item)
-
+            utils_set.update_cache(
+                updated_def, virtual_ws_item, utils_mem_store.upsert_domain_to_cache
+            )
             utils_ui.print_output_format(args, message="Domain updated")
-

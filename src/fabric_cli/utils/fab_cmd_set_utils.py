@@ -94,16 +94,13 @@ def update_fabric_element(
     try:
         input = json.loads(input)
     except (TypeError, json.JSONDecodeError):
-        # If it's not a JSON string, keep it as is
         pass
 
     updated_def = utils_jmespath.replace(resource_def, query, input)
 
     if extract_updated_only:
-        # Extract only the updated properties based on the query path
         return extract_updated_properties(updated_def, query)
     else:
-        # Return the entire updated resource definition
         return updated_def
 
 
@@ -129,7 +126,6 @@ def update_item_definition(
     try:
         input = json.loads(input)
     except (TypeError, json.JSONDecodeError):
-        # If it's not a JSON string, keep it as is
         pass
 
     # Decode > replace > encode
@@ -141,22 +137,26 @@ def update_item_definition(
     return updated_def
 
 
+def update_cache(
+    updated_def: dict,
+    element,
+    cache_update_func,
+) -> None:
+    """Update element's display name in cache if it was changed.
+
+    Args:
+        updated_def: Dictionary containing the updated properties.
+        element: The Fabric element whose name should be updated.
+        cache_update_func: Function to call to update the cache.
+
+    """
+    if "displayName" in updated_def:
+        element._name = updated_def["displayName"]
+        cache_update_func(element)
+
+
 def print_set_warning() -> None:
     fab_logger.log_warning("Modifying properties may lead to unintended consequences")
-
-
-def extract_json_schema(schema: dict, definition: bool = True) -> tuple:
-    name_description_properties = {
-        "displayName": schema.get("displayName", ""),
-        "description": schema.get("description", ""),
-    }
-
-    definition_properties = None
-
-    if definition:
-        definition_properties = {"definition": schema.get("definition", {})}
-
-    return definition_properties, name_description_properties
 
 
 def extract_updated_properties(updated_data: dict, query_path: str) -> dict:

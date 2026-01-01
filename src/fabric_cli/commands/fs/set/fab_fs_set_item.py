@@ -40,8 +40,7 @@ def exec(item: Item, args: Namespace) -> None:
 
             updated_def = _update_item_definition(definition, query_value, args.input)
 
-            definition_base64_to_update, _ = utils_set.extract_json_schema(updated_def)
-            update_item_definition_payload = json.dumps(definition_base64_to_update)
+            update_item_definition_payload = json.dumps(updated_def)
 
             utils_ui.print_grey(f"Setting new property for '{item.name}'...")
             item_api.update_item_definition(args, update_item_definition_payload)

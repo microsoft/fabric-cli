@@ -33,18 +33,8 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
             vwsi_capacity_def, query, args.input
         )
 
-        def _prep_for_updated_def(data):
-            data.pop("id", None)
-            data.pop("type", None)
-            data.pop("name", None)
-            data.pop("tags", None)
-            data.pop("fabricId", None)
-            return json.dumps(data, indent=4)
-
-        capacity_update_def = _prep_for_updated_def(updated_def)
-
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = capacity_api.update_capacity(args, capacity_update_def)
+        response = capacity_api.update_capacity(args, json.dumps(updated_def, indent=4))
 
         if response.status_code == 200:
             utils_ui.print_output_format(args, message="Capacity updated")

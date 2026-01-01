@@ -33,12 +33,7 @@ def exec(workspace: Workspace, args: Namespace) -> None:
 
         updated_def = utils_set.update_fabric_element(workspace_def, query, args.input)
 
-        definition_base64_to_update, name_description_properties = (
-            utils_set.extract_json_schema(updated_def, definition=False)
-        )
-
         args.ws_id = workspace.id
-        update_workspace_payload = json.dumps(name_description_properties)
 
         utils_ui.print_grey(f"Setting new property for '{workspace.name}'...")
 
@@ -51,11 +46,10 @@ def exec(workspace: Workspace, args: Namespace) -> None:
             )
         # Update workspace
         else:
-            response = workspace_api.update_workspace(args, update_workspace_payload)
+            response = workspace_api.update_workspace(args, json.dumps(updated_def))
 
         if response.status_code == 200:
-            # Update mem_store
-            workspace._name = name_description_properties["displayName"]
-            utils_mem_store.upsert_workspace_to_cache(workspace)
-
+            utils_set.update_cache(
+                updated_def, workspace, utils_mem_store.upsert_workspace_to_cache
+            )
             utils_ui.print_output_format(args, message="Workspace updated")
