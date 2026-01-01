@@ -263,7 +263,7 @@ fab export ws1.Workspace -o /ws1.Workspace/lh1.Lakehouse/Files -a
 ### Copy Workspace Items
 #### Copy Items Between Workspaces
 
-Copy items from one workspace to another. Supported for [exportable items](./item_examples.md#copy-items).
+Copy items from one workspace to another. Supported for [exportable items](./item_examples.md#copy-item).
 
 ```
 fab cp ws1.Workspace ws2.Workspace

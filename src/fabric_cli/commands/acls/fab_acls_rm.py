@@ -22,10 +22,8 @@ def exec_command(args: Namespace, context: FabricElement) -> None:
         _rm_acls_workspace(context, args)
     elif isinstance(context, VirtualWorkspaceItem):
         if context.item_type == VirtualWorkspaceItemType.CONNECTION:
-            fab_logger.log_warning(constant.WARNING_FABRIC_ADMIN_ROLE)
             _rm_acls_connection(context, args)
         elif context.item_type == VirtualWorkspaceItemType.GATEWAY:
-            fab_logger.log_warning(constant.WARNING_FABRIC_ADMIN_ROLE)
             _rm_acls_gateway(context, args)
         else:
             raise FabricCLIError(

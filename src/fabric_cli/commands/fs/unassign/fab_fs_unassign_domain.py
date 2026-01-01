@@ -20,7 +20,7 @@ def exec(
     args: Namespace,
     force_unassign: bool,
 ) -> None:
-    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
 
     if isinstance(ws, Workspace):
         args.id = virtual_ws_item.id
