@@ -196,8 +196,6 @@ COMMAND_LABELS_RM_DESCRIPTION = "Remove a sensitivity label from an item."
 COMMAND_VERSION_DESCRIPTION = "Show version information."
 
 # Info
-INFO_EXISTS_TRUE = True
-INFO_EXISTS_FALSE = False
 INFO_FEATURE_NOT_SUPPORTED = "Feature is not supported"
 
 # Warnings
