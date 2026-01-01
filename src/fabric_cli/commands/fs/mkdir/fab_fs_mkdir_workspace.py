@@ -76,9 +76,10 @@ def exec(workspace: Workspace, args: Namespace) -> None:
 
     response = workspace_api.create_workspace(args, json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{workspace.name}' created")
         data = json.loads(response.text)
         workspace._id = data["id"]
-
         # Add to mem_store
         utils_mem_store.upsert_workspace_to_cache(workspace)
+
+        utils_ui.print_output_format(args, message=f"'{workspace.name}' created", data=data, show_headers=True)
+

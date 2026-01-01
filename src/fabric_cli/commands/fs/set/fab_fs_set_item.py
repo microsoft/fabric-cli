@@ -33,7 +33,8 @@ def exec(item: Item, args: Namespace) -> None:
         args.item_uri = format_mapping.get(item.item_type, "items")
 
         if query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION):
-            args.format = definition_format_mapping.get(item.item_type, "")
+            formats = definition_format_mapping.get(item.item_type, {"default": ""})
+            args.format = formats["default"]
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
 

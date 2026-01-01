@@ -32,13 +32,11 @@ def exec_command(args: Namespace, context: FabricElement) -> None:
         args.query = utils.process_nargs(args.query)
 
     if isinstance(context, Workspace):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
         _get_acls_workspace(context, args)
     elif isinstance(context, Item):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
         _get_acls_item(context, args)
     elif isinstance(context, VirtualWorkspaceItem):
-        fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
         _get_acls_virtual_ws_item(context, args)
     elif (
         # OneLake security only supporting Lakehouse items

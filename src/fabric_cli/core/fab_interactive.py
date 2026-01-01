@@ -12,12 +12,19 @@ from prompt_toolkit.styles import Style
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_context import Context
+from fabric_cli.core.fab_decorators import singleton
 from fabric_cli.utils import fab_commands
 from fabric_cli.utils import fab_ui as utils_ui
 
 
+@singleton
 class InteractiveCLI:
-    def __init__(self, parser, subparsers):
+    def __init__(self, parser=None, subparsers=None):
+        """Initialize the interactive CLI."""
+        if parser is None or subparsers is None:
+            from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
+            parser, subparsers = get_global_parser_and_subparsers()
+            
         self.parser = parser
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
         self.subparsers = subparsers
@@ -31,6 +38,7 @@ class InteractiveCLI:
                 ("input", "fg:white"),  # Input color
             ]
         )
+        self._is_running = False
 
     def init_session(self, session_history: InMemoryHistory) -> PromptSession:
         return PromptSession(history=session_history)
@@ -89,11 +97,17 @@ class InteractiveCLI:
 
     def start_interactive(self):
         """Start the interactive mode using prompt_toolkit for input."""
-        utils_ui.print("\nWelcome to the Fabric CLI ⚡")
-        utils_ui.print("Type 'help' for help. \n")
+        if self._is_running:
+            utils_ui.print("Interactive mode is already running.")
+            return
 
-        while True:
-            try:
+        self._is_running = True
+        
+        try:
+            utils_ui.print("\nWelcome to the Fabric CLI ⚡")
+            utils_ui.print("Type 'help' for help. \n")
+
+            while True:
                 context = Context().context
                 pwd_context = f"/{context.path.strip('/')}"
 
@@ -111,6 +125,13 @@ class InteractiveCLI:
                 if should_exit:  # Check if the command was to exit
                     break
 
-            except (EOFError, KeyboardInterrupt):
-                utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
-                break
+        except (EOFError, KeyboardInterrupt):
+            utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
+        finally:
+            self._is_running = False
+
+
+def start_interactive_mode():
+    """Launch interactive mode using singleton pattern"""
+    interactive_cli = InteractiveCLI()
+    interactive_cli.start_interactive()

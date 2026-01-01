@@ -25,10 +25,10 @@ def exec(managed_identity: VirtualItem, args: Namespace) -> None:
     utils_ui.print_grey(f"Creating a new Managed Identity...")
     response = managed_identity_api.provision_managed_identity(args)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{managed_identity.name}' created")
 
         data = json.loads(response.text)
         managed_identity._id = data["servicePrincipalId"]
 
         # Add to mem_store
         utils_mem_store.upsert_managed_identity_to_cache(managed_identity)
+        utils_ui.print_output_format(args, message=f"'{managed_identity.name}' created", data=data, show_headers=True)

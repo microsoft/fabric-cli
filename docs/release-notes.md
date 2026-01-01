@@ -10,7 +10,7 @@ hide:
 
 ### ✨ New Functionality
 
-* Add support of `mv`, `cp` and `import` commands for SQLDatabase item type
+* Add support of mv, cp, export and import for SQLDatabase item type
 * Add new 'job run-rm' command for remove a scheduled job
 * Enhance `set` command for items to support any settable property path within the item's definition and metadata structure
 * Add support in `ls` commmand using `-q` flag for filtering based on JMESPath expressions
