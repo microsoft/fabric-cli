@@ -31,8 +31,9 @@ def _fetch_latest_version_from_pypi() -> Optional[str]:
         )
         response.raise_for_status()
         return response.json()["info"]["version"]
-    except (requests.RequestException, KeyError, ValueError, TypeError):
+    except (requests.RequestException, KeyError, ValueError, TypeError) as e:
         # Silently fail - don't interrupt user experience for version checks
+        fab_logger.log_debug(f"Failed to fetch version from PyPI: {e}")
         return None
 
 
