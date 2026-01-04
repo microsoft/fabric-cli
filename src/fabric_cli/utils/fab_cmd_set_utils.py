@@ -86,7 +86,7 @@ def update_fabric_element(
         input: New value to set.
         return_full_element: If True, returns the entire updated resource element.
             If False, returns only the modified properties extracted by the query path.
-            Defaults to False for backward compatibility.
+            Defaults to True.
 
     Returns:
         Updated dictionary.
