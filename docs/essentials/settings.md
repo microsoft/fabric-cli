@@ -7,6 +7,7 @@ The Fabric CLI provides a comprehensive set of configuration settings that allow
 | Name                           | Description                                                                                 | Type       | Default |
 |--------------------------------|-------------------------------------------------------------------------------------------- |------------|---------|
 | `cache_enabled`                | Toggles caching of CLI HTTP responses                           | `BOOLEAN`  | `true`  |
+| `check_cli_version_updates`                | Enables automatic update notifications on login                                            | `BOOLEAN`  | `true`  |
 | `debug_enabled`                | Toggles additional diagnostic logs for troubleshooting                                   | `BOOLEAN`  | `false` |
 | `context_persistence_enabled`  | Persists CLI navigation context in command line mode across sessions | `BOOLEAN` | `false` |
 | `encryption_fallback_enabled`  | Permits storing tokens in plain text if secure encryption is unavailable                  | `BOOLEAN`  | `false` |

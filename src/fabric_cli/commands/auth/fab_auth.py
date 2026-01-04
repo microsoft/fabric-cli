@@ -10,7 +10,7 @@ from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_mem_store as utils_mem_store
-from fabric_cli.utils import fab_ui
+from fabric_cli.utils import fab_ui, fab_version_check
 
 
 def init(args: Namespace) -> Any:
@@ -199,7 +199,10 @@ def init(args: Namespace) -> Any:
         except KeyboardInterrupt:
             # User cancelled the authentication process
             return False
-        return True
+
+    fab_version_check.check_and_notify_update()
+
+    return True
 
 
 def logout(args: Namespace) -> None:

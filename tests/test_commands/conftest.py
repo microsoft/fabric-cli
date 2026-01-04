@@ -104,7 +104,7 @@ def vcr_instance(vcr_mode, request):
         before_record_response=process_response,
         path_transformer=vcr.VCR.ensure_suffix(".yaml"),
         match_on=["method", "uri", "json_body"],
-        ignore_hosts=["login.microsoftonline.com"],
+        ignore_hosts=["login.microsoftonline.com", "pypi.org"],
     )
 
     set_vcr_mode_env(vcr_mode)

@@ -91,6 +91,11 @@ FAB_OUTPUT_ITEM_SORT_CRITERIA = "output_item_sort_criteria"
 FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
+FAB_CHECK_UPDATES = "check_cli_version_updates"
+
+# Version check settings
+VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
+VERSION_CHECK_TIMEOUT_SECONDS = 3
 
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
@@ -111,6 +116,7 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_OUTPUT_FORMAT: ["text", "json"],
     FAB_FOLDER_LISTING_ENABLED: ["false", "true"],
     FAB_WS_PRIVATE_LINKS_ENABLED: ["false", "true"],
+    FAB_CHECK_UPDATES: ["false", "true"],
     # Add more keys and their respective allowed values as needed
 }
 
@@ -127,6 +133,7 @@ CONFIG_DEFAULT_VALUES = {
     FAB_OUTPUT_FORMAT: "text",
     FAB_FOLDER_LISTING_ENABLED: "false",
     FAB_WS_PRIVATE_LINKS_ENABLED: "false",
+    FAB_CHECK_UPDATES: "true",
 }
 
 # Command descriptions
