@@ -10,10 +10,10 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 commands = {
     "Commands": {
-        "load": "Load data into a table in the lakehouse.",
+        "load": "Load data into a lakehouse table.",
         "optimize": "Optimize a Delta table.",
-        "schema": "Display the schema of a Delta table.",
-        "vacuum": "Vacuum a Delta table by removing old files.",
+        "schema": "Show the schema of a Delta table.",
+        "vacuum": "Clean up old files in a Delta table.",
     },
 }
 
