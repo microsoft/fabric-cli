@@ -234,3 +234,13 @@ class CommonErrors:
     @staticmethod
     def query_contains_filters_or_wildcards(query_value: str) -> str:
         return f"Query '{query_value}' contains filters or wildcards which are not supported for set item command"
+
+    @staticmethod
+    def gateway_type_not_supported(gateway_type: str) -> str:
+        return f"Set operation on Gateway type '{gateway_type}' not supported"
+
+    @staticmethod
+    def gateway_property_not_supported_for_type(
+        property_name: str, gateway_type: str
+    ) -> str:
+        return f"Setting '{property_name}' is not supported for Gateway type '{gateway_type}'"

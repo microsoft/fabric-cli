@@ -228,7 +228,7 @@ class TestSET:
         )
 
         # Assert
-        upsert_workspace_to_cache.assert_called_once()
+        upsert_workspace_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
         get(workspace.full_path, query=query)
@@ -301,7 +301,7 @@ class TestSET:
         )
 
         # Assert
-        upsert_spark_pool_to_cache.assert_called_once()
+        upsert_spark_pool_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
         get(sparkpool.full_path, query=query)
@@ -441,7 +441,7 @@ class TestSET:
         )
 
         # Assert
-        upsert_domain_to_cache.assert_called_once()
+        upsert_domain_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
         get(domain.full_path, query=query)
@@ -787,8 +787,14 @@ class TestSET:
 
         # Assert
         mock_print_done.assert_called_once()
-        if upsert_entity_to_cache and should_upsert_to_cache:
+        if (
+            upsert_entity_to_cache
+            and should_upsert_to_cache
+            and metadata_to_set in ["displayName", "name"]
+        ):
             upsert_entity_to_cache.assert_called_once()
+        elif upsert_entity_to_cache:
+            upsert_entity_to_cache.assert_not_called()
 
         new_entity = entity
 

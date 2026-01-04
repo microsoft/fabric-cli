@@ -26,26 +26,16 @@ def exec(folder: Folder, args: Namespace) -> None:
         args.output = None
         folder_def = get_folder.exec(folder, args, verbose=False)
 
-        _, updated_def = utils_set.update_fabric_element(
-            folder_def, query, args.input, decode_encode=False
-        )
+        updated_def = utils_set.update_fabric_element(folder_def, query, args.input)
 
-        def _prep_for_updated_def(data):
-            data.pop("id", None)  # Remove 'id' if it exists
-            data.pop("workspaceId", None)  # Remove 'workspaceId' if it exists
-            data.pop("parentFolderId", None)  # Remove 'parentFolderId' if it exists
-            return json.dumps(data, indent=4)
-
-        folder_update_def = _prep_for_updated_def(updated_def)
         args.name = folder.short_name
         args.id = folder.id
 
         utils_ui.print_grey(f"Setting new property for '{folder.name}'...")
-        response = folder_api.update_folder(args, folder_update_def)
+        response = folder_api.update_folder(args, json.dumps(updated_def))
 
         if response.status_code == 200:
-            # Update mem_store
-            folder._name = updated_def["displayName"]
-            utils_mem_store.upsert_folder_to_cache(folder)
-
+            utils_set.update_cache(
+                updated_def, folder, utils_mem_store.upsert_folder_to_cache
+            )
             utils_ui.print_output_format(args, message="Folder updated")
