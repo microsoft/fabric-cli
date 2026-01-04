@@ -10,9 +10,9 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 commands = {
     "Commands": {
-        "login": "Log in to a Fabric account.",
-        "logout": "Log out of a Fabric account.",
-        "status": "Display active account and authentication state.",
+        "login": "Authenticate with Fabric.",
+        "logout": "End the current authentication session.",
+        "status": "Show authentication status.",
     },
 }
 
