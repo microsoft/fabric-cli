@@ -64,25 +64,25 @@ parserHandlers = [
 ]
 
 
-class TestInteractiveCLI(InteractiveCLI):
-    def init_session(self, session_history: InMemoryHistory) -> PromptSession:
-        if platform.system() == "Windows":
-            # DummyInput and DummyOutput are test classes of prompt_toolkit to
-            # solve the NoConsoleScreenBufferError issue
-            return PromptSession(
-                history=session_history, input=DummyInput(), output=DummyOutput()
-            )
-
-        return super().init_session(session_history)
-
-
 class CLIExecutor:
     def __init__(self):
         customArgumentParser = CustomArgumentParser()
         self._parser = customArgumentParser.add_subparsers()
         for register_parser_handler in parserHandlers:
             register_parser_handler(self._parser)
-        self._interactiveCLI = TestInteractiveCLI(customArgumentParser, self._parser)
+        self._interactiveCLI = InteractiveCLI(customArgumentParser, self._parser)
+        
+        # Override init_session for Windows compatibility
+        if platform.system() == "Windows":
+            def test_init_session(session_history: InMemoryHistory) -> PromptSession:
+                # DummyInput and DummyOutput are test classes of prompt_toolkit to
+                # solve the NoConsoleScreenBufferError issue
+                return PromptSession(
+                    history=session_history, input=DummyInput(), output=DummyOutput()
+                )
+            self._interactiveCLI.init_session = test_init_session
+            # Reinitialize the session with test-friendly settings
+            self._interactiveCLI.session = self._interactiveCLI.init_session(self._interactiveCLI.history)
 
     def exec_command(self, command: str) -> None:
         self._interactiveCLI.handle_command(command)
