@@ -78,7 +78,7 @@ def _update_item_definition(
             input_value,
         )
         return updated_def
-    except (ValueError, KeyError, IndexError):
+    except Exception:
         raise FabricCLIError(
             CommonErrors.invalid_set_item_query(query_value),
             fab_constant.ERROR_INVALID_QUERY,
@@ -96,7 +96,7 @@ def _update_item_metadata(
             query_value,
             input_value,
         )
-    except (ValueError, KeyError, IndexError):
+    except Exception:
         raise FabricCLIError(
             CommonErrors.invalid_set_item_query(query_value),
             fab_constant.ERROR_INVALID_QUERY,

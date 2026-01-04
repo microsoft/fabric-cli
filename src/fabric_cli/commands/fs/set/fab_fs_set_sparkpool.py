@@ -38,7 +38,7 @@ def exec(virtual_item: VirtualItem, args: Namespace) -> None:
         def _prep_for_updated_def(data):
             data.pop("id", None)  # Remove 'id' if it exists
             data.pop("type", None)  # Remove 'type' if it exists
-            return json.dumps(data, indent=4)
+            return json.dumps(data)
 
         spark_pool_update_def = _prep_for_updated_def(updated_def)
 
@@ -48,9 +48,11 @@ def exec(virtual_item: VirtualItem, args: Namespace) -> None:
         response = sparkpool_api.update_spark_pool(args, spark_pool_update_def)
 
         if response.status_code == 200:
-            if "name" in updated_def:
-                # Update mem_store
-                virtual_item._name = updated_def["name"]
-                utils_mem_store.upsert_spark_pool_to_cache(virtual_item)
+            utils_set.update_cache(
+                updated_def,
+                virtual_item,
+                utils_mem_store.upsert_spark_pool_to_cache,
+                element_name_key="name",
+            )
 
             utils_ui.print_output_format(args, message="Spark Pool updated")

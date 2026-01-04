@@ -70,7 +70,7 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
             if isinstance(data.get("numberOfMemberGateways", 0), str):
                 data["numberOfMemberGateways"] = int(data["numberOfMemberGateways"])
 
-            return json.dumps(data, indent=4)
+            return json.dumps(data)
 
         gateway_update_def = _prep_for_updated_def(updated_def, gatewat_type)
 

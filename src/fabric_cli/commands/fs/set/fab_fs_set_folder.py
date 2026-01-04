@@ -32,7 +32,7 @@ def exec(folder: Folder, args: Namespace) -> None:
         args.id = folder.id
 
         utils_ui.print_grey(f"Setting new property for '{folder.name}'...")
-        response = folder_api.update_folder(args, json.dumps(updated_def, indent=4))
+        response = folder_api.update_folder(args, json.dumps(updated_def))
 
         if response.status_code == 200:
             utils_set.update_cache(

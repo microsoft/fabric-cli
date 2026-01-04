@@ -8,6 +8,7 @@ import pytest
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils.fab_cmd_set_utils import (
     extract_updated_properties,
+    update_cache,
     update_fabric_element,
     update_item_definition,
     validate_item_query,
@@ -179,3 +180,33 @@ def test_validate_item_query_properties_with_item_success():
     mock_item.item_type = "Lakehouse"
 
     validate_item_query("properties.settings", item=mock_item)
+
+
+def test_update_cache_with_default_display_name_key_success():
+    from unittest.mock import Mock
+
+    mock_element = Mock()
+    mock_cache_update_func = Mock()
+
+    updated_def = {"displayName": "New Display Name", "description": "Some description"}
+
+    update_cache(updated_def, mock_element, mock_cache_update_func)
+
+    assert mock_element._name == "New Display Name"
+    mock_cache_update_func.assert_called_once_with(mock_element)
+
+
+def test_update_cache_with_custom_name_key_success():
+    from unittest.mock import Mock
+
+    mock_element = Mock()
+    mock_cache_update_func = Mock()
+
+    updated_def = {"name": "New Spark Pool Name", "nodeSize": "Medium"}
+
+    update_cache(
+        updated_def, mock_element, mock_cache_update_func, element_name_key="name"
+    )
+
+    assert mock_element._name == "New Spark Pool Name"
+    mock_cache_update_func.assert_called_once_with(mock_element)

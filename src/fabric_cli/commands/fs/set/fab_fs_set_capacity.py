@@ -34,7 +34,7 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         )
 
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = capacity_api.update_capacity(args, json.dumps(updated_def, indent=4))
+        response = capacity_api.update_capacity(args, json.dumps(updated_def))
 
         if response.status_code == 200:
             utils_ui.print_output_format(args, message="Capacity updated")

@@ -76,7 +76,7 @@ def update_fabric_element(
     resource_def: dict,
     query: str,
     input: str,
-    extract_updated_only: bool = True,
+    return_full_element: bool = False,
 ) -> dict:
     """Update a Fabric resource element using a JMESPath query.
 
@@ -84,9 +84,9 @@ def update_fabric_element(
         resource_def: Resource definition dictionary to modify.
         query: JMESPath expression specifying the path to update.
         input: New value to set.
-        extract_updated_only: If True, returns only the modified properties extracted
-            by the query path. If False, returns the entire updated resource definition.
-            Defaults to True for backward compatibility.
+        return_full_element: If True, returns the entire updated resource element.
+            If False, returns only the modified properties extracted by the query path.
+            Defaults to False for backward compatibility.
 
     Returns:
         Updated dictionary.
@@ -98,10 +98,10 @@ def update_fabric_element(
 
     updated_def = utils_jmespath.replace(resource_def, query, input)
 
-    if extract_updated_only:
-        return extract_updated_properties(updated_def, query)
-    else:
+    if return_full_element:
         return updated_def
+    else:
+        return extract_updated_properties(updated_def, query)
 
 
 def update_item_definition(
@@ -141,17 +141,21 @@ def update_cache(
     updated_def: dict,
     element,
     cache_update_func,
+    element_name_key: str = "displayName",
 ) -> None:
-    """Update element's display name in cache if it was changed.
+    """Update element's name in cache if it was changed.
 
     Args:
         updated_def: Dictionary containing the updated properties.
         element: The Fabric element whose name should be updated.
         cache_update_func: Function to call to update the cache.
+        element_name_key: The key in updated_def that contains the element's name.
+            Defaults to "displayName" for most resources (workspaces, domains, etc.).
+            Use "name" for spark pools.
 
     """
-    if "displayName" in updated_def:
-        element._name = updated_def["displayName"]
+    if element_name_key in updated_def:
+        element._name = updated_def[element_name_key]
         cache_update_func(element)
 
 

@@ -31,7 +31,7 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
 
         # Read new values from the user and retrieve updated shortcut definition with the new values.
         updated_def = utils_set.update_fabric_element(
-            shortcut_def, query, args.input, extract_updated_only=False
+            shortcut_def, query, args.input, return_full_element=True
         )
 
         if "target" in updated_def and "type" in updated_def["target"]:

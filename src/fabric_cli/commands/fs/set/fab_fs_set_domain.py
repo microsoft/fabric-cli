@@ -34,7 +34,7 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         args.id = virtual_ws_item.id
 
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = domain_api.update_domain(args, json.dumps(updated_def, indent=4))
+        response = domain_api.update_domain(args, json.dumps(updated_def))
 
         if response.status_code == 200:
             utils_set.update_cache(

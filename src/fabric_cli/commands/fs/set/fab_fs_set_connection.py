@@ -34,7 +34,7 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
 
         def _prep_for_updated_def(data):
             data[CONECTIVITY_TYPE_KEY] = connectivity_type
-            return json.dumps(data, indent=4)
+            return json.dumps(data)
 
         connection_update_def = _prep_for_updated_def(updated_def)
 
