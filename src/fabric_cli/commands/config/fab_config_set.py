@@ -98,11 +98,21 @@ def _handle_fab_config_mode(previous_mode: str, current_mode: str) -> None:
         Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
         
         if current_mode == fab_constant.FAB_MODE_INTERACTIVE:
-            utils_ui.print("Switching to interactive mode...")
+            # Show deprecation warning
+            utils_ui.print_warning(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            utils_ui.print("Starting interactive mode...")
             from fabric_cli.core.fab_interactive import start_interactive_mode
             start_interactive_mode()
                 
-        elif (current_mode == fab_constant.FAB_MODE_COMMANDLINE
-              and previous_mode == fab_constant.FAB_MODE_INTERACTIVE):
-            utils_ui.print("Exiting interactive mode. Goodbye!")
-            os._exit(0)
+        elif current_mode == fab_constant.FAB_MODE_COMMANDLINE:
+            # Show deprecation warning with better messaging
+            utils_ui.print_warning(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            utils_ui.print("Configuration saved for backward compatibility.")
+            
+            if previous_mode == fab_constant.FAB_MODE_INTERACTIVE:
+                utils_ui.print("Exiting interactive mode. Goodbye!")
+                os._exit(0)
