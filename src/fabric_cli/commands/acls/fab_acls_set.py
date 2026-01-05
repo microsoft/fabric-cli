@@ -17,7 +17,7 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 # Valid roles for different contexts
 WORKSPACE_ROLES = ["Admin", "Member", "Contributor", "Viewer"]
-CONNECTION_ROLES = ["Owner", "IserWithReshare", "User"]
+CONNECTION_ROLES = ["Owner", "UserWithReshare", "User"]
 GATEWAY_ROLES = ["Admin", "ConnectionCreator", "ConnectionCreatorWithResharing"]
 PRINCIPAL_TYPES = [
     "User",
