@@ -96,6 +96,7 @@ class InteractiveCLI:
                             f"No function associated with the command: {command.strip()}"
                         )
                 except SystemExit:
+                    # Catch SystemExit raised by ArgumentParser and prevent exiting
                     return
             else:
                 self.parser.error(f"invalid choice: '{command.strip()}'. Type 'help' for available commands.")

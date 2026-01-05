@@ -321,53 +321,6 @@ class TestInteractiveCLI:
         assert any("input" in rule for rule in style_rules)
 
     # Test fab + enter automatic mode switching
-    def test_main_no_args_starts_interactive_mode_success(self):
-        """Test that running 'fab' without arguments automatically enters interactive mode."""
-        with patch("fabric_cli.main._start_auto_repl") as mock_start_auto_repl:
-            import sys
-
-            from fabric_cli.main import main
-
-            with patch.object(sys, 'argv', ['fab']):
-                with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
-                    mock_parser = type('MockParser', (), {
-                        'parse_args': lambda: type('Args', (), {
-                            'command': None,
-                            'version': False
-                        })(),
-                        'set_mode': lambda mode: None
-                    })()
-                    mock_subparsers = object()
-                    mock_get_parsers.return_value = (mock_parser, mock_subparsers)
-                    
-                    with patch("fabric_cli.core.fab_state_config.init_defaults"):
-                        main()
-                    
-                    mock_start_auto_repl.assert_called_once()
-
-    def test_start_auto_repl_calls_interactive_mode_success(self):
-        """Test that _start_auto_repl properly calls start_interactive_mode."""
-        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
-            from fabric_cli.main import _start_auto_repl
-            
-            _start_auto_repl()
-            
-            mock_start_interactive.assert_called_once()
-
-    def test_start_auto_repl_handles_exceptions_success(self):
-        """Test that _start_auto_repl handles exceptions gracefully."""
-        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive, \
-             patch("fabric_cli.utils.fab_ui.print_output_error") as mock_print_error, \
-             patch("sys.exit") as mock_exit:
-            
-            mock_start_interactive.side_effect = Exception("Test error")
-            
-            from fabric_cli.main import _start_auto_repl
-            _start_auto_repl()
-            
-            mock_start_interactive.assert_called_once()
-            mock_print_error.assert_called_once()
-            mock_exit.assert_called_once()
 
     def test_fab_command_in_interactive_mode_shows_message_success(
         self, interactive_cli, mock_print_ui, mock_print_log_file_path

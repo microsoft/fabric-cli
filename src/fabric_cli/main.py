@@ -85,26 +85,12 @@ def main():
             fab_ui.print_version()
         else:
             # AUTO-REPL: When no command is provided, automatically enter interactive mode
-            _start_auto_repl()
+            start_interactive_mode()
 
     except KeyboardInterrupt:
         _handle_keyboard_interrupt(args)
     except Exception as err:
         _handle_unexpected_error(err, args)
-
-
-def _start_auto_repl():
-    """Start Auto-REPL with proper initialization and error handling."""
-    try:
-        start_interactive_mode()
-    except Exception as err:
-        fab_ui.print_output_error(
-            FabricCLIError(
-                f"Failed to start interactive mode: {str(err)}",
-                fab_constant.ERROR_UNEXPECTED_ERROR
-            )
-        )
-        sys.exit(fab_constant.EXIT_CODE_ERROR)
 
 
 def _handle_keyboard_interrupt(args):
