@@ -206,7 +206,7 @@ class TestLS:
         notebook3 = item_factory(ItemType.NOTEBOOK)
 
         # Test 1: Basic JMESPath syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].name")
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [notebook1.display_name, notebook2.display_name, notebook3.display_name],
@@ -231,13 +231,13 @@ class TestLS:
             ["displayName", "itemID"],
             True,
             mock_questionary_print.mock_calls,
-            require_all_in_same_args=True
+            require_all_in_same_args=True,
         )
 
         mock_questionary_print.reset_mock()
 
         # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].[name]")
         _assert_strings_in_mock_calls(
             [f"['{notebook1.name}']", f"['{notebook2.name}']", f"['{notebook3.name}']"],
             True,
@@ -247,10 +247,16 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 4: JMESPath object syntax without -l should not have id in the result
-        cli_executor.exec_command(f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
+        cli_executor.exec_command(
+            f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"'
+        )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [f'{notebook1.name}   None', f'{notebook2.name}   None', f'{notebook3.name}   None'],
+            [
+                f"{notebook1.name}   None",
+                f"{notebook2.name}   None",
+                f"{notebook3.name}   None",
+            ],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -263,13 +269,13 @@ class TestLS:
         )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [f'{notebook1.name}'],
+            [f"{notebook1.name}"],
             True,
             mock_questionary_print.mock_calls,
         )
 
         _assert_strings_in_mock_calls(
-            [f'{notebook2.name}', f'{notebook3.name}'],
+            [f"{notebook2.name}", f"{notebook3.name}"],
             False,
             mock_questionary_print.mock_calls,
         )
@@ -278,7 +284,10 @@ class TestLS:
 
         # Test 6: Invalid query format
         cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
-        assert_fabric_cli_error(fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
+        assert_fabric_cli_error(
+            fab_constant.ERROR_INVALID_INPUT,
+            ErrorMessages.Common.invalid_jmespath_query(),
+        )
 
     def test_ls_item_show_hidden_from_config_success(
         self,
@@ -694,7 +703,7 @@ class TestLS:
         )
 
         mock_questionary_print.reset_mock()
-        
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {managed_private_endpoints_path}")
 
@@ -1172,7 +1181,6 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
-    @pytest.mark.skip(reason="Requires VCR cassette recording in live environment")
     def test_ls_workspace_with_folders_and_items_divider(
         self,
         workspace,
@@ -1193,15 +1201,20 @@ class TestLS:
 
         # Assert: Check that the divider is present
         mock_questionary_print.assert_called()
-        
+
         # Verify divider appears in output
         _assert_strings_in_mock_calls(
             ["------------------------------"], True, mock_questionary_print.mock_calls
         )
-        
+
         # Verify folders and items are present
         _assert_strings_in_mock_calls(
-            [folder1.display_name, folder2.display_name, notebook.display_name, lakehouse.display_name],
+            [
+                folder1.display_name,
+                folder2.display_name,
+                notebook.display_name,
+                lakehouse.display_name,
+            ],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1213,15 +1226,20 @@ class TestLS:
 
         # Assert
         mock_questionary_print.assert_called()
-        
+
         # Verify divider appears with long format
         _assert_strings_in_mock_calls(
             ["------------------------------"], True, mock_questionary_print.mock_calls
         )
-        
+
         # Verify all items are present
         _assert_strings_in_mock_calls(
-            [folder1.display_name, folder2.display_name, notebook.display_name, lakehouse.display_name],
+            [
+                folder1.display_name,
+                folder2.display_name,
+                notebook.display_name,
+                lakehouse.display_name,
+            ],
             True,
             mock_questionary_print.mock_calls,
         )
