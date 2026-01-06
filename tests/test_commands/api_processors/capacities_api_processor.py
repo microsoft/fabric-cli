@@ -80,7 +80,7 @@ class CapacitiesAPIProcessor(BaseAPIProcessor):
         request_body = load_request_json_body(request)
         if (
             request_body
-            and request_body["location"]
+            and "location" in request_body
             and request_body["location"] == get_static_data().azure_location
         ):
             request_body["location"] = get_mock_data().azure_location
@@ -143,8 +143,12 @@ class CapacitiesAPIProcessor(BaseAPIProcessor):
         if not data:
             return
 
+        if "error" in data:
+            return
+
         if (
-            data["id"].endswith(
+            "id" in data
+            and data["id"].endswith(
                 f"/capacities/{get_static_data().capacity.name}", re.IGNORECASE
             )
             and data["name"].lower() == get_static_data().capacity.name.lower()
