@@ -4,13 +4,12 @@
 import json
 import re
 
-from urllib3 import request
 from tests.test_commands.api_processors.base_api_processor import BaseAPIProcessor
-from tests.test_commands.data.static_test_data import get_mock_data, get_static_data
 from tests.test_commands.api_processors.utils import (
     load_request_json_body,
     load_response_json_body,
 )
+from tests.test_commands.data.static_test_data import get_mock_data, get_static_data
 
 
 class CapacitiesAPIProcessor(BaseAPIProcessor):
