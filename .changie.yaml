@@ -7,7 +7,7 @@ versionExt: md
 changelogPath: docs/release-notes.md
 versionFormat: '## [{{.Version}}](https://pypi.org/project/ms-fabric-cli/{{.Version}}) - {{.Time.Format "January 02, 2006"}}'
 kindFormat: '### {{.Kind}}'
-changeFormat: '* {{.Body}}'
+changeFormat: '* {{.Body}} by [{{.Custom.Author}}]({{.Custom.AuthorLink}})'
 kinds:
   - label: '⚠️ Breaking Change'
     key: breaking
@@ -34,6 +34,14 @@ newlines:
   afterKind: 1
   beforeKind: 1
 envPrefix: CHANGIE_
+custom:
+  - key: Author
+      label: GitHub Name
+      type: string
+      minLength: 3
+post:
+  - key: AuthorLink
+    value: "https://github.com/{{.Custom.Author}}"
 replacements:
   - path: pyproject.toml
     find: 'version=".*"'
