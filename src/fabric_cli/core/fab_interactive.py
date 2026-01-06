@@ -141,8 +141,7 @@ class InteractiveCLI:
                 except Exception as e:
                     # Handle unexpected errors during prompt processing
                     utils_ui.print(f"Error in interactive session: {str(e)}")
-                    utils_ui.print("Session will continue. Type 'quit' to exit safely.")
-                    continue
+                    break
 
         except (EOFError, KeyboardInterrupt):
             utils_ui.print(f"\n{fab_constant.INTERACTIVE_EXIT_MESSAGE}")
