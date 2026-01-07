@@ -8,7 +8,7 @@ COMMANDS = {
     "Core Commands": {
         "assign": "Assign a capacity or resource to a workspace.",
         "cd": "Change to a workspace, item, or folder.",
-        get_os_specific_command("cp"): "Copy an item or file.",
+        get_os_specific_command("cp"): "Copy an item or file to a destination.",
         "export": "Export an item.",
         "exists": "Check if a workspace, item, or file exists.",
         "get": "Get workspace or item properties.",
@@ -21,7 +21,7 @@ COMMANDS = {
         "pwd": "Print the current working directory.",
         get_os_specific_command(
             "rm"
-        ): "Delete a workspace, item, or file.",
+        ): "Delete a workspace, item, or file. Use with caution.",
         "set": "Set workspace or item properties.",
         "start": "Start a resource.",
         "stop": "Stop a resource.",

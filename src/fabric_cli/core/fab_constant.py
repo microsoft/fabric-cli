@@ -131,18 +131,18 @@ CONFIG_DEFAULT_VALUES = {
 
 # Command descriptions
 COMMAND_AUTH_DESCRIPTION = "Authenticate with Fabric."
-COMMAND_AUTH_STATUS_DESCRIPTION = "Show authentication status."
+COMMAND_AUTH_STATUS_DESCRIPTION = "Display active account and authentication state."
 COMMAND_FS_DESCRIPTION = "Workspace, item and file system operations."
 COMMAND_JOBS_DESCRIPTION = "Manage and schedule jobs."
 COMMAND_TABLES_DESCRIPTION = "Manage Delta tables."
 COMMAND_SHORTCUTS_DESCRIPTION = "Manage shorcuts."
 COMMAND_ACLS_DESCRIPTION = "Manage access control lists [admin]."
 COMMAND_ACLS_LS_DESCRIPTION = (
-    "List ACLs for a workspace, item, gateway, connection or OneLake resource."
+    "List ACLs for a workspace, item, gateway, connection, or OneLake resource."
 )
 COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway, or connection."
 COMMAND_ACLS_GET_DESCRIPTION = (
-    "Get ACL details for a workspace, item, gateway, connection or OneLake resource."
+    "Get ACL details for a workspace, item, gateway, connection, or OneLake resource."
 )
 COMMAND_ACLS_SET_DESCRIPTION = "Set ACLs on a workspace, gateway, or connection."
 COMMAND_CONFIG_DESCRIPTION = "Manage CLI configuration."
@@ -163,7 +163,7 @@ COMMAND_MANAGED_PRIVATE_ENDPOINTS_DESCRIPTION = (
 )
 COMMAND_SPARK_POOLS_DESCRIPTION = "(workspace) Manage Apache Spark pools."
 COMMAND_VARIABLES_DESCRIPTION = "(workspace) Manage variables."
-COMMAND_DESCRIBE_DESCRIPTION = "Show available commands for a resource."
+COMMAND_DESCRIBE_DESCRIPTION = "Show commands supported by each Fabric element or path."
 
 # File system command descriptions
 COMMAND_FS_MV_DESCRIPTION = "Move an item or file."

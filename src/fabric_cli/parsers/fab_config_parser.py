@@ -13,9 +13,9 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 commands = {
     "Commands": {
         "clear-cache": "Clear the CLI cache.",
-        "get": "Get a configuration value.",
-        get_os_specific_command("ls"): "List all configuration settings.",
-        "set": "Set a configuration value.",
+        "get": "Get the value of a configuration key.",
+        get_os_specific_command("ls"): "List all configuration keys and their values.",
+        "set": "Set a configuration key to a specified value.",
     }
 }
 

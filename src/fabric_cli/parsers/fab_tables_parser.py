@@ -13,7 +13,7 @@ commands = {
         "load": "Load data into a lakehouse table.",
         "optimize": "Optimize a Delta table.",
         "schema": "Show the schema of a Delta table.",
-        "vacuum": "Clean up old files in a Delta table.",
+        "vacuum": "Vacuum a Delta table by removing old files.",
     },
 }
 

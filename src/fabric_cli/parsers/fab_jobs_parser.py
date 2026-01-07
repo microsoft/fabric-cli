@@ -14,11 +14,11 @@ commands = {
         "start": "Start an item asynchronously.",
         "run": "Run an item synchronously.",
         "run-cancel": "Cancel a running or scheduled job.",
-        "run-list": "List job runs for an item.",
+        "run-list": "Retrieve the status of an item or scheduled job run.",
         "run-update": "Update a scheduled job.",
         "run-rm": "Remove a scheduled job.",
-        "run-sch": "Schedule a job for an item.",
-        "run-status": "Get job run status.",
+        "run-sch": "Schedule a job for an item (pipelines, notebooks, and Spark job definitions).",
+        "run-status": "Get details of an item or scheduled job run.",
     },
 }
 
