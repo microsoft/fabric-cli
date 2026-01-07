@@ -313,7 +313,7 @@ INTERACTIVE_EXIT_MESSAGE = "Exiting interactive mode. Goodbye!"
 
 # Interactive command constants
 INTERACTIVE_QUIT_COMMANDS = ["quit", "q", "exit"]
-INTERACTIVE_HELP_COMMANDS = ["help", "h", "fab", "-h", "--help"]
+INTERACTIVE_HELP_COMMANDS = ["help", "h", "-h", "--help"]
 INTERACTIVE_VERSION_COMMANDS = ["version", "v", "-v", "--version"]
 
 # Platform metadata
