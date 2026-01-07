@@ -11,9 +11,9 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 
 commands = {
     "Commands": {
-        "list-local": "List labels from 'local_definition_labels' setting.",
-        "set": "Set a sensitivity label.",
-        get_os_specific_command("rm"): "Remove a sensitivity label.",
+        "list-local": "List configured sensitivity labels.",
+        "set": "Set a sensitivity label on an item.",
+        get_os_specific_command("rm"): "Remove a sensitivity label from an item.",
     },
 }
 
