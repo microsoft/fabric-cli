@@ -95,39 +95,46 @@ fab auth login
 
 Select *Interactive with a web browser*. This opens your browser to complete authentication.
 
+## Run your first command
+
+Once you're signed in, you're one command away from exploring Fabric:
+
+```bash
+fab ls
+```
+
+This lists all workspaces you have access to. For a detailed list of available commands, see [Commands](./commands/index.md), or explore advanced scenarios in our [Usage examples](./examples/index.md).
+
 ## Common tasks
 
 ### Browse workspaces and items
 
 ```bash
 # See all workspaces
-fab ls /workspaces
-
-# Go to a workspace
-fab cd "Sales Analytics.Workspace"
-
-# See what's inside
 fab ls
+
+# See what's inside a workspace
+fab ls "Sales Analytics.Workspace"
 ```
 
 ### Run notebooks and pipelines
 
 ```bash
 # Run a pipeline
-fab run pipeline /workspaces/<workspace>/pipelines/<pipeline>
+fab run <name of the workspace>.Workspace/<name of the pipeline>.DataPipeline -i <optional input>
 
 # Start a notebook
-fab start /workspaces/<workspace>/notebooks/<notebook>
+fab start <name of the workspace>.Workspace/<name of the notebook>.Notebook
 ```
 
 ### Move files to OneLake
 
 ```bash
 # Upload a local file
-fab cp ./local/data.csv /workspaces/<workspace>/lakehouses/<lakehouse>/Files/
+fab cp ./local/data.csv <name of workspace>.Workspace/<name of lakehouse>.Lakehouse/Files/data.csv
 
 # Download from OneLake
-fab cp /workspaces/<workspace>/lakehouses/<lakehouse>/Files/data.csv ./local/
+fab cp <name of workspace>.Workspace/<name of lakehouse>.Lakehouse/Files/data.csv ./local/
 ```
 
 ## Use in automation
@@ -141,7 +148,7 @@ Add Fabric CLI to GitHub Actions, Azure Pipelines, and other DevOps tools. The s
   run: |
     pip install ms-fabric-cli
     fab auth login -u ${{ secrets.CLIENT_ID }} -p ${{ secrets.CLIENT_SECRET }} --tenant ${{ secrets.TENANT_ID }}
-    fab cp ./artifacts/* /workspaces/Production/lakehouses/Data/Files/
+    fab import Production.Workspace/Data.Lakehouse -i ./artifacts/
 ```
 
 ### Azure Pipelines example
@@ -150,19 +157,9 @@ Add Fabric CLI to GitHub Actions, Azure Pipelines, and other DevOps tools. The s
 - script: |
     pip install ms-fabric-cli
     fab auth login -u $(CLIENT_ID) -p $(CLIENT_SECRET) --tenant $(TENANT_ID)
-    fab run pipeline /workspaces/ETL/pipelines/DailyRefresh
+    fab run ETL.Workspace/DailyRefresh.DataPipeline
   displayName: 'Run Fabric pipeline'
 ```
-
-## Run your first command
-
-Once you're signed in, you're one command away from exploring Fabric:
-
-```bash
-fab ls
-```
-
-For a detailed list of available commands, see [Commands](./commands/index.md), or explore advanced scenarios in our [Usage examples](./examples/index.md).
 
 ## Get help
 
@@ -170,12 +167,15 @@ For a detailed list of available commands, see [Commands](./commands/index.md), 
 
 - [Report an issue](https://github.com/microsoft/fabric-cli/issues)
 - [Request a feature](https://github.com/microsoft/fabric-cli/discussions)
+- [Share feedback via Microsoft Form](https://forms.office.com/r/uhL6b6tNsi)
+- [Submit ideas to Fabric Ideas Portal](https://ideas.fabric.microsoft.com/)
 
 **Need help using the CLI?**
 
 - See [Troubleshooting](./troubleshooting.md) for common problems and solutions
 - Ask questions in [GitHub Discussions](https://github.com/microsoft/fabric-cli/discussions)
 - Connect with the community on [r/MicrosoftFabric](https://www.reddit.com/r/MicrosoftFabric/)
+- Join the [Microsoft Developer Community](https://community.fabric.microsoft.com/t5/Developer/bd-p/Developer)
 
 **Need enterprise assistance?**
 
