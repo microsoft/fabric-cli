@@ -76,56 +76,91 @@ def update_fabric_element(
     resource_def: dict,
     query: str,
     input: str,
-    decode_encode: bool = False,
-) -> tuple[str, dict]:
+    return_full_element: bool = False,
+) -> dict:
     """Update a Fabric resource element using a JMESPath query.
 
     Args:
         resource_def: Resource definition dictionary to modify.
         query: JMESPath expression specifying the path to update.
         input: New value to set.
-        decode_encode: If True, decode/encode base64 payloads. Default False.
+        return_full_element: If True, returns the entire updated resource element.
+            If False, returns only the modified properties extracted by the query path.
+            Defaults to False.
 
     Returns:
-        Tuple of (json_payload, updated_def) where json_payload is the JSON string
-        and updated_def is the updated dictionary.
+        Updated dictionary.
     """
     try:
         input = json.loads(input)
     except (TypeError, json.JSONDecodeError):
-        # If it's not a JSON string, keep it as is
+        pass
+
+    updated_def = utils_jmespath.replace(resource_def, query, input)
+
+    if return_full_element:
+        return updated_def
+    else:
+        return extract_updated_properties(updated_def, query)
+
+
+def update_item_definition(
+    item_def: dict,
+    query: str,
+    input: str,
+) -> dict:
+    """Update an item definition using a JMESPath query with base64 decode/encode.
+
+    This method is specifically designed for updating item definitions that contain
+    base64-encoded payloads. It decodes the payload, applies the update, and then
+    re-encodes it.
+
+    Args:
+        item_def: Item definition dictionary to modify.
+        query: JMESPath expression specifying the path to update.
+        input: New value to set.
+
+    Returns:
+        Updated dictionary with encoded payloads.
+    """
+    try:
+        input = json.loads(input)
+    except (TypeError, json.JSONDecodeError):
         pass
 
     # Decode > replace > encode
-    if decode_encode:
-        decoded_item_def = _decode_payload(resource_def)
-        decoded_item_def = ensure_notebook_dependency(decoded_item_def, query)
-        updated_item_def = utils_jmespath.replace(decoded_item_def, query, input)
-        updated_def = _encode_payload(updated_item_def)
-        json_payload = json.dumps(updated_def)
-    else:
-        updated_def = utils_jmespath.replace(resource_def, query, input)
-        json_payload = json.dumps(updated_def)
+    decoded_item_def = _decode_payload(item_def)
+    decoded_item_def = ensure_notebook_dependency(decoded_item_def, query)
+    updated_item_def = utils_jmespath.replace(decoded_item_def, query, input)
+    updated_def = _encode_payload(updated_item_def)
 
-    return json_payload, updated_def
+    return updated_def
+
+
+def update_cache(
+    updated_def: dict,
+    element,
+    cache_update_func,
+    element_name_key: str = "displayName",
+) -> None:
+    """Update element's name in cache if it was changed.
+
+    Args:
+        updated_def: Dictionary containing the updated properties.
+        element: The Fabric element whose name should be updated.
+        cache_update_func: Function to call to update the cache.
+        element_name_key: The key in updated_def that contains the element's name.
+            Defaults to "displayName" for most resources (workspaces, domains, etc.).
+            Use "name" for spark pools.
+
+    """
+    if element_name_key in updated_def:
+        element._name = updated_def[element_name_key]
+        cache_update_func(element)
 
 
 def print_set_warning() -> None:
     fab_logger.log_warning("Modifying properties may lead to unintended consequences")
-
-
-def extract_json_schema(schema: dict, definition: bool = True) -> tuple:
-    name_description_properties = {
-        "displayName": schema.get("displayName", ""),
-        "description": schema.get("description", ""),
-    }
-
-    definition_properties = None
-
-    if definition:
-        definition_properties = {"definition": schema.get("definition", {})}
-
-    return definition_properties, name_description_properties
 
 
 def extract_updated_properties(updated_data: dict, query_path: str) -> dict:

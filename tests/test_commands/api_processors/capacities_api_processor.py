@@ -5,12 +5,13 @@ import json
 import re
 
 from urllib3 import request
+
 from tests.test_commands.api_processors.base_api_processor import BaseAPIProcessor
-from tests.test_commands.data.static_test_data import get_mock_data, get_static_data
 from tests.test_commands.api_processors.utils import (
     load_request_json_body,
     load_response_json_body,
 )
+from tests.test_commands.data.static_test_data import get_mock_data, get_static_data
 
 
 class CapacitiesAPIProcessor(BaseAPIProcessor):
@@ -81,7 +82,7 @@ class CapacitiesAPIProcessor(BaseAPIProcessor):
         request_body = load_request_json_body(request)
         if (
             request_body
-            and request_body["location"]
+            and "location" in request_body
             and request_body["location"] == get_static_data().azure_location
         ):
             request_body["location"] = get_mock_data().azure_location
@@ -144,8 +145,12 @@ class CapacitiesAPIProcessor(BaseAPIProcessor):
         if not data:
             return
 
+        if "error" in data:
+            return
+
         if (
-            data["id"].endswith(
+            "id" in data
+            and data["id"].endswith(
                 f"/capacities/{get_static_data().capacity.name}", re.IGNORECASE
             )
             and data["name"].lower() == get_static_data().capacity.name.lower()

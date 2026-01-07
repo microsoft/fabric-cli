@@ -12,6 +12,7 @@ from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 
 JMESPATH_UPDATE_CONNECTIONS = ["displayName", "privacyLevel", "credentialDetails"]
+CONECTIVITY_TYPE_KEY = "connectivityType"
 
 
 def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
@@ -25,18 +26,15 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
         args.deep_traversal = True
         args.output = None
         vwsi_connection_def = get_connection.exec(connection, args, verbose=False)
+        connectivity_type = vwsi_connection_def.get(CONECTIVITY_TYPE_KEY, "")
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vwsi_connection_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_connection_def, query, args.input
         )
 
         def _prep_for_updated_def(data):
-            data.pop("id", None)  # Remove 'id' if it exists
-            data.pop("gatewayId", None)  # Remove 'type' if it exists
-            data.pop(
-                "connectionDetails", None
-            )  # Remove 'connectionDetails' if it exists
-            return json.dumps(data, indent=4)
+            data[CONECTIVITY_TYPE_KEY] = connectivity_type
+            return json.dumps(data)
 
         connection_update_def = _prep_for_updated_def(updated_def)
 
@@ -45,8 +43,7 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
         response = connection_api.update_connection(args, connection_update_def)
 
         if response.status_code == 200:
-            # Update mem_store
-            connection._name = updated_def["displayName"]
-            utils_mem_store.upsert_connection_to_cache(connection)
-
+            utils_set.update_cache(
+                updated_def, connection, utils_mem_store.upsert_connection_to_cache
+            )
             utils_ui.print_output_format(args, message="Connection updated")
