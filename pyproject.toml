@@ -10,18 +10,20 @@ authors = [
 version="1.3.1"
 description="Command-line tool for Microsoft Fabric"
 readme="README.md"
-requires-python=">=3.10,<3.13"
+requires-python=">=3.10,<3.14"
 license="MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
 
 dependencies = [
-    "msal[broker]>=1.29,<2",
+    "msal[broker]>=1.34,<2 ; platform_system != 'Linux'",
+    "msal>=1.34,<2",
     "msal_extensions",
     "questionary",
     "prompt_toolkit>=3.0.41",

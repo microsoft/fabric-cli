@@ -15,7 +15,7 @@ This file gives AI coding assistants the **ground truth** for this repository: w
 
 ## High-level architecture & code layout
 
-- **Language & framework:** Python 3.10-3.12 with `argparse` for command parsing. When adding commands, define prompts under the appropriate parser module and follow the parser conventions.
+- **Language & framework:** Python 3.10-3.13 with `argparse` for command parsing. When adding commands, define prompts under the appropriate parser module and follow the parser conventions.
 - **Representative paths in the codebase:**  
   - Commands: `src/fabric_cli/commands/...`  
   - Core utils/UI: `src/fabric_cli/utils/...`  
@@ -147,7 +147,7 @@ fab get ws1.Workspace/.sparkpools/<spark-pool-name>.SparkPool
 
 ## Limitations
 
-- Python supported version are 3.10, 3.11 and 3.12 (>=3.13 not supported per releases).
+- Python supported version are 3.10, 3.11, 3.12 and 3.13 (>3.13 not supported per releases).
 - Supported platforms are: Windows, Linux and MacOS.
 - Supported shells are: zsh, bash, PowerShell and cmd (command prompt in Windows).
 
