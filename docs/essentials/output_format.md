@@ -1,10 +1,10 @@
-# Output Format
+# Output Format - User Guide
 
-The Fabric CLI provides flexible output formatting options to support both human-readable and machine-parseable results. This document covers the output format feature, its configuration, usage patterns, and implementation guidelines.
+The Fabric CLI provides flexible output formatting options to support both human-readable and machine-parseable results. This guide covers how to configure and use output formats effectively.
 
 ## Overview
 
-The output format feature allows users to control how command results are displayed. The CLI supports two primary output formats:
+The output format feature allows you to control how command results are displayed. The CLI supports two primary output formats:
 - **Text Format** (default): Human-readable, formatted output optimized for terminal viewing
 - **JSON Format**: Structured, machine-parseable output suitable for scripting and automation
 
@@ -24,7 +24,6 @@ Structured output format that provides:
 - Machine-parseable results
 - Standardized error reporting
 - Timestamp and command metadata
-- Support for hidden data with `--all` flag
 
 ## Configuration
 
@@ -44,7 +43,7 @@ fab auth status --output_format text
 - `text` - Human-readable text output (default)
 
 ### Configuration File
-Set the default output format using the [`fab config set`](../commands/config/index.md) command:
+Set the default output format using the [`fab config set`](../examples/config_examples.md) command:
 
 ```bash
 # Set JSON as default format
@@ -57,7 +56,7 @@ fab config set output_format text
 fab config get output_format
 ```
 
-The configuration is stored in the user's Fabric CLI configuration file and applies to all subsequent commands unless overridden by the `--output_format` flag.
+The configuration is stored in your Fabric CLI configuration file and applies to all subsequent commands unless overridden by the `--output_format` flag.
 
 ## JSON Output Schema
 
@@ -107,7 +106,7 @@ The configuration is stored in the user's Fabric CLI configuration file and appl
 
 #### Result Object
 - **`data`** (array, optional): Primary output data when available
-- **`hidden_data`** (array, optional): Virtual workspace items like capacities, gateways, managed private endpoints
+- **`hidden_data`** (array, optional): Virtual workspace items like capacities, gateways, managed private endpoints etc...
 - **`message`** (string, optional): Success message or operation description
 - **`error_code`** (string, optional): Standardized error code (only present on failures)
 
@@ -163,17 +162,17 @@ Moving '/ws.Workspace/r1.Report' → '/ws1.Workspace/r1.Report'...
 - **Text format**: Command results, data, and final status messages
 
 ### Standard Error (stderr)  
-- Warning messages ([`print_warning()`](../../src/fabric_cli/utils/fab_ui.py:151))
-- Informational messages ([`print_info()`](../../src/fabric_cli/utils/fab_ui.py:204))
-- Debug messages ([`print_grey()`](../../src/fabric_cli/utils/fab_ui.py:77))
-- Progress indicators ([`print_progress()`](../../src/fabric_cli/utils/fab_ui.py:81))
+- Warning messages
+- Informational messages
+- Debug messages
+- Progress indicators
 
-This separation allows users to:
+This separation allows you to:
 - Redirect command results to files while preserving interactive feedback
 - Filter informational messages separately from actual data
 - Pipe JSON output to processing tools without interference
 
-## Examples
+## Usage Examples
 
 ### Basic Usage
 ```bash
@@ -235,93 +234,38 @@ Account: user@example.com
 Tenant ID: 12345678-1234-1234-1234-123456789012
 ```
 
-## Implementation for Developers
+### Automation and Scripting Examples
 
-### Using Output Functions
+#### Redirecting Output
+```bash
+# Save results to file while seeing progress
+$ fab ls --output_format json > workspaces.json
+Processing workspace list...
 
-When implementing CLI commands, use the designated output functions:
-
-#### Success Results
-```python
-from fabric_cli.utils import fab_ui
-
-# Return data with headers
-fab_ui.print_output_format(
-    args, 
-    data=[{"name": "workspace1", "type": "Workspace"}],
-    show_headers=True
-)
-
-# Return simple success message
-fab_ui.print_output_format(
-    args, 
-    message="Operation completed successfully"
-)
-
-# Return data with hidden information (virtual workspace items)
-fab_ui.print_output_format(
-    args,
-    data=[{"name": "item1"}],
-    hidden_data=[".capacities", ".gateways"]
-)
+# Save only errors for logging
+$ fab command 2> error.log
 ```
-
-#### Error Results
-```python
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.utils import fab_ui
-
-try:
-    # Command logic here
-    pass
-except SomeException:
-    fab_ui.print_output_error(
-        FabricCLIError(
-            "Unable to complete operation",
-            "ERROR_OPERATION_FAILED"
-        ),
-        command=args.command
-    )
-```
-
-#### Informational Output
-```python
-from fabric_cli.utils import fab_ui
-
-# Progress updates (to stderr)
-fab_ui.print_progress("Processing items", progress=75)
-
-# Warnings (to stderr) 
-fab_ui.print_warning("This feature will be deprecated")
-
-# Debug/info messages (to stderr)
-fab_ui.print_grey("Processing request...")
-```
-
-### Key Implementation Guidelines
-
-1. **Use designated output functions**: Always use [`print_output_format()`](../../src/fabric_cli/utils/fab_ui.py:91) for command results and [`print_output_error()`](../../src/fabric_cli/utils/fab_ui.py:163) for errors
-2. **Separate concerns**: Use [`print_info()`](../../src/fabric_cli/utils/fab_ui.py:204), [`print_warning()`](../../src/fabric_cli/utils/fab_ui.py:151), and [`print_grey()`](../../src/fabric_cli/utils/fab_ui.py:77) for supplementary information that goes to stderr
-3. **Test both formats**: Ensure commands work correctly with both `--output_format json` and `--output_format text`
-4. **Consistent data structure**: Provide consistent field names and data types across similar commands
-5. **Meaningful error codes**: Use standardized error codes from [`fab_constant.py`](../../src/fabric_cli/core/fab_constant.py) and reuse existing values when possible
 
 ## Best Practices
 
-### For Users
-1. **Automation**: Set `output_format json` in config for scripts and automation
-2. **Interactive use**: Keep the default `text` format for better readability
-3. **Command-specific override**: Use `--output_format json/text` for specific commands if needed to override the config value
+### Interactive Use
+- Keep the default `text` format for better readability
+- Use `-l` flag with text format to see detailed information in tables
+- Progress and status messages will appear regardless of output format
 
-### For Developers
-1. **Consistency**: Follow the established JSON schema across all commands
-2. **Error codes**: Use meaningful, standardized error codes for different failure scenarios and reuse existing values when possible
-3. **Stream separation**: Send informational messages to stderr, results to stdout
-4. **Testing**: Test commands with both output formats to ensure compatibility
+### Automation and Scripting
+- Set `output_format json` in config for scripts and automation
+- Use `--output_format json` for specific commands that need machine parsing
+- Always check the `status` field in JSON responses for error handling
+
+### Command-Specific Tips
+- Use `--output_format text` override when you need human-readable output from a JSON-configured CLI
+- Combine with other flags like `--all` to include hidden data in JSON output
+- Use shell redirection to separate data output from informational messages
 
 ## Related Documentation
 
 - [Configuration Management](settings.md) - Managing CLI settings and preferences
-- [Parameters](parameters.md) - Global flags and command parameters  
+- [Parameters](parameters.md) - Global flags and command parameters
 - [Exit Codes](exit_codes.md) - Understanding command exit codes
-- [Examples](../examples/index.md) - Practical usage examples across different commands
+- [Configuration Examples](../examples/config_examples.md) - Practical configuration examples
