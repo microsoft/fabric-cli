@@ -13,6 +13,42 @@ from fabric_cli.utils import fab_ui
 from fabric_cli.utils import fab_ui as utils_ui
 
 
+def should_retrieve_definition(query: str) -> bool:
+    """
+    Determine if a query should retrieve item definition data.
+    
+    Definition data includes sensitive information that may have sensitivity labels,
+    so this function helps determine when definition retrieval is needed.
+    
+    Examples:
+        - "definition" -> True (definition data needed)
+        - "definition.parts" -> True (nested definition data needed)
+        - "." -> True (full item - includes definition)
+        - "properties.connectionString" -> False (just metadata, no definition needed)
+        - "displayName" -> False (just metadata, no definition needed)
+    
+    Args:
+        query: The query string to check
+        
+    Returns:
+        bool: True if query requires definition retrieval, False if metadata-only
+    """
+    if not query:
+        # No query means full item retrieval (includes definition)
+        return True
+        
+    # Full item query - retrieves everything including definition
+    if query == ".":
+        return True
+        
+    # Definition queries - direct or nested
+    if query == "definition" or query.startswith("definition."):
+        return True
+        
+    # All other queries are metadata-only
+    return False
+
+
 def query_and_export(
     data: Any, args: Namespace, file_name: str, verbose: bool = True
 ) -> None:

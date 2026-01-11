@@ -7,7 +7,6 @@ from typing import Optional
 
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client import fab_api_jobs as jobs_api
-from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.utils import fab_cmd_get_utils as utils_get
@@ -20,10 +19,8 @@ def exec(
     verbose: bool = True,
     decode: Optional[bool] = True,
 ) -> dict:
-    # If no payload query, no need to obtain definition
-    obtain_definition = True
-    if args.query and args.query in fab_constant.ITEM_METADATA_PROPERTIES:
-        obtain_definition = False
+    # Determine if we need to obtain definition based on query
+    obtain_definition = utils_get.should_retrieve_definition(args.query)
 
     item_def = item_utils.get_item_with_definition(
         item, args, decode, obtain_definition

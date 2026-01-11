@@ -316,16 +316,6 @@ INTERACTIVE_QUIT_COMMANDS = ["quit", "q", "exit"]
 INTERACTIVE_HELP_COMMANDS = ["help", "h", "-h", "--help"]
 INTERACTIVE_VERSION_COMMANDS = ["version", "v", "-v", "--version"]
 
-# Platform metadata
-ITEM_METADATA_PROPERTIES = {
-    "id",
-    "type",
-    "displayName",
-    "description",
-    "workspaceId",
-    "folderId",
-}
-
 # Item set constants
 ITEM_QUERY_DEFINITION = "definition"
 ITEM_QUERY_PROPERTIES = "properties"
