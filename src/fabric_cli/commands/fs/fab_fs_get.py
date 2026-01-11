@@ -35,6 +35,7 @@ from fabric_cli.core.hiearchy.fab_hiearchy import (
     VirtualWorkspaceItem,
     Workspace,
 )
+from fabric_cli.utils import fab_cmd_get_utils as get_utils
 from fabric_cli.utils import fab_item_util, fab_ui, fab_util
 
 
@@ -98,7 +99,8 @@ def _get_virtual_item(virtual_item: VirtualItem, args: Namespace) -> None:
 
 def _validate_sensitivity_label_warning(args: Namespace, item: Item) -> bool:
     # refactor to make the condition for get item with definition in one place
-    if args.query and args.query in fab_constant.ITEM_METADATA_PROPERTIES:
+    if args.query and not get_utils.should_retrieve_definition(args.query):
+        # Query is metadata-only, skip sensitivity warning
         return True
 
     try:
