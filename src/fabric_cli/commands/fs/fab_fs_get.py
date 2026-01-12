@@ -99,8 +99,7 @@ def _get_virtual_item(virtual_item: VirtualItem, args: Namespace) -> None:
 
 def _validate_sensitivity_label_warning(args: Namespace, item: Item) -> bool:
     # refactor to make the condition for get item with definition in one place
-    if args.query and not get_utils.should_retrieve_definition(args.query):
-        # Query is metadata-only, skip sensitivity warning
+    if args.query and get_utils.is_metadata_property_query(args.query):
         return True
 
     try:

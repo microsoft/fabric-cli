@@ -19,8 +19,10 @@ def exec(
     verbose: bool = True,
     decode: Optional[bool] = True,
 ) -> dict:
-    # Determine if we need to obtain definition based on query
-    obtain_definition = utils_get.should_retrieve_definition(args.query)
+    # If no payload query, no need to obtain definition
+    obtain_definition = True
+    if args.query and utils_get.is_metadata_property_query(args.query):
+        obtain_definition = False
 
     item_def = item_utils.get_item_with_definition(
         item, args, decode, obtain_definition

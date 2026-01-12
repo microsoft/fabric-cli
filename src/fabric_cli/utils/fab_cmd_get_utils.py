@@ -9,44 +9,31 @@ from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client import fab_api_mirroring as mirroring_api
 from fabric_cli.utils import fab_jmespath as utils_jmespath
 from fabric_cli.utils import fab_storage as utils_storage
-from fabric_cli.utils import fab_ui
 from fabric_cli.utils import fab_ui as utils_ui
 
 
-def should_retrieve_definition(query: str) -> bool:
+def is_metadata_property_query(query: str) -> bool:
     """
-    Determine if a query should retrieve item definition data.
-    
-    Definition data includes sensitive information that may have sensitivity labels,
-    so this function helps determine when definition retrieval is needed.
+    Check if the query is for a metadata property or nested sub-property.
     
     Examples:
-        - "definition" -> True (definition data needed)
-        - "definition.parts" -> True (nested definition data needed)
-        - "." -> True (full item - includes definition)
-        - "properties.connectionString" -> False (just metadata, no definition needed)
-        - "displayName" -> False (just metadata, no definition needed)
+        - "properties" -> True (exact match)
+        - "properties.connectionString" -> True (nested property)
+        - "id" -> True (exact match)
+        - "someOtherField" -> False (not a metadata property)
     
     Args:
-        query: The query string to check
+        query: The query string to check (assumed to be non-empty)
         
     Returns:
-        bool: True if query requires definition retrieval, False if metadata-only
+        bool: True if query matches a metadata property or its nested properties
     """
-    if not query:
-        # No query means full item retrieval (includes definition)
-        return True
-        
-    # Full item query - retrieves everything including definition
-    if query == ".":
-        return True
-        
-    # Definition queries - direct or nested
-    if query == "definition" or query.startswith("definition."):
-        return True
-        
-    # All other queries are metadata-only
-    return False
+    from fabric_cli.core import fab_constant
+
+    # Extract root property and check if it's a valid metadata property
+    # This handles both exact matches and nested properties in one step
+    root_property = query.split('.')[0]
+    return root_property in fab_constant.ITEM_METADATA_PROPERTIES
 
 
 def query_and_export(

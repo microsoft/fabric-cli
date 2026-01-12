@@ -355,6 +355,26 @@ class TestGet:
 
     # endregion
 
+    def test_metadata_property_query_validation(self):
+        """Test the enhanced metadata property validation for nested properties."""
+        from fabric_cli.utils.fab_cmd_get_utils import is_metadata_property_query
+
+        # Test exact matches
+        assert is_metadata_property_query("properties") is True
+        assert is_metadata_property_query("id") is True
+        assert is_metadata_property_query("displayName") is True
+        assert is_metadata_property_query("description") is True
+        
+        # Test nested properties - the key enhancement
+        assert is_metadata_property_query("properties.connectionString") is True
+        assert is_metadata_property_query("properties.nested.value") is True
+        assert is_metadata_property_query("displayName.localized") is True
+        
+        # Test invalid properties
+        assert is_metadata_property_query("someField") is False
+        assert is_metadata_property_query("definition") is False
+        assert is_metadata_property_query("definition.content") is False
+
 
 # region Helper Methods
 def get(path, output=None, query=None, deep_traversal=False, force=False):
