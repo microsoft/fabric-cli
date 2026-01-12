@@ -23,6 +23,7 @@ import fabric_cli.core.fab_state_config as state_config
 import fabric_cli.utils.fab_cmd_job_utils as utils_job
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
@@ -956,6 +957,142 @@ class TestJobs:
         mock_questionary_print.reset_mock()
         job_run_list(fabric_item.full_path, schedule=True)
         assert len(mock_questionary_print.call_args_list) != 0
+
+    def test_job_run_exits_with_code_1_success(self):
+        """Unit test to verify that wait_for_job_completion raises FabricCLIError with ERROR_JOB_FAILED when job status is 'Failed'."""
+        from fabric_cli.client.fab_api_types import ApiResponse
+        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
+        import json
+        from unittest.mock import Mock, patch
+        
+        # Create mock arguments
+        job_args = argparse.Namespace(
+            ws_id="test-workspace-id",
+            item_id="test-item-id",
+            command_path="job run",
+            output_format="text"
+        )
+        job_ins_id = "test-job-instance-id"
+        
+        # Create a mock response for the job creation
+        job_response = Mock(spec=ApiResponse)
+        job_response.headers = {}
+        
+        # Create a failed job status response
+        failed_job_content = {
+            "status": "Failed",
+            "id": job_ins_id,
+            "itemId": "test-item-id",
+            "jobType": "RunNotebook",
+            "invokeType": "Manual",
+            "failureReason": "Notebook execution failed intentionally"
+        }
+        
+        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
+            # Mock the API response for a failed job
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.text = json.dumps(failed_job_content)
+            mock_get_job.return_value = mock_response
+            
+            # Verify that the correct exception is raised
+            with pytest.raises(FabricCLIError) as exc_info:
+                wait_for_job_completion(job_args, job_ins_id, job_response)
+            
+            # Assert the error details
+            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
+            assert "Job instance 'test-job-instance-id' Failed" in str(exc_info.value.message)
+
+    def test_job_run_failure_with_timeout_exits_with_code_1_success(self):
+        """Unit test to verify that timeout doesn't interfere with job failure error handling."""
+        from fabric_cli.client.fab_api_types import ApiResponse
+        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
+        import json
+        from unittest.mock import Mock, patch
+        
+        # Create mock arguments with timeout
+        job_args = argparse.Namespace(
+            ws_id="test-workspace-id",
+            item_id="test-item-id",
+            command_path="job run",
+            output_format="text"
+        )
+        job_ins_id = "test-job-instance-id-timeout"
+        timeout = 60  # 60 second timeout
+        
+        # Create a mock response for the job creation
+        job_response = Mock(spec=ApiResponse)
+        job_response.headers = {}
+        
+        # Create a failed job status response
+        failed_job_content = {
+            "status": "Failed",
+            "id": job_ins_id,
+            "itemId": "test-item-id",
+            "jobType": "RunNotebook",
+            "invokeType": "Manual",
+            "failureReason": "Job failed before timeout"
+        }
+        
+        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
+            # Mock the API response for a failed job
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.text = json.dumps(failed_job_content)
+            mock_get_job.return_value = mock_response
+            
+            # Verify that the correct exception is raised even with timeout
+            with pytest.raises(FabricCLIError) as exc_info:
+                wait_for_job_completion(job_args, job_ins_id, job_response, timeout=timeout)
+            
+            # Assert the error details
+            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
+            assert "Job instance 'test-job-instance-id-timeout' Failed" in str(exc_info.value.message)
+
+    def test_job_failure_error_handling_unit_test(self):
+        """Unit test to verify that FabricCLIError with ERROR_JOB_FAILED is raised when job status is 'Failed'."""
+        from fabric_cli.client.fab_api_types import ApiResponse
+        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
+        import json
+        from unittest.mock import Mock, patch
+        
+        # Create mock arguments
+        job_args = argparse.Namespace(
+            ws_id="test-workspace-id",
+            item_id="test-item-id",
+            command_path="job run",
+            output_format="text"
+        )
+        job_ins_id = "test-job-instance-id"
+        
+        # Create a mock response for the job creation
+        job_response = Mock(spec=ApiResponse)
+        job_response.headers = {}
+        
+        # Create a failed job status response
+        failed_job_content = {
+            "status": "Failed",
+            "id": job_ins_id,
+            "itemId": "test-item-id",
+            "jobType": "RunNotebook",
+            "invokeType": "Manual",
+            "failureReason": "Notebook execution failed"
+        }
+        
+        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
+            # Mock the API response for a failed job
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.text = json.dumps(failed_job_content)
+            mock_get_job.return_value = mock_response
+            
+            # Verify that the correct exception is raised
+            with pytest.raises(FabricCLIError) as exc_info:
+                wait_for_job_completion(job_args, job_ins_id, job_response)
+            
+            # Assert the error details
+            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
+            assert "Job instance 'test-job-instance-id' Failed" in str(exc_info.value.message)
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):
