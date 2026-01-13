@@ -31,7 +31,9 @@ dependencies = [
     "jmespath",
     "pyyaml==6.0.2",
     "argcomplete>=3.6.2",
-    "psutil==7.0.0"
+    "psutil==7.0.0",
+    "requests",
+    "cryptography",
 ]
 
 [project.scripts]
@@ -46,6 +48,21 @@ where = ["src"]
 "*" = ["NOTICE.txt", "LICENSE"]
 
 [project.optional-dependencies]
-test = [
+dev = [
     "pytest>=8.2.1",
+    "tox>=4.20.0",
+    "build",
+    "pytest-cov",
+    "vcrpy",
 ]
+docs = [
+    "mkdocs-material",
+    "mkdocs-section-index",
+]
+
+[tool.mypy]
+"mypy-pytest.*" = { ignore_missing_imports = true }
+"mypy-msal.*" = { ignore_missing_imports = true }
+"mypy-msal_extensions" = { ignore_missing_imports = true }
+"mypy-fabric_cli.utils.fab_mem_store" = { ignore_errors = true }
+"mypy-pyspark.*" = { ignore_missing_imports = true }
