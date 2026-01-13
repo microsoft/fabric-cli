@@ -61,8 +61,16 @@ docs = [
 ]
 
 [tool.mypy]
-"mypy-pytest.*" = { ignore_missing_imports = true }
-"mypy-msal.*" = { ignore_missing_imports = true }
-"mypy-msal_extensions" = { ignore_missing_imports = true }
-"mypy-fabric_cli.utils.fab_mem_store" = { ignore_errors = true }
-"mypy-pyspark.*" = { ignore_missing_imports = true }
+
+[[tool.mypy.overrides]]
+module = [
+    "pytest.*",
+    "msal.*",
+    "msal_extensions",
+    "pyspark.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "fabric_cli.utils.fab_mem_store"
+ignore_errors = true
