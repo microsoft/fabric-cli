@@ -61,6 +61,48 @@ class TestMkdir:
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
 
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE,
+        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.REPORT,
+        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+        ItemType.GRAPHQLAPI, ItemType.MOUNTED_DATA_FACTORY, ItemType.DATAFLOW,
+    ])
+    def test_mkdir_item_success(
+        self, 
+        item_type, 
+        workspace, 
+        cli_executor, 
+        mock_print_done, 
+        mock_questionary_print,
+        vcr_instance, 
+        cassette_name,
+        upsert_item_to_cache
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{item_type}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Assert
+        mock_print_done.assert_called_once()
+        assert item_display_name in mock_print_done.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        get(item_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert item_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup
+        rm(item_full_path)
+
     def test_mkdir_unsupported_item_failure(
         self,
         workspace_factory,
