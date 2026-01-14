@@ -50,21 +50,12 @@ package-data = { "fabric_cli.core.fab_config" = [
 ] }
 # "*" = ["NOTICE.txt", "LICENSE"]
 
-[tool.mypy-pytest]
-# Per-module configuration
-ignore_missing_imports = true
+[tool.mypy]
 
-[tool.mypy-msal]
-ignore_missing_imports = true
-
-[tool.mypy-msal_extensions]
-ignore_missing_imports = true
-
-[tool.mypy-fabric_cli.utils.fab_mem_store]
+# Module-specific overrides
+[[tool.mypy.overrides]]
+module = "fabric_cli.utils.fab_mem_store"
 ignore_errors = true
-
-[tool.mypy-pyspark]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
