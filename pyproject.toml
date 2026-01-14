@@ -1,17 +1,11 @@
-[build-system]
-requires = ["setuptools>=65.5.1"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name="ms-fabric-cli"
-authors = [
-    { name = "Microsoft Corporation" },
-]
-version="1.3.1"
-description="Command-line tool for Microsoft Fabric"
-readme="README.md"
-requires-python=">=3.10,<3.14"
-license="MIT"
+name = "ms-fabric-cli"
+authors = [{ name = "Microsoft Corporation" }]
+description = "Command-line tool for Microsoft Fabric"
+readme = "README.md"
+dynamic = ["version"]
+license-files = ["LICENSE", "NOTICE.txt"]
+requires-python = ">=3.10,<3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -20,7 +14,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
-
 dependencies = [
     "msal[broker]>=1.34,<2 ; platform_system != 'Linux'",
     "msal>=1.34,<2",
@@ -39,38 +32,44 @@ dependencies = [
 [project.scripts]
 fab = "fabric_cli.main:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[dependency-groups]
+dev = ["pytest>=8.2.1", "tox>=4.20.0", "build", "pytest-cov", "vcrpy"]
+docs = ["mkdocs-material", "mkdocs-section-index"]
 
-[tool.setuptools.package-data]
-"fabric_cli.core.fab_config" = ["command_support.yaml"]
-"fabric_cli.commands.fs" = ["payloads/*"]
-"*" = ["NOTICE.txt", "LICENSE"]
+[build-system]
+requires = ["setuptools>=65.5.1"]
+build-backend = "setuptools.build_meta"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.2.1",
-    "tox>=4.20.0",
-    "build",
-    "pytest-cov",
-    "vcrpy",
-]
-docs = [
-    "mkdocs-material",
-    "mkdocs-section-index",
-]
+[tool.setuptools]
+packages.find.where = ["src"]
+dynamic.version = { attr = "fabric_cli.__init__.__version__" }
+package-data = { "fabric_cli.core.fab_config" = [
+    "command_support.yaml",
+], "fabric_cli.commands.fs" = [
+    "payloads/*",
+] }
+# "*" = ["NOTICE.txt", "LICENSE"]
 
-[tool.mypy]
-
-[[tool.mypy.overrides]]
-module = [
-    "pytest.*",
-    "msal.*",
-    "msal_extensions",
-    "pyspark.*",
-]
+[tool.mypy-pytest]
+# Per-module configuration
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = "fabric_cli.utils.fab_mem_store"
+[tool.mypy-msal]
+ignore_missing_imports = true
+
+[tool.mypy-msal_extensions]
+ignore_missing_imports = true
+
+[tool.mypy-fabric_cli.utils.fab_mem_store]
 ignore_errors = true
+
+[tool.mypy-pyspark]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+# Uncomment to enable live recording mode
+# addopts = ["--record"]
+markers = [
+    "token_claims(arg): override the 'upn' or 'ctid' claim returned by get_token_claims",
+]
