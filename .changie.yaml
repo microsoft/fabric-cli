@@ -43,12 +43,6 @@ post:
   - key: AuthorLink
     value: "https://github.com/{{.Custom.Author}}"
 replacements:
-  - path: pyproject.toml
-    find: 'version=".*"'
-    replace: 'version="{{.VersionNoPrefix}}"'
   - path: src/fabric_cli/__init__.py
     find: '__version__ = ".*"'
     replace: '__version__ = "{{.VersionNoPrefix}}"'
-  - path: src/fabric_cli/core/fab_constant.py
-    find: 'FAB_VERSION = ".*"'
-    replace: 'FAB_VERSION = "{{.VersionNoPrefix}}"'
