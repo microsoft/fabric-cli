@@ -6,23 +6,23 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 
 COMMANDS = {
     "Core Commands": {
-        "assign": "Assign a resource to a workspace.",
-        "cd": "Change to the specified directory.",
+        "assign": "Assign a capacity or resource to a workspace.",
+        "cd": "Change to a workspace, item, or folder.",
         get_os_specific_command("cp"): "Copy an item or file to a destination.",
         "export": "Export an item.",
         "exists": "Check if a workspace, item, or file exists.",
-        "get": "Get a workspace or item property.",
-        "import": "Import an item to create or modify it.",
+        "get": "Get workspace or item properties.",
+        "import": "Import an item to create or update it.",
         get_os_specific_command("ls"): "List workspaces, items, and files.",
         get_os_specific_command("ln"): "Create a shortcut.",
-        "mkdir": "Create a new workspace, item, or directory.",
+        "mkdir": "Create a workspace, item, or directory.",
         get_os_specific_command("mv"): "Move an item or file.",
         "open": "Open a workspace or item in the browser.",
         "pwd": "Print the current working directory.",
         get_os_specific_command(
             "rm"
         ): "Delete a workspace, item, or file. Use with caution.",
-        "set": "Set a workspace or item property.",
+        "set": "Set workspace or item properties.",
         "start": "Start a resource.",
         "stop": "Stop a resource.",
         "unassign": "Unassign a resource from a workspace.",
