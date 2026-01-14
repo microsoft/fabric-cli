@@ -54,8 +54,24 @@ package-data = { "fabric_cli.core.fab_config" = [
 
 # Module-specific overrides
 [[tool.mypy.overrides]]
+module = "pytest.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "msal.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "msal_extensions"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = "fabric_cli.utils.fab_mem_store"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pyspark.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
