@@ -38,14 +38,25 @@ from tests.test_commands.utils import cli_path_join
 
 class TestMkdir:
     # region ITEM
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE,
+        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.REPORT,
+        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+        ItemType.GRAPHQLAPI, ItemType.MOUNTED_DATA_FACTORY, ItemType.DATAFLOW,
+    ])
     def test_mkdir_item_name_already_exists_failure(
-        self, item_factory, cli_executor, assert_fabric_cli_error
+        self, item_type, item_factory, cli_executor, assert_fabric_cli_error
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        created_factory = item_factory(item_type)
 
         # Execute command
-        cli_executor.exec_command(f"mkdir {lakehouse.full_path}")
+        cli_executor.exec_command(f"mkdir {created_factory.full_path}")
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
