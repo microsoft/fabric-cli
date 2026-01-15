@@ -9,7 +9,7 @@ import re
 class FabricCLIError(Exception):
     def __init__(self, message, status_code=None):
         super().__init__(message)
-        self.message = message.rstrip(".")
+        self.message = message.rstrip(".") if message else None
         self.status_code = status_code
 
     def __str__(self):
@@ -20,7 +20,7 @@ class FabricCLIError(Exception):
         )
 
     def formatted_message(self, verbose=False):
-        escaped_text = html.escape(self.message)
+        escaped_text = html.escape(self.message) if self.message else ""
 
         return (
             f"[{self.status_code}] {escaped_text}"
@@ -63,12 +63,17 @@ class FabricAPIError(FabricCLIError):
             related_resource (dict): Details about the main related resource, if available.
             request_id (str): The ID of the request associated with the error.
         """
-        response = json.loads(response_text)
-        message = response.get("message")
-        error_code = response.get("errorCode")
-
-        self.more_details: list[dict] = response.get("moreDetails", [])
-        self.request_id = response.get("requestId")
+        try:
+            response = json.loads(response_text) if response_text else {}
+            message = response.get("message")
+            error_code = response.get("errorCode")
+            self.more_details: list[dict] = response.get("moreDetails", [])
+            self.request_id = response.get("requestId")
+        except (json.JSONDecodeError, TypeError):
+            message = "An error occurred while processing the operation"
+            error_code = "UnknownError"
+            self.more_details = []
+            self.request_id = None
 
         super().__init__(message, error_code)
 
@@ -111,27 +116,32 @@ class OnelakeAPIError(FabricCLIError):
             code (str): The error code returned by the API.
             message (str): A descriptive message about the error.
         """
-        response_data = json.loads(response_text)
-        error_data = response_data.get("error", {})
-        code = error_data.get("code")
-        message = error_data.get("message")
+        try:
+            response_data = json.loads(response_text) if response_text else {}
+            error_data = response_data.get("error", {})
+            code = error_data.get("code")
+            message = error_data.get("message")
 
-        if message:
-            message = re.sub(r"\n(?=RequestId:)", "", message)
-            match = re.search(r"RequestId:(\S+)", message)
-            if match:
-                self.request_id = match.group(1)
-                message = message.replace(match.group(0), "")
-            else:
-                self.request_id = None
+            self.request_id = None
+            self.timestamp = None
 
-            message = re.sub(r"\n(?=Time:)", "", message)
-            match = re.search(r"Time:(\S+)", message)
-            if match:
-                self.timestamp = match.group(1)
-                message = message.replace(match.group(0), "")
-            else:
-                self.timestamp = None
+            if message:
+                message = re.sub(r"\n(?=RequestId:)", "", message)
+                match = re.search(r"RequestId:(\S+)", message)
+                if match:
+                    self.request_id = match.group(1)
+                    message = message.replace(match.group(0), "")
+
+                message = re.sub(r"\n(?=Time:)", "", message)
+                match = re.search(r"Time:(\S+)", message)
+                if match:
+                    self.timestamp = match.group(1)
+                    message = message.replace(match.group(0), "")
+        except (json.JSONDecodeError, TypeError):
+            message = "An error occurred while processing the operation"
+            code = "UnknownError"
+            self.request_id = None
+            self.timestamp = None
 
         super().__init__(message, code)
 
@@ -188,19 +198,24 @@ class AzureAPIError(FabricCLIError):
             details (list): A list of additional error details, if available.
             additional_info (list): Additional info at the main error level, if available.
         """
-        response_data = json.loads(response_text)
-        error_data = response_data.get("error", {})
-        code = error_data.get("code")
-        message = error_data.get("message")
+        try:
+            response_data = json.loads(response_text) if response_text else {}
+            error_data = response_data.get("error", {})
+            code = error_data.get("code")
+            message = error_data.get("message")
 
-        details: list[dict] = error_data.get("details", [])
+            details: list[dict] = error_data.get("details", [])
 
-        # Extract RootActivityId from the details
-        self.request_id = None
-        for detail in details:
-            if detail.get("code") == "RootActivityId":
-                self.request_id = detail.get("message")
-                break
+            # Extract RootActivityId from the details
+            self.request_id = None
+            for detail in details:
+                if detail.get("code") == "RootActivityId":
+                    self.request_id = detail.get("message")
+                    break
+        except (json.JSONDecodeError, TypeError):
+            message = "An error occurred while processing the operation"
+            code = "UnknownError"
+            self.request_id = None
 
         super().__init__(message, code)
 
