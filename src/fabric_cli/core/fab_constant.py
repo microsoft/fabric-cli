@@ -323,6 +323,7 @@ ITEM_METADATA_PROPERTIES = {
     "description",
     "workspaceId",
     "folderId",
+    "properties",
 }
 
 # Item set constants
