@@ -148,7 +148,7 @@ Add Fabric CLI to GitHub Actions, Azure Pipelines, and other DevOps tools. The s
   run: |
     pip install ms-fabric-cli
     fab auth login -u ${{ secrets.CLIENT_ID }} -p ${{ secrets.CLIENT_SECRET }} --tenant ${{ secrets.TENANT_ID }}
-    fab import Production.Workspace/Data.Lakehouse -i ./artifacts/
+    fab import Production.Workspace/Data.Lakehouse -i ./artifacts/DataToImport.Lakehouse
 ```
 
 ### Azure Pipelines example
