@@ -11,9 +11,9 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 commands = {
     "Commands": {
-        "start": "Start an item (async).",
-        "run": "Run an item (sync).",
-        "run-cancel": "Cancel an item or scheduled run.",
+        "start": "Start an item asynchronously.",
+        "run": "Run an item synchronously.",
+        "run-cancel": "Cancel a running or scheduled job.",
         "run-list": "Retrieve the status of an item or scheduled job run.",
         "run-update": "Update a scheduled job.",
         "run-rm": "Remove a scheduled job.",

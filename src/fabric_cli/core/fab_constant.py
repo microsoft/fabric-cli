@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from fabric_cli import __version__
 from fabric_cli.utils.fab_hostname_validator import validate_and_get_env_variable
 
 # Initialize API endpoints with validation
@@ -27,7 +28,7 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = __version__
 
 # Scopes
 SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
@@ -137,23 +138,23 @@ CONFIG_DEFAULT_VALUES = {
 }
 
 # Command descriptions
-COMMAND_AUTH_DESCRIPTION = "Authenticate fab with Fabric."
+COMMAND_AUTH_DESCRIPTION = "Authenticate with Fabric."
 COMMAND_AUTH_STATUS_DESCRIPTION = "Display active account and authentication state."
 COMMAND_FS_DESCRIPTION = "Workspace, item and file system operations."
-COMMAND_JOBS_DESCRIPTION = "Manage tasks and jobs."
-COMMAND_TABLES_DESCRIPTION = "Manage tables."
+COMMAND_JOBS_DESCRIPTION = "Manage and schedule jobs."
+COMMAND_TABLES_DESCRIPTION = "Manage Delta tables."
 COMMAND_SHORTCUTS_DESCRIPTION = "Manage shorcuts."
-COMMAND_ACLS_DESCRIPTION = "Manage permissions [admin]."
+COMMAND_ACLS_DESCRIPTION = "Manage access control lists [admin]."
 COMMAND_ACLS_LS_DESCRIPTION = (
-    "List ACLs for a workspace, item, gateway, connection or OneLake."
+    "List ACLs for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway or connection."
+COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway, or connection."
 COMMAND_ACLS_GET_DESCRIPTION = (
-    "Get ACL details for a workspace, item, gateway, connection or OneLake."
+    "Get ACL details for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_SET_DESCRIPTION = "Set ACL on workspace, gateway or connection."
-COMMAND_CONFIG_DESCRIPTION = "Manage configuration settings."
-COMMAND_API_DESCRIPTION = "Make an authenticated API request."
+COMMAND_ACLS_SET_DESCRIPTION = "Set ACLs on a workspace, gateway, or connection."
+COMMAND_CONFIG_DESCRIPTION = "Manage CLI configuration."
+COMMAND_API_DESCRIPTION = "Make authenticated API requests."
 COMMAND_EXTENSIONS_DESCRIPTION = "Manage extensions."
 COMMAND_LABELS_DESCRIPTION = "Manage sensitivity labels [admin]."
 COMMAND_CAPACITIES_DESCRIPTION = "(tenant) Manage capacities [admin]."
@@ -179,23 +180,21 @@ COMMAND_FS_EXISTS_DESCRIPTION = "Check if a workspace, item, or file exists."
 COMMAND_FS_PWD_DESCRIPTION = "Print the current working directory."
 COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
-COMMAND_FS_GET_DESCRIPTION = "Get a workspace or item property."
-COMMAND_FS_IMPORT_DESCRIPTION = "Import an item (create/modify)."
-COMMAND_FS_SET_DESCRIPTION = "Set a workspace or item property."
+COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
+COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
+COMMAND_FS_SET_DESCRIPTION = "Set workspace or item properties."
 COMMAND_FS_CLEAR_DESCRIPTION = "Clear the terminal screen."
 COMMAND_FS_LN_DESCRIPTION = "Create a shortcut."
 COMMAND_FS_START_DESCRIPTION = "Start a resource."
 COMMAND_FS_STOP_DESCRIPTION = "Stop a resource."
-COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a resource to a workspace."
+COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a capacity or resource to a workspace."
 COMMAND_FS_UNASSIGN_DESCRIPTION = "Unassign a resource from a workspace."
 COMMAND_FS_LS_DESCRIPTION = "List workspaces, items, and files."
-COMMAND_FS_MKDIR_DESCRIPTION = "Create a new workspace, item, or directory."
+COMMAND_FS_MKDIR_DESCRIPTION = "Create a workspace, item, or directory."
 COMMAND_FS_RM_DESCRIPTION = "Delete a workspace, item, or file."
 
 # Label command descriptions
-COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = (
-    "List labels from `local_definition_labels` setting."
-)
+COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = "List configured sensitivity labels."
 COMMAND_LABELS_SET_DESCRIPTION = "Set a sensitivity label on an item."
 COMMAND_LABELS_RM_DESCRIPTION = "Remove a sensitivity label from an item."
 
