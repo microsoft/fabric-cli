@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from fabric_cli import __version__
 from fabric_cli.utils.fab_hostname_validator import validate_and_get_env_variable
 
 # Initialize API endpoints with validation
@@ -27,7 +28,7 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = __version__
 
 # Scopes
 SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
@@ -322,6 +323,7 @@ ITEM_METADATA_PROPERTIES = {
     "description",
     "workspaceId",
     "folderId",
+    "properties",
 }
 
 # Item set constants
