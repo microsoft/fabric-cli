@@ -84,8 +84,5 @@ def format_and_print_output(
         filtered_data = [{key: item[key] for key in columns if key in item} for item in data]
 
     utils_ui.print_output_format(
-        args, 
-        show_headers=show_details, 
-        data=filtered_data, 
-        hidden_data=hidden_data,
+        args, show_headers=show_details, data=filtered_data, hidden_data=hidden_data
     )

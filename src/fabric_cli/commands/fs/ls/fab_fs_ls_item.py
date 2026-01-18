@@ -16,26 +16,25 @@ _DIVIDER = "------------------------------"
 
 def _sort_ws_elements_with_seperation_by_type_order(
     ws_elements: list[Union[Item, Folder]], 
-    show_details: bool,
-    type_order: list
+    show_details: bool
 ) -> list[dict]:
     """
-    Groups elements by type according to type_order, sorts each group using sort_ws_elements,
+    Groups elements by type (Folders first, then Items), sorts each group using sort_ws_elements,
     and inserts a divider between non-empty groups.
     
     Args:
         ws_elements: List of workspace elements (Items and Folders)
         show_details: Whether to include detailed columns
-        type_order: List of types in the order they should appear (e.g., [Folder, Item])
     
     Returns:
-        list: Single list with elements grouped by type, with dividers between groups
+        list: Single list with folders first, divider, then items
     """
     if not ws_elements:
         return []
     
     result = []
     first_group = True
+    type_order = [Folder, Item]
 
     for typ in type_order:
         group = [el for el in ws_elements if isinstance(el, typ)]
@@ -70,7 +69,7 @@ def exec(workspace: Workspace, args):
     # Use separation if folder listing is enabled, output is text format, and --long is not provided
     if folder_listing_enabled and output_format == "text" and not show_details:
         sorted_elements_dict = _sort_ws_elements_with_seperation_by_type_order(
-            ws_elements, show_details, type_order=[Folder, Item]
+            ws_elements, show_details
         )
     else:
         sorted_elements_dict = utils_fs.sort_ws_elements(ws_elements, show_details)
