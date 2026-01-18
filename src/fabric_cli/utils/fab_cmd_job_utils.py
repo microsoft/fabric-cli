@@ -102,16 +102,11 @@ def wait_for_job_completion(
                     )
                 return
             elif status == "Failed":
-                fab_ui.print_output_error(
-                    FabricCLIError(
+                fab_ui.print_entries_unix_style([content], content.keys(), header=True)
+                raise FabricCLIError(
                         ErrorMessages.Common.job_instance_failed(job_ins_id),
                         fab_constant.ERROR_JOB_FAILED,
-                    ),
-                    command=args.command,
-                    output_format_type=args.output_format,
-                )
-                fab_ui.print_entries_unix_style([content], content.keys(), header=True)
-                return
+                    )
             elif status in ["NotStarted", "InProgress"]:
                 fab_ui.print_progress(f"Job instance status: {status}")
                 
