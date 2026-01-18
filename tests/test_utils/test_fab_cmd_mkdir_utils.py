@@ -9,7 +9,142 @@ import pytest
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
-from fabric_cli.utils.fab_cmd_mkdir_utils import find_mpe_connection
+from fabric_cli.utils.fab_cmd_mkdir_utils import (
+    find_mpe_connection,
+    get_connection_config_from_params,
+)
+
+
+def test_fabric_data_pipelines_workspace_identity_no_params_success():
+    """Test FabricDataPipelines with WorkspaceIdentity credential type when no parameters are required."""
+    # Arrange
+    payload = {
+        "description": "Created by fab",
+        "displayName": "test-connection",
+        "connectivityType": "ShareableCloud"
+    }
+    
+    con_type = "FabricDataPipelines"
+    con_type_def = {
+        "type": "FabricDataPipelines",
+        "creationMethods": [
+            {
+                "name": "FabricDataPipelines.Actions",
+                "parameters": []  # No parameters required for this creation method
+            }
+        ],
+        "supportedCredentialTypes": ["WorkspaceIdentity"]
+    }
+    
+    params = {
+        "connectiondetails": {
+            "type": "FabricDataPipelines",
+            "creationmethod": "FabricDataPipelines.Actions"
+            # No parameters provided since none are required
+        },
+        "credentialdetails": {
+            "type": "WorkspaceIdentity"
+            # No credential parameters provided since WorkspaceIdentity doesn't require any
+        }
+    }
+    
+    result = get_connection_config_from_params(payload, con_type, con_type_def, params)
+    
+    # Assert
+    assert result["privacyLevel"] == "None"
+    assert result["connectionDetails"]["type"] == "FabricDataPipelines"
+    assert result["connectionDetails"]["creationMethod"] == "FabricDataPipelines.Actions"
+    assert "parameters" not in result["connectionDetails"]
+    assert result["credentialDetails"]["credentials"]["credentialType"] == "WorkspaceIdentity"
+    assert len(result["credentialDetails"]["credentials"].keys()) == 1
+
+
+def test_connection_with_required_params_missing_failure():
+    """Test that connection creation fails when required parameters are missing."""
+    # Arrange
+    payload = {
+        "description": "Created by fab",
+        "displayName": "test-connection",
+        "connectivityType": "ShareableCloud"
+    }
+    
+    con_type = "SQL"
+    con_type_def = {
+        "type": "SQL",
+        "creationMethods": [
+            {
+                "name": "SQL",
+                "parameters": [
+                    {"name": "server", "required": True, "dataType": "Text"},
+                    {"name": "database", "required": True, "dataType": "Text"}
+                ]
+            }
+        ],
+        "supportedCredentialTypes": ["Basic"]
+    }
+    
+    params = {
+        "connectiondetails": {
+            "type": "SQL",
+            "creationmethod": "SQL"
+            # No parameters provided, but they are required
+        },
+        "credentialdetails": {
+            "type": "Basic",
+            "username": "testuser",
+            "password": "testpass"
+        }
+    }
+    
+    with pytest.raises(FabricCLIError) as exc_info:
+        get_connection_config_from_params(payload, con_type, con_type_def, params)
+    
+    assert "Parameters are required for the connection creation method" in str(exc_info.value.message)
+    assert "server, database" in str(exc_info.value.message)
+
+
+def test_workspace_identity_with_unsupported_params_ignored_success():
+    """Test that WorkspaceIdentity ignores unsupported credential parameters with warning."""
+    # Arrange
+    payload = {
+        "description": "Created by fab",
+        "displayName": "test-connection",
+        "connectivityType": "ShareableCloud"
+    }
+    
+    con_type = "FabricDataPipelines"
+    con_type_def = {
+        "type": "FabricDataPipelines",
+        "creationMethods": [
+            {
+                "name": "FabricDataPipelines.Actions",
+                "parameters": []
+            }
+        ],
+        "supportedCredentialTypes": ["WorkspaceIdentity"]
+    }
+    
+    params = {
+        "connectiondetails": {
+            "type": "FabricDataPipelines",
+            "creationmethod": "FabricDataPipelines.Actions"
+        },
+        "credentialdetails": {
+            "type": "WorkspaceIdentity",
+            "username": "should_be_ignored",  # This should be ignored for WorkspaceIdentity
+            "password": "should_be_ignored"   # This should be ignored for WorkspaceIdentity
+        }
+    }
+    
+    # Act
+    with patch('fabric_cli.utils.fab_ui.print_warning') as mock_warning:
+        result = get_connection_config_from_params(payload, con_type, con_type_def, params)
+        
+        mock_warning.assert_called_once()
+        assert "username" in str(mock_warning.call_args)
+        assert "password" in str(mock_warning.call_args)
+    
+    assert result["credentialDetails"]["credentials"]["credentialType"] == "WorkspaceIdentity"
 
 
 class TestFindMpeConnection:
