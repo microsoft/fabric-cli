@@ -15,9 +15,6 @@ from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils import fab_util as utils
 
-# Divider used to separate folders and items in workspace listings
-DIVIDER = "------------------------------"
-
 
 def select_workspace_items(from_context):
     ws_elems: list[Item | Folder] = get_ws_elements(from_context)
@@ -93,41 +90,3 @@ def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
         {key: getattr(item, key) for key in columns if hasattr(item, key)}
         for item in sorted_elements
     ]
-
-
-def sort_ws_elements_with_seperation_by_type_order(
-    ws_elements: list[Union[Item, Folder]], 
-    show_details: bool,
-    type_order: list
-) -> list[dict]:
-    """
-    Groups elements by type according to type_order, sorts each group using sort_ws_elements,
-    and inserts a divider between non-empty groups.
-    
-    Args:
-        ws_elements: List of workspace elements (Items and Folders)
-        show_details: Whether to include detailed columns
-        type_order: List of types in the order they should appear (e.g., [Folder, Item])
-    
-    Returns:
-        list: Single list with elements grouped by type, with dividers between groups
-    """
-    if not ws_elements:
-        return []
-    
-    result = []
-    first_group = True
-
-    for typ in type_order:
-        group = [el for el in ws_elements if isinstance(el, typ)]
-        if group:
-            group_dicts = sort_ws_elements(group, show_details)
-            if not first_group:
-                divider = {"name": DIVIDER}
-                if show_details:
-                    divider["id"] = ""
-                result.append(divider)
-            result.extend(group_dicts)
-            first_group = False
-
-    return result
