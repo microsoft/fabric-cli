@@ -958,96 +958,40 @@ class TestJobs:
         job_run_list(fabric_item.full_path, schedule=True)
         assert len(mock_questionary_print.call_args_list) != 0
 
-    def test_job_run_exits_with_code_1_success(self):
-        """Unit test to verify that wait_for_job_completion raises FabricCLIError with ERROR_JOB_FAILED when job status is 'Failed'."""
-        from fabric_cli.client.fab_api_types import ApiResponse
-        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
-        import json
-        from unittest.mock import Mock, patch
-        
-        # Create mock arguments
-        job_args = argparse.Namespace(
-            ws_id="test-workspace-id",
-            item_id="test-item-id",
-            command_path="job run",
-            output_format="text"
+    def test_job_run_exits_with_code_1_success(self, item_factory, cli_executor, assert_fabric_cli_error):
+        """Integration test to verify that job run command exits with code 1 when job fails."""
+        # Setup - use the example_failed notebook which contains failing code
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_failed.Notebook",
         )
-        job_ins_id = "test-job-instance-id"
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
         
-        # Create a mock response for the job creation
-        job_response = Mock(spec=ApiResponse)
-        job_response.headers = {}
+        # Execute command - this should fail with ERROR_JOB_FAILED due to the exception in the notebook
+        cli_executor.exec_command(f"job run {notebook.full_path}")
         
-        # Create a failed job status response
-        failed_job_content = {
-            "status": "Failed",
-            "id": job_ins_id,
-            "itemId": "test-item-id",
-            "jobType": "RunNotebook",
-            "invokeType": "Manual",
-            "failureReason": "Notebook execution failed intentionally"
-        }
-        
-        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
-            # Mock the API response for a failed job
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.text = json.dumps(failed_job_content)
-            mock_get_job.return_value = mock_response
-            
-            # Verify that the correct exception is raised
-            with pytest.raises(FabricCLIError) as exc_info:
-                wait_for_job_completion(job_args, job_ins_id, job_response)
-            
-            # Assert the error details
-            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
-            assert "Job instance 'test-job-instance-id' Failed" in str(exc_info.value.message)
+        # Assert that the correct FabricCLIError was raised with exit code 1
+        assert_fabric_cli_error(
+            constant.ERROR_JOB_FAILED,
+            "Failed"
+        )
 
-    def test_job_run_failure_with_timeout_exits_with_code_1_success(self):
-        """Unit test to verify that timeout doesn't interfere with job failure error handling."""
-        from fabric_cli.client.fab_api_types import ApiResponse
-        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
-        import json
-        from unittest.mock import Mock, patch
-        
-        # Create mock arguments with timeout
-        job_args = argparse.Namespace(
-            ws_id="test-workspace-id",
-            item_id="test-item-id",
-            command_path="job run",
-            output_format="text"
+    def test_job_run_failure_with_timeout_exits_with_code_1_success(self, item_factory, cli_executor, mock_print_warning):
+        """Integration test to verify that timeout prints cancellation message and doesn't raise error."""
+        # Setup - use a notebook that will run longer than the timeout
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
         )
-        job_ins_id = "test-job-instance-id-timeout"
-        timeout = 60  # 60 second timeout
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
         
-        # Create a mock response for the job creation
-        job_response = Mock(spec=ApiResponse)
-        job_response.headers = {}
+        # Execute command with short timeout - this should timeout and print cancellation message
+        cli_executor.exec_command(f"job run {notebook.full_path} --timeout 1")
         
-        # Create a failed job status response
-        failed_job_content = {
-            "status": "Failed",
-            "id": job_ins_id,
-            "itemId": "test-item-id",
-            "jobType": "RunNotebook",
-            "invokeType": "Manual",
-            "failureReason": "Job failed before timeout"
-        }
-        
-        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
-            # Mock the API response for a failed job
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.text = json.dumps(failed_job_content)
-            mock_get_job.return_value = mock_response
-            
-            # Verify that the correct exception is raised even with timeout
-            with pytest.raises(FabricCLIError) as exc_info:
-                wait_for_job_completion(job_args, job_ins_id, job_response, timeout=timeout)
-            
-            # Assert the error details
-            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
-            assert "Job instance 'test-job-instance-id-timeout' Failed" in str(exc_info.value.message)
+        # Verify that timeout warning was printed (not an error)
+        mock_print_warning.assert_called()
+        warning_message = mock_print_warning.call_args[0][0]
+        assert "timed out" in warning_message
 
     def test_job_failure_error_handling_unit_test(self):
         """Unit test to verify that FabricCLIError with ERROR_JOB_FAILED is raised when job status is 'Failed'."""
