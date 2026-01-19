@@ -663,20 +663,14 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         "singleSignOnType": singleSignOnType,
         "connectionEncryption": encryption,
         "skipTestConnection": skipTestConnection,
+        "credentials": connection_params,
     }
-    
-    # Only add credentials if there are any parameters or it's not a type that requires no credentials
-    if connection_params or cred_type not in ["Anonymous", "WindowsWithoutImpersonation", "WorkspaceIdentity"]:
-        connection_request["credentialDetails"]["credentials"] = connection_params
-        connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
+
+    connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
         
-        if is_on_premises_gateway:
-            connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get("values")
-    else:
-        # For credential types that don't need parameters, just add the credentialType
-        connection_request["credentialDetails"]["credentials"] = {
-            "credentialType": cred_type
-        }
+    if is_on_premises_gateway:
+        connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get(
+            "values")
 
     return connection_request
 
