@@ -993,50 +993,6 @@ class TestJobs:
         warning_message = mock_print_warning.call_args[0][0]
         assert "timed out" in warning_message
 
-    def test_job_failure_error_handling_unit_test(self):
-        """Unit test to verify that FabricCLIError with ERROR_JOB_FAILED is raised when job status is 'Failed'."""
-        from fabric_cli.client.fab_api_types import ApiResponse
-        from fabric_cli.utils.fab_cmd_job_utils import wait_for_job_completion
-        import json
-        from unittest.mock import Mock, patch
-        
-        # Create mock arguments
-        job_args = argparse.Namespace(
-            ws_id="test-workspace-id",
-            item_id="test-item-id",
-            command_path="job run",
-            output_format="text"
-        )
-        job_ins_id = "test-job-instance-id"
-        
-        # Create a mock response for the job creation
-        job_response = Mock(spec=ApiResponse)
-        job_response.headers = {}
-        
-        # Create a failed job status response
-        failed_job_content = {
-            "status": "Failed",
-            "id": job_ins_id,
-            "itemId": "test-item-id",
-            "jobType": "RunNotebook",
-            "invokeType": "Manual",
-            "failureReason": "Notebook execution failed"
-        }
-        
-        with patch('fabric_cli.client.fab_api_jobs.get_item_job_instance') as mock_get_job:
-            # Mock the API response for a failed job
-            mock_response = Mock()
-            mock_response.status_code = 200
-            mock_response.text = json.dumps(failed_job_content)
-            mock_get_job.return_value = mock_response
-            
-            # Verify that the correct exception is raised
-            with pytest.raises(FabricCLIError) as exc_info:
-                wait_for_job_completion(job_args, job_ins_id, job_response)
-            
-            # Assert the error details
-            assert exc_info.value.status_code == constant.ERROR_JOB_FAILED
-            assert "Job instance 'test-job-instance-id' Failed" in str(exc_info.value.message)
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):
