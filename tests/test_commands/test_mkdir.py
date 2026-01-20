@@ -29,7 +29,7 @@ from fabric_cli.core.fab_types import (
     VirtualWorkspaceType,
 )
 from fabric_cli.errors import ErrorMessages
-from tests.test_commands.conftest import mock_print_done
+from tests.test_commands.conftest import custom_parametrize
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
@@ -38,17 +38,8 @@ from tests.test_commands.utils import cli_path_join
 
 class TestMkdir:
     # region ITEM
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE,
-        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.REPORT,
-        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
-        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.GRAPHQLAPI, ItemType.MOUNTED_DATA_FACTORY, ItemType.DATAFLOW,
-    ])
+
+    @custom_parametrize
     def test_mkdir_item_name_already_exists_failure(
         self, item_type, item_factory, cli_executor, assert_fabric_cli_error
     ):
@@ -61,17 +52,7 @@ class TestMkdir:
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE,
-        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.REPORT,
-        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
-        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.GRAPHQLAPI, ItemType.MOUNTED_DATA_FACTORY, ItemType.DATAFLOW,
-    ])
+    @custom_parametrize
     def test_mkdir_item_success(
         self, 
         item_type, 
@@ -81,7 +62,6 @@ class TestMkdir:
         mock_questionary_print,
         vcr_instance, 
         cassette_name,
-        upsert_item_to_cache
     ):
         # Setup
         item_display_name = generate_random_string(vcr_instance, cassette_name)
