@@ -5,6 +5,10 @@ import html
 import json
 import re
 
+# Constants for common error messages and codes
+DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
+DEFAULT_ERROR_CODE = "UnknownError"
+
 
 class FabricCLIError(Exception):
     def __init__(self, message, status_code=None):
@@ -70,8 +74,8 @@ class FabricAPIError(FabricCLIError):
             self.more_details: list[dict] = response.get("moreDetails", [])
             self.request_id = response.get("requestId")
         except (json.JSONDecodeError, TypeError):
-            message = "An error occurred while processing the operation"
-            error_code = "UnknownError"
+            message = DEFAULT_ERROR_MESSAGE
+            error_code = DEFAULT_ERROR_CODE
             self.more_details = []
             self.request_id = None
 
@@ -116,14 +120,15 @@ class OnelakeAPIError(FabricCLIError):
             code (str): The error code returned by the API.
             message (str): A descriptive message about the error.
         """
+        # Initialize properties before parsing
+        self.request_id = None
+        self.timestamp = None
+        
         try:
             response_data = json.loads(response_text) if response_text else {}
             error_data = response_data.get("error", {})
             code = error_data.get("code")
             message = error_data.get("message")
-
-            self.request_id = None
-            self.timestamp = None
 
             if message:
                 message = re.sub(r"\n(?=RequestId:)", "", message)
@@ -138,10 +143,8 @@ class OnelakeAPIError(FabricCLIError):
                     self.timestamp = match.group(1)
                     message = message.replace(match.group(0), "")
         except (json.JSONDecodeError, TypeError):
-            message = "An error occurred while processing the operation"
-            code = "UnknownError"
-            self.request_id = None
-            self.timestamp = None
+            message = DEFAULT_ERROR_MESSAGE
+            code = DEFAULT_ERROR_CODE
 
         super().__init__(message, code)
 
@@ -198,6 +201,9 @@ class AzureAPIError(FabricCLIError):
             details (list): A list of additional error details, if available.
             additional_info (list): Additional info at the main error level, if available.
         """
+        # Initialize properties before parsing
+        self.request_id = None
+        
         try:
             response_data = json.loads(response_text) if response_text else {}
             error_data = response_data.get("error", {})
@@ -206,16 +212,13 @@ class AzureAPIError(FabricCLIError):
 
             details: list[dict] = error_data.get("details", [])
 
-            # Extract RootActivityId from the details
-            self.request_id = None
             for detail in details:
                 if detail.get("code") == "RootActivityId":
                     self.request_id = detail.get("message")
                     break
         except (json.JSONDecodeError, TypeError):
-            message = "An error occurred while processing the operation"
-            code = "UnknownError"
-            self.request_id = None
+            message = DEFAULT_ERROR_MESSAGE
+            code = DEFAULT_ERROR_CODE
 
         super().__init__(message, code)
 

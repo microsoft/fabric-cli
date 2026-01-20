@@ -301,34 +301,22 @@ def _search_capacity_id(capacity_name: str) -> str | None:
 def _get_capacity_id(
     capacity_name, subscription_id=None, resource_group_name=None
 ) -> str | None:
-    import time
-    
-    max_retries = 3
-    retry_delay = 2  # seconds
-    
-    for attempt in range(max_retries):
-        if subscription_id and resource_group_name:
-            args = Namespace()
-            args.name = capacity_name
-            args.subscription_id = subscription_id
-            args.resource_group_name = resource_group_name
-            try:
-                response = capacity_api.get_capacity(args)
-                if response.status_code == 200:
-                    return json.loads(response.text)["id"]
-            except FabricCLIError:
-                pass  # Continue to fallback search
-        
-        # Fallback to searching across subscriptions
-        capacity_id = _search_capacity_id(capacity_name)
-        if capacity_id:
-            return capacity_id
-            
-        # If not found and we still have retries left, wait and try again
-        if attempt < max_retries - 1:
-            time.sleep(retry_delay)
-    
-    return None
+    if subscription_id and resource_group_name:
+        args = Namespace()
+        args.name = capacity_name
+        args.subscription_id = subscription_id
+        args.resource_group_name = resource_group_name
+        try:
+            response = capacity_api.get_capacity(args)
+        except FabricCLIError:
+            return _search_capacity_id(capacity_name)
+        else:
+            if response.status_code == 200:
+                return json.loads(response.text)["id"]
+            else:
+                return _search_capacity_id(capacity_name)
+    else:
+        return _search_capacity_id(capacity_name)
 
 
 def get_all_az_capacities() -> list:
