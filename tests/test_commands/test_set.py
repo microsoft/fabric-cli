@@ -266,46 +266,44 @@ class TestSET:
         upsert_spark_pool_to_cache.assert_not_called()
 
     @pytest.mark.parametrize(
-        "query, input",
+        "metadata_to_set, input_value",
         [
             ("nodeSize", "Medium"),
             ("autoScale.enabled", "true"),
             ("autoScale.minNodeCount", "2"),
             ("autoScale.maxNodeCount", "5"),
+            ("name", "newName"),
         ],
     )
     def test_set_sparkpool_success(
         self,
-        query,
-        input,
+        metadata_to_set,
+        input_value,
         virtual_item_factory,
         cli_executor,
         mock_questionary_print,
         mock_print_done,
         upsert_spark_pool_to_cache,
+        vcr_instance,
+        cassette_name,
     ):
-        # Setup
         # Setting maxNodeCount to 3 to be able to set minNodeCount to 2/3 since minNodeCount should be less than or equal to maxNodeCount
         sparkpool = virtual_item_factory(
             VirtualItemContainerType.SPARK_POOL, params=["autoScale.maxNodeCount=3"]
         )
 
-        # Reset mocks
-        mock_questionary_print.reset_mock()
-        mock_print_done.reset_mock()
-        upsert_spark_pool_to_cache.reset_mock()
-
-        # Execute command
-        cli_executor.exec_command(
-            f"set {sparkpool.full_path} --query {query} --input {input} --force"
+        self._test_set_metadata_success(
+            sparkpool,
+            mock_questionary_print,
+            mock_print_done,
+            upsert_spark_pool_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache=metadata_to_set == "name",
+            input_value=input_value,
         )
-
-        # Assert
-        upsert_spark_pool_to_cache.assert_not_called()
-        mock_print_done.assert_called_once()
-
-        get(sparkpool.full_path, query=query)
-        assert mock_questionary_print.call_args[0][0].lower() == input.lower()
 
     # endregion
 
@@ -487,38 +485,66 @@ class TestSET:
     # endregion
 
     # region Gateway
+    @pytest.mark.parametrize(
+        "query,input",
+        [
+            ("numberOfMemberGateways", "2"),
+            ("inactivityMinutesBeforeSleep", "60"),
+            ("displayName", "new name"),
+        ],
+    )
     def test_set_gateway_virtualNetwork_success(
+        self,
+        query,
+        input,
+        virtual_workspace_item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        upsert_gateway_to_cache,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup - Create VirtualNetwork gateway (default type created by factory)
+        gateway = virtual_workspace_item_factory(VirtualWorkspaceType.GATEWAY)
+
+        self._test_set_metadata_success(
+            gateway,
+            mock_questionary_print,
+            mock_print_done,
+            upsert_gateway_to_cache,
+            query,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache=(query == "displayName"),
+            input_value=input,
+        )
+
+    def test_set_gateway_virtualNetwork_capacityId_success(
         self,
         virtual_workspace_item_factory,
         cli_executor,
         mock_questionary_print,
         mock_print_done,
+        test_data,
         vcr_instance,
         cassette_name,
     ):
-        # Setup
         gateway = virtual_workspace_item_factory(VirtualWorkspaceType.GATEWAY)
-        query = "displayName"
-        input = generate_random_string(vcr_instance, cassette_name)
 
-        # Reset mocks
-        mock_questionary_print.reset_mock()
-        mock_print_done.reset_mock()
-
-        # Execute command
-        cli_executor.exec_command(
-            f"set {gateway.full_path} --query {query} --input {input} --force"
+        self._test_set_metadata_success(
+            gateway,
+            mock_questionary_print,
+            mock_print_done,
+            None,
+            "capacityId",
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache=False,
+            input_value=test_data.capacity.id,
         )
-
-        full_path_new = gateway.full_path.replace(gateway.display_name, input)
-        # Assert
-        mock_print_done.assert_called_once()
-
-        get(full_path_new, query=query)
-        assert mock_questionary_print.call_args[0][0].lower() == input.lower()
-
-        # Clean up - update the full path of the renamed entities so the factory can clean them up
-        set(full_path_new, query=query, input=gateway.display_name)
 
     def test_set_gateway_duplicate_name_failure(
         self,
@@ -770,9 +796,14 @@ class TestSET:
         vcr_instance,
         cassette_name,
         should_upsert_to_cache=True,
+        input_value=None,
     ):
         # Setup
-        new_metadata_value = generate_random_string(vcr_instance, cassette_name)
+        new_metadata_value = (
+            input_value
+            if input_value is not None
+            else generate_random_string(vcr_instance, cassette_name)
+        )
 
         # Reset mocks
         mock_questionary_print.reset_mock()
@@ -812,7 +843,9 @@ class TestSET:
             assert ex.value.status_code in (constant.ERROR_NOT_FOUND, "EntityNotFound")
 
         get(new_entity.full_path, query=metadata_to_set)
-        assert mock_questionary_print.call_args[0][0] == new_metadata_value
+        assert (
+            mock_questionary_print.call_args[0][0].lower() == new_metadata_value.lower()
+        )
 
         # Clean up - update the full path of the renamed entities so the factory can clean them up
         if metadata_to_set == "displayName":
@@ -915,6 +948,12 @@ def upsert_item_to_cache():
 @pytest.fixture()
 def upsert_folder_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_folder_to_cache") as mock:
+        yield mock
+
+
+@pytest.fixture()
+def upsert_gateway_to_cache():
+    with patch("fabric_cli.utils.fab_mem_store.upsert_gateway_to_cache") as mock:
         yield mock
 
 
