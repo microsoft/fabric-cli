@@ -448,7 +448,38 @@ class TestSET:
     # endregion
 
     # region Connection
-    def test_set_connection_success(
+    @pytest.mark.parametrize(
+        "metadata_to_set,input_value",
+        [
+            ("privacyLevel", "Organizational"),
+        ],
+    )
+    def test_set_connection_metadata_success(
+        self,
+        virtual_workspace_item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        upsert_connection_to_cache,
+        metadata_to_set,
+        input_value,
+        vcr_instance,
+        cassette_name,
+    ):
+        self._test_set_metadata_success(
+            virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION),
+            mock_questionary_print,
+            mock_print_done,
+            upsert_connection_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache=metadata_to_set == "displayName",
+            input_value=input_value,
+        )
+
+    def test_set_connection_displayName_success(
         self,
         virtual_workspace_item_factory,
         cli_executor,
@@ -490,7 +521,7 @@ class TestSET:
         [
             ("numberOfMemberGateways", "2"),
             ("inactivityMinutesBeforeSleep", "60"),
-            ("displayName", "new name"),
+            ("displayName", None),  # Use None to trigger generate_random_string
         ],
     )
     def test_set_gateway_virtualNetwork_success(
@@ -954,6 +985,12 @@ def upsert_folder_to_cache():
 @pytest.fixture()
 def upsert_gateway_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_gateway_to_cache") as mock:
+        yield mock
+
+
+@pytest.fixture()
+def upsert_connection_to_cache():
+    with patch("fabric_cli.utils.fab_mem_store.upsert_connection_to_cache") as mock:
         yield mock
 
 
