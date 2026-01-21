@@ -122,8 +122,7 @@ class TestSET:
         mock_print_done.assert_called_once()
         upsert_item_to_cache.assert_not_called()
         get(report.full_path, query=property_path)
-        assert new_semantic_model_id in str(
-            mock_questionary_print.call_args[0][0])
+        assert new_semantic_model_id in str(mock_questionary_print.call_args[0][0])
 
     def test_set_item_variable_library_properties_success(
         self,
@@ -153,8 +152,7 @@ class TestSET:
 
         # Verify the property was set correctly
         get(variable_library.full_path, query="properties.activeValueSetName")
-        assert "Default value set" in str(
-            mock_questionary_print.call_args[0][0])
+        assert "Default value set" in str(mock_questionary_print.call_args[0][0])
 
     # endregion
 
@@ -274,7 +272,7 @@ class TestSET:
             ("autoScale.enabled", "true"),
             ("autoScale.minNodeCount", "2"),
             ("autoScale.maxNodeCount", "5"),
-            ("name", None)  # Use None to trigger generate_random_string
+            ("name", None),  # Use None to trigger generate_random_string
         ],
     )
     def test_set_sparkpool_success(
@@ -291,8 +289,7 @@ class TestSET:
     ):
         # Setting maxNodeCount to 3 to be able to set minNodeCount to 2/3 since minNodeCount should be less than or equal to maxNodeCount
         sparkpool = virtual_item_factory(
-            VirtualItemContainerType.SPARK_POOL, params=[
-                "autoScale.maxNodeCount=3"]
+            VirtualItemContainerType.SPARK_POOL, params=["autoScale.maxNodeCount=3"]
         )
 
         self._test_set_metadata_success(
@@ -321,8 +318,7 @@ class TestSET:
         setup_config_values_for_capacity,
     ):
         # Setup
-        capacity = virtual_workspace_item_factory(
-            VirtualWorkspaceType.CAPACITY)
+        capacity = virtual_workspace_item_factory(VirtualWorkspaceType.CAPACITY)
 
         # Reset mocks
         mock_questionary_print.reset_mock()
@@ -350,8 +346,7 @@ class TestSET:
         setup_config_values_for_capacity,
     ):
         # Setup
-        capacity = virtual_workspace_item_factory(
-            VirtualWorkspaceType.CAPACITY)
+        capacity = virtual_workspace_item_factory(VirtualWorkspaceType.CAPACITY)
 
         # Reset mocks
         mock_questionary_print.reset_mock()
@@ -494,8 +489,7 @@ class TestSET:
         cassette_name,
     ):
         # Setup
-        connection = virtual_workspace_item_factory(
-            VirtualWorkspaceType.CONNECTION)
+        connection = virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION)
 
         # Reset mocks
         mock_questionary_print.reset_mock()
@@ -509,8 +503,7 @@ class TestSET:
             f"set {connection.full_path} --query {query} --input {input} --force"
         )
 
-        full_path_new = connection.full_path.replace(
-            connection.display_name, input)
+        full_path_new = connection.full_path.replace(connection.display_name, input)
         # Assert
         mock_print_done.assert_called_once()
 
@@ -807,8 +800,7 @@ class TestSET:
         mock_print_done,
     ):
         # Setup
-        virtual_item = virtual_item_factory(
-            VirtualItemContainerType.MANAGED_IDENTITY)
+        virtual_item = virtual_item_factory(VirtualItemContainerType.MANAGED_IDENTITY)
 
         # Reset mocks
         mock_questionary_print.reset_mock()
@@ -871,8 +863,7 @@ class TestSET:
         if metadata_to_set == "displayName" or metadata_to_set == "name":
             new_entity = EntityMetadata(
                 display_name=new_metadata_value,
-                name=entity.name.replace(
-                    entity.display_name, new_metadata_value),
+                name=entity.name.replace(entity.display_name, new_metadata_value),
                 full_path=entity.full_path.replace(
                     entity.display_name, new_metadata_value
                 ),
@@ -880,19 +871,18 @@ class TestSET:
 
             with pytest.raises(FabricCLIError) as ex:
                 get(entity.full_path)
-            assert ex.value.status_code in (
-                constant.ERROR_NOT_FOUND, "EntityNotFound")
+            assert ex.value.status_code in (constant.ERROR_NOT_FOUND, "EntityNotFound")
 
         get(new_entity.full_path, query=metadata_to_set)
         assert (
-            mock_questionary_print.call_args[0][0].lower(
-            ) == new_metadata_value.lower()
+            mock_questionary_print.call_args[0][0].lower() == new_metadata_value.lower()
         )
 
         # Clean up - update the full path of the renamed entities so the factory can clean them up
         if metadata_to_set == "displayName":
-            set(new_entity.full_path, query="displayName",
-                input=entity.display_name)
+            set(new_entity.full_path, query="displayName", input=entity.display_name)
+        elif metadata_to_set == "name":
+            set(new_entity.full_path, query="name", input=entity.display_name)
 
 
 # region Helper Methods
