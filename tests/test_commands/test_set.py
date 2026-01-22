@@ -269,7 +269,7 @@ class TestSET:
         "metadata_to_set, input_value",
         [
             ("nodeSize", "Medium"),
-            ("autoScale.enabled", "true"),
+            ("autoScale.enabled", "True"),
             ("autoScale.minNodeCount", "2"),
             ("autoScale.maxNodeCount", "5"),
             ("name", None),  # Use None to trigger generate_random_string
@@ -874,9 +874,7 @@ class TestSET:
             assert ex.value.status_code in (constant.ERROR_NOT_FOUND, "EntityNotFound")
 
         get(new_entity.full_path, query=metadata_to_set)
-        assert (
-            mock_questionary_print.call_args[0][0].lower() == new_metadata_value.lower()
-        )
+        assert mock_questionary_print.call_args[0][0] == new_metadata_value
 
         # Clean up - update the full path of the renamed entities so the factory can clean them up
         if metadata_to_set == "displayName":
