@@ -34,7 +34,7 @@ class TestSET:
         assert_fabric_cli_error,
         mock_questionary_print,
         mock_print_done,
-        upsert_item_to_cache,
+        mock_upsert_item_to_cache,
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
@@ -42,7 +42,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_item_to_cache.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -51,7 +51,7 @@ class TestSET:
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
-        upsert_item_to_cache.assert_not_called()
+        mock_upsert_item_to_cache.assert_not_called()
 
     @pytest.mark.parametrize(
         "metadata_to_set,should_upsert_to_cache",
@@ -66,7 +66,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_item_to_cache,
+        mock_upsert_item_to_cache,
         metadata_to_set,
         vcr_instance,
         cassette_name,
@@ -76,7 +76,7 @@ class TestSET:
             item_factory(ItemType.NOTEBOOK),
             mock_questionary_print,
             mock_print_done,
-            upsert_item_to_cache,
+            mock_upsert_item_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
@@ -90,7 +90,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_item_to_cache,
+        mock_upsert_item_to_cache,
         workspace,
     ):
         # Setup
@@ -105,7 +105,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_item_to_cache.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
 
         property_path = (
             "definition.parts[0].payload.datasetReference.byConnection.connectionString"
@@ -120,7 +120,7 @@ class TestSET:
 
         # Assert
         mock_print_done.assert_called_once()
-        upsert_item_to_cache.assert_not_called()
+        mock_upsert_item_to_cache.assert_not_called()
         get(report.full_path, query=property_path)
         assert new_semantic_model_id in str(mock_questionary_print.call_args[0][0])
 
@@ -130,7 +130,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_item_to_cache,
+        mock_upsert_item_to_cache,
     ):
         # Setup - Create a new variable library
         variable_library = item_factory(ItemType.VARIABLE_LIBRARY)
@@ -139,7 +139,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_item_to_cache.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
 
         # Execute command - Set properties with activeValueSetName
         cli_executor.exec_command(
@@ -148,7 +148,7 @@ class TestSET:
 
         # Assert
         mock_print_done.assert_called_once()
-        upsert_item_to_cache.assert_not_called()
+        mock_upsert_item_to_cache.assert_not_called()
 
         # Verify the property was set correctly
         get(variable_library.full_path, query="properties.activeValueSetName")
@@ -162,7 +162,7 @@ class TestSET:
         workspace,
         cli_executor,
         assert_fabric_cli_error,
-        upsert_workspace_to_cache,
+        mock_upsert_workspace_to_cache,
     ):
         # Execute command
         cli_executor.exec_command(
@@ -173,7 +173,7 @@ class TestSET:
         assert_fabric_cli_error(
             constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
-        upsert_workspace_to_cache.assert_not_called()
+        mock_upsert_workspace_to_cache.assert_not_called()
 
     @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
     def test_set_workspace_metadata_success(
@@ -181,7 +181,7 @@ class TestSET:
         workspace_factory,
         mock_questionary_print,
         mock_print_done,
-        upsert_workspace_to_cache,
+        mock_upsert_workspace_to_cache,
         metadata_to_set,
         cli_executor,
         vcr_instance,
@@ -191,7 +191,7 @@ class TestSET:
             workspace_factory(),
             mock_questionary_print,
             mock_print_done,
-            upsert_workspace_to_cache,
+            mock_upsert_workspace_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
@@ -212,7 +212,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_workspace_to_cache,
+        mock_upsert_workspace_to_cache,
     ):
         # Setup
         workspace = workspace_factory()
@@ -220,7 +220,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_workspace_to_cache.reset_mock()
+        mock_upsert_workspace_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -228,7 +228,7 @@ class TestSET:
         )
 
         # Assert
-        upsert_workspace_to_cache.assert_not_called()
+        mock_upsert_workspace_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
         get(workspace.full_path, query=metadata_to_set)
@@ -244,7 +244,7 @@ class TestSET:
         assert_fabric_cli_error,
         mock_questionary_print,
         mock_print_done,
-        upsert_spark_pool_to_cache,
+        mock_upsert_spark_pool_to_cache,
     ):
         # Setup
         sparkpool = virtual_item_factory(VirtualItemContainerType.SPARK_POOL)
@@ -252,7 +252,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_spark_pool_to_cache.reset_mock()
+        mock_upsert_spark_pool_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -263,7 +263,7 @@ class TestSET:
         assert_fabric_cli_error(
             constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
         )
-        upsert_spark_pool_to_cache.assert_not_called()
+        mock_upsert_spark_pool_to_cache.assert_not_called()
 
     @pytest.mark.parametrize(
         "metadata_to_set, input_value",
@@ -283,7 +283,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_spark_pool_to_cache,
+        mock_upsert_spark_pool_to_cache,
         vcr_instance,
         cassette_name,
     ):
@@ -296,7 +296,7 @@ class TestSET:
             sparkpool,
             mock_questionary_print,
             mock_print_done,
-            upsert_spark_pool_to_cache,
+            mock_upsert_spark_pool_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
@@ -397,7 +397,7 @@ class TestSET:
         virtual_workspace_item_factory,
         mock_questionary_print,
         mock_print_done,
-        upsert_domain_to_cache,
+        mock_upsert_domain_to_cache,
         metadata_to_set,
         cli_executor,
         vcr_instance,
@@ -407,7 +407,7 @@ class TestSET:
             virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN),
             mock_questionary_print,
             mock_print_done,
-            upsert_domain_to_cache,
+            mock_upsert_domain_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
@@ -423,7 +423,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_domain_to_cache,
+        mock_upsert_domain_to_cache,
     ):
         # Setup
         domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
@@ -431,7 +431,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_domain_to_cache.reset_mock()
+        mock_upsert_domain_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -439,7 +439,7 @@ class TestSET:
         )
 
         # Assert
-        upsert_domain_to_cache.assert_not_called()
+        mock_upsert_domain_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
         get(domain.full_path, query=query)
@@ -460,7 +460,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_connection_to_cache,
+        mock_upsert_connection_to_cache,
         metadata_to_set,
         input_value,
         vcr_instance,
@@ -470,7 +470,7 @@ class TestSET:
             virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION),
             mock_questionary_print,
             mock_print_done,
-            upsert_connection_to_cache,
+            mock_upsert_connection_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
@@ -532,7 +532,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_gateway_to_cache,
+        mock_upsert_gateway_to_cache,
         vcr_instance,
         cassette_name,
     ):
@@ -543,7 +543,7 @@ class TestSET:
             gateway,
             mock_questionary_print,
             mock_print_done,
-            upsert_gateway_to_cache,
+            mock_upsert_gateway_to_cache,
             query,
             cli_executor,
             vcr_instance,
@@ -739,7 +739,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_folder_to_cache,
+        mock_upsert_folder_to_cache,
     ):
         # Setup
         folder = folder_factory()
@@ -747,7 +747,7 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        upsert_folder_to_cache.reset_mock()
+        mock_upsert_folder_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -756,7 +756,7 @@ class TestSET:
 
         full_path_new = folder.full_path.replace(folder.display_name, input)
         # Assert
-        upsert_folder_to_cache.assert_called_once()
+        mock_upsert_folder_to_cache.assert_called_once()
         mock_print_done.assert_called_once()
 
         get(full_path_new, query=query)
@@ -953,43 +953,43 @@ def _build_ln_args(path, type, target, input, force):
 
 # region fixtures
 @pytest.fixture()
-def upsert_workspace_to_cache():
+def mock_upsert_workspace_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_workspace_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_domain_to_cache():
+def mock_upsert_domain_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_domain_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_spark_pool_to_cache():
+def mock_upsert_spark_pool_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_spark_pool_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_item_to_cache():
+def mock_upsert_item_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_item_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_folder_to_cache():
+def mock_upsert_folder_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_folder_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_gateway_to_cache():
+def mock_upsert_gateway_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_gateway_to_cache") as mock:
         yield mock
 
 
 @pytest.fixture()
-def upsert_connection_to_cache():
+def mock_upsert_connection_to_cache():
     with patch("fabric_cli.utils.fab_mem_store.upsert_connection_to_cache") as mock:
         yield mock
 
