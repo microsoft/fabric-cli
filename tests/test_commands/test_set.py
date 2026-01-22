@@ -199,15 +199,15 @@ class TestSET:
         )
 
     @pytest.mark.parametrize(
-        "query, input",
+        "metadata_to_set, input_value",
         [
             ("sparkSettings.automaticLog.enabled", "false"),
         ],
     )
     def test_set_workspace_success(
         self,
-        query,
-        input,
+        metadata_to_set,
+        input_value,
         workspace_factory,
         cli_executor,
         mock_questionary_print,
@@ -224,15 +224,15 @@ class TestSET:
 
         # Execute command
         cli_executor.exec_command(
-            f"set {workspace.full_path} --query {query} --input {input} --force"
+            f"set {workspace.full_path} --query {metadata_to_set} --input {input_value} --force"
         )
 
         # Assert
         upsert_workspace_to_cache.assert_not_called()
         mock_print_done.assert_called_once()
 
-        get(workspace.full_path, query=query)
-        assert mock_questionary_print.call_args[0][0].lower() == input.lower()
+        get(workspace.full_path, query=metadata_to_set)
+        assert mock_questionary_print.call_args[0][0].lower() == input_value.lower()
 
     # endregion
 
