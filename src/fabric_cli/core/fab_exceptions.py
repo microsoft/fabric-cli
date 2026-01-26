@@ -5,7 +5,9 @@ import html
 import json
 import re
 
-from fabric_cli.core.fab_constant import DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE
+# Default error constants - avoids circular imports
+DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
+DEFAULT_ERROR_CODE = "UnknownError"
 
 
 class FabricCLIError(Exception):

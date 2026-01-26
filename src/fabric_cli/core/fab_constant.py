@@ -236,10 +236,6 @@ WARNING_MOVING_ITEMS_INSIDE_WORKSPACE_NOT_SUPPORTED = (
 WARNING_WORKSPACE_EMPTY = "Workspace is empty"
 WARNING_ITEM_EXISTS_IN_PATH = "An item with the same name exists in {0}"
 
-# General errors
-DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
-DEFAULT_ERROR_CODE = "UnknownError"
-
 # Error codes
 
 ERROR_ALREADY_EXISTS = "AlreadyExists"
