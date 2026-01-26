@@ -5,9 +5,7 @@ import html
 import json
 import re
 
-# Constants for common error messages and codes
-DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
-DEFAULT_ERROR_CODE = "UnknownError"
+from fabric_cli.core.fab_constant import DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE
 
 
 class FabricCLIError(Exception):
@@ -123,7 +121,7 @@ class OnelakeAPIError(FabricCLIError):
         # Initialize properties before parsing
         self.request_id = None
         self.timestamp = None
-        
+
         try:
             response_data = json.loads(response_text) if response_text else {}
             error_data = response_data.get("error", {})
@@ -203,7 +201,7 @@ class AzureAPIError(FabricCLIError):
         """
         # Initialize properties before parsing
         self.request_id = None
-        
+
         try:
             response_data = json.loads(response_text) if response_text else {}
             error_data = response_data.get("error", {})
