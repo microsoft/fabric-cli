@@ -11,10 +11,21 @@ DEFAULT_ERROR_CODE = "UnknownError"
 
 
 class FabricCLIError(Exception):
-    def __init__(self, message, status_code=None):
+    def __init__(self, message=None, status_code=None):
+        # Use default values if not provided
+        message = message or DEFAULT_ERROR_MESSAGE
+        status_code = status_code or DEFAULT_ERROR_CODE
+
         super().__init__(message)
         self.message = message.rstrip(".") if message else None
         self.status_code = status_code
+
+    @staticmethod
+    def _parse_json_response(response_text):
+        try:
+            return json.loads(response_text) if response_text else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
 
     def __str__(self):
         return (
@@ -67,17 +78,12 @@ class FabricAPIError(FabricCLIError):
             related_resource (dict): Details about the main related resource, if available.
             request_id (str): The ID of the request associated with the error.
         """
-        try:
-            response = json.loads(response_text) if response_text else {}
-            message = response.get("message")
-            error_code = response.get("errorCode")
-            self.more_details: list[dict] = response.get("moreDetails", [])
-            self.request_id = response.get("requestId")
-        except (json.JSONDecodeError, TypeError):
-            message = DEFAULT_ERROR_MESSAGE
-            error_code = DEFAULT_ERROR_CODE
-            self.more_details = []
-            self.request_id = None
+        response = self._parse_json_response(response_text)
+
+        message = response.get("message")
+        error_code = response.get("errorCode")
+        self.more_details: list[dict] = response.get("moreDetails", [])
+        self.request_id = response.get("requestId")
 
         super().__init__(message, error_code)
 
@@ -124,27 +130,23 @@ class OnelakeAPIError(FabricCLIError):
         self.request_id = None
         self.timestamp = None
 
-        try:
-            response_data = json.loads(response_text) if response_text else {}
-            error_data = response_data.get("error", {})
-            code = error_data.get("code")
-            message = error_data.get("message")
+        response_data = self._parse_json_response(response_text)
+        error_data = response_data.get("error", {})
+        code = error_data.get("code")
+        message = error_data.get("message")
 
-            if message:
-                message = re.sub(r"\n(?=RequestId:)", "", message)
-                match = re.search(r"RequestId:(\S+)", message)
-                if match:
-                    self.request_id = match.group(1)
-                    message = message.replace(match.group(0), "")
+        if message:
+            message = re.sub(r"\n(?=RequestId:)", "", message)
+            match = re.search(r"RequestId:(\S+)", message)
+            if match:
+                self.request_id = match.group(1)
+                message = message.replace(match.group(0), "")
 
-                message = re.sub(r"\n(?=Time:)", "", message)
-                match = re.search(r"Time:(\S+)", message)
-                if match:
-                    self.timestamp = match.group(1)
-                    message = message.replace(match.group(0), "")
-        except (json.JSONDecodeError, TypeError):
-            message = DEFAULT_ERROR_MESSAGE
-            code = DEFAULT_ERROR_CODE
+            message = re.sub(r"\n(?=Time:)", "", message)
+            match = re.search(r"Time:(\S+)", message)
+            if match:
+                self.timestamp = match.group(1)
+                message = message.replace(match.group(0), "")
 
         super().__init__(message, code)
 
@@ -204,21 +206,17 @@ class AzureAPIError(FabricCLIError):
         # Initialize properties before parsing
         self.request_id = None
 
-        try:
-            response_data = json.loads(response_text) if response_text else {}
-            error_data = response_data.get("error", {})
-            code = error_data.get("code")
-            message = error_data.get("message")
+        response_data = self._parse_json_response(response_text)
+        error_data = response_data.get("error", {})
+        code = error_data.get("code")
+        message = error_data.get("message")
 
-            details: list[dict] = error_data.get("details", [])
+        details: list[dict] = error_data.get("details", [])
 
-            for detail in details:
-                if detail.get("code") == "RootActivityId":
-                    self.request_id = detail.get("message")
-                    break
-        except (json.JSONDecodeError, TypeError):
-            message = DEFAULT_ERROR_MESSAGE
-            code = DEFAULT_ERROR_CODE
+        for detail in details:
+            if detail.get("code") == "RootActivityId":
+                self.request_id = detail.get("message")
+                break
 
         super().__init__(message, code)
 
