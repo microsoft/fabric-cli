@@ -140,7 +140,8 @@ class VirtualWorkspaceType(Enum):
 class _BaseItemType(Enum):
     @classmethod
     def from_string(cls, item_type_str):
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError(
+            "This method must be implemented in the subclass")
 
 
 ##################################
@@ -199,7 +200,8 @@ class VirtualItemContainerType(Enum):
             if item.value.lower() == vws_type_str.lower():
                 return item
         raise FabricCLIError(
-            ErrorMessages.Common.invalid_virtual_item_container_type(vws_type_str),
+            ErrorMessages.Common.invalid_virtual_item_container_type(
+                vws_type_str),
             fab_constant.ERROR_INVALID_ITEM_TYPE,
         )
 
@@ -253,10 +255,10 @@ class ItemType(_BaseItemType):
     METRIC_SET = "MetricSet"
     ORG_APP = "OrgApp"
     SUSTAINABILITY_DATA_SOLUTION = "SustainabilityDataSolution"
-    USER_DATA_FUNCTION = "UserDataFunction"
     VARIABLE_LIBRARY = "VariableLibrary"
 
     # API
+    COSMOS_DATABASE = "CosmosDBDatabase"
     DASHBOARD = "Dashboard"
     DATAMART = "Datamart"
     DATA_PIPELINE = "DataPipeline"
@@ -281,6 +283,8 @@ class ItemType(_BaseItemType):
     WAREHOUSE = "Warehouse"
     COPYJOB = "CopyJob"
     GRAPHQLAPI = "GraphQLApi"
+    GRAPH_QUERY_SET = "GraphQuerySet"
+    USER_DATA_FUNCTION = "UserDataFunction"
     MOUNTED_DATA_FACTORY = "MountedDataFactory"
     SQL_DATABASE = "SQLDatabase"
     DATAFLOW = "Dataflow"
@@ -482,9 +486,9 @@ format_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainabilitydatasolutions",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.VARIABLE_LIBRARY: "variablelibraries",
     # API
+    ItemType.COSMOS_DATABASE: "cosmosDbDatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
@@ -510,6 +514,8 @@ format_mapping = {
     ItemType.WAREHOUSE: "warehouses",
     ItemType.COPYJOB: "copyJobs",
     ItemType.GRAPHQLAPI: "graphqlapis",
+    ItemType.GRAPH_QUERY_SET: "GraphQuerySets",
+    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows",
 }
@@ -526,9 +532,9 @@ uri_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainability-data-manager",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.VARIABLE_LIBRARY: "variable-libraries",
     # API
+    ItemType.COSMOS_DATABASE: "cosmosdbdatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
@@ -552,6 +558,8 @@ uri_mapping = {
     ItemType.SQL_ENDPOINT: "lakewarehouses",
     ItemType.WAREHOUSE: "datawarehouses",
     ItemType.COPYJOB: "copyjobs",
+    ItemType.GRAPH_QUERY_SET: "graph-queryset",
+    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.GRAPHQLAPI: "graphql",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows-gen2",
@@ -566,4 +574,7 @@ definition_format_mapping = {
         ".py": "?format=fabricGitSource",
         ".ipynb": "?format=ipynb",
     },
+    ItemType.COSMOS_DATABASE: {"default": ""},
+    ItemType.USER_DATA_FUNCTION: {"default": ""},
+    ItemType.GRAPH_QUERY_SET: {"default": ""},
 }

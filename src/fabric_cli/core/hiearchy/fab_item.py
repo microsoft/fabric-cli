@@ -39,7 +39,8 @@ class Item(_BaseItem):
             return _item_type
         else:
             raise FabricCLIError(
-                ErrorMessages.Hierarchy.item_type_not_valid(str(super().item_type)),
+                ErrorMessages.Hierarchy.item_type_not_valid(
+                    str(super().item_type)),
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
             )
 
@@ -119,6 +120,9 @@ class Item(_BaseItem):
                 | ItemType.GRAPHQLAPI
                 | ItemType.DATAFLOW
                 | ItemType.SQL_DATABASE
+                | ItemType.COSMOS_DATABASE
+                | ItemType.GRAPH_QUERY_SET
+                | ItemType.USER_DATA_FUNCTION
             ):
                 return {
                     "type": str(self.item_type),
