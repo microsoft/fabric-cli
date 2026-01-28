@@ -231,7 +231,7 @@ class TestGet:
 
     @pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
         (VirtualWorkspaceType.DOMAIN, ["contributorsScope", "domainWorkspaces"]),
-        (VirtualWorkspaceType.GATEWAY, ["type", "version"]),
+        (VirtualWorkspaceType.GATEWAY, ["type", "capacityId", "numberOfMemberGateways"]),
     ])
     def test_get_virtual_workspace_success(
         self, virtual_workspace_item_factory, cli_executor, mock_questionary_print, 
