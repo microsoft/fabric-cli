@@ -4,6 +4,7 @@
 import argparse
 import os
 import platform
+import time
 from unittest.mock import ANY, patch
 
 import pytest
@@ -847,6 +848,11 @@ def _import_create_new_item_success(
 ):
     # Setup
     item = item_factory(item_type)
+    
+    # TODO: delete this line after mirrored db fix the API GAP for Create
+    if item_type == ItemType.MIRRORED_DATABASE:
+        time.sleep(60)
+    
     export(item.full_path, output=os.path.expanduser(str(tmp_path)))
 
     # Reset mock
@@ -891,6 +897,11 @@ def _import_update_existing_item_success(
 ):
     # Setup
     item = item_factory(item_type)
+    
+    # TODO: delete this line after mirrored db fix the API GAP for Create
+    if item_type == ItemType.MIRRORED_DATABASE:
+        time.sleep(60)
+    
     export(item.full_path, output=str(tmp_path))
 
     # Reset mock

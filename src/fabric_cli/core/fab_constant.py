@@ -19,7 +19,8 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
