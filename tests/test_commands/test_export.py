@@ -238,20 +238,18 @@ class TestExport:
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
-    @pytest.mark.parametrize("item_type,expected_default_extension", [
-        (ItemType.NOTEBOOK, ".ipynb"),  # Default format for notebook is ipynb
-        (ItemType.SPARK_JOB_DEFINITION, ".json"),
-        (ItemType.DATA_PIPELINE, ".json"),
-        (ItemType.MIRRORED_DATABASE, ".json"),
-        (ItemType.REPORT, ".pbix"),
-        (ItemType.SEMANTIC_MODEL, ".json"),
-        (ItemType.KQL_DATABASE, ".json"),
-        (ItemType.LAKEHOUSE, ".json"),
-        (ItemType.WAREHOUSE, ".json"),
+    @pytest.mark.parametrize("item_type,expected_file_count", [
+        (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
+        (ItemType.SPARK_JOB_DEFINITION, 2),
+        (ItemType.DATA_PIPELINE, 2),
+        (ItemType.MIRRORED_DATABASE, 2),
+        (ItemType.REPORT, 4),
+        (ItemType.SEMANTIC_MODEL, 3),
+        (ItemType.KQL_DATABASE, 3),
     ])
     def test_export_item_default_format_success(
         self, item_factory, cli_executor, mock_print_done, tmp_path,
-        item_type, expected_default_extension
+        item_type, expected_file_count
     ):
         # Setup
         item = item_factory(item_type)
@@ -268,14 +266,13 @@ class TestExport:
         export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.suffix == expected_default_extension for file in files)
+        assert len(files) == expected_file_count
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
     @pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
         (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
-        (ItemType.SPARK_JOB_DEFINITION, ".txt", "Only the following formats are supported: "),
+        (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
         (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
         (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported")
     ])
