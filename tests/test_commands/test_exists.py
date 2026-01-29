@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import pytest
+
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.data.static_test_data import StaticTestData
+from tests.test_commands.conftest import custom_parametrize
 
 
 class TestExists:
@@ -18,17 +21,18 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
+    @custom_parametrize
     def test_exists_item_exists_success(
-        self, item_factory, mock_print_done, cli_executor
+        self, item_factory, mock_print_done, cli_executor, item_type
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"exists {lakehouse.full_path}")
+        cli_executor.exec_command(f"exists {item.full_path}")
 
         # Assert
         mock_print_done.assert_called_once()
@@ -46,51 +50,79 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
+    @pytest.mark.parametrize("item_type,folder_name", [
+        (ItemType.LAKEHOUSE, "Files"),
+        (ItemType.LAKEHOUSE, "Tables"),
+        (ItemType.WAREHOUSE, "Tables"),
+        (ItemType.SPARK_JOB_DEFINITION, "Libs"),
+        (ItemType.SPARK_JOB_DEFINITION, "Main"),
+        (ItemType.KQL_DATABASE, "Tables"),
+        (ItemType.SQL_DATABASE, "Tables"),
+        (ItemType.SQL_DATABASE, "Files"),
+        (ItemType.MIRRORED_DATABASE, "Tables"),
+        (ItemType.MIRRORED_DATABASE, "Files"),
+    ])
     def test_exists_onelake_exists_success(
-        self, item_factory, mock_print_done, cli_executor
+        self, item_factory, mock_print_done, cli_executor, item_type, folder_name
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"exists {lakehouse.full_path}/Files")
+        cli_executor.exec_command(f"exists {item.full_path}/{folder_name}")
 
         # Assert
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
+    @custom_parametrize
     def test_exists_item_doesnt_exist_success(
-        self, item_factory, mock_print_done, cli_executor
+        self, item_factory, mock_print_done, cli_executor, item_type
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
-        path = lakehouse.full_path.replace(".Lakehouse", "random.Lakehouse")
+        item_extension = f".{item_type.value}"
+        path = item.full_path.replace(item_extension, f"random{item_extension}")
         cli_executor.exec_command(f"exists {path}")
 
         # Assert
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
 
+    @pytest.mark.parametrize("item_type,folder_name", [
+        (ItemType.LAKEHOUSE, "Files"),
+        (ItemType.LAKEHOUSE, "Tables"),
+        (ItemType.WAREHOUSE, "Files"),
+        (ItemType.WAREHOUSE, "Tables"),
+        (ItemType.SEMANTIC_MODEL, "Tables"),
+        (ItemType.SPARK_JOB_DEFINITION, "Libs"),
+        (ItemType.SPARK_JOB_DEFINITION, "Main"),
+        (ItemType.KQL_DATABASE, "Tables"),
+        (ItemType.SQL_DATABASE, "Tables"),
+        (ItemType.SQL_DATABASE, "Files"),
+        (ItemType.MIRRORED_DATABASE, "Tables"),
+        (ItemType.MIRRORED_DATABASE, "Files"),
+    ])
     def test_exists_onelake_doesnt_exist_success(
-        self, item_factory, mock_print_done, cli_executor
+        self, item_factory, mock_print_done, cli_executor, item_type, folder_name
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
-            f"exists {lakehouse.full_path}/Files/non_existent_file.txt"
+            f"exists {item.full_path}/{folder_name}/non_existent_file.txt"
         )
 
         # Assert
