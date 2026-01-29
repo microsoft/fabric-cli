@@ -258,7 +258,7 @@ class ItemType(_BaseItemType):
     VARIABLE_LIBRARY = "VariableLibrary"
 
     # API
-    COSMOS_DATABASE = "CosmosDBDatabase"
+    COSMOS_DB_DATABASE = "CosmosDBDatabase"
     DASHBOARD = "Dashboard"
     DATAMART = "Datamart"
     DATA_PIPELINE = "DataPipeline"
@@ -488,7 +488,7 @@ format_mapping = {
     ItemType.ORG_APP: "orgapps",
     ItemType.VARIABLE_LIBRARY: "variablelibraries",
     # API
-    ItemType.COSMOS_DATABASE: "cosmosDbDatabases",
+    ItemType.COSMOS_DB_DATABASE: "cosmosDbDatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
@@ -534,7 +534,7 @@ uri_mapping = {
     ItemType.ORG_APP: "orgapps",
     ItemType.VARIABLE_LIBRARY: "variable-libraries",
     # API
-    ItemType.COSMOS_DATABASE: "cosmosdbdatabases",
+    ItemType.COSMOS_DB_DATABASE: "cosmosdbdatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
@@ -574,7 +574,7 @@ definition_format_mapping = {
         ".py": "?format=fabricGitSource",
         ".ipynb": "?format=ipynb",
     },
-    ItemType.COSMOS_DATABASE: {"default": ""},
+    ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
     ItemType.GRAPH_QUERY_SET: {"default": ""},
 }
