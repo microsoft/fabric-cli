@@ -338,3 +338,6 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
     ITEM_QUERY_DESCRIPTION,
     ITEM_QUERY_PROPERTIES,
 ]
+
+# Invalid query parameters for set command across all fabric resources
+SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]

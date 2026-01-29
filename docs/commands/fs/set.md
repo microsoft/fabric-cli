@@ -47,24 +47,14 @@ fab set ws1.Workspace -q displayName -i "New Name" -f
 - Paths must map directly to JSON paths **without** filters or wildcards
 - If the property path doesn't exist on the item definition, it will be added, provided it's valid according to the item's schema. The `set` command supports creation of 1 level at a time (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
 - Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
+- The following properties **cannot be set** for any Fabric resource: `id`, `type`, `workspaceId`, `folderId`
 
 ## Query Support
 
-The following table shows supported queries per resource type:
+To discover the available properties of a Fabric resource, use the [`get` command](get.md) to retrieve the resource's current state. However, note that **not all properties returned by `get` are settable**.
 
-| Resource | Supported Queries |
-|----------------|-------------------|
-| **Item** | `displayName`, `description`, `properties` (`.VariableLibrary` only), [`definition.<path>`](#definition-paths) |
-| **Workspace** | `displayName`, `description`, `sparkSettings` |
-| **Capacity** | `sku.name` |
-| **Domain** | `displayName`, `description`, `contributorsScope` |
-| **Connection** | `displayName`, `privacyLevel`, `credentialDetails` |
-| **Gateway** | `displayName`, `allowCloudConnectionRefresh`, `allowCustomConnectors`, `capacityId`, `inactivityMinutesBeforeSleep`, `numberOfMemberGateways` |
-| **Spark Pool** | `name`, `nodeSize`, `autoScale.enabled`, `autoScale.minNodeCount`, `autoScale.maxNodeCount` |
-| **Folder** | `displayName` |
-| **Shortcut** | `name`, `target` |
+To determine which properties can be updated via the `set` command, refer to the [Microsoft Fabric REST API documentation](https://learn.microsoft.com/en-us/rest/api/fabric/articles/) and locate the Update API operation for your specific resource type. Only properties documented in the Update API are supported for modification.
 
-<a id="definition-paths"></a>
 !!! note "Setting Item Definition Properties"
     For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties (e.g. `definition.parts[0].property`).
     Paths must map directly to JSON paths **without** filters or wildcards. Refer to the [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions) for the complete definition structure.
