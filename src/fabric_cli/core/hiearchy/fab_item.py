@@ -120,7 +120,7 @@ class Item(_BaseItem):
                 | ItemType.GRAPHQLAPI
                 | ItemType.DATAFLOW
                 | ItemType.SQL_DATABASE
-                | ItemType.COSMOS_DATABASE
+                | ItemType.COSMOS_DB_DATABASE
                 | ItemType.GRAPH_QUERY_SET
                 | ItemType.USER_DATA_FUNCTION
             ):
