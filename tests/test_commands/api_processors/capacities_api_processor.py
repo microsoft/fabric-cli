@@ -4,8 +4,6 @@
 import json
 import re
 
-from urllib3 import request
-
 from tests.test_commands.api_processors.base_api_processor import BaseAPIProcessor
 from tests.test_commands.api_processors.utils import (
     load_request_json_body,

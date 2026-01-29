@@ -1,5 +1,5 @@
 requires = ["tox>=4"]
-env_list = ["lint", "type", "py310", "py311", "py312"]
+env_list = ["lint", "type", "py310", "py311", "py312", "py313"]
 
 # Base testing environment
 [env_run_base]
@@ -8,8 +8,7 @@ deps = [
     "pytest>=8",
     "pytest-sugar",
     "pytest-cov",
-    "vcrpy",
-    "urllib3<2.3.0,>=2.0.0",
+    "vcrpy"
 ]
 commands = [
     [
@@ -53,6 +52,7 @@ deps = [
     "types-requests",
     "types-cachetools",
     "types-psutil",
+    "pytest-mypy-plugins",
     "vcrpy",
 ]
 commands = [
@@ -68,5 +68,5 @@ commands = [
 # Black Configuration
 [tool.black]
 line-length = 88
-target-version = ['py310', 'py311', 'py312']
+target-version = ['py310', 'py311', 'py312', 'py313']
 exclude = '/(\.git|\.tox|\.venv|_build|dist)/'

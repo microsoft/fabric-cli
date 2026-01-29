@@ -79,6 +79,8 @@ jobs:
             tox-env: "py311"
           - python-version: "3.12"
             tox-env: "py312"
+          - python-version: "3.13"
+            tox-env: "py313"
     steps:
       - uses: actions/checkout@v3
 
@@ -125,13 +127,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Create and activate Virtual Environment
+      - name: Install build dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          pip install build
 
       - name: Build package
-        run: |
-          source venv/bin/activate
-          python -m build
+        run: python -m build
