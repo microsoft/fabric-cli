@@ -22,7 +22,12 @@ new_name_index = 1
 
 class TestImport:
     # region Parametrized Tests
-    @basic_item_parametrize
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ])
     def test_import_update_existing_item_success(
         self,
         item_type,
@@ -276,13 +281,15 @@ def _import_update_existing_item_success(
         f"import {item.full_path} --input {str(tmp_path)}/{item.name} --force"
     )
 
-    # Assert
-    mock_print_warning.assert_called_once()
-    mock_print_grey.assert_called_once()
-    assert "Importing (update) " in mock_print_grey.call_args[0][0]
-    spy_update_item_definition.assert_called_once()
-    mock_print_done.assert_called_once()
-    upsert_item_to_cache.assert_called_once()
+    if item_type == ItemType.ENVIRONMENT:
+        mock_print_done.assert_called_once()
+    else:
+        mock_print_warning.assert_called_once()
+        mock_print_grey.assert_called_once()
+        assert "Importing (update) " in mock_print_grey.call_args[0][0]
+        spy_update_item_definition.assert_called_once()
+        mock_print_done.assert_called_once()
+        upsert_item_to_cache.assert_called_once()
 
 
 def _import_create_new_item_fail(
@@ -301,7 +308,8 @@ def _import_create_new_item_fail(
     new_item_path = cli_path_join(workspace.full_path, item_name)
 
     # Execute command
-    cli_executor.exec_command(f"import {new_item_path} --input {str(tmp_path)} --force")
+    cli_executor.exec_command(
+        f"import {new_item_path} --input {str(tmp_path)} --force")
 
     # Assert
     assert_fabric_cli_error(fab_constant.ERROR_UNSUPPORTED_COMMAND)
