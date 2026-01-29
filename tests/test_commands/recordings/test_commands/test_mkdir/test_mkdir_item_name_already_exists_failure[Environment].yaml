@@ -11,13 +11,15 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (None; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
+        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -26,15 +28,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2271'
+      - '2303'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:33:09 GMT
+      - Thu, 29 Jan 2026 08:33:37 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 41c39fb2-363a-4966-a53d-97b568130168
+      - 940380eb-baa0-4cc7-8a0e-d02cfdecae7a
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -60,13 +62,12 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (None; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces
+    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/items
   response:
     body:
-      string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}]}'
+      string: '{"value": []}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -75,15 +76,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2271'
+      - '32'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:33:10 GMT
+      - Thu, 29 Jan 2026 08:33:37 GMT
       Pragma:
       - no-cache
       RequestId:
-      - b93d0308-7a05-43d2-be56-cb46ddfbbf06
+      - 7a1cc6b7-a9ba-48ff-b4bc-ef08a56468c9
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -109,14 +110,12 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (None; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/capacities
+    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/items
   response:
     body:
-      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
-        "mocked_fabriccli_capacity_name", "sku": "F32", "region": "Central US", "state":
-        "Active"}]}'
+      string: '{"value": []}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -125,15 +124,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '424'
+      - '32'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:33:14 GMT
+      - Thu, 29 Jan 2026 08:33:38 GMT
       Pragma:
       - no-cache
       RequestId:
-      - a19d659a-11ba-40ea-ab3c-2e7f84f014d8
+      - dd8bbae3-160c-4ee0-b1be-7ef5de25600d
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -148,8 +147,8 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '{"description": "Created by fab", "displayName": "fabriccli_WorkspacePerTestclass_000001",
-      "capacityId": "00000000-0000-0000-0000-000000000004"}'
+    body: '{"description": "Created by fab", "displayName": "fabcli000001", "type":
+      "Environment", "folderId": null}'
     headers:
       Accept:
       - '*/*'
@@ -158,36 +157,37 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '157'
+      - '109'
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (None; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: POST
-    uri: https://api.fabric.microsoft.com/v1/workspaces
+    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/environments
   response:
     body:
-      string: '{"id": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e", "displayName": "fabriccli_WorkspacePerTestclass_000001",
-        "description": "Created by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}'
+      string: '{"id": "d7f253c8-a6a9-48c7-8262-1b9fd038ee5b", "type": "Environment",
+        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
+        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}'
     headers:
       Access-Control-Expose-Headers:
-      - RequestId,Location
+      - RequestId,ETag
       Cache-Control:
       - no-store, must-revalidate, no-cache
       Content-Encoding:
       - gzip
       Content-Length:
-      - '188'
+      - '170'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:33:22 GMT
-      Location:
-      - https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e
+      - Thu, 29 Jan 2026 08:33:39 GMT
+      ETag:
+      - '""'
       Pragma:
       - no-cache
       RequestId:
-      - 46b5d3d2-d023-45de-aaee-c501c05a5320
+      - f183ae4a-d898-4ad4-987b-973c9483584c
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -213,7 +213,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (mkdir; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
@@ -234,11 +234,11 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:54:16 GMT
+      - Thu, 29 Jan 2026 08:33:40 GMT
       Pragma:
       - no-cache
       RequestId:
-      - f06c1ded-eefd-4e9c-b4d2-a2efdfe3e720
+      - 19a66f04-170a-4937-9254-7fed99c6c1b0
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -264,32 +264,14 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (mkdir; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/items
   response:
     body:
-      string: '{"value": [{"id": "8ff3aa09-ab5f-4bd0-8dfe-7e76102342f2", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"},
-        {"id": "e452ddb1-e702-4539-a178-c2f645e9bfd8", "type": "SemanticModel", "displayName":
-        "fabcli000001_auto", "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"},
-        {"id": "bb9752a8-14cb-4138-948a-7da1ec17007b", "type": "SemanticModel", "displayName":
-        "fabcli000001_auto", "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"},
-        {"id": "ef2fc02e-6cb7-4813-b293-f5d5b98c5d9a", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260129083942", "description": "", "workspaceId":
-        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}, {"id": "d74d91a8-7679-40a2-9962-55e3d3aefda2",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129084026",
-        "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"},
-        {"id": "de097e11-61fb-4a7c-9730-8db9949b3010", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260129084943", "description": "", "workspaceId":
-        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}, {"id": "3971e34d-6c02-410f-ac5e-1acf5b59f575",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129084958",
-        "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"},
-        {"id": "49b99e73-f31e-473d-9fe4-085031b70124", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260129083942", "description": "", "workspaceId":
-        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}, {"id": "36526887-cebc-4179-a3ae-fcdd374245d0",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260129084943",
-        "description": "", "workspaceId": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}]}'
+      string: '{"value": [{"id": "d7f253c8-a6a9-48c7-8262-1b9fd038ee5b", "type": "Environment",
+        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
+        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -298,15 +280,116 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '489'
+      - '181'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 29 Jan 2026 08:54:17 GMT
+      - Thu, 29 Jan 2026 08:33:41 GMT
       Pragma:
       - no-cache
       RequestId:
-      - a1885746-dd64-4f4c-9fb4-7db59d52c1dd
+      - 94191eea-9704-4a5a-8ac4-9597e2faf11e
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces
+  response:
+    body:
+      string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
+        "My workspace", "description": "", "type": "Personal"}, {"id": "0cfd9c66-3bf0-4e43-8257-4b76aa86581e",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
+        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '2303'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Thu, 29 Jan 2026 08:33:43 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - d102f12e-3c49-4a42-a18f-a8967da86c7c
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/items
+  response:
+    body:
+      string: '{"value": [{"id": "d7f253c8-a6a9-48c7-8262-1b9fd038ee5b", "type": "Environment",
+        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
+        "0cfd9c66-3bf0-4e43-8257-4b76aa86581e"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '181'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Thu, 29 Jan 2026 08:33:43 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - a9985268-9efa-495d-8d5b-239f880a0f6d
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -334,9 +417,9 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli/1.3.1 (mkdir; Linux; x86_64; 6.6.87.2-microsoft-standard-WSL2)
+      - ms-fabric-cli-test/1.3.1
     method: DELETE
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e
+    uri: https://api.fabric.microsoft.com/v1/workspaces/0cfd9c66-3bf0-4e43-8257-4b76aa86581e/items/d7f253c8-a6a9-48c7-8262-1b9fd038ee5b
   response:
     body:
       string: ''
@@ -352,11 +435,11 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Thu, 29 Jan 2026 08:54:18 GMT
+      - Thu, 29 Jan 2026 08:33:43 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 433baf36-b7b5-4d1b-ac86-01c85b528a52
+      - 98a95d59-26a2-4185-8619-26d4c74fccc4
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
