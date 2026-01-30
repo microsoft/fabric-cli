@@ -17,7 +17,7 @@ class FabricCLIError(Exception):
         status_code = status_code or DEFAULT_ERROR_CODE
 
         super().__init__(message)
-        self.message = message.rstrip(".") if message else None
+        self.message = message.rstrip(".")
         self.status_code = status_code
 
     @staticmethod
@@ -35,7 +35,7 @@ class FabricCLIError(Exception):
         )
 
     def formatted_message(self, verbose=False):
-        escaped_text = html.escape(self.message) if self.message else ""
+        escaped_text = html.escape(self.message)
 
         return (
             f"[{self.status_code}] {escaped_text}"
