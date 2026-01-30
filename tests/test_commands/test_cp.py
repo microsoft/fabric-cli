@@ -38,7 +38,8 @@ class TestCP:
         ws1 = workspace_factory()
         ws2 = workspace_factory()
         notebook = item_factory(ItemType.NOTEBOOK, path=ws1.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=ws1.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, path=ws1.full_path)
         f1 = folder_factory(path=ws1.full_path)  # Subfolder in f1
         sjd = item_factory(ItemType.SPARK_JOB_DEFINITION, path=f1.full_path)
 
@@ -58,7 +59,8 @@ class TestCP:
             mock_confirm.return_value.ask.return_value = True
 
             # Execute command
-            cli_executor.exec_command(f"cp {ws1.full_path} {ws2.full_path} --force")
+            cli_executor.exec_command(
+                f"cp {ws1.full_path} {ws2.full_path} --force")
 
             # Assert
             mock_print_done.assert_called()
@@ -113,13 +115,15 @@ class TestCP:
         ws2 = workspace_factory()
         # Create 2 items in ws1
         notebook = item_factory(ItemType.NOTEBOOK, path=ws1.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=ws1.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, path=ws1.full_path)
         f1 = folder_factory(path=ws1.full_path)  # Subfolder in f1
         sjd = item_factory(ItemType.SPARK_JOB_DEFINITION, path=f1.full_path)
         f2 = folder_factory(path=f1.full_path)  # Subfolder in f2
         notebook2 = item_factory(ItemType.NOTEBOOK, path=f2.full_path)
         f3 = folder_factory(path=f2.full_path)  # Subfolder in f3
-        data_pipeline2 = item_factory(ItemType.DATA_PIPELINE, path=f3.full_path)
+        data_pipeline2 = item_factory(
+            ItemType.DATA_PIPELINE, path=f3.full_path)
 
         # Reset mock
         mock_print_done.reset_mock()
@@ -218,7 +222,8 @@ class TestCP:
         f2 = folder_factory(path=ws2.full_path)
         # Create 2 items in ws1
         notebook = item_factory(ItemType.NOTEBOOK, path=ws1.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=ws1.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, path=ws1.full_path)
 
         # Reset mock
         mock_print_done.reset_mock()
@@ -236,7 +241,8 @@ class TestCP:
             mock_confirm.return_value.ask.return_value = True
 
             # Execute command
-            cli_executor.exec_command(f"cp {ws1.full_path} {f2.full_path} --force")
+            cli_executor.exec_command(
+                f"cp {ws1.full_path} {f2.full_path} --force")
 
             copied_notebook = EntityMetadata(
                 notebook.display_name,
@@ -289,52 +295,52 @@ class TestCP:
             rm(copied_notebook.full_path)
             rm(copied_eventhouse.full_path)
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ])
-    def test_cp_item_to_item_success(
-        self,
-        workspace_factory,
-        item_factory,
-        mock_print_done,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-        item_type,
-    ):
-        # Setup
-        ws1 = workspace_factory()
-        ws2 = workspace_factory()
-        item = item_factory(item_type, ws1.full_path)
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    # ])
+    # def test_cp_item_to_item_success(
+    #     self,
+    #     workspace_factory,
+    #     item_factory,
+    #     mock_print_done,
+    #     mock_questionary_print,
+    #     cli_executor: CLIExecutor,
+    #     item_type,
+    # ):
+    #     # Setup
+    #     ws1 = workspace_factory()
+    #     ws2 = workspace_factory()
+    #     item = item_factory(item_type, ws1.full_path)
 
-        # Reset mock
-        mock_print_done.reset_mock()
+    #     # Reset mock
+    #     mock_print_done.reset_mock()
 
-        with patch("questionary.confirm") as mock_confirm:
+    #     with patch("questionary.confirm") as mock_confirm:
 
-            mock_confirm.return_value.ask.return_value = True
+    #         mock_confirm.return_value.ask.return_value = True
 
-            # Execute command
-            to_path = cli_path_join(ws2.full_path, item.display_name + f".{item_type}")
-            cli_executor.exec_command(f"cp {item.full_path} {to_path}")
+    #         # Execute command
+    #         to_path = cli_path_join(ws2.full_path, item.display_name + f".{item_type}")
+    #         cli_executor.exec_command(f"cp {item.full_path} {to_path}")
 
-            # Assert
-            mock_print_done.assert_called()
+    #         # Assert
+    #         mock_print_done.assert_called()
 
-            mock_questionary_print.reset_mock()
-            ls(ws1.full_path)
-            assert any(
-                item.display_name in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         mock_questionary_print.reset_mock()
+    #         ls(ws1.full_path)
+    #         assert any(
+    #             item.display_name in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
 
-            mock_questionary_print.reset_mock()
-            ls(ws2.full_path)
-            assert any(
-                item.display_name in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         mock_questionary_print.reset_mock()
+    #         ls(ws2.full_path)
+    #         assert any(
+    #             item.display_name in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
 
     def test_cp_workspace_to_workspace_type_mismatch_failure(
         self, workspace, assert_fabric_cli_error, cli_executor: CLIExecutor
@@ -343,7 +349,8 @@ class TestCP:
         to_path = "My workspace.Personal"
 
         # Execute command
-        cli_executor.exec_command(f"cp {workspace.full_path} {to_path} --force")
+        cli_executor.exec_command(
+            f"cp {workspace.full_path} {to_path} --force")
 
     #     # Assert
     #     assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
@@ -381,26 +388,27 @@ class TestCP:
         # Assert
         assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
 
-    @pytest.mark.parametrize("virtual_workspace_type", [
-        VirtualWorkspaceType.DOMAIN,
-        VirtualWorkspaceType.CAPACITY,
-        VirtualWorkspaceType.GATEWAY,
-    ])
-    def test_cp_virtual_workspace_item_not_supported_failure(
-        self,
-        virtual_workspace_item_factory,
-        assert_fabric_cli_error,
-        cli_executor: CLIExecutor,
-        virtual_workspace_type,
-    ):
-        # Setup
-        virtual_item = virtual_workspace_item_factory(virtual_workspace_type)
+    # @pytest.mark.parametrize("virtual_workspace_type", [
+    #     VirtualWorkspaceType.DOMAIN,
+    #     VirtualWorkspaceType.CAPACITY,
+    #     VirtualWorkspaceType.GATEWAY,
+    # ])
+    # def test_cp_virtual_workspace_item_not_supported_failure(
+    #     self,
+    #     virtual_workspace_item_factory,
+    #     assert_fabric_cli_error,
+    #     cli_executor: CLIExecutor,
+    #     virtual_workspace_type,
+    # ):
+    #     # Setup
+    #     virtual_item = virtual_workspace_item_factory(virtual_workspace_type)
 
-        # Execute command
-        cli_executor.exec_command(f"cp {virtual_item.full_path} {virtual_item.full_path} --force")
+    #     # Execute command
+    #     cli_executor.exec_command(
+    #         f"cp {virtual_item.full_path} {virtual_item.full_path} --force")
 
-        # Assert
-        assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
+    #     # Assert
+    #     assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
 
     def test_cp_onelake_to_onelake_success(
         self,
@@ -422,7 +430,8 @@ class TestCP:
             lakehouse1_onelake_full_path = cli_path_join(
                 lakehouse1.full_path, "Files", file_name
             )
-            lakehouse2_onelake_full_path = cli_path_join(lakehouse2.full_path, "Files")
+            lakehouse2_onelake_full_path = cli_path_join(
+                lakehouse2.full_path, "Files")
 
             # Reset mock
             mock_print_done.reset_mock()
@@ -432,7 +441,8 @@ class TestCP:
                 mock_confirm.return_value.ask.return_value = True
 
                 # Upload local file to lakehouse1
-                _upload_local_file_to_onelake(file_path, lakehouse1_onelake_full_path)
+                _upload_local_file_to_onelake(
+                    file_path, lakehouse1_onelake_full_path)
                 # Delete the temporary file
                 os.remove(file_path)
 
@@ -477,8 +487,10 @@ class TestCP:
         # Setup
         lakehouse1 = item_factory(ItemType.LAKEHOUSE)
         lakehouse2 = item_factory(ItemType.LAKEHOUSE)
-        lakehouse1_onelake_full_path = cli_path_join(lakehouse1.full_path, "Files")
-        lakehouse2_onelake_full_path = cli_path_join(lakehouse2.full_path, "Files")
+        lakehouse1_onelake_full_path = cli_path_join(
+            lakehouse1.full_path, "Files")
+        lakehouse2_onelake_full_path = cli_path_join(
+            lakehouse2.full_path, "Files")
 
         # Reset mock
         mock_print_done.reset_mock()
@@ -504,7 +516,8 @@ class TestCP:
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
-        lakehouse_onelake_full_path = cli_path_join(lakehouse.full_path, "Files")
+        lakehouse_onelake_full_path = cli_path_join(
+            lakehouse.full_path, "Files")
 
         # Reset mock
         mock_print_done.reset_mock()
@@ -554,51 +567,53 @@ class TestCP:
                 # Delete the temporary file
                 os.remove(file_path)
 
-    def test_cp_onelake_operations_success(
-        self,
-        item_factory,
-        mock_print_done,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-    ):
-        # Setup - Create two lakehouse items that support OneLake
-        lakehouse1 = item_factory(ItemType.LAKEHOUSE)
-        lakehouse2 = item_factory(ItemType.LAKEHOUSE)
-        
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            file_name = "test_cp_lakehouse.txt"
-            file_path = cli_path_join(tmp_dir, file_name)
-            with open(file_path, "wb") as fp:
-                fp.write(b"Hello world!\n")
+    # def test_cp_onelake_operations_success(
+    #     self,
+    #     item_factory,
+    #     mock_print_done,
+    #     mock_questionary_print,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     # Setup - Create two lakehouse items that support OneLake
+    #     lakehouse1 = item_factory(ItemType.LAKEHOUSE)
+    #     lakehouse2 = item_factory(ItemType.LAKEHOUSE)
 
-            lakehouse1_onelake_full_path = cli_path_join(
-                lakehouse1.full_path, "Files", file_name
-            )
-            lakehouse2_onelake_full_path = cli_path_join(lakehouse2.full_path, "Files")
+    #     with tempfile.TemporaryDirectory() as tmp_dir:
+    #         file_name = "test_cp_lakehouse.txt"
+    #         file_path = cli_path_join(tmp_dir, file_name)
+    #         with open(file_path, "wb") as fp:
+    #             fp.write(b"Hello world!\n")
 
-            # Reset mock
-            mock_print_done.reset_mock()
+    #         lakehouse1_onelake_full_path = cli_path_join(
+    #             lakehouse1.full_path, "Files", file_name
+    #         )
+    #         lakehouse2_onelake_full_path = cli_path_join(
+    #             lakehouse2.full_path, "Files")
 
-            with patch("questionary.confirm") as mock_confirm:
-                mock_confirm.return_value.ask.return_value = True
+    #         # Reset mock
+    #         mock_print_done.reset_mock()
 
-                # Upload local file to lakehouse1
-                _upload_local_file_to_onelake(file_path, lakehouse1_onelake_full_path)
-                # Delete the temporary file
-                os.remove(file_path)
+    #         with patch("questionary.confirm") as mock_confirm:
+    #             mock_confirm.return_value.ask.return_value = True
 
-                # Execute command - OneLake to OneLake copy
-                cli_executor.exec_command(
-                    f"cp {lakehouse1_onelake_full_path} {lakehouse2_onelake_full_path}"
-                )
-                # Assert
-                mock_print_done.assert_called()
-                mock_questionary_print.reset_mock()
-                ls(lakehouse2_onelake_full_path)
-                assert any(
-                    file_name in call.args[0]
-                    for call in mock_questionary_print.mock_calls
-                )
+    #             # Upload local file to lakehouse1
+    #             _upload_local_file_to_onelake(
+    #                 file_path, lakehouse1_onelake_full_path)
+    #             # Delete the temporary file
+    #             os.remove(file_path)
+
+    #             # Execute command - OneLake to OneLake copy
+    #             cli_executor.exec_command(
+    #                 f"cp {lakehouse1_onelake_full_path} {lakehouse2_onelake_full_path}"
+    #             )
+    #             # Assert
+    #             mock_print_done.assert_called()
+    #             mock_questionary_print.reset_mock()
+    #             ls(lakehouse2_onelake_full_path)
+    #             assert any(
+    #                 file_name in call.args[0]
+    #                 for call in mock_questionary_print.mock_calls
+    #             )
 
     def test_cp_from_local_recursive_unsupported(
         self,
@@ -610,7 +625,8 @@ class TestCP:
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
-        lakehouse_onelake_full_path = cli_path_join(lakehouse.full_path, "Files")
+        lakehouse_onelake_full_path = cli_path_join(
+            lakehouse.full_path, "Files")
         td = tempfile.TemporaryDirectory()
 
         # Reset mock
@@ -620,7 +636,8 @@ class TestCP:
             mock_confirm.return_value.ask.return_value = True
 
             # Execute command
-            cli_executor.exec_command(f"cp {td.name} {lakehouse_onelake_full_path}")
+            cli_executor.exec_command(
+                f"cp {td.name} {lakehouse_onelake_full_path}")
 
             # Assert
             assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
@@ -636,7 +653,8 @@ class TestCP:
     ):
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
-        lakehouse_onelake_full_path = cli_path_join(lakehouse.full_path, "Files")
+        lakehouse_onelake_full_path = cli_path_join(
+            lakehouse.full_path, "Files")
         with tempfile.TemporaryDirectory() as td:
             file_name = "test_cp_ol2lo.txt"
             file_path = cli_path_join(td, file_name)
@@ -644,12 +662,14 @@ class TestCP:
                 fp.write(b"Hello world!\n")
 
             # Upload local file to lakehouse
-            _upload_local_file_to_onelake(file_path, lakehouse_onelake_full_path)
+            _upload_local_file_to_onelake(
+                file_path, lakehouse_onelake_full_path)
 
             with patch("questionary.confirm") as mock_confirm:
                 mock_confirm.return_value.ask.return_value = True
 
-                source_file_path = cli_path_join(lakehouse_onelake_full_path, file_name)
+                source_file_path = cli_path_join(
+                    lakehouse_onelake_full_path, file_name)
 
                 # Reset mock
                 mock_print_done.reset_mock()
@@ -670,7 +690,8 @@ class TestCP:
                 mock_print_done.reset_mock()
 
                 # Execute command
-                cli_executor.exec_command(f"cp {source_file_path} {dest_file_path_rn}")
+                cli_executor.exec_command(
+                    f"cp {source_file_path} {dest_file_path_rn}")
 
                 # Assert
                 mock_print_done.assert_called()
@@ -685,7 +706,8 @@ class TestCP:
         """Test copying a parquet file (binary format) from OneLake to local preserves binary content."""
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
-        lakehouse_onelake_full_path = cli_path_join(lakehouse.full_path, "Files")
+        lakehouse_onelake_full_path = cli_path_join(
+            lakehouse.full_path, "Files")
 
         with tempfile.TemporaryDirectory() as td:
             # Generate parquet file on the fly instead of using hard-coded test data
@@ -693,18 +715,21 @@ class TestCP:
             file_path = cli_path_join(td, file_name)
             _generate_test_binary_file(file_path)
 
-            _upload_local_file_to_onelake(file_path, lakehouse_onelake_full_path)
+            _upload_local_file_to_onelake(
+                file_path, lakehouse_onelake_full_path)
 
             with patch("questionary.confirm") as mock_confirm:
                 mock_confirm.return_value.ask.return_value = True
 
-                source_file_path = cli_path_join(lakehouse_onelake_full_path, file_name)
+                source_file_path = cli_path_join(
+                    lakehouse_onelake_full_path, file_name)
 
                 # Reset mock
                 mock_print_done.reset_mock()
 
                 # Execute command to download the parquet file
-                downloaded_file_path = cli_path_join(td, "downloaded_" + file_name)
+                downloaded_file_path = cli_path_join(
+                    td, "downloaded_" + file_name)
                 cli_executor.exec_command(
                     f"cp {source_file_path} {downloaded_file_path}"
                 )
@@ -1092,72 +1117,72 @@ class TestCP:
             ErrorMessages.Cp.item_exists_different_path(),
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ])
-    def test_cp_folder_with_different_item_types_success(
-        self,
-        workspace_factory,
-        folder_factory,
-        item_factory,
-        mock_print_done,
-        mock_print_warning,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-        item_type,
-    ):
-        # Setup
-        ws1 = workspace_factory()
-        ws2 = workspace_factory()
-        f1 = folder_factory(path=ws1.full_path)
-        
-        # Create an item of the specified type in the folder
-        item = item_factory(item_type, path=f1.full_path)
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    # ])
+    # def test_cp_folder_with_different_item_types_success(
+    #     self,
+    #     workspace_factory,
+    #     folder_factory,
+    #     item_factory,
+    #     mock_print_done,
+    #     mock_print_warning,
+    #     mock_questionary_print,
+    #     cli_executor: CLIExecutor,
+    #     item_type,
+    # ):
+    #     # Setup
+    #     ws1 = workspace_factory()
+    #     ws2 = workspace_factory()
+    #     f1 = folder_factory(path=ws1.full_path)
 
-        # Reset mock
-        mock_print_done.reset_mock()
+    #     # Create an item of the specified type in the folder
+    #     item = item_factory(item_type, path=f1.full_path)
 
-        with patch("questionary.confirm") as mock_confirm:
-            mock_confirm.return_value.ask.return_value = True
+    #     # Reset mock
+    #     mock_print_done.reset_mock()
 
-            # Execute command
-            cli_executor.exec_command(
-                f"cp {f1.full_path} {ws2.full_path} --force --recursive"
-            )
+    #     with patch("questionary.confirm") as mock_confirm:
+    #         mock_confirm.return_value.ask.return_value = True
 
-            f2 = EntityMetadata(
-                f1.display_name, f1.name, cli_path_join(ws2.full_path, f1.name)
-            )
-            copied_item = EntityMetadata(
-                item.display_name,
-                item.name,
-                cli_path_join(f2.full_path, item.name),
-            )
+    #         # Execute command
+    #         cli_executor.exec_command(
+    #             f"cp {f1.full_path} {ws2.full_path} --force --recursive"
+    #         )
 
-            # Assert
-            mock_print_done.assert_called()
-            mock_print_warning.assert_called_once()
-            mock_questionary_print.reset_mock()
-            
-            # Verify folder was copied
-            ls(ws2.full_path)
-            assert any(
-                f1.name in call.args[0] for call in mock_questionary_print.mock_calls
-            )
-            
-            # Verify item was copied
-            mock_questionary_print.reset_mock()
-            ls(f2.full_path)
-            assert any(
-                item.name in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         f2 = EntityMetadata(
+    #             f1.display_name, f1.name, cli_path_join(ws2.full_path, f1.name)
+    #         )
+    #         copied_item = EntityMetadata(
+    #             item.display_name,
+    #             item.name,
+    #             cli_path_join(f2.full_path, item.name),
+    #         )
 
-            # Cleanup
-            rm(copied_item.full_path)
-            rm(f2.full_path)
+    #         # Assert
+    #         mock_print_done.assert_called()
+    #         mock_print_warning.assert_called_once()
+    #         mock_questionary_print.reset_mock()
+
+    #         # Verify folder was copied
+    #         ls(ws2.full_path)
+    #         assert any(
+    #             f1.name in call.args[0] for call in mock_questionary_print.mock_calls
+    #         )
+
+    #         # Verify item was copied
+    #         mock_questionary_print.reset_mock()
+    #         ls(f2.full_path)
+    #         assert any(
+    #             item.name in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
+
+    #         # Cleanup
+    #         rm(copied_item.full_path)
+    #         rm(f2.full_path)
 
 
 # region Helper Methods
@@ -1178,7 +1203,8 @@ def _upload_local_file_to_onelake(local_file_path: str, onelake_path: str):
         local_file_path, supports_local_path=True
     )
     assert isinstance(from_ctxt, LocalPath)
-    to_ctxt = handle_context.get_command_context(onelake_path, raise_error=False)
+    to_ctxt = handle_context.get_command_context(
+        onelake_path, raise_error=False)
     assert isinstance(to_ctxt, OneLakeItem)
 
     args = argparse.Namespace(

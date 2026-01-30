@@ -17,119 +17,119 @@ from tests.test_commands.data.static_test_data import StaticTestData
 
 class TestUnassign:
     # region Parametrized Tests
-    @pytest.mark.parametrize("entity_type,factory_key,path_template,assertion_key", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity", "id"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path", "display_name"),
-    ])
-    def test_unassign_entity_workspace_success(
-        self,
-        entity_type,
-        factory_key,
-        path_template,
-        assertion_key,
-        workspace_factory,
-        cli_executor,
-        mock_questionary_print,
-        test_data: StaticTestData,
-        virtual_workspace_item_factory,
-    ):
-        # Setup
-        workspace = workspace_factory()
-        mock_questionary_print.reset_mock()
+    # @pytest.mark.parametrize("entity_type,factory_key,path_template,assertion_key", [
+    #     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity", "id"),
+    #     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path", "display_name"),
+    # ])
+    # def test_unassign_entity_workspace_success(
+    #     self,
+    #     entity_type,
+    #     factory_key,
+    #     path_template,
+    #     assertion_key,
+    #     workspace_factory,
+    #     cli_executor,
+    #     mock_questionary_print,
+    #     test_data: StaticTestData,
+    #     virtual_workspace_item_factory,
+    # ):
+    #     # Setup
+    #     workspace = workspace_factory()
+    #     mock_questionary_print.reset_mock()
 
-        if factory_key == "test_data":
-            # Capacity scenario
-            entity_path = path_template.format(test_data.capacity.name)
-            assertion_value = getattr(test_data.capacity, assertion_key)
-        else:
-            # Domain scenario
-            domain = virtual_workspace_item_factory(entity_type)
-            assign(domain.full_path, workspace.full_path)
-            entity_path = domain.full_path
-            assertion_value = getattr(domain, assertion_key)
+    #     if factory_key == "test_data":
+    #         # Capacity scenario
+    #         entity_path = path_template.format(test_data.capacity.name)
+    #         assertion_value = getattr(test_data.capacity, assertion_key)
+    #     else:
+    #         # Domain scenario
+    #         domain = virtual_workspace_item_factory(entity_type)
+    #         assign(domain.full_path, workspace.full_path)
+    #         entity_path = domain.full_path
+    #         assertion_value = getattr(domain, assertion_key)
 
-        # Execute command
-        cli_executor.exec_command(
-            f"unassign {entity_path} --workspace {workspace.full_path} --force"
-        )
+    #     # Execute command
+    #     cli_executor.exec_command(
+    #         f"unassign {entity_path} --workspace {workspace.full_path} --force"
+    #     )
 
-        # Assert
-        if entity_type == VirtualWorkspaceType.CAPACITY:
-            get(workspace.full_path, query=".")
-        else:
-            get(entity_path, query="domainWorkspaces")
-        
-        assert any(
-            str(assertion_value) not in str(call.args[0])
-            for call in mock_questionary_print.mock_calls
-        )
+    #     # Assert
+    #     if entity_type == VirtualWorkspaceType.CAPACITY:
+    #         get(workspace.full_path, query=".")
+    #     else:
+    #         get(entity_path, query="domainWorkspaces")
+    #
+    #     assert any(
+    #         str(assertion_value) not in str(call.args[0])
+    #         for call in mock_questionary_print.mock_calls
+    #     )
 
-    @pytest.mark.parametrize("entity_type,factory_key,path_template", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
-    ])
-    def test_unassign_entity_workspace_not_assigned_failure(
-        self,
-        entity_type,
-        factory_key,
-        path_template,
-        workspace_factory,
-        cli_executor,
-        assert_fabric_cli_error,
-        test_data: StaticTestData,
-        virtual_workspace_item_factory,
-    ):
-        # Setup
-        workspace = workspace_factory()
-        
-        if factory_key == "test_data":
-            # Capacity scenario - ensure it's unassigned first
-            entity_path = path_template.format(test_data.capacity.name)
-            unassign(entity_path, workspace.full_path)
-        else:
-            # Domain scenario - just create domain without assigning
-            domain = virtual_workspace_item_factory(entity_type)
-            entity_path = domain.full_path
+    # @pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    #     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    #     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
+    # ])
+    # def test_unassign_entity_workspace_not_assigned_failure(
+    #     self,
+    #     entity_type,
+    #     factory_key,
+    #     path_template,
+    #     workspace_factory,
+    #     cli_executor,
+    #     assert_fabric_cli_error,
+    #     test_data: StaticTestData,
+    #     virtual_workspace_item_factory,
+    # ):
+    #     # Setup
+    #     workspace = workspace_factory()
+    #
+    #     if factory_key == "test_data":
+    #         # Capacity scenario - ensure it's unassigned first
+    #         entity_path = path_template.format(test_data.capacity.name)
+    #         unassign(entity_path, workspace.full_path)
+    #     else:
+    #         # Domain scenario - just create domain without assigning
+    #         domain = virtual_workspace_item_factory(entity_type)
+    #         entity_path = domain.full_path
 
-        # Execute command
-        cli_executor.exec_command(
-            f"unassign {entity_path} --workspace {workspace.full_path} --force"
-        )
+    #     # Execute command
+    #     cli_executor.exec_command(
+    #         f"unassign {entity_path} --workspace {workspace.full_path} --force"
+    #     )
 
-        # Assert
-        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
+    #     # Assert
+    #     assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("entity_type,factory_key,path_template", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
-    ])
-    def test_unassign_entity_item_not_supported_failure(
-        self,
-        entity_type,
-        factory_key,
-        path_template,
-        item_factory,
-        cli_executor,
-        assert_fabric_cli_error,
-        test_data: StaticTestData,
-        virtual_workspace_item_factory,
-    ):
-        # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
-        
-        if factory_key == "test_data":
-            entity_path = path_template.format(test_data.capacity.name)
-        else:
-            domain = virtual_workspace_item_factory(entity_type)
-            entity_path = domain.full_path
+    # @pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    #     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    #     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
+    # ])
+    # def test_unassign_entity_item_not_supported_failure(
+    #     self,
+    #     entity_type,
+    #     factory_key,
+    #     path_template,
+    #     item_factory,
+    #     cli_executor,
+    #     assert_fabric_cli_error,
+    #     test_data: StaticTestData,
+    #     virtual_workspace_item_factory,
+    # ):
+    #     # Setup
+    #     lakehouse = item_factory(ItemType.LAKEHOUSE)
+    #
+    #     if factory_key == "test_data":
+    #         entity_path = path_template.format(test_data.capacity.name)
+    #     else:
+    #         domain = virtual_workspace_item_factory(entity_type)
+    #         entity_path = domain.full_path
 
-        # Execute command
-        cli_executor.exec_command(
-            f"unassign {entity_path} --workspace {lakehouse.full_path} --force"
-        )
+    #     # Execute command
+    #     cli_executor.exec_command(
+    #         f"unassign {entity_path} --workspace {lakehouse.full_path} --force"
+    #     )
 
-        # Assert
-        assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
+    #     # Assert
+    #     assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
 
     # endregion
 

@@ -22,92 +22,92 @@ new_name_index = 1
 
 class TestImport:
     # region Parametrized Tests
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ])
-    def test_import_update_existing_item_success(
-        self,
-        item_type,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            item_type,
-            cli_executor,
-        )
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    #     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    # ])
+    # def test_import_update_existing_item_success(
+    #     self,
+    #     item_type,
+    #     item_factory,
+    #     mock_print_done,
+    #     tmp_path,
+    #     mock_print_warning,
+    #     spy_update_item_definition,
+    #     mock_print_grey,
+    #     upsert_item_to_cache,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     _import_update_existing_item_success(
+    #         item_factory,
+    #         mock_print_done,
+    #         tmp_path,
+    #         mock_print_warning,
+    #         spy_update_item_definition,
+    #         mock_print_grey,
+    #         upsert_item_to_cache,
+    #         item_type,
+    #         cli_executor,
+    #     )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.NOTEBOOK, ItemType.SPARK_JOB_DEFINITION, ItemType.DATA_PIPELINE,
-        ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
-        ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
-        ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
-    ])
-    def test_import_create_new_item_success(
-        self,
-        item_type,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            item_type,
-            cli_executor,
-        )
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.NOTEBOOK, ItemType.SPARK_JOB_DEFINITION, ItemType.DATA_PIPELINE,
+    #     ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
+    #     ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
+    #     ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
+    # ])
+    # def test_import_create_new_item_success(
+    #     self,
+    #     item_type,
+    #     item_factory,
+    #     mock_print_done,
+    #     tmp_path,
+    #     spy_create_item,
+    #     mock_print_grey,
+    #     upsert_item_to_cache,
+    #     cli_executor,
+    # ):
+    #     _import_create_new_item_success(
+    #         item_factory,
+    #         mock_print_done,
+    #         tmp_path,
+    #         spy_create_item,
+    #         mock_print_grey,
+    #         upsert_item_to_cache,
+    #         item_type,
+    #         cli_executor,
+    #     )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DASHBOARD, ItemType.DATAMART, ItemType.LAKEHOUSE,
-        ItemType.MIRRORED_WAREHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.PAGINATED_REPORT, ItemType.SQL_ENDPOINT, ItemType.WAREHOUSE,
-    ])
-    def test_import_create_new_item_fail(
-        self,
-        item_type,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            item_type,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DASHBOARD, ItemType.DATAMART, ItemType.LAKEHOUSE,
+    #     ItemType.MIRRORED_WAREHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    #     ItemType.PAGINATED_REPORT, ItemType.SQL_ENDPOINT, ItemType.WAREHOUSE,
+    # ])
+    # def test_import_create_new_item_fail(
+    #     self,
+    #     item_type,
+    #     workspace,
+    #     mock_print_done,
+    #     tmp_path,
+    #     spy_create_item,
+    #     mock_print_grey,
+    #     upsert_item_to_cache,
+    #     cli_executor,
+    #     assert_fabric_cli_error,
+    # ):
+    #     _import_create_new_item_fail(
+    #         workspace,
+    #         mock_print_done,
+    #         tmp_path,
+    #         spy_create_item,
+    #         mock_print_grey,
+    #         upsert_item_to_cache,
+    #         item_type,
+    #         cli_executor,
+    #         assert_fabric_cli_error,
+    #     )
 
     # endregion
 

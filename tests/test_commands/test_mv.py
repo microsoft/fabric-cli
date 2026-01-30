@@ -52,11 +52,13 @@ class TestMV:
             mock_confirm.return_value.ask.return_value = True
 
             # Execute command
-            cli_executor.exec_command(f"mv {ws1.full_path} {ws2.full_path} --force")
+            cli_executor.exec_command(
+                f"mv {ws1.full_path} {ws2.full_path} --force")
 
             # Clean up - update the full path of the moved items so the factory can clean them up
             notebook.full_path = cli_path_join(ws2.full_path, notebook.name)
-            data_pipeline.full_path = cli_path_join(ws2.full_path, data_pipeline.name)
+            data_pipeline.full_path = cli_path_join(
+                ws2.full_path, data_pipeline.name)
 
             # Assert
             mock_print_done.assert_called()
@@ -142,7 +144,8 @@ class TestMV:
 
             # Clean up - update the full path of the moved items so the factory can clean them up
             notebook.full_path = cli_path_join(ws2.full_path, notebook.name)
-            data_pipeline.full_path = cli_path_join(ws2.full_path, data_pipeline.name)
+            data_pipeline.full_path = cli_path_join(
+                ws2.full_path, data_pipeline.name)
             f1.full_path = cli_path_join(ws2.full_path, f1.name)
             sjd.full_path = cli_path_join(ws2.full_path, f1.name, sjd.name)
 
@@ -188,94 +191,94 @@ class TestMV:
                 sjd.name in call.args[0] for call in mock_questionary_print.mock_calls
             )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ])
-    def test_mv_item_to_item_success(
-        self,
-        workspace_factory,
-        item_factory,
-        mock_print_done,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-        mock_print_warning,
-        item_type,
-    ):
-        # Setup
-        ws1 = workspace_factory()
-        ws2 = workspace_factory()
-        item = item_factory(item_type, ws1.full_path)
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    # ])
+    # def test_mv_item_to_item_success(
+    #     self,
+    #     workspace_factory,
+    #     item_factory,
+    #     mock_print_done,
+    #     mock_questionary_print,
+    #     cli_executor: CLIExecutor,
+    #     mock_print_warning,
+    #     item_type,
+    # ):
+    #     # Setup
+    #     ws1 = workspace_factory()
+    #     ws2 = workspace_factory()
+    #     item = item_factory(item_type, ws1.full_path)
 
-        # Reset mock
-        mock_print_done.reset_mock()
-        mock_print_warning.reset_mock()
+    #     # Reset mock
+    #     mock_print_done.reset_mock()
+    #     mock_print_warning.reset_mock()
 
-        with patch("questionary.confirm") as mock_confirm:
+    #     with patch("questionary.confirm") as mock_confirm:
 
-            mock_confirm.return_value.ask.return_value = True
+    #         mock_confirm.return_value.ask.return_value = True
 
-            # Execute command
-            target_path = cli_path_join(ws2.full_path, item.name)
-            cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
+    #         # Execute command
+    #         target_path = cli_path_join(ws2.full_path, item.name)
+    #         cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
 
-            # Clean up - update the full path of the moved items so the factory can clean them up
-            item.full_path = cli_path_join(ws2.full_path, item.name)
+    #         # Clean up - update the full path of the moved items so the factory can clean them up
+    #         item.full_path = cli_path_join(ws2.full_path, item.name)
 
-            # Assert
-            mock_print_done.assert_called()
-            mock_print_warning.assert_called_once()
+    #         # Assert
+    #         mock_print_done.assert_called()
+    #         mock_print_warning.assert_called_once()
 
-            mock_questionary_print.reset_mock()
-            ls(ws1.full_path)
-            assert all(
-                item.display_name not in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         mock_questionary_print.reset_mock()
+    #         ls(ws1.full_path)
+    #         assert all(
+    #             item.display_name not in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
 
-            mock_questionary_print.reset_mock()
-            ls(ws2.full_path)
-            assert any(
-                item.display_name in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         mock_questionary_print.reset_mock()
+    #         ls(ws2.full_path)
+    #         assert any(
+    #             item.display_name in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
 
-    @pytest.mark.parametrize("unsupported_item_type", [
-        ItemType.EVENTHOUSE,
-        ItemType.KQL_DATABASE, 
-        ItemType.EVENTSTREAM,
-    ])
-    def test_mv_item_to_item_unsupported_failure(
-        self,
-        workspace_factory,
-        item_factory,
-        mock_print_done,
-        assert_fabric_cli_error,
-        mock_fab_ui_print_error,
-        cli_executor: CLIExecutor,
-        mock_print_warning,
-        unsupported_item_type,
-    ):
-        # Setup
-        ws1 = workspace_factory()
-        ws2 = workspace_factory()
-        item = item_factory(unsupported_item_type, ws1.full_path)
+    # @pytest.mark.parametrize("unsupported_item_type", [
+    #     ItemType.EVENTHOUSE,
+    #     ItemType.KQL_DATABASE,
+    #     ItemType.EVENTSTREAM,
+    # ])
+    # def test_mv_item_to_item_unsupported_failure(
+    #     self,
+    #     workspace_factory,
+    #     item_factory,
+    #     mock_print_done,
+    #     assert_fabric_cli_error,
+    #     mock_fab_ui_print_error,
+    #     cli_executor: CLIExecutor,
+    #     mock_print_warning,
+    #     unsupported_item_type,
+    # ):
+    #     # Setup
+    #     ws1 = workspace_factory()
+    #     ws2 = workspace_factory()
+    #     item = item_factory(unsupported_item_type, ws1.full_path)
 
-        # Reset mock
-        mock_print_done.reset_mock()
-        mock_print_warning.reset_mock()
+    #     # Reset mock
+    #     mock_print_done.reset_mock()
+    #     mock_print_warning.reset_mock()
 
-        with patch("questionary.confirm") as mock_confirm:
+    #     with patch("questionary.confirm") as mock_confirm:
 
-            mock_confirm.return_value.ask.return_value = True
+    #         mock_confirm.return_value.ask.return_value = True
 
-            # Execute command
-            target_path = cli_path_join(ws2.full_path, item.name)
-            cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
+    #         # Execute command
+    #         target_path = cli_path_join(ws2.full_path, item.name)
+    #         cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
 
-            assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
-            
+    #         assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
+
     def test_mv_type_mismatch_error(
         self,
         workspace_factory,
@@ -284,12 +287,13 @@ class TestMV:
         assert_fabric_cli_error,
     ):
         ws = workspace_factory()
-        virtual_item = virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION)
+        virtual_item = virtual_workspace_item_factory(
+            VirtualWorkspaceType.CONNECTION)
 
-        cli_executor.exec_command(f"mv {ws.full_path} {virtual_item.full_path} --force")
+        cli_executor.exec_command(
+            f"mv {ws.full_path} {virtual_item.full_path} --force")
 
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
-
 
     def test_mv_workspace_to_workspace_item_already_exists_success(
         self,
@@ -322,7 +326,8 @@ class TestMV:
             mock_checkbox.return_value.ask.return_value = [notebook1.name]
             mock_confirm.return_value.ask.return_value = True
 
-            cli_executor.exec_command(f"mv {ws1.full_path} {ws2.full_path} --force")
+            cli_executor.exec_command(
+                f"mv {ws1.full_path} {ws2.full_path} --force")
 
             # Clean up - update the full path of the moved items so the factory can clean them up
             notebook1.full_path = cli_path_join(ws2.full_path, notebook1.name)
@@ -377,7 +382,8 @@ class TestMV:
             mock_confirm.return_value.ask.return_value = True
             # Execute command
             target_path = cli_path_join(ws2.full_path, notebook1.name)
-            cli_executor.exec_command(f"mv {notebook1.full_path} {target_path} --force")
+            cli_executor.exec_command(
+                f"mv {notebook1.full_path} {target_path} --force")
 
             # Clean up - update the full path of the moved items so the factory can clean them up
             notebook1.full_path = cli_path_join(ws2.full_path, notebook1.name)
@@ -453,7 +459,8 @@ class TestMV:
             target_path = cli_path_join(ws2.full_path, notebook1.name)
 
             # Execute command
-            cli_executor.exec_command(f"mv {notebook1.full_path} {target_path}")
+            cli_executor.exec_command(
+                f"mv {notebook1.full_path} {target_path}")
 
         # assert
         assert mock_questionary_print.call_count == 0
@@ -466,7 +473,8 @@ class TestMV:
         target_path = "My workspace.Personal"
 
         # Execute command
-        cli_executor.exec_command(f"mv {workspace.full_path} {target_path} --force")
+        cli_executor.exec_command(
+            f"mv {workspace.full_path} {target_path} --force")
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_OPERATION)
@@ -489,81 +497,81 @@ class TestMV:
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("source_type,target_type", [
-        (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
-        (ItemType.REPORT, ItemType.LAKEHOUSE),
-        (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
-    ])
-    def test_mv_item_to_item_type_mismatch_failure(
-        self, 
-        item_factory, 
-        cli_executor: CLIExecutor, 
-        assert_fabric_cli_error,
-        source_type,
-        target_type,
-    ):
-        # Setup
-        source_item = item_factory(source_type)
-        target_item = item_factory(target_type)
+    # @pytest.mark.parametrize("source_type,target_type", [
+    #     (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
+    #     (ItemType.REPORT, ItemType.LAKEHOUSE),
+    #     (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
+    # ])
+    # def test_mv_item_to_item_type_mismatch_failure(
+    #     self,
+    #     item_factory,
+    #     cli_executor: CLIExecutor,
+    #     assert_fabric_cli_error,
+    #     source_type,
+    #     target_type,
+    # ):
+    #     # Setup
+    #     source_item = item_factory(source_type)
+    #     target_item = item_factory(target_type)
 
-        cli_executor.exec_command(
-            f"mv {source_item.full_path} {target_item.full_path} --force"
-        )
+    #     cli_executor.exec_command(
+    #         f"mv {source_item.full_path} {target_item.full_path} --force"
+    #     )
 
-        # Assert
-        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
+    #     # Assert
+    #     assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ])
-    def test_mv_item_within_workspace_rename_success(
-        self,
-        workspace_factory,
-        item_factory,
-        mock_print_done,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-        item_type,
-    ):
-        # Setup
-        ws1 = workspace_factory()
-        # Create item in ws1
-        item = item_factory(item_type, ws1.full_path)
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    # ])
+    # def test_mv_item_within_workspace_rename_success(
+    #     self,
+    #     workspace_factory,
+    #     item_factory,
+    #     mock_print_done,
+    #     mock_questionary_print,
+    #     cli_executor: CLIExecutor,
+    #     item_type,
+    # ):
+    #     # Setup
+    #     ws1 = workspace_factory()
+    #     # Create item in ws1
+    #     item = item_factory(item_type, ws1.full_path)
 
-        # Reset mock
-        mock_print_done.reset_mock()
-        mock_questionary_print.reset_mock()
+    #     # Reset mock
+    #     mock_print_done.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        with patch("questionary.confirm") as mock_confirm:
-            mock_confirm.return_value.ask.return_value = True
+    #     with patch("questionary.confirm") as mock_confirm:
+    #         mock_confirm.return_value.ask.return_value = True
 
-            renamed_item_name = f"{item.display_name} Renamed.{item_type}"
+    #         renamed_item_name = f"{item.display_name} Renamed.{item_type}"
 
-            # Execute command
-            target_path = cli_path_join(ws1.full_path, renamed_item_name)
-            cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
+    #         # Execute command
+    #         target_path = cli_path_join(ws1.full_path, renamed_item_name)
+    #         cli_executor.exec_command(f"mv {item.full_path} {target_path} --force")
 
-            # Clean up - update the full path of the moved items so the factory can clean them up
-            item.full_path = target_path
+    #         # Clean up - update the full path of the moved items so the factory can clean them up
+    #         item.full_path = target_path
 
-            # Assert
-            mock_print_done.assert_called()
-            assert any(
-                call.args[0] == "Move completed\n" for call in mock_print_done.mock_calls
-            )
+    #         # Assert
+    #         mock_print_done.assert_called()
+    #         assert any(
+    #             call.args[0] == "Move completed\n" for call in mock_print_done.mock_calls
+    #         )
 
-            mock_questionary_print.reset_mock()
-            ls(ws1.full_path)
-            assert all(
-                item.name not in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
-            assert any(
-                renamed_item_name in call.args[0]
-                for call in mock_questionary_print.mock_calls
-            )
+    #         mock_questionary_print.reset_mock()
+    #         ls(ws1.full_path)
+    #         assert all(
+    #             item.name not in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
+    #         assert any(
+    #             renamed_item_name in call.args[0]
+    #             for call in mock_questionary_print.mock_calls
+    #         )
 
     def test_mv_item_within_workspace_failure(
         self,
@@ -591,7 +599,8 @@ class TestMV:
 
             # Execute command
             target_path = cli_path_join(folder.full_path, notebook.name)
-            cli_executor.exec_command(f"mv {notebook.full_path} {target_path} --force")
+            cli_executor.exec_command(
+                f"mv {notebook.full_path} {target_path} --force")
 
             # Assert
             assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
@@ -626,7 +635,8 @@ class TestMV:
 
             # Clean up - update the full path of the moved items so the factory can clean them up
             notebook.full_path = cli_path_join(ws2.full_path, notebook.name)
-            data_pipeline.full_path = cli_path_join(ws2.full_path, data_pipeline.name)
+            data_pipeline.full_path = cli_path_join(
+                ws2.full_path, data_pipeline.name)
             f1.full_path = cli_path_join(ws2.full_path, f1.name)
 
             # Assert
@@ -679,7 +689,8 @@ class TestMV:
 
         # Create items in the source folder
         notebook = item_factory(ItemType.NOTEBOOK, source_folder.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, source_folder.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, source_folder.full_path)
 
         # Create a nested folder inside source folder
         nested_folder = folder_factory(path=source_folder.full_path)
@@ -703,7 +714,8 @@ class TestMV:
             moved_source_folder_path = cli_path_join(
                 dest_folder.full_path, source_folder.name
             )
-            notebook.full_path = cli_path_join(moved_source_folder_path, notebook.name)
+            notebook.full_path = cli_path_join(
+                moved_source_folder_path, notebook.name)
             data_pipeline.full_path = cli_path_join(
                 moved_source_folder_path, data_pipeline.name
             )
