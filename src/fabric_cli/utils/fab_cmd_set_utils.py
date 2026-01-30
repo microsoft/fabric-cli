@@ -26,7 +26,7 @@ def validate_item_query(query_value: str, item=None) -> None:
     allowed_keys = fab_constant.ITEM_SET_ALLOWED_METADATA_KEYS + [
         fab_constant.ITEM_QUERY_DEFINITION
     ]
-    validate_expression(query_value, allowed_keys)
+    validate_query_in_allowlist(query_value, allowed_keys)
 
     if not utils_jmespath.is_simple_path_expression(query_value):
         raise FabricCLIError(
@@ -47,7 +47,7 @@ def validate_item_query(query_value: str, item=None) -> None:
             )
 
 
-def validate_expression(expression: str, allowed_keys: list[str]) -> None:
+def validate_query_in_allowlist(expression: str, allowed_keys: list[str]) -> None:
     if not any(
         expression == key or expression.startswith(f"{key}.") for key in allowed_keys
     ):
@@ -56,6 +56,42 @@ def validate_expression(expression: str, allowed_keys: list[str]) -> None:
             f"Invalid query '{expression}'\n\nAvailable queries:\n  {allowed_expressions}",
             fab_constant.ERROR_INVALID_QUERY,
         )
+
+
+def validate_query_not_in_blocklist(
+    query: str, resource_specific_invalid_queries: list = None
+) -> None:
+    """Validate that a query is not blocklisted.
+
+    Blocks queries from SET_COMMAND_INVALID_QUERIES or resource_specific_invalid_queries,
+    or JMESPath expressions containing filters/wildcards.
+
+    Args:
+        query: Query string to validate.
+        resource_specific_invalid_queries: Optional additional invalid queries.
+
+    Raises:
+        FabricCLIError: If query is blocklisted or contains filters/wildcards.
+    """
+    # Validate it's a simple path expression (no filters, wildcards, etc.)
+    if not utils_jmespath.is_simple_path_expression(query):
+        raise FabricCLIError(
+            CommonErrors.query_contains_filters_or_wildcards(query),
+            fab_constant.ERROR_INVALID_QUERY,
+        )
+
+    # Combine common invalid queries with resource-specific ones
+    all_invalid_queries = fab_constant.SET_COMMAND_INVALID_QUERIES.copy()
+    if resource_specific_invalid_queries:
+        all_invalid_queries.extend(resource_specific_invalid_queries)
+
+    # Check if query matches or is a sub-path of any invalid key
+    for invalid_key in all_invalid_queries:
+        if query == invalid_key or query.startswith(f"{invalid_key}."):
+            raise FabricCLIError(
+                CommonErrors.query_not_supported_for_set(query),
+                fab_constant.ERROR_INVALID_QUERY,
+            )
 
 
 def ensure_notebook_dependency(decoded_item_def: dict, query: str) -> dict:
