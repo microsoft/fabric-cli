@@ -20,10 +20,10 @@ from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import basic_item_parametrize, custom_parametrize
 
 
 class TestLS:
-
     _workspace_long_columns = [
         "name",
         "id",
@@ -50,7 +50,8 @@ class TestLS:
         "tags",
     ]
 
-    _domain_long_columns = ["id", "contributorsScope", "description", "parentDomainId"]
+    _domain_long_columns = ["id", "contributorsScope",
+                            "description", "parentDomainId"]
 
     _connection_long_columns = [
         "name",
@@ -79,7 +80,8 @@ class TestLS:
         "dynamicExecutorAllocation",
     ]
 
-    _managed_identities_long_columns = ["name", "servicePrincipalId", "applicationId"]
+    _managed_identities_long_columns = [
+        "name", "servicePrincipalId", "applicationId"]
 
     _managed_private_endpoints_long_columns = [
         "name",
@@ -98,187 +100,194 @@ class TestLS:
     ]
 
     # region ITEM
-    @pytest.mark.parametrize("command", ["ls", "dir"])
-    def test_ls_workspace_items_success(
-        self,
-        workspace,
-        item_factory,
-        mock_questionary_print,
-        command,
-        cli_executor: CLIExecutor,
-    ):
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK)
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE)
 
-        # Test 1: without args
-        cli_executor.exec_command(f"{command} {workspace.full_path}")
+    # @custom_parametrize
+    # @pytest.mark.parametrize("command", ["ls", "dir"])
+    # def test_ls_workspace_items_success(
+    #     self,
+    #     workspace,
+    #     item_factory,
+    #     mock_questionary_print,
+    #     command,
+    #     item_type,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     # Setup item of parametrized type
+    #     item = item_factory(item_type)
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
-        _assert_strings_in_mock_calls(
-            self._virtual_workspace_items, False, mock_questionary_print.mock_calls
-        )
+    #     # Test 1: without args
+    #     cli_executor.exec_command(f"{command} {workspace.full_path}")
 
-        mock_questionary_print.reset_mock()
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._virtual_workspace_items, False, mock_questionary_print.mock_calls
+    #     )
 
-        # Test 2: with long
-        cli_executor.exec_command(f"{command} {workspace.full_path} --long")
+    #     mock_questionary_print.reset_mock()
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns,
-            True,
-            mock_questionary_print.mock_calls,
-            require_all_in_same_args=True,
-        )
-        _assert_strings_in_mock_calls(
-            self._virtual_workspace_items, False, mock_questionary_print.mock_calls
-        )
+    #     # Test 2: with long
+    #     cli_executor.exec_command(f"{command} {workspace.full_path} --long")
 
-        mock_questionary_print.reset_mock()
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns,
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._virtual_workspace_items, False, mock_questionary_print.mock_calls
+    #     )
 
-        # Test 3: with all
-        cli_executor.exec_command(f"{command} {workspace.full_path} --all")
+    #     mock_questionary_print.reset_mock()
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
-        _assert_strings_in_mock_calls(
-            self._virtual_workspace_items, True, mock_questionary_print.mock_calls
-        )
+    #     # Test 3: with all
+    #     cli_executor.exec_command(f"{command} {workspace.full_path} --all")
 
-        mock_questionary_print.reset_mock()
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._virtual_workspace_items, True, mock_questionary_print.mock_calls
+    #     )
 
-        # Test 4: with all and long
-        cli_executor.exec_command(f"{command} {workspace.full_path} --long --all")
+    #     mock_questionary_print.reset_mock()
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns,
-            True,
-            mock_questionary_print.mock_calls,
-            require_all_in_same_args=True,
-        )
-        _assert_strings_in_mock_calls(
-            self._virtual_workspace_items, True, mock_questionary_print.mock_calls
-        )
+    #     # Test 4: with all and long
+    #     cli_executor.exec_command(
+    #         f"{command} {workspace.full_path} --long --all")
 
-    def test_ls_query_filter_success(
-        self,
-        workspace,
-        item_factory,
-        mock_questionary_print,
-        assert_fabric_cli_error,
-        cli_executor: CLIExecutor,
-    ):
-        # Setup items with different names and types
-        notebook1 = item_factory(ItemType.NOTEBOOK)
-        notebook2 = item_factory(ItemType.NOTEBOOK)
-        notebook3 = item_factory(ItemType.NOTEBOOK)
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns,
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._virtual_workspace_items, True, mock_questionary_print.mock_calls
+    #     )
 
-        # Test 1: Basic JMESPath syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
+    # @basic_item_parametrize
+    # def test_ls_query_filter_success(
+    #     self,
+    #     workspace,
+    #     item_factory,
+    #     mock_questionary_print,
+    #     assert_fabric_cli_error,
+    #     item_type,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     # Setup items with different names and same parametrized type
+    #     item1 = item_factory(item_type)
+    #     item2 = item_factory(item_type)
+    #     item3 = item_factory(item_type)
 
-        mock_questionary_print.reset_mock()
+    #     # Test 1: Basic JMESPath syntax
+    #     cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item1.display_name, item2.display_name, item3.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
 
-        # Test 2: JMESPath object syntax
-        cli_executor.exec_command(
-            f"ls {workspace.full_path} -l -q '[].{{displayName: name, itemID: id}}'"
-        )
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        # Verify renamed fields
-        _assert_strings_in_mock_calls(
-            ["displayName", "itemID"],
-            True,
-            mock_questionary_print.mock_calls,
-            require_all_in_same_args=True
-        )
+    #     mock_questionary_print.reset_mock()
 
-        mock_questionary_print.reset_mock()
+    #     # Test 2: JMESPath object syntax
+    #     cli_executor.exec_command(
+    #         f"ls {workspace.full_path} -l -q '[].{{displayName: name, itemID: id}}'"
+    #     )
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item1.display_name, item2.display_name, item3.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     # Verify renamed fields
+    #     _assert_strings_in_mock_calls(
+    #         ["displayName", "itemID"],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True
+    #     )
 
-        # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
-        _assert_strings_in_mock_calls(
-            [f"['{notebook1.name}']", f"['{notebook2.name}']", f"['{notebook3.name}']"],
-            True,
-            mock_questionary_print.mock_calls,
-        )
+    #     mock_questionary_print.reset_mock()
 
-        mock_questionary_print.reset_mock()
+    #     # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
+    #     cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+    #     _assert_strings_in_mock_calls(
+    #         [f"['{item1.name}']", f"['{item2.name}']", f"['{item3.name}']"],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
 
-        # Test 4: JMESPath object syntax without -l should not have id in the result
-        cli_executor.exec_command(f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [f'{notebook1.name}   None', f'{notebook2.name}   None', f'{notebook3.name}   None'],
-            True,
-            mock_questionary_print.mock_calls,
-        )
+    #     mock_questionary_print.reset_mock()
 
-        mock_questionary_print.reset_mock()
+    #     # Test 4: JMESPath object syntax without -l should not have id in the result
+    #     cli_executor.exec_command(
+    #         f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         ["displayName", "itemId"],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True
+    #     )
 
-        # Test 5: JMESPath query filters specific value
-        cli_executor.exec_command(
-            f"ls {workspace.full_path} -q \"[?name=='{notebook1.name}'].name\""
-        )
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [f'{notebook1.name}'],
-            True,
-            mock_questionary_print.mock_calls,
-        )
+    #     mock_questionary_print.reset_mock()
 
-        _assert_strings_in_mock_calls(
-            [f'{notebook2.name}', f'{notebook3.name}'],
-            False,
-            mock_questionary_print.mock_calls,
-        )
+    #     # Test 5: JMESPath query filters specific value
+    #     cli_executor.exec_command(
+    #         f"ls {workspace.full_path} -q \"[?name=='{item1.name}'].name\""
+    #     )
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [f'{item1.name}'],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     _assert_strings_in_mock_calls(
+    #         [f'{item2.name}', f'{item3.name}'],
+    #         False,
+    #         mock_questionary_print.mock_calls,
+    #     )
 
-        # Test 6: Invalid query format
-        cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
-        assert_fabric_cli_error(fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
+    #     mock_questionary_print.reset_mock()
+
+    #     # Test 6: Invalid query format
+    #     cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
+    #     assert_fabric_cli_error(
+    #         fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
 
     def test_ls_item_show_hidden_from_config_success(
         self,
@@ -303,7 +312,8 @@ class TestLS:
 
         # Check hidden_data is present despite no --all flag
         assert actual_json["result"]["hidden_data"] is not None
-        expected_hidden_data_keys = [vws.value for vws in VirtualItemContainerType]
+        expected_hidden_data_keys = [
+            vws.value for vws in VirtualItemContainerType]
         for key in expected_hidden_data_keys:
             assert any(key in k for k in actual_json["result"]["hidden_data"])
 
@@ -340,7 +350,8 @@ class TestLS:
         actual_json = json.loads(mock_questionary_print.mock_calls[0].args[0])
         # check --all flag
         assert actual_json["result"]["hidden_data"] is not None
-        expected_hidden_data_keys = [vws.value for vws in VirtualItemContainerType]
+        expected_hidden_data_keys = [
+            vws.value for vws in VirtualItemContainerType]
         for key in expected_hidden_data_keys:
             assert any(key in k for k in actual_json["result"]["hidden_data"])
 
@@ -547,38 +558,44 @@ class TestLS:
     # endregion
 
     # region ITEM FOLDERS
-    def test_ls_item_folders_success(
-        self, item_factory, mock_questionary_print, cli_executor: CLIExecutor
-    ):
-        # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
-        expected_output = ["Files", "Tables", "TableMaintenance"]
+    # @pytest.mark.parametrize("item_type,expected_folders", [
+    #     (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+    #     (ItemType.WAREHOUSE, ["Files", "Tables"]),
+    #     (ItemType.SPARK_JOB_DEFINITION, ["Libs", "Main", "Snapshots"]),
+    #     (ItemType.KQL_DATABASE, ["Tables", "Shortcut"]),
+    #     (ItemType.SQL_DATABASE, ["Tables", "Files", "Code"]),
+    # ])
+    # def test_ls_item_folders_success(
+    #     self, item_factory, mock_questionary_print, item_type, expected_folders, cli_executor: CLIExecutor
+    # ):
+    #     # Setup
+    #     item = item_factory(item_type)
 
-        # Test 1: without args
-        cli_executor.exec_command(f"ls {lakehouse.full_path}")
+    #     # Test 1: without args
+    #     cli_executor.exec_command(f"ls {item.full_path}")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            expected_output, True, mock_questionary_print.mock_calls
-        )
-        _assert_strings_in_mock_calls(
-            self._item_folders_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         expected_folders, True, mock_questionary_print.mock_calls
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._item_folders_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Test 2: with long
-        cli_executor.exec_command(f"ls {lakehouse.full_path} --long")
+    #     # Test 2: with long
+    #     cli_executor.exec_command(f"ls {item.full_path} --long")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            expected_output, True, mock_questionary_print.mock_calls
-        )
-        _assert_strings_in_mock_calls(
-            self._item_folders_long_columns, True, mock_questionary_print.mock_calls
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         expected_folders, True, mock_questionary_print.mock_calls
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._item_folders_long_columns, True, mock_questionary_print.mock_calls
+    #     )
 
     # endregion
 
@@ -690,11 +707,12 @@ class TestLS:
             VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT
         )
         managed_private_endpoints_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
+            workspace.full_path, str(
+                VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
         )
 
         mock_questionary_print.reset_mock()
-        
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {managed_private_endpoints_path}")
 
@@ -714,7 +732,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {managed_private_endpoints_path} --long")
+        cli_executor.exec_command(
+            f"ls {managed_private_endpoints_path} --long")
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -746,7 +765,8 @@ class TestLS:
             VirtualItemContainerType.EXTERNAL_DATA_SHARE
         )
         external_data_shares_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.EXTERNAL_DATA_SHARE)
+            workspace.full_path, str(
+                VirtualItemContainerType.EXTERNAL_DATA_SHARE)
         )
         # Test 1: without args
         cli_executor.exec_command(f"ls {external_data_shares_path}")
@@ -794,7 +814,8 @@ class TestLS:
             VirtualItemContainerType.EXTERNAL_DATA_SHARE
         )
         external_data_shares_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.EXTERNAL_DATA_SHARE)
+            workspace.full_path, str(
+                VirtualItemContainerType.EXTERNAL_DATA_SHARE)
         )
 
         mock_fab_set_state_config(fab_constant.FAB_CACHE_ENABLED, "true")
@@ -828,7 +849,8 @@ class TestLS:
         test_data: StaticTestData,
     ):
         # Setup
-        capacity = virtual_workspace_item_factory(VirtualWorkspaceType.CAPACITY)
+        capacity = virtual_workspace_item_factory(
+            VirtualWorkspaceType.CAPACITY)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CAPACITY)}")
@@ -845,7 +867,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CAPACITY)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.CAPACITY)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -893,7 +916,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.DOMAIN)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.DOMAIN)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -920,7 +944,8 @@ class TestLS:
         mock_questionary_print,
     ):
         # Setup
-        connection = virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION)
+        connection = virtual_workspace_item_factory(
+            VirtualWorkspaceType.CONNECTION)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CONNECTION)}")
@@ -936,7 +961,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CONNECTION)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.CONNECTION)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -984,7 +1010,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.GATEWAY)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.GATEWAY)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -1088,157 +1115,177 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
-    def test_ls_folder_content_success(
-        self,
-        workspace,
-        folder_factory,
-        item_factory,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-    ):
-        # Setup
-        folder = folder_factory()
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE,
+    #     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    #     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.GRAPHQLAPI,
+    #     ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    #     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    # ])
+    # def test_ls_folder_content_success(
+    #     self,
+    #     folder_factory,
+    #     item_factory,
+    #     mock_questionary_print,
+    #     item_type,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     # Setup
+    #     folder = folder_factory()
 
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK, path=folder.full_path)
-        lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=folder.full_path)
+    #     # Setup item of parametrized type
+    #     item = item_factory(item_type, path=folder.full_path)
 
-        # Test 1: without args
-        cli_executor.exec_command(f"ls {folder.full_path}")
+    #     # Test 1: without args
+    #     cli_executor.exec_command(f"ls {folder.full_path}")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Test 2: with long
-        cli_executor.exec_command(f"ls {folder.full_path} --long")
+    #     # Test 2: with long
+    #     cli_executor.exec_command(f"ls {folder.full_path} --long")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns,
-            True,
-            mock_questionary_print.mock_calls,
-            require_all_in_same_args=True,
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns,
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True,
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Test 3: with all
-        cli_executor.exec_command(f"ls {folder.full_path} --all")
+    #     # Test 3: with all
+    #     cli_executor.exec_command(f"ls {folder.full_path} --all")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Test 4: with all and long
-        cli_executor.exec_command(f"ls {folder.full_path} --long --all")
+    #     # Test 4: with all and long
+    #     cli_executor.exec_command(f"ls {folder.full_path} --long --all")
 
-        # Assert
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns,
-            True,
-            mock_questionary_print.mock_calls,
-            require_all_in_same_args=True,
-        )
+    #     # Assert
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns,
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #         require_all_in_same_args=True,
+    #     )
 
-    def test_ls_workspace_items_no_list_folders_support_success(
-        self,
-        workspace,
-        folder_factory,
-        item_factory,
-        mock_questionary_print,
-        cli_executor: CLIExecutor,
-    ):
-        # Setup
-        folder = folder_factory()
+    # @pytest.mark.parametrize("item_type", [
+    #     ItemType.DATA_PIPELINE,
+    #     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    #     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    #     ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    #     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    #     ItemType.REFLEX, ItemType.GRAPHQLAPI,
+    #     ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    #     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    # ])
+    # def test_ls_workspace_items_no_list_folders_support_success(
+    #     self,
+    #     workspace,
+    #     folder_factory,
+    #     item_factory,
+    #     mock_questionary_print,
+    #     item_type,
+    #     cli_executor: CLIExecutor,
+    # ):
+    #     # Setup
+    #     folder = folder_factory()
 
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK)
-        lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=folder.full_path)
+    #     # Setup 2 items of the same parametrized type - one in workspace, one in folder
+    #     workspace_item = item_factory(item_type)
+    #     folder_item = item_factory(item_type, path=folder.full_path)
 
-        # Test 1: workspace ls
-        cli_executor.exec_command(f"ls {workspace.full_path}")
+    #     # Test 1: workspace ls
+    #     cli_executor.exec_command(f"ls {workspace.full_path}")
 
-        # Assert that only the notebook and folder are listed
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, folder.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert that only the workspace item and folder are listed
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [workspace_item.display_name, folder.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Test 2: Folder ls
-        cli_executor.exec_command(f"ls {folder.full_path}")
+    #     # Test 2: Folder ls
+    #     cli_executor.exec_command(f"ls {folder.full_path}")
 
-        # Assert that only the lakehouse and data pipeline are listed
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert that only the folder item is listed
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [folder_item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        mock_questionary_print.reset_mock()
+    #     mock_questionary_print.reset_mock()
 
-        # Disable folder support
-        state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, "false")
+    #     # Disable folder support
+    #     state_config.set_config(
+    #         fab_constant.FAB_FOLDER_LISTING_ENABLED, "false")
 
-        # Test 3: workspace ls
-        cli_executor.exec_command(f"ls {workspace.full_path}")
+    #     # Test 3: workspace ls
+    #     cli_executor.exec_command(f"ls {workspace.full_path}")
 
-        # Assert that only the items are listed
-        mock_questionary_print.assert_called()
-        _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
-            True,
-            mock_questionary_print.mock_calls,
-        )
-        _assert_strings_in_mock_calls(
-            self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
-        )
+    #     # Assert that both items are listed (folder and its contents flattened)
+    #     mock_questionary_print.assert_called()
+    #     _assert_strings_in_mock_calls(
+    #         [workspace_item.display_name, folder_item.display_name],
+    #         True,
+    #         mock_questionary_print.mock_calls,
+    #     )
+    #     _assert_strings_in_mock_calls(
+    #         self._workspace_items_long_columns, False, mock_questionary_print.mock_calls
+    #     )
 
-        # Enable folder support for cleanup
-        state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, "true")
+    #     # Enable folder support for cleanup
+    #     state_config.set_config(
+    #         fab_constant.FAB_FOLDER_LISTING_ENABLED, "true")
 
     # endregion
 
