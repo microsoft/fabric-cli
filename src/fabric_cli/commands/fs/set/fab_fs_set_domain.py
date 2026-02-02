@@ -17,8 +17,6 @@ INVALID_QUERIES = ["parentDomainId"]
 def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
     query = args.query
 
-    # Validate against invalid queries - allow users to set any query parameter
-    # and let the API validate if it's supported
     utils_set.validate_query_not_in_blocklist(query, INVALID_QUERIES)
 
     utils_set.print_set_warning()

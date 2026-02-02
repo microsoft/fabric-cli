@@ -59,7 +59,7 @@ def validate_query_in_allowlist(expression: str, allowed_keys: list[str]) -> Non
 
 
 def validate_query_not_in_blocklist(
-    query: str, resource_specific_invalid_queries: list = None
+    query: str, resource_specific_invalid_queries: list | None = None
 ) -> None:
     """Validate that a query is not blocklisted.
 
@@ -73,19 +73,16 @@ def validate_query_not_in_blocklist(
     Raises:
         FabricCLIError: If query is blocklisted or contains filters/wildcards.
     """
-    # Validate it's a simple path expression (no filters, wildcards, etc.)
     if not utils_jmespath.is_simple_path_expression(query):
         raise FabricCLIError(
             CommonErrors.query_contains_filters_or_wildcards(query),
             fab_constant.ERROR_INVALID_QUERY,
         )
 
-    # Combine common invalid queries with resource-specific ones
     all_invalid_queries = fab_constant.SET_COMMAND_INVALID_QUERIES.copy()
     if resource_specific_invalid_queries:
         all_invalid_queries.extend(resource_specific_invalid_queries)
 
-    # Check if query matches or is a sub-path of any invalid key
     for invalid_key in all_invalid_queries:
         if query == invalid_key or query.startswith(f"{invalid_key}."):
             raise FabricCLIError(

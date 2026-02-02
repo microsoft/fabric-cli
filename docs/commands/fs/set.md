@@ -53,7 +53,7 @@ fab set ws1.Workspace -q displayName -i "New Name" -f
 
 To discover the available properties of a Fabric resource, use the [`get` command](get.md) to retrieve the resource's current state. However, note that **not all properties returned by `get` are settable**.
 
-To determine which properties can be updated via the `set` command, refer to the [Microsoft Fabric REST API documentation](https://learn.microsoft.com/en-us/rest/api/fabric/articles/) and locate the Update API operation for your specific resource type. Only properties documented in the Update API are supported for modification.
+To determine which properties can be updated via the `set` command, refer to the [Microsoft Fabric REST API documentation](aka.ms/fabric-apis) and locate the Update API operation for your specific resource type. Only properties documented in the Update API are supported for modification.
 
 !!! note "Setting Item Definition Properties"
     For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties (e.g. `definition.parts[0].property`).
