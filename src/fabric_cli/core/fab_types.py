@@ -140,8 +140,7 @@ class VirtualWorkspaceType(Enum):
 class _BaseItemType(Enum):
     @classmethod
     def from_string(cls, item_type_str):
-        raise NotImplementedError(
-            "This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the subclass")
 
 
 ##################################
@@ -200,8 +199,7 @@ class VirtualItemContainerType(Enum):
             if item.value.lower() == vws_type_str.lower():
                 return item
         raise FabricCLIError(
-            ErrorMessages.Common.invalid_virtual_item_container_type(
-                vws_type_str),
+            ErrorMessages.Common.invalid_virtual_item_container_type(vws_type_str),
             fab_constant.ERROR_INVALID_ITEM_TYPE,
         )
 
@@ -237,7 +235,7 @@ VICMap: dict[VirtualItemContainerType, VirtualItemType] = {
     VirtualItemContainerType.SPARK_POOL: VirtualItemType.SPARK_POOL,
     VirtualItemContainerType.MANAGED_IDENTITY: VirtualItemType.MANAGED_IDENTITY,
     VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT: VirtualItemType.MANAGED_PRIVATE_ENDPOINT,
-    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE
+    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE,
 }
 
 ################
@@ -262,6 +260,7 @@ class ItemType(_BaseItemType):
     DASHBOARD = "Dashboard"
     DATAMART = "Datamart"
     DATA_PIPELINE = "DataPipeline"
+    DIGITAL_TWIN_BUILDER = "DigitalTwinBuilder"
     ENVIRONMENT = "Environment"
     EVENTHOUSE = "Eventhouse"
     EVENTSTREAM = "Eventstream"
@@ -492,6 +491,7 @@ format_mapping = {
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
+    ItemType.DIGITAL_TWIN_BUILDER: "digitalTwinBuilders",
     ItemType.ENVIRONMENT: "environments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -538,6 +538,7 @@ uri_mapping = {
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
+    ItemType.DIGITAL_TWIN_BUILDER: "digitaltwinbuilders",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
