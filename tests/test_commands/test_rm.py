@@ -25,13 +25,17 @@ from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import custom_parametrize
 
 
 class TestRM:
     # region ITEM
+
+    @custom_parametrize
     def test_rm_item_success(
         self,
         workspace,
+        item_type,
         cli_executor,
         mock_questionary_print,
         mock_print_warning,
@@ -40,31 +44,33 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        notebook = set_entity_metadata(
-            vcr_instance, cassette_name, "Notebook", workspace.full_path
+        item = set_entity_metadata(
+            vcr_instance, cassette_name, item_type, workspace.full_path
         )
-        mkdir(notebook.full_path)
+        mkdir(item.full_path)
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"rm {notebook.full_path} --force")
+        cli_executor.exec_command(f"rm {item.full_path} --force")
 
         # Assert
         mock_print_warning.assert_called()
         mock_questionary_print.assert_called()
         mock_print_done.assert_called_once()
         _assert_strings_in_mock_calls(
-            [notebook.display_name], True, mock_questionary_print.mock_calls
+            [item.display_name], True, mock_questionary_print.mock_calls
         )
         _assert_strings_in_mock_calls(
-            [notebook.display_name], True, mock_print_done.mock_calls
+            [item.display_name], True, mock_print_done.mock_calls
         )
 
-        _assert_not_found(notebook.full_path)
+        _assert_not_found(item.full_path)
 
+    @custom_parametrize
     def test_rm_item_without_force_success(
         self,
         workspace,
+        item_type,
         cli_executor,
         mock_questionary_print,
         mock_print_done,
@@ -72,10 +78,10 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        notebook = set_entity_metadata(
-            vcr_instance, cassette_name, "Notebook", workspace.full_path
+        item = set_entity_metadata(
+            vcr_instance, cassette_name, item_type, workspace.full_path
         )
-        mkdir(notebook.full_path)
+        mkdir(item.full_path)
         # Reset mocks
         mock_print_done.reset_mock()
         mock_questionary_print.reset_mock()
@@ -84,24 +90,35 @@ class TestRM:
             mock_confirm.return_value.ask.return_value = True
 
             # Execute command
-            cli_executor.exec_command(f"rm {notebook.full_path}")
+            cli_executor.exec_command(f"rm {item.full_path}")
 
         # Assert
         mock_confirm.assert_called_once()
         mock_questionary_print.assert_called_once()
         mock_print_done.assert_called_once()
         _assert_strings_in_mock_calls(
-            [notebook.display_name], True, mock_questionary_print.mock_calls
+            [item.display_name], True, mock_questionary_print.mock_calls
         )
         _assert_strings_in_mock_calls(
-            [notebook.display_name], True, mock_print_done.mock_calls
+            [item.display_name], True, mock_print_done.mock_calls
         )
 
-        _assert_not_found(notebook.full_path)
+        _assert_not_found(item.full_path)
 
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE,
+        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+        ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+    ])
     def test_rm_item_without_force_cancel_operation_success(
         self,
         workspace,
+        item_type,
         cli_executor,
         mock_questionary_print,
         mock_print_done,
@@ -110,10 +127,10 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        notebook = set_entity_metadata(
-            vcr_instance, cassette_name, "Notebook", workspace.full_path
+        item = set_entity_metadata(
+            vcr_instance, cassette_name, item_type, workspace.full_path
         )
-        mkdir(notebook.full_path)
+        mkdir(item.full_path)
         # Reset mocks
         mock_print_done.reset_mock()
         mock_questionary_print.reset_mock()
@@ -122,13 +139,42 @@ class TestRM:
             mock_confirm.return_value.ask.return_value = False
 
             # Execute command
-            cli_executor.exec_command(f"rm {notebook.full_path}")
+            cli_executor.exec_command(f"rm {item.full_path}")
 
         # Assert
         mock_print_warning.assert_called_once()
         mock_confirm.assert_called_once()
         mock_questionary_print.assert_not_called()
         mock_print_done.assert_not_called()
+
+    @pytest.mark.parametrize("unsupported_item_type", [
+        ItemType.DASHBOARD,
+        ItemType.DATAMART,
+        ItemType.MIRRORED_WAREHOUSE,
+        ItemType.PAGINATED_REPORT,
+        ItemType.SQL_ENDPOINT,
+    ])
+    def test_rm_unsupported_item_failure(
+        self,
+        unsupported_item_type,
+        workspace_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        workspace = workspace_factory()
+
+        # Create unsupported item metadata
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_name = f"{item_display_name}.{unsupported_item_type}"
+        item_full_path = cli_path_join(workspace.full_path, item_name)
+
+        # Execute command
+        cli_executor.exec_command(f"rm {item_full_path} --force")
+
+        # Assert
+        assert_fabric_cli_error(constant.ERROR_NOT_FOUND)
 
     # endregion
 
@@ -144,7 +190,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -191,7 +238,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -253,7 +301,7 @@ class TestRM:
         mkdir(notebook.full_path)
         mock_print_done.reset_mock()
         mock_questionary_print.reset_mock()
-        
+
         with (
             patch("questionary.checkbox") as mock_checkbox,
             patch("questionary.confirm") as mock_confirm,
@@ -295,7 +343,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -329,7 +378,8 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(
+            vcr_instance, cassette_name)
         sparkpool_name = f"{sparkpool_display_name}.SparkPool"
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_name
@@ -417,7 +467,8 @@ class TestRM:
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"rm {managed_private_endpoint.full_path} --force")
+        cli_executor.exec_command(
+            f"rm {managed_private_endpoint.full_path} --force")
 
         # Assert
         mock_print_warning.assert_called()
@@ -457,7 +508,8 @@ class TestRM:
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"rm {external_data_share.full_path} --force")
+        cli_executor.exec_command(
+            f"rm {external_data_share.full_path} --force")
 
         # Assert
         mock_print_warning.assert_called()
@@ -523,7 +575,8 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        domain = set_entity_metadata(vcr_instance, cassette_name, "Domain", ".domains")
+        domain = set_entity_metadata(
+            vcr_instance, cassette_name, "Domain", ".domains")
         mkdir(domain.full_path)
 
         mock_print_done.reset_mock()
@@ -685,7 +738,8 @@ class TestRM:
         cli_executor.exec_command(f"rm {folder.full_path} --force")
 
         # Assert
-        assert_fabric_cli_error("FolderNotEmpty", "The requested folder was not empty")
+        assert_fabric_cli_error(
+            "FolderNotEmpty", "The requested folder was not empty")
 
         # Cleanup
         rm(lakehouse.full_path, force=True)
