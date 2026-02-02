@@ -1,12 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import pytest
-
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.data.static_test_data import StaticTestData
-from tests.test_commands.conftest import custom_parametrize
 
 
 class TestExists:
@@ -21,22 +18,21 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    # @custom_parametrize
-    # def test_exists_item_exists_success(
-    #     self, item_factory, mock_print_done, cli_executor, item_type
-    # ):
-    #     # Setup
-    #     item = item_factory(item_type)
+    def test_exists_item_exists_success(
+        self, item_factory, mock_print_done, cli_executor
+    ):
+        # Setup
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
 
-    #     # Reset mock
-    #     mock_print_done.reset_mock()
+        # Reset mock
+        mock_print_done.reset_mock()
 
-    #     # Execute command
-    #     cli_executor.exec_command(f"exists {item.full_path}")
+        # Execute command
+        cli_executor.exec_command(f"exists {lakehouse.full_path}")
 
-    #     # Assert
-    #     mock_print_done.assert_called_once()
-    #     assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        # Assert
+        mock_print_done.assert_called_once()
+        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
     def test_exists_virtual_workspace_item_capacity_exists_success(
         self, mock_print_done, cli_executor, test_data: StaticTestData
@@ -50,85 +46,56 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    # @pytest.mark.parametrize("item_type,folder_name", [
-    #     (ItemType.LAKEHOUSE, "Files"),
-    #     (ItemType.LAKEHOUSE, "Tables"),
-    #     (ItemType.WAREHOUSE, "Tables"),
-    #     (ItemType.SPARK_JOB_DEFINITION, "Libs"),
-    #     (ItemType.SPARK_JOB_DEFINITION, "Main"),
-    #     (ItemType.KQL_DATABASE, "Tables"),
-    #     (ItemType.SQL_DATABASE, "Tables"),
-    #     (ItemType.SQL_DATABASE, "Files"),
-    #     (ItemType.MIRRORED_DATABASE, "Tables"),
-    #     (ItemType.MIRRORED_DATABASE, "Files"),
-    # ])
-    # def test_exists_onelake_exists_success(
-    #     self, item_factory, mock_print_done, cli_executor, item_type, folder_name
-    # ):
-    #     # Setup
-    #     item = item_factory(item_type)
+    def test_exists_onelake_exists_success(
+        self, item_factory, mock_print_done, cli_executor
+    ):
+        # Setup
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
 
-    #     # Reset mock
-    #     mock_print_done.reset_mock()
+        # Reset mock
+        mock_print_done.reset_mock()
 
-    #     # Execute command
-    #     cli_executor.exec_command(f"exists {item.full_path}/{folder_name}")
+        # Execute command
+        cli_executor.exec_command(f"exists {lakehouse.full_path}/Files")
 
-    #     # Assert
-    #     mock_print_done.assert_called_once()
-    #     assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
+        # Assert
+        mock_print_done.assert_called_once()
+        assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    # @custom_parametrize
-    # def test_exists_item_doesnt_exist_success(
-    #     self, item_factory, mock_print_done, cli_executor, item_type
-    # ):
-    #     # Setup
-    #     item = item_factory(item_type)
+    def test_exists_item_doesnt_exist_success(
+        self, item_factory, mock_print_done, cli_executor
+    ):
+        # Setup
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
 
-    #     # Reset mock
-    #     mock_print_done.reset_mock()
+        # Reset mock
+        mock_print_done.reset_mock()
 
-    #     # Execute command
-    #     item_extension = f".{item_type.value}"
-    #     path = item.full_path.replace(
-    #         item_extension, f"random{item_extension}")
-    #     cli_executor.exec_command(f"exists {path}")
+        # Execute command
+        path = lakehouse.full_path.replace(".Lakehouse", "random.Lakehouse")
+        cli_executor.exec_command(f"exists {path}")
 
-    #     # Assert
-    #     mock_print_done.assert_called_once()
-    #     assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
+        # Assert
+        mock_print_done.assert_called_once()
+        assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
 
-    # @pytest.mark.parametrize("item_type,folder_name", [
-    #     (ItemType.LAKEHOUSE, "Files"),
-    #     (ItemType.LAKEHOUSE, "Tables"),
-    #     (ItemType.WAREHOUSE, "Files"),
-    #     (ItemType.WAREHOUSE, "Tables"),
-    #     (ItemType.SEMANTIC_MODEL, "Tables"),
-    #     (ItemType.SPARK_JOB_DEFINITION, "Libs"),
-    #     (ItemType.SPARK_JOB_DEFINITION, "Main"),
-    #     (ItemType.KQL_DATABASE, "Tables"),
-    #     (ItemType.SQL_DATABASE, "Tables"),
-    #     (ItemType.SQL_DATABASE, "Files"),
-    #     (ItemType.MIRRORED_DATABASE, "Tables"),
-    #     (ItemType.MIRRORED_DATABASE, "Files"),
-    # ])
-    # def test_exists_onelake_doesnt_exist_success(
-    #     self, item_factory, mock_print_done, cli_executor, item_type, folder_name
-    # ):
-    #     # Setup
-    #     item = item_factory(item_type)
+    def test_exists_onelake_doesnt_exist_success(
+        self, item_factory, mock_print_done, cli_executor
+    ):
+        # Setup
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
 
-    #     # Reset mock
-    #     mock_print_done.reset_mock()
+        # Reset mock
+        mock_print_done.reset_mock()
 
-    #     # Execute command
-    #     cli_executor.exec_command(
-    #         f"exists {item.full_path}/{folder_name}/non_existent_file.txt"
-    #     )
+        # Execute command
+        cli_executor.exec_command(
+            f"exists {lakehouse.full_path}/Files/non_existent_file.txt"
+        )
 
-    #     # Assert
-    #     mock_print_done.assert_called_once()
-    #     assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
+        # Assert
+        mock_print_done.assert_called_once()
+        assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
 
     def test_exists_folder_exists_success(
         self, folder_factory, mock_print_done, cli_executor
