@@ -3,6 +3,7 @@
 
 import base64
 import json
+from typing import Optional
 
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -59,7 +60,7 @@ def validate_query_in_allowlist(expression: str, allowed_keys: list[str]) -> Non
 
 
 def validate_query_not_in_blocklist(
-    query: str, resource_specific_invalid_queries: list | None = None
+    query: str, resource_specific_invalid_queries: Optional[list] = None
 ) -> None:
     """Validate that a query is not blocklisted.
 
