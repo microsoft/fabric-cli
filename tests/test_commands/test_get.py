@@ -5,6 +5,8 @@ import argparse
 import json
 import time
 
+import pytest
+
 import fabric_cli.commands.fs.fab_fs_get as fab_get
 import fabric_cli.commands.fs.fab_fs_ln as fab_ln
 from fabric_cli.core import fab_constant
@@ -19,6 +21,7 @@ from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.conftest import assert_fabric_cli_error
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import custom_parametrize
 
 
 class TestGet:
@@ -48,7 +51,8 @@ class TestGet:
         self, workspace, assert_fabric_cli_error, cli_executor: CLIExecutor
     ):
         # Execute command
-        cli_executor.exec_command(f"get {workspace.full_path} -q '.nonexistent'")
+        cli_executor.exec_command(
+            f"get {workspace.full_path} -q '.nonexistent'")
 
         # Assert
         assert_fabric_cli_error(
@@ -63,7 +67,8 @@ class TestGet:
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {workspace.full_path} --query displayName")
+        cli_executor.exec_command(
+            f"get {workspace.full_path} --query displayName")
 
         # Assert
         mock_questionary_print.assert_called_once()
@@ -73,82 +78,99 @@ class TestGet:
     # endregion
 
     # region Item
-    def test_get_item_lakehouse_query_all_success(
-        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning
+    @custom_parametrize
+    def test_get_item_query_all_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_questionary_print.reset_mock()
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {lakehouse.full_path} --query . --force")
+        cli_executor.exec_command(f"get {item.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_not_called()  # lakehouse item is called with get item and not get item with definition
-        assert lakehouse.display_name in mock_questionary_print.call_args[0][0]
+        assert item.display_name in mock_questionary_print.call_args[0][0]
 
-        # Assert lakehouse extended properties are returned
-        assert "properties" in mock_questionary_print.call_args[0][0]
-        assert "oneLakeTablesPath" in mock_questionary_print.call_args[0][0]
-        assert "oneLakeFilesPath" in mock_questionary_print.call_args[0][0]
-        assert "sqlEndpointProperties" in mock_questionary_print.call_args[0][0]
+        # Assert basic item properties are returned
+        assert "id" in mock_questionary_print.call_args[0][0]
+        assert "displayName" in mock_questionary_print.call_args[0][0]
+        assert "type" in mock_questionary_print.call_args[0][0]
 
-    def test_get_item_environment_success(
-        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning
+    @pytest.mark.parametrize("item_type,expected_properties", [
+        (ItemType.ENVIRONMENT, [
+         "properties", "publishDetails", "connections", "published", "staging"]),
+        (ItemType.LAKEHOUSE, ["properties", "oneLakeTablesPath",
+         "oneLakeFilesPath", "sqlEndpointProperties"]),
+        (ItemType.WAREHOUSE, ["properties"]),
+        (ItemType.KQL_DATABASE, ["properties"]),
+        (ItemType.SQL_DATABASE, ["properties"]),
+        (ItemType.MIRRORED_DATABASE, [
+         "definition", "connections", "status", "tablesStatus"]),
+    ])
+    def test_get_item_with_properties_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type, expected_properties
     ):
         # Setup
-        environment = item_factory(ItemType.ENVIRONMENT)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_questionary_print.reset_mock()
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {environment.full_path} --query . --force")
+        cli_executor.exec_command(f"get {item.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_not_called()  # enironment item is called with get item and not get item with definition
-        assert environment.display_name in mock_questionary_print.call_args[0][0]
+        assert item.display_name in mock_questionary_print.call_args[0][0]
 
-        # Assert enviroment extended properties are returned
-        assert "properties" in mock_questionary_print.call_args[0][0]
-        assert "publishDetails" in mock_questionary_print.call_args[0][0]
+        # Assert specific properties for this item type
+        for prop in expected_properties:
+            assert prop in mock_questionary_print.call_args[0][0]
 
-        # Assert environment metadata is returned
-        assert "connections" in mock_questionary_print.call_args[0][0]
-        assert "published" in mock_questionary_print.call_args[0][0]
-        assert "staging" in mock_questionary_print.call_args[0][0]
-
-    def test_get_item_mirroreddb_success(
-        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning
+    @pytest.mark.parametrize("item_type,expects_warning", [
+        # Called with get item with definition
+        (ItemType.MIRRORED_DATABASE, True),
+        # Items with definition typically trigger warnings
+        (ItemType.NOTEBOOK, True),
+        # Items with definition typically trigger warnings
+        (ItemType.DATA_PIPELINE, True),
+        # Called with get item, not get item with definition
+        (ItemType.LAKEHOUSE, False),
+        # Called with get item, not get item with definition
+        (ItemType.ENVIRONMENT, False),
+        # Called with get item, not get item with definition
+        (ItemType.WAREHOUSE, False),
+    ])
+    def test_get_item_warning_behavior_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type, expects_warning
     ):
         # Setup
-        mirroreddb = item_factory(ItemType.MIRRORED_DATABASE)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_questionary_print.reset_mock()
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {mirroreddb.full_path} --query . --force")
+        cli_executor.exec_command(f"get {item.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_called_once()  # MIRRORED_DATABASE is called with get item with definition
-        assert mirroreddb.display_name in mock_questionary_print.call_args[0][0]
+        assert item.display_name in mock_questionary_print.call_args[0][0]
 
-        # Assert mirroreddb definition is returned
-        assert "definition" in mock_questionary_print.call_args[0][0]
-
-        # Assert mirroreddb metadata is returned
-        assert "connections" in mock_questionary_print.call_args[0][0]
-        assert "status" in mock_questionary_print.call_args[0][0]
-        assert "tablesStatus" in mock_questionary_print.call_args[0][0]
+        # Assert warning behavior based on item type
+        if expects_warning:
+            # Items with definition trigger warnings
+            mock_print_warning.assert_called_once()
+        else:
+            # Items without definition don't trigger warnings
+            mock_print_warning.assert_not_called()
 
     # endregion
 
@@ -220,26 +242,38 @@ class TestGet:
             for call in mock_questionary_print.mock_calls
         )
 
-    def test_get_virtual_workspace_domain_success(
-        self, virtual_workspace_item_factory, cli_executor, mock_questionary_print
+    @pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
+        (VirtualWorkspaceType.DOMAIN, [
+         "contributorsScope", "domainWorkspaces"]),
+        (VirtualWorkspaceType.GATEWAY, [
+         "type", "capacityId", "numberOfMemberGateways"]),
+    ])
+    def test_get_virtual_workspace_success(
+        self, virtual_workspace_item_factory, cli_executor, mock_questionary_print,
+        virtual_workspace_type, expected_properties
     ):
         # Setup
-        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
+        virtual_workspace = virtual_workspace_item_factory(
+            virtual_workspace_type)
 
         # Reset mock
         mock_questionary_print.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {domain.full_path} --query .")
+        cli_executor.exec_command(
+            f"get {virtual_workspace.full_path} --query .")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        assert domain.display_name in mock_questionary_print.call_args[0][0]
+        assert virtual_workspace.display_name in mock_questionary_print.call_args[0][0]
 
-        # Assert domain metadata is returned
-        assert "parentDomainId" not in mock_questionary_print.call_args[0][0]
-        assert "contributorsScope" in mock_questionary_print.call_args[0][0]
-        assert "domainWorkspaces" in mock_questionary_print.call_args[0][0]
+        # Assert specific properties for this virtual workspace type
+        for prop in expected_properties:
+            assert prop in mock_questionary_print.call_args[0][0]
+
+        # Domain-specific assertion (parentDomainId should not be present)
+        if virtual_workspace_type == VirtualWorkspaceType.DOMAIN:
+            assert "parentDomainId" not in mock_questionary_print.call_args[0][0]
 
     # endregion
 
@@ -272,7 +306,8 @@ class TestGet:
         mock_questionary_print.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {managed_private_endpoint.full_path} --query .")
+        cli_executor.exec_command(
+            f"get {managed_private_endpoint.full_path} --query .")
 
         # Assert
         mock_questionary_print.assert_called_once()
@@ -301,7 +336,8 @@ class TestGet:
         mock_fab_logger_log_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {external_data_share.full_path} --query .")
+        cli_executor.exec_command(
+            f"get {external_data_share.full_path} --query .")
 
         # Assert
         # Verify call to get was made
@@ -364,12 +400,13 @@ class TestGet:
         assert is_metadata_property_query("id") is True
         assert is_metadata_property_query("displayName") is True
         assert is_metadata_property_query("description") is True
-        
+
         # Test nested properties - the key enhancement
-        assert is_metadata_property_query("properties.connectionString") is True
+        assert is_metadata_property_query(
+            "properties.connectionString") is True
         assert is_metadata_property_query("properties.nested.value") is True
         assert is_metadata_property_query("displayName.localized") is True
-        
+
         # Test invalid properties
         assert is_metadata_property_query("someField") is False
         assert is_metadata_property_query("definition") is False
