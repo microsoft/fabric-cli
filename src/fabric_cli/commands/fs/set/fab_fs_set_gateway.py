@@ -14,22 +14,14 @@ from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_GATEWAYS = [
-    "displayName",
-    "allowCloudConnectionRefresh",
-    "allowCustomConnectors",
-    "capacityId",
-    "inactivityMinutesBeforeSleep",
-    "numberOfMemberGateways",
-]
-
+INVALID_QUERIES = ["publicKey", "version", "virtualNetworkAzureResource"]
 SUPPORTED_GATEWAY_TYPES = ["OnPremises", "VirtualNetwork"]
 
 
 def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_GATEWAYS)
+    utils_set.validate_query_not_in_blocklist(query, INVALID_QUERIES)
 
     utils_set.print_set_warning()
     if args.force or utils_ui.prompt_confirm():
@@ -40,20 +32,7 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
 
         gatewat_type = vwsi_gateway_def.get("type", "")
 
-        if gatewat_type not in SUPPORTED_GATEWAY_TYPES:
-            raise FabricCLIError(
-                ErrorMessages.Common.gateway_type_not_supported(gatewat_type),
-                fab_constant.ERROR_NOT_SUPPORTED,
-            )
-        elif gatewat_type == "OnPremises" and query.startswith(
-            ("numberOfMemberGateways", "capacityId", "inactivityMinutesBeforeSleep")
-        ):
-            raise FabricCLIError(
-                ErrorMessages.Common.gateway_property_not_supported_for_type(
-                    query, "OnPremises"
-                ),
-                fab_constant.ERROR_NOT_SUPPORTED,
-            )
+        validate_query_by_gateway_type(gatewat_type, query)
 
         updated_def = utils_set.update_fabric_element(
             vwsi_gateway_def, query, args.input
@@ -83,3 +62,29 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
                 updated_def, gateway, utils_mem_store.upsert_gateway_to_cache
             )
             utils_ui.print_output_format(args, message="Gateway updated")
+
+
+def validate_query_by_gateway_type(gateway_type: str, query: str) -> None:
+    if gateway_type not in SUPPORTED_GATEWAY_TYPES:
+        raise FabricCLIError(
+            ErrorMessages.Common.gateway_type_not_supported(gateway_type),
+            fab_constant.ERROR_NOT_SUPPORTED,
+        )
+    elif gateway_type == "OnPremises" and query.startswith(
+        ("numberOfMemberGateways", "capacityId", "inactivityMinutesBeforeSleep")
+    ):
+        raise FabricCLIError(
+            ErrorMessages.Common.gateway_property_not_supported_for_type(
+                query, "OnPremises"
+            ),
+            fab_constant.ERROR_NOT_SUPPORTED,
+        )
+    elif gateway_type == "VirtualNetwork" and query.startswith(
+        ("allowCloudConnectionRefresh", "allowCustomConnectors")
+    ):
+        raise FabricCLIError(
+            ErrorMessages.Common.gateway_property_not_supported_for_type(
+                query, "VirtualNetwork"
+            ),
+            fab_constant.ERROR_NOT_SUPPORTED,
+        )
