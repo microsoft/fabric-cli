@@ -62,7 +62,6 @@ def remove_dot_suffix(path: str, dot_string_to_rm: str = ".Shortcut") -> str:
     return path.replace(dot_string_to_rm, "").replace(dot_string_to_rm.lower(), "")
 
 
-
 def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     """
     Convert args to dict with a specified max nested level.
@@ -76,7 +75,7 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     # Result ['key1.key2=hello', 'key2={"hello":"testing","bye":2}', 'key3=[1,2,3]', 'key4={"key5":"value5"}']
     # Example key1.key2=hello
     # Result ['key1.key=hello']
-    pattern = r"((?:[\w\.]+=.+?)(?=(?:,[\w\.]+=)|$))"
+    pattern = r"((?:[\w\.]+=.+?)(?=(?:,\s*[\w\.]+=)|$))"
 
     if params:
         if isinstance(params, list):
@@ -166,8 +165,6 @@ def remove_keys_from_dict(_dict: dict, keys: list) -> dict:
     return _dict
 
 
-
-
 def get_os_specific_command(command: str) -> str:
     if platform.system() == "Windows":
         return fab_constant.OS_COMMANDS.get(command, {}).get("windows", command)
@@ -237,5 +234,3 @@ def get_capacity_settings(
         az_resource_group,
         sku,
     )
-
-

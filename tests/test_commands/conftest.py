@@ -41,6 +41,25 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
+custom_parametrize = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.REPORT,
+    ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+])
+
+basic_item_parametrize = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
+    ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
@@ -104,7 +123,7 @@ def vcr_instance(vcr_mode, request):
         before_record_response=process_response,
         path_transformer=vcr.VCR.ensure_suffix(".yaml"),
         match_on=["method", "uri", "json_body"],
-        ignore_hosts=["login.microsoftonline.com"],
+        ignore_hosts=["login.microsoftonline.com", "pypi.org"],
     )
 
     set_vcr_mode_env(vcr_mode)

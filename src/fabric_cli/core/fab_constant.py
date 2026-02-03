@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from fabric_cli import __version__
 from fabric_cli.utils.fab_hostname_validator import validate_and_get_env_variable
 
 # Initialize API endpoints with validation
@@ -18,7 +19,8 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -27,7 +29,7 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = __version__
 
 # Scopes
 SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
@@ -91,6 +93,11 @@ FAB_OUTPUT_ITEM_SORT_CRITERIA = "output_item_sort_criteria"
 FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
+FAB_CHECK_UPDATES = "check_cli_version_updates"
+
+# Version check settings
+VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
+VERSION_CHECK_TIMEOUT_SECONDS = 3
 
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
@@ -111,6 +118,7 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_OUTPUT_FORMAT: ["text", "json"],
     FAB_FOLDER_LISTING_ENABLED: ["false", "true"],
     FAB_WS_PRIVATE_LINKS_ENABLED: ["false", "true"],
+    FAB_CHECK_UPDATES: ["false", "true"],
     # Add more keys and their respective allowed values as needed
 }
 
@@ -127,26 +135,27 @@ CONFIG_DEFAULT_VALUES = {
     FAB_OUTPUT_FORMAT: "text",
     FAB_FOLDER_LISTING_ENABLED: "false",
     FAB_WS_PRIVATE_LINKS_ENABLED: "false",
+    FAB_CHECK_UPDATES: "true",
 }
 
 # Command descriptions
-COMMAND_AUTH_DESCRIPTION = "Authenticate fab with Fabric."
+COMMAND_AUTH_DESCRIPTION = "Authenticate with Fabric."
 COMMAND_AUTH_STATUS_DESCRIPTION = "Display active account and authentication state."
 COMMAND_FS_DESCRIPTION = "Workspace, item and file system operations."
-COMMAND_JOBS_DESCRIPTION = "Manage tasks and jobs."
-COMMAND_TABLES_DESCRIPTION = "Manage tables."
+COMMAND_JOBS_DESCRIPTION = "Manage and schedule jobs."
+COMMAND_TABLES_DESCRIPTION = "Manage Delta tables."
 COMMAND_SHORTCUTS_DESCRIPTION = "Manage shorcuts."
-COMMAND_ACLS_DESCRIPTION = "Manage permissions [admin]."
+COMMAND_ACLS_DESCRIPTION = "Manage access control lists [admin]."
 COMMAND_ACLS_LS_DESCRIPTION = (
-    "List ACLs for a workspace, item, gateway, connection or OneLake."
+    "List ACLs for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway or connection."
+COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway, or connection."
 COMMAND_ACLS_GET_DESCRIPTION = (
-    "Get ACL details for a workspace, item, gateway, connection or OneLake."
+    "Get ACL details for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_SET_DESCRIPTION = "Set ACL on workspace, gateway or connection."
-COMMAND_CONFIG_DESCRIPTION = "Manage configuration settings."
-COMMAND_API_DESCRIPTION = "Make an authenticated API request."
+COMMAND_ACLS_SET_DESCRIPTION = "Set ACLs on a workspace, gateway, or connection."
+COMMAND_CONFIG_DESCRIPTION = "Manage CLI configuration."
+COMMAND_API_DESCRIPTION = "Make authenticated API requests."
 COMMAND_EXTENSIONS_DESCRIPTION = "Manage extensions."
 COMMAND_LABELS_DESCRIPTION = "Manage sensitivity labels [admin]."
 COMMAND_CAPACITIES_DESCRIPTION = "(tenant) Manage capacities [admin]."
@@ -172,23 +181,21 @@ COMMAND_FS_EXISTS_DESCRIPTION = "Check if a workspace, item, or file exists."
 COMMAND_FS_PWD_DESCRIPTION = "Print the current working directory."
 COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
-COMMAND_FS_GET_DESCRIPTION = "Get a workspace or item property."
-COMMAND_FS_IMPORT_DESCRIPTION = "Import an item (create/modify)."
-COMMAND_FS_SET_DESCRIPTION = "Set a workspace or item property."
+COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
+COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
+COMMAND_FS_SET_DESCRIPTION = "Set workspace or item properties."
 COMMAND_FS_CLEAR_DESCRIPTION = "Clear the terminal screen."
 COMMAND_FS_LN_DESCRIPTION = "Create a shortcut."
 COMMAND_FS_START_DESCRIPTION = "Start a resource."
 COMMAND_FS_STOP_DESCRIPTION = "Stop a resource."
-COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a resource to a workspace."
+COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a capacity or resource to a workspace."
 COMMAND_FS_UNASSIGN_DESCRIPTION = "Unassign a resource from a workspace."
 COMMAND_FS_LS_DESCRIPTION = "List workspaces, items, and files."
-COMMAND_FS_MKDIR_DESCRIPTION = "Create a new workspace, item, or directory."
+COMMAND_FS_MKDIR_DESCRIPTION = "Create a workspace, item, or directory."
 COMMAND_FS_RM_DESCRIPTION = "Delete a workspace, item, or file."
 
 # Label command descriptions
-COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = (
-    "List labels from `local_definition_labels` setting."
-)
+COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = "List configured sensitivity labels."
 COMMAND_LABELS_SET_DESCRIPTION = "Set a sensitivity label on an item."
 COMMAND_LABELS_RM_DESCRIPTION = "Remove a sensitivity label from an item."
 
@@ -216,7 +223,7 @@ WARNING_INVALID_LS_ONELAKE = "No more subdirectories supported for this item"
 WARNING_INVALID_JSON_FORMAT = "Invalid JSON format"
 WARNING_MKDIR_INVALID_ONELAKE = "Invalid paths. Only supported within /Files"
 WARNING_OPERATION_NO_RESULT = "Long Running Operation returned no result"
-WARNING_FABRIC_ADMIN_ROLE = "Requires Fabric admin role"
+WARNING_FABRIC_ADMINISTRATOR = "Requires Fabric administrator"
 WARNING_ONELAKE_RBAC_ENABLED = "Requires data access roles enabled"
 WARNING_NON_FABRIC_CAPACITY = "Not a Fabric capacity"
 WARNING_ONLY_SUPPORTED_WITHIN_LAKEHOUSE = "Only supported within Lakehouse"
@@ -306,7 +313,7 @@ INTERACTIVE_EXIT_MESSAGE = "Exiting interactive mode. Goodbye!"
 
 # Interactive command constants
 INTERACTIVE_QUIT_COMMANDS = ["quit", "q", "exit"]
-INTERACTIVE_HELP_COMMANDS = ["help", "h", "fab", "-h", "--help"]
+INTERACTIVE_HELP_COMMANDS = ["help", "h", "-h", "--help"]
 INTERACTIVE_VERSION_COMMANDS = ["version", "v", "-v", "--version"]
 
 # Platform metadata
@@ -317,6 +324,7 @@ ITEM_METADATA_PROPERTIES = {
     "description",
     "workspaceId",
     "folderId",
+    "properties",
 }
 
 # Item set constants
@@ -331,3 +339,6 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
     ITEM_QUERY_DESCRIPTION,
     ITEM_QUERY_PROPERTIES,
 ]
+
+# Invalid query parameters for set command across all fabric resources
+SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]

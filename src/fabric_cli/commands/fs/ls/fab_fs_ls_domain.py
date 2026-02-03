@@ -11,7 +11,7 @@ from fabric_cli.utils import fab_mem_store as utils_mem_store
 
 
 def exec(vws: VirtualWorkspace, args, show_details):
-    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
     domains = utils_mem_store.get_domains(vws.tenant)
     sorted_domains = utils_ls.sort_elements(
         [{"name": d.name, "id": d.id} for d in domains]
@@ -45,8 +45,5 @@ def exec(vws: VirtualWorkspace, args, show_details):
     columns = base_cols + domains_detail_cols if show_details else base_cols
 
     utils_ls.format_and_print_output(
-        data=sorted_domains,
-        columns=columns,
-        args=args,
-        show_details=show_details
+        data=sorted_domains, columns=columns, args=args, show_details=show_details
     )

@@ -12,13 +12,11 @@ from fabric_cli.core.hiearchy.fab_hiearchy import OneLakeItem
 from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_SHORTCUT = ["name", "target"]
-
 
 def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_SHORTCUT)
+    utils_set.validate_query_not_in_blocklist(query)
 
     # Get shortcut
     args.output = None
@@ -30,28 +28,23 @@ def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
     if args.force or utils_ui.prompt_confirm():
 
         # Read new values from the user and retrieve updated shortcut definition with the new values.
-        _, updated_def = utils_set.update_fabric_element(
-            shortcut_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            shortcut_def, query, args.input, return_full_element=True
         )
-
-        # Check if the new name matches the existing name
-        new_name = updated_def.get("name", "")
-        if new_name == current_name:
-            raise FabricCLIError(
-                f"The new name matches the existing name. No changes will be made",
-                fab_constant.ERROR_INVALID_INPUT,
-            )
 
         if "target" in updated_def and "type" in updated_def["target"]:
             del updated_def["target"]["type"]
-        json_payload = updated_def
 
-        # Create a new shortcut with the updated values
-        args.shortcutConflictPolicy = "Abort"
-        shortcut_api.create_shortcut(args, json_payload)
+        new_name = updated_def.get("name", "")
+        if new_name != current_name:
+            args.shortcutConflictPolicy = "Abort"
+            shortcut_api.create_shortcut(args, updated_def)
 
-        # Delete the old shortcut
-        rm_onelake.shortcut_file_or_folder(
-            onelake, args, force_delete=True, verbose=False
-        )
+            rm_onelake.shortcut_file_or_folder(
+                onelake, args, force_delete=True, verbose=False
+            )
+        else:
+            args.shortcutConflictPolicy = "OverwriteOnly"
+            shortcut_api.create_shortcut(args, updated_def)
+
         utils_ui.print_output_format(args, message="Shortcut updated")
