@@ -134,18 +134,15 @@ class TestGet:
             assert prop in mock_questionary_print.call_args[0][0]
 
     @pytest.mark.parametrize("item_type,expects_warning", [
-        # Called with get item with definition
         (ItemType.MIRRORED_DATABASE, True),
-        # Items with definition typically trigger warnings
         (ItemType.NOTEBOOK, True),
-        # Items with definition typically trigger warnings
         (ItemType.DATA_PIPELINE, True),
-        # Called with get item, not get item with definition
         (ItemType.LAKEHOUSE, False),
-        # Called with get item, not get item with definition
         (ItemType.ENVIRONMENT, False),
-        # Called with get item, not get item with definition
         (ItemType.WAREHOUSE, False),
+        (ItemType.COSMOS_DB_DATABASE, True),
+        (ItemType.USER_DATA_FUNCTION, True),
+        (ItemType.GRAPH_QUERY_SET, True)
     ])
     def test_get_item_warning_behavior_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type, expects_warning
