@@ -195,6 +195,7 @@ class TestMV:
         ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
     ])
     def test_mv_item_to_item_success(
         self,
@@ -527,6 +528,7 @@ class TestMV:
         ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
     ])
     def test_mv_item_within_workspace_rename_success(
         self,
