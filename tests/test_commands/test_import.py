@@ -27,6 +27,7 @@ class TestImport:
         ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
     ])
     def test_import_update_existing_item_success(
         self,
@@ -57,6 +58,7 @@ class TestImport:
         ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
         ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
         ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
     ])
     def test_import_create_new_item_success(
         self,
