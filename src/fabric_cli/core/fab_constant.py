@@ -19,7 +19,8 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -338,3 +339,6 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
     ITEM_QUERY_DESCRIPTION,
     ITEM_QUERY_PROPERTIES,
 ]
+
+# Invalid query parameters for set command across all fabric resources
+SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
