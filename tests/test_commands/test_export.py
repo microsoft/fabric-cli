@@ -268,7 +268,9 @@ class TestExport:
         export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
+
         assert len(files) == expected_file_count
+        assert any(file.suffix == ".ipynb" for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
@@ -304,3 +306,26 @@ class TestExport:
         # Assert
         assert_fabric_cli_error(
             constant.ERROR_INVALID_INPUT, f"Invalid format. {expected_error_suffix}")
+
+    def test_export_report_no_format_support_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_print_done,
+        tmp_path,
+    ):
+        # Setup
+        report = item_factory(ItemType.REPORT)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command - Report doesn't have any format support in definition_format_mapping
+        cli_executor.exec_command(
+            f"export {report.full_path} --output {str(tmp_path)} --format .txt --force"
+        )
+
+        # Assert - should fail with error indicating no formats are supported
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT, "No formats are supported")
