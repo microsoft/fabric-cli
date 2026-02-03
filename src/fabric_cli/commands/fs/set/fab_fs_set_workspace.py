@@ -11,17 +11,22 @@ from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_WORKSPACE = [
-    "description",
-    "displayName",
-    "sparkSettings",
+INVALID_QUERIES = [
+    "capacityId",
+    "capacityRegion",
+    "apiEndpoint",
+    "domainId",
+    "oneLakeEndpoints",
+    "workspaceIdentity",
+    "managedPrivateEndpoints",
+    "roleAssignments",
 ]
 
 
 def exec(workspace: Workspace, args: Namespace) -> None:
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_WORKSPACE)
+    utils_set.validate_query_not_in_blocklist(query, INVALID_QUERIES)
 
     # Get workspace
     args.deep_traversal = True
