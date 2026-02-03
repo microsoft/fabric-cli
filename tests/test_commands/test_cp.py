@@ -299,6 +299,7 @@ class TestCP:
         ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
     ])
     def test_cp_item_to_item_success(
         self,
@@ -1122,6 +1123,7 @@ class TestCP:
         ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
     ])
     def test_cp_folder_with_different_item_types_success(
         self,
