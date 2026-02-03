@@ -113,7 +113,8 @@ class TestRM:
         ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
         ItemType.REFLEX, ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
         ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+        ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
+        ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET, ItemType.DIGITAL_TWIN_BUILDER
     ])
     def test_rm_item_without_force_cancel_operation_success(
         self,
