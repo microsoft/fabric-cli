@@ -27,6 +27,57 @@ from tests.test_commands.utils import cli_path_join
 
 class TestSET:
     # region Item
+    @pytest.mark.parametrize("entity_type,factory_method,entity_setup,should_cache", [
+        ("item", "item_factory", ItemType.LAKEHOUSE, False),
+        ("workspace", "workspace_factory", None, False),
+        ("sparkpool", "virtual_item_factory",
+         VirtualItemContainerType.SPARK_POOL, False),
+        ("domain", "virtual_workspace_item_factory",
+         VirtualWorkspaceType.DOMAIN, False),
+    ])
+    def test_set_entity_invalid_query_failure(
+        self,
+        entity_type,
+        factory_method,
+        entity_setup,
+        should_cache,
+        item_factory,
+        workspace_factory,
+        virtual_item_factory,
+        virtual_workspace_item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        upsert_item_to_cache,
+        setup_config_values_for_capacity,
+    ):
+        # Setup based on entity type
+        if entity_type == "item":
+            entity = item_factory(entity_setup)
+        elif entity_type == "workspace":
+            entity = workspace_factory()
+        elif entity_type == "sparkpool":
+            entity = virtual_item_factory(entity_setup)
+        elif entity_type == "domain":
+            entity = virtual_workspace_item_factory(entity_setup)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        if should_cache:
+            upsert_item_to_cache.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {entity.full_path} --query non_existent_query --input new_value --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
+        if should_cache:
+            upsert_item_to_cache.assert_not_called()
+
     def test_set_item_invalid_query_failure(
         self,
         item_factory,
@@ -83,6 +134,94 @@ class TestSET:
             cassette_name,
             should_upsert_to_cache,
         )
+
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
+        ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
+    ])
+    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    def test_set_item_metadata_for_all_types_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+        metadata_to_set,
+        item_type,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item = item_factory(item_type)
+        should_upsert_to_cache = metadata_to_set == "displayName"
+
+        self._test_set_metadata_success(
+            item,
+            mock_questionary_print,
+            mock_print_done,
+            mock_upsert_item_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache,
+        )
+
+    @pytest.mark.parametrize("metadata_to_set", ["description"])
+    def test_set_cosmosdb_database_metadata_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+        metadata_to_set,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test setting description for CosmosDB Database.
+
+        Note: displayName cannot be changed for CosmosDB Database items.
+        """
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        should_upsert_to_cache = False
+
+        self._test_set_metadata_success(
+            item,
+            mock_questionary_print,
+            mock_print_done,
+            mock_upsert_item_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache,
+        )
+
+    def test_set_cosmosdb_database_displayname_not_supported_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test that changing displayName for CosmosDB Database fails with appropriate error."""
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        new_name = generate_random_string(vcr_instance, cassette_name)
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {item.full_path} --query displayName --input {new_name} --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error("CosmosDBDatabaseDisplayNameCannotBeChanged")
 
     def test_set_item_report_definition_semantic_model_id_success(
         self,
@@ -157,6 +296,37 @@ class TestSET:
             mock_questionary_print.call_args[0][0])
 
     # endregion
+
+    def test_set_domain_contributors_scope_success(
+        self,
+        virtual_workspace_item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        setup_config_values_for_capacity,
+        upsert_domain_to_cache,
+    ):
+        # Setup
+        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        if upsert_domain_to_cache:
+            upsert_domain_to_cache.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {domain.full_path} --query contributorsScope --input AdminsOnly --force"
+        )
+
+        # Assert
+        mock_print_done.assert_called_once()
+        if upsert_domain_to_cache:
+            upsert_domain_to_cache.assert_not_called()
+
+        get(domain.full_path, query="contributorsScope")
+        assert mock_questionary_print.call_args[0][0].lower() == "adminsonly"
 
     # region Workspace
     def test_set_workspace_invalid_query_failure(
