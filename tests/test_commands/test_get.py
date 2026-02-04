@@ -225,7 +225,7 @@ class TestGet:
 
     # region Virtual Workspaces
     def test_get_virtual_workspace_capacity_query_all_success(
-        self, cli_executor, mock_questionary_print, test_data: StaticTestData
+        self, cli_executor, mock_questionary_print, test_data: StaticTestData, setup_config_values_for_capacity,
     ):
         # Execute command
         cli_executor.exec_command(
