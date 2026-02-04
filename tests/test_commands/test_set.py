@@ -20,7 +20,6 @@ from fabric_cli.core.fab_types import (
     VirtualWorkspaceType,
 )
 from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
-from tests.test_commands.conftest import basic_item_parametrize
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.processors import generate_random_string
 from tests.test_commands.utils import cli_path_join
@@ -140,6 +139,7 @@ class TestSET:
         ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
         ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
         ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+        ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
     ])
     @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
     def test_set_item_metadata_for_all_types_success(
@@ -148,7 +148,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        upsert_item_to_cache,
+        mock_upsert_item_to_cache,
         metadata_to_set,
         item_type,
         vcr_instance,
@@ -162,13 +162,66 @@ class TestSET:
             item,
             mock_questionary_print,
             mock_print_done,
-            upsert_item_to_cache,
+            mock_upsert_item_to_cache,
             metadata_to_set,
             cli_executor,
             vcr_instance,
             cassette_name,
             should_upsert_to_cache,
         )
+
+    @pytest.mark.parametrize("metadata_to_set", ["description"])
+    def test_set_cosmosdb_database_metadata_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+        metadata_to_set,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test setting description for CosmosDB Database.
+
+        Note: displayName cannot be changed for CosmosDB Database items.
+        """
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        should_upsert_to_cache = False
+
+        self._test_set_metadata_success(
+            item,
+            mock_questionary_print,
+            mock_print_done,
+            mock_upsert_item_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache,
+        )
+
+    def test_set_cosmosdb_database_displayname_not_supported_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test that changing displayName for CosmosDB Database fails with appropriate error."""
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        new_name = generate_random_string(vcr_instance, cassette_name)
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {item.full_path} --query displayName --input {new_name} --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error("CosmosDBDatabaseDisplayNameCannotBeChanged")
 
     def test_set_item_report_definition_semantic_model_id_success(
         self,
