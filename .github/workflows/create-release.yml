@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "The version to release (e.g., v1.2.0)"
+        description: 'The version to release (e.g., v1.2.0)'
         required: true
       commit_sha:
-        description: "Optional: Commit SHA to create the tag on. If not provided, the tag will be created on the latest commit of the current branch (HEAD)"
+        description: 'Optional: Commit SHA to create the tag on. If not provided, the tag will be created on the latest commit of the current branch (HEAD)'
         required: false
-        default: ""
+        default: ''
 
 jobs:
   create-release:
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required to access full commit history for validation
+          fetch-depth: 0  # Required to access full commit history for validation
 
       - name: Display workflow information
         run: |
@@ -65,22 +65,22 @@ jobs:
         run: |
           VERSION="${{ github.event.inputs.version }}"
           COMMIT_SHA="${{ github.event.inputs.commit_sha }}"
-
+          
           # Use provided commit SHA or default to HEAD
           if [ -n "$COMMIT_SHA" ]; then
             TARGET_COMMIT="$COMMIT_SHA"
           else
             TARGET_COMMIT="HEAD"
           fi
-
+          
           echo "tag_name=$VERSION" >> $GITHUB_OUTPUT
           echo "changelog_file_path=.changes/${VERSION}.md" >> $GITHUB_OUTPUT
           echo "target_commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
-
+          
           # Get the actual commit SHA for display
           ACTUAL_SHA=$(git rev-parse "$TARGET_COMMIT")
           echo "actual_sha=$ACTUAL_SHA" >> $GITHUB_OUTPUT
-
+          
           echo "✅ Release variables set:"
           echo "  - Tag name: $VERSION"
           echo "  - Target commit: $ACTUAL_SHA"
