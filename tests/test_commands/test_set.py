@@ -168,12 +168,13 @@ class TestSET:
     ):
         # Execute command
         cli_executor.exec_command(
-            f"set {workspace.full_path} --query non_existent_query --input new_value --force"
+            f"set {workspace.full_path} --query oneLakeEndpoints --input new_value --force"
         )
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY,
+            "Query 'oneLakeEndpoints' is not supported for set command",
         )
         mock_upsert_workspace_to_cache.assert_not_called()
 
@@ -259,12 +260,12 @@ class TestSET:
 
         # Execute command
         cli_executor.exec_command(
-            f"set {sparkpool.full_path} --query non_existent_query --input new_value --force"
+            f"set {sparkpool.full_path} --query id --input new_value --force"
         )
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY, "Query 'id' is not supported for set command"
         )
         mock_upsert_spark_pool_to_cache.assert_not_called()
 
@@ -331,12 +332,13 @@ class TestSET:
 
         # Execute command
         cli_executor.exec_command(
-            f"set {capacity.full_path} --query non_existent_query --input new_value --force"
+            f"set {capacity.full_path} --query workspaceId --input new_value --force"
         )
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY,
+            "Query 'workspaceId' is not supported for set command",
         )
 
     @pytest.mark.parametrize("query, input", [("sku.name", "F4")])
@@ -389,12 +391,13 @@ class TestSET:
 
         # Execute command
         cli_executor.exec_command(
-            f"set {domain.full_path} --query non_existent_query --input new_value --force"
+            f"set {domain.full_path} --query parentDomainId --input new_value --force"
         )
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY,
+            "Query 'parentDomainId' is not supported for set command",
         )
 
     @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
@@ -645,12 +648,13 @@ class TestSET:
 
         # Execute command
         cli_executor.exec_command(
-            f"set {shortcut.full_path} --query non_existent_query --input new_value --force"
+            f"set {shortcut.full_path} --query type --input new_value --force"
         )
 
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_QUERY, "Invalid query 'non_existent_query'"
+            constant.ERROR_INVALID_QUERY,
+            "Query 'type' is not supported for set command",
         )
 
     def test_set_onelake_shortcut_name_only_success(
