@@ -401,6 +401,7 @@ class TestCP:
         assert_fabric_cli_error,
         cli_executor: CLIExecutor,
         virtual_workspace_type,
+        setup_config_values_for_capacity,
     ):
         # Setup
         virtual_item = virtual_workspace_item_factory(virtual_workspace_type)
