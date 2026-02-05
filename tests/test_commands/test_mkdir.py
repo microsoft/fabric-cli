@@ -29,7 +29,7 @@ from fabric_cli.core.fab_types import (
     VirtualWorkspaceType,
 )
 from fabric_cli.errors import ErrorMessages
-from tests.test_commands.conftest import mock_print_done
+from tests.test_commands.conftest import custom_parametrize
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
@@ -38,20 +38,61 @@ from tests.test_commands.utils import cli_path_join
 
 class TestMkdir:
     # region ITEM
+
+    @custom_parametrize
     def test_mkdir_item_name_already_exists_failure(
-        self, item_factory, cli_executor, assert_fabric_cli_error
+        self, item_type, item_factory, cli_executor, assert_fabric_cli_error
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        created_factory = item_factory(item_type)
 
         # Execute command
-        cli_executor.exec_command(f"mkdir {lakehouse.full_path}")
+        cli_executor.exec_command(f"mkdir {created_factory.full_path}")
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
 
+    @custom_parametrize
+    def test_mkdir_item_success(
+        self,
+        item_type,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{item_type}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Assert
+        mock_print_done.assert_called_once()
+        assert item_display_name in mock_print_done.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        get(item_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert item_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup
+        rm(item_full_path)
+
+    @pytest.mark.parametrize("unsupported_item_type", [
+        ItemType.DASHBOARD,
+        ItemType.DATAMART,
+        ItemType.MIRRORED_WAREHOUSE,
+        ItemType.PAGINATED_REPORT,
+        ItemType.SQL_ENDPOINT,
+    ])
     def test_mkdir_unsupported_item_failure(
         self,
+        unsupported_item_type,
         workspace_factory,
         cli_executor,
         assert_fabric_cli_error,
@@ -60,24 +101,21 @@ class TestMkdir:
     ):
         workspace = workspace_factory()
 
-        # Create paginatedReport
-        paginatedReport_display_name = generate_random_string(
+        # Create unsupported item
+        item_display_name = generate_random_string(
             vcr_instance, cassette_name
         )
-        paginatedReport_name = (
-            f"{paginatedReport_display_name}.{ItemType.PAGINATED_REPORT}"
-        )
-        paginatedReport_full_path = cli_path_join(
-            workspace.full_path, paginatedReport_name
-        )
-        paginatedReport = EntityMetadata(
-            paginatedReport_display_name,
-            paginatedReport_name,
-            paginatedReport_full_path,
+        item_name = f"{item_display_name}.{unsupported_item_type}"
+        item_full_path = cli_path_join(workspace.full_path, item_name)
+
+        unsupported_item = EntityMetadata(
+            item_display_name,
+            item_name,
+            item_full_path,
         )
 
         # Execute command
-        cli_executor.exec_command(f"mkdir {paginatedReport.full_path}")
+        cli_executor.exec_command(f"mkdir {unsupported_item.full_path}")
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
@@ -205,6 +243,110 @@ class TestMkdir:
 
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         rm(eventhouse_full_path)
+
+    @pytest.mark.parametrize("item_type,params,expected_assertions", [
+        (ItemType.LAKEHOUSE, "enableSchemas=true", ["defaultSchema"]),
+        (ItemType.WAREHOUSE, "enableCaseInsensitive=true",
+         ["Latin1_General_100_CI_AS_KS_WS_SC_UTF8"]),
+        (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
+        (ItemType.REPORT, "", ["_auto"]),
+    ])
+    def test_mkdir_item_with_creation_payload_success(
+        self,
+        item_type,
+        params,
+        expected_assertions,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{item_type}"
+        )
+
+        # Execute command
+        if params:
+            cli_executor.exec_command(f"mkdir {item_full_path} -P {params}")
+        else:
+            cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Assert creation success
+        mock_print_done.assert_called()
+        assert item_display_name in mock_print_done.call_args[0][0]
+
+        # Verify item was created with expected configuration
+        mock_questionary_print.reset_mock()
+        get(item_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+
+        result_output = mock_questionary_print.call_args[0][0]
+        assert item_display_name in result_output
+
+        # Check type-specific assertions
+        for assertion in expected_assertions:
+            assert assertion in result_output
+
+        # Cleanup
+        rm(item_full_path)
+
+    def test_mkdir_mounted_data_factory_with_required_params_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        test_data: StaticTestData,
+    ):
+        # Setup
+        mdf_display_name = generate_random_string(vcr_instance, cassette_name)
+        mdf_full_path = cli_path_join(
+            workspace.full_path, f"{mdf_display_name}.{ItemType.MOUNTED_DATA_FACTORY}"
+        )
+
+        # Execute command with required params
+        cli_executor.exec_command(
+            f"mkdir {mdf_full_path} -P subscriptionId={test_data.azure_subscription_id},resourceGroup={test_data.azure_resource_group},factoryName=test-factory-name"
+        )
+
+        # Assert creation success
+        mock_print_done.assert_called()
+        assert mdf_display_name in mock_print_done.call_args[0][0]
+
+        # Verify item was created
+        mock_questionary_print.reset_mock()
+        get(mdf_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert mdf_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup
+        rm(mdf_full_path)
+
+    def test_mkdir_mounted_data_factory_missing_required_params_failure(
+        self,
+        workspace,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        mdf_display_name = generate_random_string(vcr_instance, cassette_name)
+        mdf_full_path = cli_path_join(
+            workspace.full_path, f"{mdf_display_name}.{ItemType.MOUNTED_DATA_FACTORY}"
+        )
+
+        # Execute command without required params
+        cli_executor.exec_command(f"mkdir {mdf_full_path}")
+
+        # Assert failure due to missing required params
+        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
     # endregion
 
