@@ -6,7 +6,22 @@ import pytest
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.data.static_test_data import StaticTestData
-from tests.test_commands.conftest import custom_parametrize
+from tests.test_commands.conftest import item_type_paramerter
+
+ONELAKE_FOLDER_PARAMS = [
+    (ItemType.LAKEHOUSE, "Files", True),
+    (ItemType.LAKEHOUSE, "Tables", True),
+    (ItemType.WAREHOUSE, "Files", False),
+    (ItemType.WAREHOUSE, "Tables", True),
+    (ItemType.SEMANTIC_MODEL, "Tables", False),
+    (ItemType.SPARK_JOB_DEFINITION, "Libs", True),
+    (ItemType.SPARK_JOB_DEFINITION, "Main", True),
+    (ItemType.KQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Files", True),
+    (ItemType.MIRRORED_DATABASE, "Tables", True),
+    (ItemType.MIRRORED_DATABASE, "Files", True),
+]
 
 
 class TestExists:
@@ -21,7 +36,7 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_exists_item_exists_success(
         self, item_factory, mock_print_done, cli_executor, item_type
     ):
@@ -50,21 +65,15 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    @pytest.mark.parametrize("item_type,folder_name", [
-        (ItemType.LAKEHOUSE, "Files"),
-        (ItemType.LAKEHOUSE, "Tables"),
-        (ItemType.WAREHOUSE, "Tables"),
-        (ItemType.SPARK_JOB_DEFINITION, "Libs"),
-        (ItemType.SPARK_JOB_DEFINITION, "Main"),
-        (ItemType.KQL_DATABASE, "Tables"),
-        (ItemType.SQL_DATABASE, "Tables"),
-        (ItemType.SQL_DATABASE, "Files"),
-        (ItemType.MIRRORED_DATABASE, "Tables"),
-        (ItemType.MIRRORED_DATABASE, "Files"),
-    ])
+    @pytest.mark.parametrize("item_type,folder_name,created_by_default", ONELAKE_FOLDER_PARAMS)
     def test_exists_onelake_exists_success(
-        self, item_factory, mock_print_done, cli_executor, item_type, folder_name
+        self, item_factory, mock_print_done, cli_executor, item_type, folder_name, created_by_default
     ):
+        # Skip combinations where folder is not created by default
+        if not created_by_default:
+            pytest.skip(
+                f"{folder_name} folder not created by default for {item_type}")
+
         # Setup
         item = item_factory(item_type)
 
@@ -78,7 +87,7 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_TRUE in mock_print_done.call_args[0][0]
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_exists_item_doesnt_exist_success(
         self, item_factory, mock_print_done, cli_executor, item_type
     ):
@@ -98,22 +107,9 @@ class TestExists:
         mock_print_done.assert_called_once()
         assert constant.INFO_EXISTS_FALSE in mock_print_done.call_args[0][0]
 
-    @pytest.mark.parametrize("item_type,folder_name", [
-        (ItemType.LAKEHOUSE, "Files"),
-        (ItemType.LAKEHOUSE, "Tables"),
-        (ItemType.WAREHOUSE, "Files"),
-        (ItemType.WAREHOUSE, "Tables"),
-        (ItemType.SEMANTIC_MODEL, "Tables"),
-        (ItemType.SPARK_JOB_DEFINITION, "Libs"),
-        (ItemType.SPARK_JOB_DEFINITION, "Main"),
-        (ItemType.KQL_DATABASE, "Tables"),
-        (ItemType.SQL_DATABASE, "Tables"),
-        (ItemType.SQL_DATABASE, "Files"),
-        (ItemType.MIRRORED_DATABASE, "Tables"),
-        (ItemType.MIRRORED_DATABASE, "Files"),
-    ])
+    @pytest.mark.parametrize("item_type,folder_name,created_by_default", ONELAKE_FOLDER_PARAMS)
     def test_exists_onelake_doesnt_exist_success(
-        self, item_factory, mock_print_done, cli_executor, item_type, folder_name
+        self, item_factory, mock_print_done, cli_executor, item_type, folder_name, created_by_default
     ):
         # Setup
         item = item_factory(item_type)

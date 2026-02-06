@@ -41,7 +41,7 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
-custom_parametrize = pytest.mark.parametrize("item_type", [
+item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE,
     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
@@ -54,7 +54,7 @@ custom_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
-basic_item_parametrize = pytest.mark.parametrize("item_type", [
+basic_item_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
