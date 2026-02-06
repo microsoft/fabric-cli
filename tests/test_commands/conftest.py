@@ -484,7 +484,6 @@ def virtual_workspace_item_factory(
     vcr_instance,
     cassette_name,
     test_data: StaticTestData,
-    setup_config_values_for_capacity,
 ):
     # Keep track of all workspaces created during this test
     created_virtual_workspace_items = []
