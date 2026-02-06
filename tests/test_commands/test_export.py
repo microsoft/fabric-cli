@@ -141,7 +141,8 @@ class TestExport:
             )
 
             # Assert notebook
-            notebook_export_path = tmp_path / f"{notebook.display_name}.Notebook"
+            notebook_export_path = tmp_path / \
+                f"{notebook.display_name}.Notebook"
             assert notebook_export_path.is_dir()
             files = list(notebook_export_path.iterdir())
             assert len(files) == 2
@@ -150,7 +151,8 @@ class TestExport:
 
             # Assert spark job definition
             sjd_export_path = (
-                tmp_path / f"{spark_job_definition.display_name}.SparkJobDefinition"
+                tmp_path /
+                f"{spark_job_definition.display_name}.SparkJobDefinition"
             )
             assert sjd_export_path.is_dir()
             files = list(sjd_export_path.iterdir())
@@ -225,7 +227,8 @@ class TestExport:
         assert export_path.is_dir()
         files = list(export_path.iterdir())
         assert len(files) == 2
-        assert any(file.suffix == ".ipynb" for file in files)  # Default format should be .ipynb
+        # Default format should be .ipynb
+        assert any(file.suffix == ".ipynb" for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
@@ -249,7 +252,8 @@ class TestExport:
         )
 
         # Assert
-        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT, "Invalid format. Only the following formats are supported: .py, .ipynb")
+        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT,
+                                "Invalid format. Only the following formats are supported: .py, .ipynb")
 
     def test_export_report_no_format_support_failure(
         self,
@@ -271,5 +275,5 @@ class TestExport:
         )
 
         # Assert - should fail with error indicating no formats are supported
-        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT, "No formats are supported")
-        
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT, "No formats are supported")

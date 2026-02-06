@@ -139,7 +139,8 @@ class TestExists:
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"exists {workspace.full_path}/random_folder.Folder")
+        cli_executor.exec_command(
+            f"exists {workspace.full_path}/random_folder.Folder")
 
         # Assert
         mock_print_done.assert_called_once()
