@@ -545,7 +545,7 @@ uri_mapping = {
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
-    ItemType.DIGITAL_TWIN_BUILDER: "digitaltwinbuilders",
+    ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
