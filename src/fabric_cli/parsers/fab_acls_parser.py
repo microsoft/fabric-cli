@@ -11,12 +11,12 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 
 commands = {
     "Commands": {
-        get_os_specific_command("ls"): "List ACLs for a workspace, item, or OneLake.",
+        get_os_specific_command("ls"): "List ACLs for a workspace, item, or OneLake resource.",
         get_os_specific_command(
             "rm"
-        ): "Remove an ACL from a workspace, gateway or connection.",
-        "set": "Set access controls on a workspace.",
-        "get": "Get ACL details for a workspace, item or OneLake.",
+        ): "Remove an ACL from a workspace, gateway, or connection.",
+        "set": "Set ACLs on a workspace, gateway, or connection.",
+        "get": "Get ACL details for a workspace, item, or OneLake resource.",
     },
 }
 

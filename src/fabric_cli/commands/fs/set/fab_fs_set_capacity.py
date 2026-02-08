@@ -11,7 +11,13 @@ from fabric_cli.core.hiearchy.fab_hiearchy import VirtualWorkspaceItem
 from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_CAPACITIES = ["sku.name"]
+INVALID_QUERIES = [
+    "location",
+    "properties.provisioningState",
+    "properties.state",
+    "systemData",
+    "name",
+]
 
 
 def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
@@ -20,7 +26,7 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
 
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_CAPACITIES)
+    utils_set.validate_query_not_in_blocklist(query, INVALID_QUERIES)
 
     utils_set.print_set_warning()
     if args.force or utils_ui.prompt_confirm():
@@ -29,22 +35,12 @@ def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
         args.output = None
         vwsi_capacity_def = get_capacity.exec(virtual_ws_item, args, verbose=False)
 
-        json_payload, updated_def = utils_set.update_fabric_element(
-            vwsi_capacity_def, query, args.input, decode_encode=False
+        updated_def = utils_set.update_fabric_element(
+            vwsi_capacity_def, query, args.input
         )
 
-        def _prep_for_updated_def(data):
-            data.pop("id", None)
-            data.pop("type", None)
-            data.pop("name", None)
-            data.pop("tags", None)
-            data.pop("fabricId", None)
-            return json.dumps(data, indent=4)
-
-        capacity_update_def = _prep_for_updated_def(updated_def)
-
         utils_ui.print_grey(f"Setting new property for '{virtual_ws_item.name}'...")
-        response = capacity_api.update_capacity(args, capacity_update_def)
+        response = capacity_api.update_capacity(args, json.dumps(updated_def))
 
         if response.status_code == 200:
             utils_ui.print_output_format(args, message="Capacity updated")
