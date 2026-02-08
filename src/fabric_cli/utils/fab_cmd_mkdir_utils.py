@@ -73,6 +73,8 @@ def add_type_specific_payload(item: Item, args, payload):
                     "EventHouse not provided in params. Creating one first"
                 )
 
+                _initialize_batch_collection_for_dependency_creation(args)
+
                 # Create a new Event House first
                 _eventhouse = Item(
                     f"{item.short_name}_auto",
@@ -127,6 +129,8 @@ def add_type_specific_payload(item: Item, args, payload):
                 fab_logger.log_warning(
                     "Semantic Model not provided in params. Creating one first"
                 )
+
+                _initialize_batch_collection_for_dependency_creation(args)
 
                 # Create a new Semantic Model first
                 _semantic_model = Item(
@@ -541,36 +545,39 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     parsed_params = []
     missing_params = []
     if not provided_params:
-        # Get required and optional parameters from the creation method
-        req_params_str = ", ".join(
-            [p["name"] for p in creation_method["parameters"] if p["required"]]
-        )
-        opt_params_str = ", ".join(
-            [p["name"] for p in creation_method["parameters"] if not p["required"]]
-        )
-        raise FabricCLIError(
-            f"Parameters are required for the connection creation method. Required parameters are: {req_params_str}. Optional parameters are: {opt_params_str}",
-            fab_constant.ERROR_INVALID_INPUT,
-        )
-    for param in creation_method["parameters"]:
-        p_name = param["name"]
-        if p_name.lower() not in provided_params and param["required"]:
-            c_method = creation_method["name"]
-            missing_params.append(p_name)
-        if p_name.lower() in provided_params:
-            parsed_params.append(
-                {
-                    "dataType": param["dataType"],
-                    "name": p_name,
-                    "value": provided_params[p_name.lower()],
-                }
+        # Check if the creation method actually requires parameters
+        required_params = [p["name"] for p in creation_method["parameters"] if p["required"]]
+        if required_params:
+            # Get required and optional parameters from the creation method
+            req_params_str = ", ".join(required_params)
+            opt_params_str = ", ".join(
+                [p["name"] for p in creation_method["parameters"] if not p["required"]]
             )
-    for param in provided_params:
-        if param not in [p["name"].lower() for p in creation_method["parameters"]]:
-            c_method = creation_method["name"]
-            utils_ui.print_warning(
-                f"Parameter {param} is not used by the creation method {c_method} and will be ignored"
+            raise FabricCLIError(
+                f"Parameters are required for the connection creation method. Required parameters are: {req_params_str}. Optional parameters are: {opt_params_str}",
+                fab_constant.ERROR_INVALID_INPUT,
             )
+        # If no required parameters, continue with empty parsed_params
+    else:
+        for param in creation_method["parameters"]:
+            p_name = param["name"]
+            if p_name.lower() not in provided_params and param["required"]:
+                c_method = creation_method["name"]
+                missing_params.append(p_name)
+            if p_name.lower() in provided_params:
+                parsed_params.append(
+                    {
+                        "dataType": param["dataType"],
+                        "name": p_name,
+                        "value": provided_params[p_name.lower()],
+                    }
+                )
+        for param in provided_params:
+            if param not in [p["name"].lower() for p in creation_method["parameters"]]:
+                c_method = creation_method["name"]
+                utils_ui.print_warning(
+                    f"Parameter {param} is not used by the creation method {c_method} and will be ignored"
+                )
 
     if missing_params:
         missing_params_str = ", ".join(missing_params)
@@ -582,8 +589,11 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     connection_request["connectionDetails"] = {
         "type": con_type,
         "creationMethod": creation_method["name"],
-        "parameters": parsed_params,
     }
+    
+    # Only add parameters if there are any
+    if parsed_params:
+        connection_request["connectionDetails"]["parameters"] = parsed_params
 
     """
     Check that the provided credential type is supported by the connection type:
@@ -655,10 +665,12 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         "skipTestConnection": skipTestConnection,
         "credentials": connection_params,
     }
-    connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
 
+    connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
+        
     if is_on_premises_gateway:
-        connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get("values")
+        connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get(
+            "values")
 
     return connection_request
 
@@ -754,3 +766,28 @@ def find_mpe_connection(managed_private_endpoint, targetprivatelinkresourceid):
         return conn
 
     return None
+
+def _initialize_batch_collection_for_dependency_creation(args):
+    """Initialize batch collection for scenarios where dependent items need to be created automatically.
+    
+    This method is used when creating items that have dependencies that don't exist yet, such as:
+    - Creating a KQL Database without an EventHouse (auto-creates EventHouse first)
+    - Creating a Report without a Semantic Model (auto-creates Semantic Model first)
+    
+    The batch collection allows multiple related items to be created in sequence and then
+    display a consolidated output message showing all items that were created together.
+    
+    Args:
+        args (Namespace): The command arguments namespace that will be augmented with
+                         'output_batch' attribute containing 'items' and 'names' lists
+                         to collect creation results.
+    
+    Note:
+        This method only initializes the batch collection if it doesn't already exist,
+        ensuring it's safe to call multiple times during a dependency creation chain.
+    """
+    if not hasattr(args, 'output_batch'):
+        args.output_batch = {
+            'items': [],
+            'names': []
+        }

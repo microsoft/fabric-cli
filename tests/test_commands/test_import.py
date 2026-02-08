@@ -4,6 +4,7 @@
 import argparse
 import os
 import platform
+import time
 from unittest.mock import ANY, patch
 
 import pytest
@@ -15,7 +16,6 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.utils import cli_path_join
-
 
 new_name_index = 1
 
@@ -305,6 +305,27 @@ class TestImport:
             mock_print_grey,
             upsert_item_to_cache,
             ItemType.NOTEBOOK,
+            cli_executor,
+        )
+
+    def test_import_create_new_sqldb_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SQL_DATABASE,
             cli_executor,
         )
 
@@ -827,6 +848,11 @@ def _import_create_new_item_success(
 ):
     # Setup
     item = item_factory(item_type)
+
+    # TODO: delete this line after mirrored db fix the API GAP for Create
+    if item_type == ItemType.MIRRORED_DATABASE:
+        time.sleep(60)
+
     export(item.full_path, output=os.path.expanduser(str(tmp_path)))
 
     # Reset mock
@@ -842,7 +868,9 @@ def _import_create_new_item_success(
         item.display_name, item.display_name + "_new_" + str(new_name_index)
     )
     new_name_index += 1
-    new_item_path = item_path.replace(item.display_name, item.display_name + "_new_" + str(new_name_index))
+    new_item_path = item_path.replace(
+        item.display_name, item.display_name + "_new_" + str(new_name_index)
+    )
     with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
         cli_executor.exec_command(
             f"import {new_item_path} --input {str(tmp_path)}/{item.name} --force"
@@ -869,6 +897,11 @@ def _import_update_existing_item_success(
 ):
     # Setup
     item = item_factory(item_type)
+
+    # TODO: delete this line after mirrored db fix the API GAP for Create
+    if item_type == ItemType.MIRRORED_DATABASE:
+        time.sleep(60)
+
     export(item.full_path, output=str(tmp_path))
 
     # Reset mock
@@ -907,7 +940,8 @@ def _import_create_new_item_fail(
     new_item_path = cli_path_join(workspace.full_path, item_name)
 
     # Execute command
-    cli_executor.exec_command(f"import {new_item_path} --input {str(tmp_path)} --force")
+    cli_executor.exec_command(
+        f"import {new_item_path} --input {str(tmp_path)} --force")
 
     # Assert
     assert_fabric_cli_error(fab_constant.ERROR_UNSUPPORTED_COMMAND)

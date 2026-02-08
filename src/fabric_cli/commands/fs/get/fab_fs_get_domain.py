@@ -14,7 +14,7 @@ from fabric_cli.utils import fab_cmd_get_utils as utils_get
 def exec(
     virtual_ws_item: VirtualWorkspaceItem, args: Namespace, verbose: bool = True
 ) -> dict:
-    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
+    fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMINISTRATOR)
     args.name = virtual_ws_item.short_name
     args.id = virtual_ws_item.id
 

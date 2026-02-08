@@ -171,3 +171,75 @@ class TestConfig:
             mock_print_done.assert_called_once()
 
     # endregion
+
+    # region config MODE SWITCHING
+    def test_config_set_mode_interactive_success(
+        self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
+    ):
+        """Test successful transition to interactive mode"""
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive, \
+            patch("fabric_cli.utils.fab_ui.print_warning") as mock_print_warning:
+            
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_COMMANDLINE)
+            
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_INTERACTIVE}")
+
+            # Assert
+            mock_print_warning.assert_called_once_with(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            mock_questionary_print.assert_called()
+            mock_start_interactive.assert_called_once_with()
+            assert mock_questionary_print.call_args[0][0] == 'Starting interactive mode...'
+
+    def test_config_set_mode_interactive_from_interactive_success(
+        self, mock_questionary_print, mock_fab_set_state_config, cli_executor: CLIExecutor
+    ):
+        """Test setting interactive mode while already in interactive mode"""
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive, \
+            patch("fabric_cli.utils.fab_ui.print_warning") as mock_print_warning:
+            
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_INTERACTIVE)
+            
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_INTERACTIVE}")
+
+            # Assert
+            mock_print_warning.assert_called_once_with(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            mock_questionary_print.assert_called()
+            mock_start_interactive.assert_called_once()
+            assert mock_questionary_print.call_args[0][0] == 'Starting interactive mode...'
+
+    def test_config_set_mode_command_line_from_interactive_success(
+        self, mock_fab_set_state_config, mock_questionary_print, cli_executor: CLIExecutor
+    ):
+        """Test transition from interactive to command_line mode"""
+        with patch("fabric_cli.utils.fab_ui.print_warning") as mock_print_warning, \
+            patch("os._exit") as mock_exit:
+            
+            mock_fab_set_state_config(constant.FAB_MODE, constant.FAB_MODE_INTERACTIVE)
+
+            # Execute command
+            cli_executor.exec_command(f"config set mode {constant.FAB_MODE_COMMANDLINE}")
+
+            expected_calls = [
+                ("Updating 'mode' value...",),
+                ("Configuration saved for backward compatibility.",),
+                ("Exiting interactive mode. Goodbye!",)
+            ]
+
+            # Assert
+            mock_questionary_print.assert_called()
+            actual_calls = [call.args for call in mock_questionary_print.mock_calls]
+            assert actual_calls == expected_calls
+            mock_exit.assert_called_once_with(0)
+
+            # Verify proper exit sequence
+            mock_print_warning.assert_called_once_with(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+
+    # endregion

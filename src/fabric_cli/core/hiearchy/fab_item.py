@@ -111,6 +111,7 @@ class Item(_BaseItem):
                 | ItemType.EVENTHOUSE
                 | ItemType.KQL_DATABASE
                 | ItemType.MIRRORED_DATABASE
+                | ItemType.DIGITAL_TWIN_BUILDER
                 | ItemType.REFLEX
                 | ItemType.EVENTSTREAM
                 | ItemType.MOUNTED_DATA_FACTORY
@@ -118,6 +119,10 @@ class Item(_BaseItem):
                 | ItemType.VARIABLE_LIBRARY
                 | ItemType.GRAPHQLAPI
                 | ItemType.DATAFLOW
+                | ItemType.SQL_DATABASE
+                | ItemType.COSMOS_DB_DATABASE
+                | ItemType.GRAPH_QUERY_SET
+                | ItemType.USER_DATA_FUNCTION
             ):
                 return {
                     "type": str(self.item_type),

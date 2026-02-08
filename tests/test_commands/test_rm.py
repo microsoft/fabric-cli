@@ -144,7 +144,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -191,7 +192,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -252,6 +254,7 @@ class TestRM:
         )
         mkdir(notebook.full_path)
         mock_print_done.reset_mock()
+        mock_questionary_print.reset_mock()
 
         with (
             patch("questionary.checkbox") as mock_checkbox,
@@ -270,7 +273,7 @@ class TestRM:
             mock_questionary_print.assert_called()
             mock_print_done.assert_called()
             _assert_strings_in_mock_calls(
-                ["1 items deleted successfully"], True, mock_print_done.mock_calls
+                ["1 items deleted successfully\n"], True, mock_print_done.mock_calls
             )
             _assert_strings_in_mock_calls(
                 [notebook.display_name], True, mock_print_done.mock_calls
@@ -294,7 +297,8 @@ class TestRM:
         test_data: StaticTestData,
     ):
         # Setup
-        workspace = set_entity_metadata(vcr_instance, cassette_name, "Workspace", "/")
+        workspace = set_entity_metadata(
+            vcr_instance, cassette_name, "Workspace", "/")
         mkdir(
             workspace.full_path,
             params=[f"capacityName={test_data.capacity.name}"],
@@ -328,7 +332,8 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(
+            vcr_instance, cassette_name)
         sparkpool_name = f"{sparkpool_display_name}.SparkPool"
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_name
@@ -416,7 +421,8 @@ class TestRM:
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"rm {managed_private_endpoint.full_path} --force")
+        cli_executor.exec_command(
+            f"rm {managed_private_endpoint.full_path} --force")
 
         # Assert
         mock_print_warning.assert_called()
@@ -456,7 +462,8 @@ class TestRM:
         mock_print_done.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"rm {external_data_share.full_path} --force")
+        cli_executor.exec_command(
+            f"rm {external_data_share.full_path} --force")
 
         # Assert
         mock_print_warning.assert_called()
@@ -522,7 +529,8 @@ class TestRM:
         cassette_name,
     ):
         # Setup
-        domain = set_entity_metadata(vcr_instance, cassette_name, "Domain", ".domains")
+        domain = set_entity_metadata(
+            vcr_instance, cassette_name, "Domain", ".domains")
         mkdir(domain.full_path)
 
         mock_print_done.reset_mock()
@@ -684,7 +692,8 @@ class TestRM:
         cli_executor.exec_command(f"rm {folder.full_path} --force")
 
         # Assert
-        assert_fabric_cli_error("FolderNotEmpty", "The requested folder was not empty")
+        assert_fabric_cli_error(
+            "FolderNotEmpty", "The requested folder was not empty")
 
         # Cleanup
         rm(lakehouse.full_path, force=True)

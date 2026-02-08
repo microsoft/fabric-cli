@@ -11,12 +11,12 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 
 commands = {
     "Commands": {
-        get_os_specific_command("ls"): "List ACLs for a workspace, item, or OneLake.",
+        get_os_specific_command("ls"): "List ACLs for a workspace, item, or OneLake resource.",
         get_os_specific_command(
             "rm"
-        ): "Remove an ACL from a workspace, gateway or connection.",
-        "set": "Set access controls on a workspace.",
-        "get": "Get ACL details for a workspace, item or OneLake.",
+        ): "Remove an ACL from a workspace, gateway, or connection.",
+        "set": "Set ACLs on a workspace, gateway, or connection.",
+        "get": "Get ACL details for a workspace, item, or OneLake resource.",
     },
 }
 
@@ -50,6 +50,13 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         action="store_true",
         help="Show detailed output. Optional",
+    )
+    ls_parser.add_argument(
+        "-q",
+        "--query",
+        metavar="",
+        required=False,
+        help="JMESPath query to filter. Optional",
     )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"

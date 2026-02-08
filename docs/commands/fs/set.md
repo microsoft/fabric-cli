@@ -31,7 +31,7 @@ fab set <path> -q <jmespath_query> -i <input_value> [-f]
 - `-i, --input <input_value>`: Input value to set.
     
     !!! tip "Working with JSON input"
-        For guidance on providing JSON input values across different shells, see [JSON Input Handling](../../essentials/parameters.md#json-input-handling).
+        For guidance on providing JSON input values across different shells, see [JSON Input Handling](../../essentials/input.md#json-input-handling).
 
 - `-f, --force`: Force set without confirmation. Optional.
 
@@ -47,28 +47,23 @@ fab set ws1.Workspace -q displayName -i "New Name" -f
 - Paths must map directly to JSON paths **without** filters or wildcards
 - If the property path doesn't exist on the item definition, it will be added, provided it's valid according to the item's schema. The `set` command supports creation of 1 level at a time (e.g., to set `a.b.c`, first set `a.b`, then set `a.b.c`)
 - Properties that expect a JSON string value are not supported - JSON input is always parsed as an object
+- The following properties **cannot be set** for any Fabric resource: `id`, `type`, `workspaceId`, `folderId`
 
 ## Query Support
 
-The following table shows supported queries per resource type:
+To discover the available properties of a Fabric resource, use the [`get` command](get.md) to retrieve the resource's current state. However, note that **not all properties returned by `get` are settable**.
 
-| Resource | Supported Queries |
-|----------------|-------------------|
-| **Item** | `displayName`, `description`, `properties` (`.VariableLibrary` only), `definition`[^1] |
-| **Workspace** | `displayName`, `description`, `sparkSettings` |
-| **Capacity** | `sku.name` |
-| **Domain** | `displayName`, `description`, `contributorsScope` |
-| **Connection** | `displayName`, `privacyLevel`, `credentialDetails` |
-| **Gateway** | `displayName`, `allowCloudConnectionRefresh`, `allowCustomConnectors`, `capacityId`, `inactivityMinutesBeforeSleep`, `numberOfMemberGateways` |
-| **Spark Pool** | `name`, `nodeSize`, `autoScale.enabled`, `autoScale.minNodeCount`, `autoScale.maxNodeCount` |
-| **Folder** | `displayName` |
-| **Shortcut** | `name`, `target` |
+To determine which properties can be updated via the `set` command, refer to the [Microsoft Fabric REST API documentation](aka.ms/fabric-apis) and locate the Update API operation for your specific resource type. Only properties documented in the Update API are supported for modification.
+
+!!! note "Setting Item Definition Properties"
+    For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties (e.g. `definition.parts[0].property`).
+    Paths must map directly to JSON paths **without** filters or wildcards. Refer to the [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions) for the complete definition structure.
 
 #### Item-Specific Definition Path Aliasing
 
 !!! warning "Note on definition path aliases"
 
-    These definition path aliases may be deprecated in a future release. We strongly recommend using explicit JSON paths within the item's [definition structure][^definition-structure] rather than aliases.
+    These definition path aliases may be deprecated in a future release. We strongly recommend using explicit JSON paths within the item's definition structure rather than aliases.
 
 These are definition path aliases that map to specific paths in the item's definition structure. When using the `set` command, you can use these aliases directly (as the `-query` / `--q` argument value) as they map to the correct definition paths:
 
@@ -77,6 +72,3 @@ These are definition path aliases that map to specific paths in the item's defin
 | **Notebook** | `lakehouse`, `environment`, `warehouse` | |
 | **Report** | `semanticModelId` | Applies only to [Report definition.pbir version 1](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report?tabs=v1%2Cdesktop#definitionpbir). For other versions, check the correct property path in the Report definition documentation |
 | **SparkJobDefinition** | `payload` | |
-
-#### Notes
-[^1]: For **Items**, you can set any explicit path within the `definition` structure using dot notation for nested properties (e.g., `definition.parts[0].b`). Paths must map directly to JSON paths **without** filters or wildcards. Refer to the [Microsoft Fabric item definitions](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions) for the complete definition structure.

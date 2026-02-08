@@ -144,7 +144,7 @@ def print_done(text: str, to_stderr: bool = False) -> None:
     # Escape the text to avoid HTML injection and parsing issues
     escaped_text = html.escape(text)
     _safe_print_formatted_text(
-        f"<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
+        f"\n<ansigreen>*</ansigreen> {escaped_text}", escaped_text, to_stderr
     )
 
 
@@ -251,7 +251,7 @@ def display_help(
 # ascii Display
 
 
-def get_visual_length(entry: Any, field: Any) -> int:
+def get_visual_length(entry: dict, field: Any) -> int:
     return _get_visual_length(str(entry.get(field, "")))
 
 
@@ -355,7 +355,10 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
             or show_headers
         ):
             data_keys = output.result.get_data_keys() if output_result.data else []
-            print_entries_unix_style(output_result.data, data_keys, header=show_headers)
+            if len(data_keys) > 0:
+                print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
+            else:
+                _print_raw_data(output_result.data)
         elif output.show_key_value_list:
             _print_entries_key_value_list_style(output_result.data)
         else:
@@ -365,9 +368,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         print_grey("------------------------------")
         _print_raw_data(output_result.hidden_data)
 
+        
     if output_result.message:
-        print_done(output_result.message)
-
+        print_done(f"{output_result.message}\n")
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """

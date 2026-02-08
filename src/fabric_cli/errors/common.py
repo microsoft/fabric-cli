@@ -18,6 +18,10 @@ class CommonErrors:
         return f"Invalid jmespath query (https://jmespath.org)"
 
     @staticmethod
+    def invalid_parameter(invalid_query_fields: list, valid_columns: list) -> str:
+        return f"Invalid query field(s): {', '.join(invalid_query_fields)}. Available fields: {', '.join(valid_columns)}"
+
+    @staticmethod
     def invalid_hostname(hostname: str) -> str:
         return f"Invalid hostname for '{hostname}'"
 
@@ -230,3 +234,17 @@ class CommonErrors:
     @staticmethod
     def query_contains_filters_or_wildcards(query_value: str) -> str:
         return f"Query '{query_value}' contains filters or wildcards which are not supported for set item command"
+
+    @staticmethod
+    def gateway_type_not_supported(gateway_type: str) -> str:
+        return f"Set operation on Gateway type '{gateway_type}' not supported"
+
+    @staticmethod
+    def gateway_property_not_supported_for_type(
+        property_name: str, gateway_type: str
+    ) -> str:
+        return f"Setting '{property_name}' is not supported for Gateway type '{gateway_type}'"
+
+    @staticmethod
+    def query_not_supported_for_set(query: str) -> str:
+        return f"Query '{query}' is not supported for set command"

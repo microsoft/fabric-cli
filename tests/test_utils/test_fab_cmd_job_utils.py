@@ -100,8 +100,13 @@ def test_wait_for_job_completion_failed_status(mock_sleep, mock_api, mock_get_po
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response(status="Failed", error="Test error")
     
-    wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
+    # Should raise FabricCLIError with ERROR_JOB_FAILED when job status is "Failed"
+    with pytest.raises(FabricCLIError) as exc_info:
+        wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
     
+    # Verify the exception details
+    assert exc_info.value.status_code == fab_constant.ERROR_JOB_FAILED
+    assert "Job instance 'test-job-id' Failed" in str(exc_info.value.message)
     assert mock_sleep.call_count == 1
 
 

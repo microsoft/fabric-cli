@@ -125,9 +125,9 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
 
     response = connection_api.create_connection(args, payload=json_payload)
     if response.status_code in (200, 201):
-        utils_ui.print_output_format(args, message=f"'{connection.name}' created")
-
         data = json.loads(response.text)
+        utils_ui.print_output_format(args, message=f"'{connection.name}' created", data=data, show_headers=True)
+
         connection._id = data["id"]
 
         # Add to mem_store

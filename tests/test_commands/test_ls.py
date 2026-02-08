@@ -9,12 +9,14 @@ import pytest
 
 import fabric_cli.core.fab_state_config as state_config
 from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import OutputStatus
 from fabric_cli.core.fab_types import (
     ItemType,
     VirtualItemContainerType,
     VirtualWorkspaceType,
 )
+from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
@@ -48,7 +50,8 @@ class TestLS:
         "tags",
     ]
 
-    _domain_long_columns = ["id", "contributorsScope", "description", "parentDomainId"]
+    _domain_long_columns = ["id", "contributorsScope",
+                            "description", "parentDomainId"]
 
     _connection_long_columns = [
         "name",
@@ -77,7 +80,8 @@ class TestLS:
         "dynamicExecutorAllocation",
     ]
 
-    _managed_identities_long_columns = ["name", "servicePrincipalId", "applicationId"]
+    _managed_identities_long_columns = [
+        "name", "servicePrincipalId", "applicationId"]
 
     _managed_private_endpoints_long_columns = [
         "name",
@@ -116,7 +120,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -135,7 +140,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -157,7 +163,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -171,12 +178,14 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 4: with all and long
-        cli_executor.exec_command(f"{command} {workspace.full_path} --long --all")
+        cli_executor.exec_command(
+            f"{command} {workspace.full_path} --long --all")
 
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -189,6 +198,98 @@ class TestLS:
         _assert_strings_in_mock_calls(
             self._virtual_workspace_items, True, mock_questionary_print.mock_calls
         )
+
+    def test_ls_query_filter_success(
+        self,
+        workspace,
+        item_factory,
+        mock_questionary_print,
+        assert_fabric_cli_error,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup items with different names and types
+        notebook1 = item_factory(ItemType.NOTEBOOK)
+        notebook2 = item_factory(ItemType.NOTEBOOK)
+        notebook3 = item_factory(ItemType.NOTEBOOK)
+
+        # Test 1: Basic JMESPath syntax
+        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 2: JMESPath object syntax
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -l -q '[].{{displayName: name, itemID: id}}'"
+        )
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+        # Verify renamed fields
+        _assert_strings_in_mock_calls(
+            ["displayName", "itemID"],
+            True,
+            mock_questionary_print.mock_calls,
+            require_all_in_same_args=True
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
+        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+        _assert_strings_in_mock_calls(
+            [f"['{notebook1.name}']", f"['{notebook2.name}']",
+                f"['{notebook3.name}']"],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 4: JMESPath object syntax without -l should not have id in the result
+        cli_executor.exec_command(
+            f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [f'{notebook1.name}   None', f'{notebook2.name}   None',
+                f'{notebook3.name}   None'],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 5: JMESPath query filters specific value
+        cli_executor.exec_command(
+            f"ls {workspace.full_path} -q \"[?name=='{notebook1.name}'].name\""
+        )
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [f'{notebook1.name}'],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        _assert_strings_in_mock_calls(
+            [f'{notebook2.name}', f'{notebook3.name}'],
+            False,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 6: Invalid query format
+        cli_executor.exec_command(f'ls {workspace.full_path} -q "name type"')
+        assert_fabric_cli_error(
+            fab_constant.ERROR_INVALID_INPUT, ErrorMessages.Common.invalid_jmespath_query())
 
     def test_ls_item_show_hidden_from_config_success(
         self,
@@ -213,7 +314,8 @@ class TestLS:
 
         # Check hidden_data is present despite no --all flag
         assert actual_json["result"]["hidden_data"] is not None
-        expected_hidden_data_keys = [vws.value for vws in VirtualItemContainerType]
+        expected_hidden_data_keys = [
+            vws.value for vws in VirtualItemContainerType]
         for key in expected_hidden_data_keys:
             assert any(key in k for k in actual_json["result"]["hidden_data"])
 
@@ -250,7 +352,8 @@ class TestLS:
         actual_json = json.loads(mock_questionary_print.mock_calls[0].args[0])
         # check --all flag
         assert actual_json["result"]["hidden_data"] is not None
-        expected_hidden_data_keys = [vws.value for vws in VirtualItemContainerType]
+        expected_hidden_data_keys = [
+            vws.value for vws in VirtualItemContainerType]
         for key in expected_hidden_data_keys:
             assert any(key in k for k in actual_json["result"]["hidden_data"])
 
@@ -506,6 +609,8 @@ class TestLS:
             workspace.full_path, str(VirtualItemContainerType.SPARK_POOL)
         )
 
+        mock_questionary_print.reset_mock()
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {sparkpools_path}")
 
@@ -598,8 +703,12 @@ class TestLS:
             VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT
         )
         managed_private_endpoints_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
+            workspace.full_path, str(
+                VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT)
         )
+
+        mock_questionary_print.reset_mock()
+
         # Test 1: without args
         cli_executor.exec_command(f"ls {managed_private_endpoints_path}")
 
@@ -619,7 +728,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {managed_private_endpoints_path} --long")
+        cli_executor.exec_command(
+            f"ls {managed_private_endpoints_path} --long")
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -651,7 +761,8 @@ class TestLS:
             VirtualItemContainerType.EXTERNAL_DATA_SHARE
         )
         external_data_shares_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.EXTERNAL_DATA_SHARE)
+            workspace.full_path, str(
+                VirtualItemContainerType.EXTERNAL_DATA_SHARE)
         )
         # Test 1: without args
         cli_executor.exec_command(f"ls {external_data_shares_path}")
@@ -699,7 +810,8 @@ class TestLS:
             VirtualItemContainerType.EXTERNAL_DATA_SHARE
         )
         external_data_shares_path = cli_path_join(
-            workspace.full_path, str(VirtualItemContainerType.EXTERNAL_DATA_SHARE)
+            workspace.full_path, str(
+                VirtualItemContainerType.EXTERNAL_DATA_SHARE)
         )
 
         mock_fab_set_state_config(fab_constant.FAB_CACHE_ENABLED, "true")
@@ -733,7 +845,8 @@ class TestLS:
         test_data: StaticTestData,
     ):
         # Setup
-        capacity = virtual_workspace_item_factory(VirtualWorkspaceType.CAPACITY)
+        capacity = virtual_workspace_item_factory(
+            VirtualWorkspaceType.CAPACITY)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CAPACITY)}")
@@ -750,7 +863,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CAPACITY)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.CAPACITY)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -798,7 +912,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.DOMAIN)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.DOMAIN)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -825,7 +940,8 @@ class TestLS:
         mock_questionary_print,
     ):
         # Setup
-        connection = virtual_workspace_item_factory(VirtualWorkspaceType.CONNECTION)
+        connection = virtual_workspace_item_factory(
+            VirtualWorkspaceType.CONNECTION)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CONNECTION)}")
@@ -841,7 +957,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.CONNECTION)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.CONNECTION)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -889,7 +1006,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {str(VirtualWorkspaceType.GATEWAY)} --long")
+        cli_executor.exec_command(
+            f"ls {str(VirtualWorkspaceType.GATEWAY)} --long")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -1007,7 +1125,8 @@ class TestLS:
         # Setup 3 items
         notebook = item_factory(ItemType.NOTEBOOK, path=folder.full_path)
         lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=folder.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, path=folder.full_path)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {folder.full_path}")
@@ -1015,7 +1134,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1031,7 +1151,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1050,7 +1171,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1066,7 +1188,8 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1091,7 +1214,8 @@ class TestLS:
         # Setup 3 items
         notebook = item_factory(ItemType.NOTEBOOK)
         lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=folder.full_path)
+        data_pipeline = item_factory(
+            ItemType.DATA_PIPELINE, path=folder.full_path)
 
         # Test 1: workspace ls
         cli_executor.exec_command(f"ls {workspace.full_path}")
@@ -1126,7 +1250,8 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Disable folder support
-        state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, "false")
+        state_config.set_config(
+            fab_constant.FAB_FOLDER_LISTING_ENABLED, "false")
 
         # Test 3: workspace ls
         cli_executor.exec_command(f"ls {workspace.full_path}")
@@ -1134,7 +1259,8 @@ class TestLS:
         # Assert that only the items are listed
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name, data_pipeline.display_name],
+            [notebook.display_name, lakehouse.display_name,
+                data_pipeline.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1143,7 +1269,8 @@ class TestLS:
         )
 
         # Enable folder support for cleanup
-        state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, "true")
+        state_config.set_config(
+            fab_constant.FAB_FOLDER_LISTING_ENABLED, "true")
 
     # endregion
 

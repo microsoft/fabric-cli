@@ -48,7 +48,8 @@ class TestGet:
         self, workspace, assert_fabric_cli_error, cli_executor: CLIExecutor
     ):
         # Execute command
-        cli_executor.exec_command(f"get {workspace.full_path} -q '.nonexistent'")
+        cli_executor.exec_command(
+            f"get {workspace.full_path} -q '.nonexistent'")
 
         # Assert
         assert_fabric_cli_error(
@@ -63,7 +64,8 @@ class TestGet:
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {workspace.full_path} --query displayName")
+        cli_executor.exec_command(
+            f"get {workspace.full_path} --query displayName")
 
         # Assert
         mock_questionary_print.assert_called_once()
@@ -84,11 +86,13 @@ class TestGet:
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {lakehouse.full_path} --query . --force")
+        cli_executor.exec_command(
+            f"get {lakehouse.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_not_called()  # lakehouse item is called with get item and not get item with definition
+        # lakehouse item is called with get item and not get item with definition
+        mock_print_warning.assert_not_called()
         assert lakehouse.display_name in mock_questionary_print.call_args[0][0]
 
         # Assert lakehouse extended properties are returned
@@ -108,11 +112,13 @@ class TestGet:
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {environment.full_path} --query . --force")
+        cli_executor.exec_command(
+            f"get {environment.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_not_called()  # enironment item is called with get item and not get item with definition
+        # enironment item is called with get item and not get item with definition
+        mock_print_warning.assert_not_called()
         assert environment.display_name in mock_questionary_print.call_args[0][0]
 
         # Assert enviroment extended properties are returned
@@ -135,11 +141,13 @@ class TestGet:
         mock_print_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {mirroreddb.full_path} --query . --force")
+        cli_executor.exec_command(
+            f"get {mirroreddb.full_path} --query . --force")
 
         # Assert
         mock_questionary_print.assert_called_once()
-        mock_print_warning.assert_called_once()  # MIRRORED_DATABASE is called with get item with definition
+        # MIRRORED_DATABASE is called with get item with definition
+        mock_print_warning.assert_called_once()
         assert mirroreddb.display_name in mock_questionary_print.call_args[0][0]
 
         # Assert mirroreddb definition is returned
@@ -272,7 +280,8 @@ class TestGet:
         mock_questionary_print.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {managed_private_endpoint.full_path} --query .")
+        cli_executor.exec_command(
+            f"get {managed_private_endpoint.full_path} --query .")
 
         # Assert
         mock_questionary_print.assert_called_once()
@@ -301,7 +310,8 @@ class TestGet:
         mock_fab_logger_log_warning.reset_mock()
 
         # Execute command
-        cli_executor.exec_command(f"get {external_data_share.full_path} --query .")
+        cli_executor.exec_command(
+            f"get {external_data_share.full_path} --query .")
 
         # Assert
         # Verify call to get was made
@@ -354,6 +364,27 @@ class TestGet:
         assert subfolder.display_name in mock_questionary_print.call_args[0][0]
 
     # endregion
+
+    def test_metadata_property_query_validation(self):
+        """Test the enhanced metadata property validation for nested properties."""
+        from fabric_cli.utils.fab_cmd_get_utils import is_metadata_property_query
+
+        # Test exact matches
+        assert is_metadata_property_query("properties") is True
+        assert is_metadata_property_query("id") is True
+        assert is_metadata_property_query("displayName") is True
+        assert is_metadata_property_query("description") is True
+
+        # Test nested properties - the key enhancement
+        assert is_metadata_property_query(
+            "properties.connectionString") is True
+        assert is_metadata_property_query("properties.nested.value") is True
+        assert is_metadata_property_query("displayName.localized") is True
+
+        # Test invalid properties
+        assert is_metadata_property_query("someField") is False
+        assert is_metadata_property_query("definition") is False
+        assert is_metadata_property_query("definition.content") is False
 
 
 # region Helper Methods

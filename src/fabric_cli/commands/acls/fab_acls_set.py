@@ -17,7 +17,7 @@ from fabric_cli.utils import fab_ui as utils_ui
 
 # Valid roles for different contexts
 WORKSPACE_ROLES = ["Admin", "Member", "Contributor", "Viewer"]
-CONNECTION_ROLES = ["Owner", "IserWithReshare", "User"]
+CONNECTION_ROLES = ["Owner", "UserWithReshare", "User"]
 GATEWAY_ROLES = ["Admin", "ConnectionCreator", "ConnectionCreatorWithResharing"]
 PRINCIPAL_TYPES = [
     "User",
@@ -34,11 +34,9 @@ def exec_command(args: Namespace, context: FabricElement) -> None:
     elif isinstance(context, VirtualWorkspaceItem):
         if context.item_type == VirtualWorkspaceItemType.CONNECTION:
             _validate_role_by_type(args.role, "Connection")
-            fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
             _set_acls_connection(context, args)
         elif context.item_type == VirtualWorkspaceItemType.GATEWAY:
             _validate_role_by_type(args.role, "Gateway")
-            fab_logger.log_warning(fab_constant.WARNING_FABRIC_ADMIN_ROLE)
             _set_acls_gateway(context, args)
         else:
             raise FabricCLIError(

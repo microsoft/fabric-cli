@@ -235,7 +235,7 @@ VICMap: dict[VirtualItemContainerType, VirtualItemType] = {
     VirtualItemContainerType.SPARK_POOL: VirtualItemType.SPARK_POOL,
     VirtualItemContainerType.MANAGED_IDENTITY: VirtualItemType.MANAGED_IDENTITY,
     VirtualItemContainerType.MANAGED_PRIVATE_ENDPOINT: VirtualItemType.MANAGED_PRIVATE_ENDPOINT,
-    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE
+    VirtualItemContainerType.EXTERNAL_DATA_SHARE: VirtualItemType.EXTERNAL_DATA_SHARE,
 }
 
 ################
@@ -253,13 +253,14 @@ class ItemType(_BaseItemType):
     METRIC_SET = "MetricSet"
     ORG_APP = "OrgApp"
     SUSTAINABILITY_DATA_SOLUTION = "SustainabilityDataSolution"
-    USER_DATA_FUNCTION = "UserDataFunction"
     VARIABLE_LIBRARY = "VariableLibrary"
 
     # API
+    COSMOS_DB_DATABASE = "CosmosDBDatabase"
     DASHBOARD = "Dashboard"
     DATAMART = "Datamart"
     DATA_PIPELINE = "DataPipeline"
+    DIGITAL_TWIN_BUILDER = "DigitalTwinBuilder"
     ENVIRONMENT = "Environment"
     EVENTHOUSE = "Eventhouse"
     EVENTSTREAM = "Eventstream"
@@ -281,6 +282,8 @@ class ItemType(_BaseItemType):
     WAREHOUSE = "Warehouse"
     COPYJOB = "CopyJob"
     GRAPHQLAPI = "GraphQLApi"
+    GRAPH_QUERY_SET = "GraphQuerySet"
+    USER_DATA_FUNCTION = "UserDataFunction"
     MOUNTED_DATA_FACTORY = "MountedDataFactory"
     SQL_DATABASE = "SQLDatabase"
     DATAFLOW = "Dataflow"
@@ -482,12 +485,13 @@ format_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainabilitydatasolutions",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.VARIABLE_LIBRARY: "variablelibraries",
     # API
+    ItemType.COSMOS_DB_DATABASE: "cosmosDbDatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
+    ItemType.DIGITAL_TWIN_BUILDER: "digitalTwinBuilders",
     ItemType.ENVIRONMENT: "environments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -510,6 +514,8 @@ format_mapping = {
     ItemType.WAREHOUSE: "warehouses",
     ItemType.COPYJOB: "copyJobs",
     ItemType.GRAPHQLAPI: "graphqlapis",
+    ItemType.GRAPH_QUERY_SET: "GraphQuerySets",
+    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows",
 }
@@ -526,12 +532,13 @@ uri_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainability-data-manager",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.VARIABLE_LIBRARY: "variable-libraries",
     # API
+    ItemType.COSMOS_DB_DATABASE: "cosmosdbdatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
+    ItemType.DIGITAL_TWIN_BUILDER: "digitaltwinbuilders",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -552,6 +559,8 @@ uri_mapping = {
     ItemType.SQL_ENDPOINT: "lakewarehouses",
     ItemType.WAREHOUSE: "datawarehouses",
     ItemType.COPYJOB: "copyjobs",
+    ItemType.GRAPH_QUERY_SET: "graph-queryset",
+    ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.GRAPHQLAPI: "graphql",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows-gen2",
@@ -560,6 +569,13 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
-    ItemType.SPARK_JOB_DEFINITION: "?format=SparkJobDefinitionV1",
-    ItemType.NOTEBOOK: "?format=ipynb",
+    ItemType.SPARK_JOB_DEFINITION: {"default": "?format=SparkJobDefinitionV1"},
+    ItemType.NOTEBOOK: {
+        "default": "?format=ipynb",
+        ".py": "?format=fabricGitSource",
+        ".ipynb": "?format=ipynb",
+    },
+    ItemType.COSMOS_DB_DATABASE: {"default": ""},
+    ItemType.USER_DATA_FUNCTION: {"default": ""},
+    ItemType.GRAPH_QUERY_SET: {"default": ""},
 }

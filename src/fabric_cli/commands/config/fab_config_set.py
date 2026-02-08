@@ -68,21 +68,9 @@ def _set_config(args: Namespace, key: str, value: Any, verbose: bool = True) -> 
         utils_ui.print_output_format(
             args, message=f"Configuration '{key}' set to '{value}'"
         )
-    current_mode = fab_state_config.get_config(fab_constant.FAB_MODE)
 
-    # Clean up context files when changing mode
     if key == fab_constant.FAB_MODE:
-        from fabric_cli.core.fab_context import Context
-
-        Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
-
-    if (
-        key == fab_constant.FAB_MODE
-        and current_mode == fab_constant.FAB_MODE_COMMANDLINE
-        and previous_mode == fab_constant.FAB_MODE_INTERACTIVE
-    ):
-        utils_ui.print("Exiting interactive mode. Goodbye!")
-        os._exit(0)
+        _handle_fab_config_mode(previous_mode, value)
 
 
 def _set_capacity(args: Namespace, value: str) -> None:
@@ -102,3 +90,29 @@ def _set_capacity(args: Namespace, value: str) -> None:
             ErrorMessages.Config.invalid_capacity(value),
             fab_constant.ERROR_INVALID_INPUT,
         )
+
+
+def _handle_fab_config_mode(previous_mode: str, current_mode: str) -> None:
+        from fabric_cli.core.fab_context import Context
+        # Clean up context files when changing mode
+        Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
+        
+        if current_mode == fab_constant.FAB_MODE_INTERACTIVE:
+            # Show deprecation warning
+            utils_ui.print_warning(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            utils_ui.print("Starting interactive mode...")
+            from fabric_cli.core.fab_interactive import start_interactive_mode
+            start_interactive_mode()
+                
+        elif current_mode == fab_constant.FAB_MODE_COMMANDLINE:
+            # Show deprecation warning with better messaging
+            utils_ui.print_warning(
+                "Mode configuration is deprecated. Running 'fab' now automatically enters interactive mode."
+            )
+            utils_ui.print("Configuration saved for backward compatibility.")
+            
+            if previous_mode == fab_constant.FAB_MODE_INTERACTIVE:
+                utils_ui.print("Exiting interactive mode. Goodbye!")
+                os._exit(0)

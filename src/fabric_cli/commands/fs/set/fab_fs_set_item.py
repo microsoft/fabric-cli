@@ -33,28 +33,22 @@ def exec(item: Item, args: Namespace) -> None:
         args.item_uri = format_mapping.get(item.item_type, "items")
 
         if query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION):
-            args.format = definition_format_mapping.get(item.item_type, "")
+            formats = definition_format_mapping.get(item.item_type, {"default": ""})
+            args.format = formats["default"]
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
 
-            updated_def = _update_element(
-                definition, query_value, args.input, decode_encode=True
-            )
+            updated_def = _update_item_definition(definition, query_value, args.input)
 
-            definition_base64_to_update, _ = utils_set.extract_json_schema(updated_def)
-            update_item_definition_payload = json.dumps(definition_base64_to_update)
+            update_item_definition_payload = json.dumps(updated_def)
 
             utils_ui.print_grey(f"Setting new property for '{item.name}'...")
             item_api.update_item_definition(args, update_item_definition_payload)
         else:
             item_metadata = json.loads(item_api.get_item(args, item_uri=True).text)
 
-            updated_metadata = _update_element(
-                item_metadata, query_value, args.input, decode_encode=False
-            )
-
-            update_payload_dict = utils_set.extract_updated_properties(
-                updated_metadata, query_value
+            update_payload_dict = _update_item_metadata(
+                item_metadata, query_value, args.input
             )
             item_update_payload = json.dumps(update_payload_dict)
 
@@ -63,28 +57,46 @@ def exec(item: Item, args: Namespace) -> None:
             item_api.update_item(args, item_update_payload, item_uri=True)
 
             if fab_constant.ITEM_QUERY_DISPLAY_NAME in update_payload_dict:
-                new_item_name = updated_metadata[fab_constant.ITEM_QUERY_DISPLAY_NAME]
+                new_item_name = update_payload_dict[
+                    fab_constant.ITEM_QUERY_DISPLAY_NAME
+                ]
                 item._name = new_item_name
                 utils_mem_store.upsert_item_to_cache(item)
 
         utils_ui.print_output_format(args, message="Item updated")
 
 
-def _update_element(
-    resource_def: dict,
+def _update_item_definition(
+    item_def: dict,
     query_value: str,
     input_value: str,
-    decode_encode: bool,
 ) -> dict:
     try:
-        _, updated_def = utils_set.update_fabric_element(
-            resource_def,
+        updated_def = utils_set.update_item_definition(
+            item_def,
             query_value,
             input_value,
-            decode_encode=decode_encode,
         )
         return updated_def
-    except (ValueError, KeyError, IndexError):
+    except Exception:
+        raise FabricCLIError(
+            CommonErrors.invalid_set_item_query(query_value),
+            fab_constant.ERROR_INVALID_QUERY,
+        )
+
+
+def _update_item_metadata(
+    item_metadata: dict,
+    query_value: str,
+    input_value: str,
+) -> dict:
+    try:
+        return utils_set.update_fabric_element(
+            item_metadata,
+            query_value,
+            input_value,
+        )
+    except Exception:
         raise FabricCLIError(
             CommonErrors.invalid_set_item_query(query_value),
             fab_constant.ERROR_INVALID_QUERY,
