@@ -404,6 +404,12 @@ class SQLDatabaseFolders(Enum):
     FILES = "Files"
     CODE = "Code"
 
+class CosmosDBDatabaseFolders(Enum):
+    TABLES = "Tables"
+    FILES = "Files"
+    CODE = "Code"
+    AUDIT = "Audit"
+
 
 # TODO validate MirroredWarehouse OneLake folders
 class MirroredDatabaseFolders(Enum):
@@ -422,6 +428,7 @@ ItemFoldersMap: dict[ItemType, List[str]] = {
     ItemType.MIRRORED_DATABASE: [folder.value for folder in MirroredDatabaseFolders],
     ItemType.MIRRORED_WAREHOUSE: [folder.value for folder in MirroredDatabaseFolders],
     ItemType.SQL_DATABASE: [folder.value for folder in SQLDatabaseFolders],
+    ItemType.COSMOS_DB_DATABASE: [folder.value for folder in CosmosDBDatabaseFolders],
 }
 
 OnelakeWritableFolders = ["Files", "Libs", "Main"]
