@@ -61,6 +61,58 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
 ])
 
+# Export command parametrizations
+export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
+    (ItemType.NOTEBOOK, ".ipynb"),
+    (ItemType.SPARK_JOB_DEFINITION, ".json"),
+    (ItemType.DATA_PIPELINE, ".json"),
+    (ItemType.MIRRORED_DATABASE, ".json"),
+    (ItemType.COSMOS_DB_DATABASE, ".json"),
+    (ItemType.USER_DATA_FUNCTION, ".json"),
+    (ItemType.GRAPH_QUERY_SET, ".json")
+])
+
+export_item_types_parameters = pytest.mark.parametrize("item_type", [
+    ItemType.NOTEBOOK,
+    ItemType.SPARK_JOB_DEFINITION,
+    ItemType.DATA_PIPELINE,
+    ItemType.MIRRORED_DATABASE,
+    ItemType.REPORT,
+    ItemType.SEMANTIC_MODEL,
+    ItemType.KQL_DATABASE,
+    ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION,
+    ItemType.GRAPH_QUERY_SET
+])
+
+export_item_format_parameters = pytest.mark.parametrize("item_type,export_format,expected_file_extension", [
+    (ItemType.NOTEBOOK, ".py", ".py"),
+    (ItemType.NOTEBOOK, ".ipynb", ".ipynb")
+])
+
+export_item_default_format_parameters = pytest.mark.parametrize("item_type,expected_file_count", [
+    (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
+    (ItemType.SPARK_JOB_DEFINITION, 2),
+    (ItemType.DATA_PIPELINE, 2),
+    (ItemType.MIRRORED_DATABASE, 2),
+    (ItemType.REPORT, 4),
+    (ItemType.SEMANTIC_MODEL, 3),
+    (ItemType.KQL_DATABASE, 3),
+    (ItemType.COSMOS_DB_DATABASE, 2),
+    (ItemType.USER_DATA_FUNCTION, 2),
+    (ItemType.GRAPH_QUERY_SET, 2)
+])
+
+export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
+    (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
+    (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
+    (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
+    (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported"),
+    (ItemType.COSMOS_DB_DATABASE, ".txt", "No formats are supported"),
+    (ItemType.USER_DATA_FUNCTION, ".txt", "No formats are supported"),
+    (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
