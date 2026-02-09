@@ -29,7 +29,11 @@ from fabric_cli.core.fab_types import (
     VirtualWorkspaceType,
 )
 from fabric_cli.errors import ErrorMessages
-from tests.test_commands.conftest import custom_parametrize
+from tests.test_commands.conftest import (
+    custom_parametrize,
+    mkdir_unsupported_item_failure_params,
+    mkdir_item_with_creation_payload_success_params,
+)
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
@@ -83,13 +87,7 @@ class TestMkdir:
         # Cleanup
         rm(item_full_path)
 
-    @pytest.mark.parametrize("unsupported_item_type", [
-        ItemType.DASHBOARD,
-        ItemType.DATAMART,
-        ItemType.MIRRORED_WAREHOUSE,
-        ItemType.PAGINATED_REPORT,
-        ItemType.SQL_ENDPOINT,
-    ])
+    @mkdir_unsupported_item_failure_params
     def test_mkdir_unsupported_item_failure(
         self,
         unsupported_item_type,
@@ -244,13 +242,7 @@ class TestMkdir:
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         rm(eventhouse_full_path)
 
-    @pytest.mark.parametrize("item_type,params,expected_assertions", [
-        (ItemType.LAKEHOUSE, "enableSchemas=true", ["defaultSchema"]),
-        (ItemType.WAREHOUSE, "enableCaseInsensitive=true",
-         ["Latin1_General_100_CI_AS_KS_WS_SC_UTF8"]),
-        (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
-        (ItemType.REPORT, "", ["_auto"]),
-    ])
+    @mkdir_item_with_creation_payload_success_params
     def test_mkdir_item_with_creation_payload_success(
         self,
         item_type,

@@ -61,6 +61,22 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
 ])
 
+mkdir_unsupported_item_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.DASHBOARD,
+    ItemType.DATAMART,
+    ItemType.MIRRORED_WAREHOUSE,
+    ItemType.PAGINATED_REPORT,
+    ItemType.SQL_ENDPOINT,
+])
+
+mkdir_item_with_creation_payload_success_params = pytest.mark.parametrize("item_type,params,expected_assertions", [
+    (ItemType.LAKEHOUSE, "enableSchemas=true", ["defaultSchema"]),
+    (ItemType.WAREHOUSE, "enableCaseInsensitive=true",
+        ["Latin1_General_100_CI_AS_KS_WS_SC_UTF8"]),
+    (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
+    (ItemType.REPORT, "", ["_auto"]),
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
