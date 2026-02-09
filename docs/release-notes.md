@@ -6,7 +6,7 @@ hide:
 # Release Notes
 
 
-## [v1.4.0](https://pypi.org/project/ms-fabric-cli/v1.4.0) - February 04, 2026
+## [v1.4.0](https://pypi.org/project/ms-fabric-cli/v1.4.0) - February 09, 2026
 
 ### 🆕 New Items Support
 
@@ -42,6 +42,7 @@ hide:
 
 ### 📝 Documentation Update
 
+* Improve homepage documentation clarity and structure with better headings, simplified examples, and enhanced getting started instructions by [jeremydhoover-blip](https://github.com/jeremydhoover-blip)
 * Improve help text clarity and consistency across all commands with concise descriptions, consistent terminology, and user-focused language by [jeremydhoover-blip](https://github.com/jeremydhoover-blip)
 
 
