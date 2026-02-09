@@ -113,6 +113,25 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
 ])
 
+ONELAKE_FOLDER_PARAMS = [
+    (ItemType.LAKEHOUSE, "Files", True),
+    (ItemType.LAKEHOUSE, "Tables", True),
+    (ItemType.WAREHOUSE, "Files", False),
+    (ItemType.WAREHOUSE, "Tables", True),
+    (ItemType.SEMANTIC_MODEL, "Tables", False),
+    (ItemType.SPARK_JOB_DEFINITION, "Libs", True),
+    (ItemType.SPARK_JOB_DEFINITION, "Main", True),
+    (ItemType.KQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Files", True),
+    (ItemType.MIRRORED_DATABASE, "Tables", True),
+    (ItemType.MIRRORED_DATABASE, "Files", True),
+]
+
+exists_onelake_parameters = pytest.mark.parametrize(
+    "item_type,folder_name,created_by_default", ONELAKE_FOLDER_PARAMS
+)
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
