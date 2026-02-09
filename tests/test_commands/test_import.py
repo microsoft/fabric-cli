@@ -17,6 +17,11 @@ from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.processors import cassette_resource_counters
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import (
+    import_update_existing_item_success_params,
+    import_create_new_item_success_params,
+    import_create_new_item_fail_params,
+)
 
 new_name_index = 1
 
@@ -29,13 +34,7 @@ class TestImport:
         yield
 
     # region Parametrized Tests
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
-    ])
+    @import_update_existing_item_success_params
     def test_import_update_existing_item_success(
         self,
         item_type,
@@ -60,13 +59,7 @@ class TestImport:
             cli_executor,
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.NOTEBOOK, ItemType.SPARK_JOB_DEFINITION, ItemType.DATA_PIPELINE,
-        ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
-        ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
-        ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
-    ])
+    @import_create_new_item_success_params
     def test_import_create_new_item_success(
         self,
         item_type,
@@ -89,11 +82,7 @@ class TestImport:
             cli_executor,
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DASHBOARD, ItemType.DATAMART, ItemType.LAKEHOUSE,
-        ItemType.MIRRORED_WAREHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.PAGINATED_REPORT, ItemType.SQL_ENDPOINT, ItemType.WAREHOUSE,
-    ])
+    @import_create_new_item_fail_params
     def test_import_create_new_item_fail(
         self,
         item_type,
