@@ -12,38 +12,12 @@ from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType
 from tests.test_commands.data.static_test_data import StaticTestData
+from conftest import assign_entity_item_not_supported_failure_parameters
 
 
 class TestAssign:
     # region Parametrized Tests
-    def test_assign_domain_workspace_success(
-        self,
-        workspace_factory,
-        cli_executor,
-        mock_questionary_print,
-        virtual_workspace_item_factory,
-    ):
-        # Setup
-        workspace = workspace_factory()
-        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
-        mock_questionary_print.reset_mock()
-
-        # Execute command
-        cli_executor.exec_command(
-            f"assign {domain.full_path} --workspace {workspace.full_path} --force"
-        )
-
-        # Assert
-        get(domain.full_path, query="domainWorkspaces")
-        assert any(
-            workspace.display_name in str(call.args[0])
-            for call in mock_questionary_print.mock_calls
-        )
-
-    @pytest.mark.parametrize("entity_type,factory_key,path_template", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
-    ])
+    @assign_entity_item_not_supported_failure_parameters
     def test_assign_entity_item_not_supported_failure(
         self,
         entity_type,
@@ -75,6 +49,30 @@ class TestAssign:
     # endregion
 
     # region ASSIGN
+    def test_assign_domain_workspace_success(
+        self,
+        workspace_factory,
+        cli_executor,
+        mock_questionary_print,
+        virtual_workspace_item_factory,
+    ):
+        # Setup
+        workspace = workspace_factory()
+        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"assign {domain.full_path} --workspace {workspace.full_path} --force"
+        )
+
+        # Assert
+        get(domain.full_path, query="domainWorkspaces")
+        assert any(
+            workspace.display_name in str(call.args[0])
+            for call in mock_questionary_print.mock_calls
+        )
+
     def test_assign_capacity_workspace_success(
         self,
         workspace_factory,
