@@ -61,6 +61,37 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
 ])
 
+get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
+    (ItemType.ENVIRONMENT, [
+        "properties", "publishDetails", "connections", "published", "staging"]),
+    (ItemType.LAKEHOUSE, ["properties", "oneLakeTablesPath",
+                          "oneLakeFilesPath", "sqlEndpointProperties"]),
+    (ItemType.WAREHOUSE, ["properties"]),
+    (ItemType.KQL_DATABASE, ["properties"]),
+    (ItemType.SQL_DATABASE, ["properties"]),
+    (ItemType.MIRRORED_DATABASE, [
+        "definition", "connections", "status", "tablesStatus"]),
+])
+
+get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,expects_warning", [
+    (ItemType.MIRRORED_DATABASE, True),
+    (ItemType.NOTEBOOK, True),
+    (ItemType.DATA_PIPELINE, True),
+    (ItemType.LAKEHOUSE, False),
+    (ItemType.ENVIRONMENT, False),
+    (ItemType.WAREHOUSE, False),
+    (ItemType.COSMOS_DB_DATABASE, True),
+    (ItemType.USER_DATA_FUNCTION, True),
+    (ItemType.GRAPH_QUERY_SET, True)
+])
+
+get_virtual_workspace_success_params = pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
+    (VirtualWorkspaceType.DOMAIN, [
+        "contributorsScope", "domainWorkspaces"]),
+    (VirtualWorkspaceType.GATEWAY, [
+        "type", "capacityId", "numberOfMemberGateways"]),
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",

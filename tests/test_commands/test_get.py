@@ -21,7 +21,12 @@ from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.conftest import assert_fabric_cli_error
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
-from tests.test_commands.conftest import custom_parametrize
+from tests.test_commands.conftest import (
+    custom_parametrize,
+    get_item_with_properties_success_params,
+    get_item_warning_behavior_success_params,
+    get_virtual_workspace_success_params,
+)
 
 
 class TestGet:
@@ -101,17 +106,7 @@ class TestGet:
         assert "displayName" in mock_questionary_print.call_args[0][0]
         assert "type" in mock_questionary_print.call_args[0][0]
 
-    @pytest.mark.parametrize("item_type,expected_properties", [
-        (ItemType.ENVIRONMENT, [
-         "properties", "publishDetails", "connections", "published", "staging"]),
-        (ItemType.LAKEHOUSE, ["properties", "oneLakeTablesPath",
-         "oneLakeFilesPath", "sqlEndpointProperties"]),
-        (ItemType.WAREHOUSE, ["properties"]),
-        (ItemType.KQL_DATABASE, ["properties"]),
-        (ItemType.SQL_DATABASE, ["properties"]),
-        (ItemType.MIRRORED_DATABASE, [
-         "definition", "connections", "status", "tablesStatus"]),
-    ])
+    @get_item_with_properties_success_params
     def test_get_item_with_properties_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type, expected_properties
     ):
@@ -133,17 +128,7 @@ class TestGet:
         for prop in expected_properties:
             assert prop in mock_questionary_print.call_args[0][0]
 
-    @pytest.mark.parametrize("item_type,expects_warning", [
-        (ItemType.MIRRORED_DATABASE, True),
-        (ItemType.NOTEBOOK, True),
-        (ItemType.DATA_PIPELINE, True),
-        (ItemType.LAKEHOUSE, False),
-        (ItemType.ENVIRONMENT, False),
-        (ItemType.WAREHOUSE, False),
-        (ItemType.COSMOS_DB_DATABASE, True),
-        (ItemType.USER_DATA_FUNCTION, True),
-        (ItemType.GRAPH_QUERY_SET, True)
-    ])
+    @get_item_warning_behavior_success_params
     def test_get_item_warning_behavior_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type, expects_warning
     ):
@@ -239,12 +224,7 @@ class TestGet:
             for call in mock_questionary_print.mock_calls
         )
 
-    @pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
-        (VirtualWorkspaceType.DOMAIN, [
-         "contributorsScope", "domainWorkspaces"]),
-        (VirtualWorkspaceType.GATEWAY, [
-         "type", "capacityId", "numberOfMemberGateways"]),
-    ])
+    @get_virtual_workspace_success_params
     def test_get_virtual_workspace_success(
         self, virtual_workspace_item_factory, cli_executor, mock_questionary_print,
         virtual_workspace_type, expected_properties
