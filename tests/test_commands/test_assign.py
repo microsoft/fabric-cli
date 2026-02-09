@@ -12,7 +12,7 @@ from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType
 from tests.test_commands.data.static_test_data import StaticTestData
-from conftest import assign_entity_item_not_supported_failure_parameters
+from tests.test_commands.conftest import assign_entity_item_not_supported_failure_parameters
 
 
 class TestAssign:
