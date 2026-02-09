@@ -12,7 +12,13 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
 from tests.test_commands.commands_parser import CLIExecutor
-from tests.test_commands.conftest import basic_item_parametrize, mkdir
+from tests.test_commands.conftest import (
+    mv_item_to_item_success_params,
+    mv_item_to_item_unsupported_failure_params,
+    mv_item_to_item_type_mismatch_failure_params,
+    mv_item_within_workspace_rename_success_params,
+    mkdir,
+)
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.utils import cli_path_join
 
@@ -191,12 +197,7 @@ class TestMV:
                 sjd.name in call.args[0] for call in mock_questionary_print.mock_calls
             )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-    ])
+    @mv_item_to_item_success_params
     def test_mv_item_to_item_success(
         self,
         workspace_factory,
@@ -246,11 +247,7 @@ class TestMV:
                 for call in mock_questionary_print.mock_calls
             )
 
-    @pytest.mark.parametrize("unsupported_item_type", [
-        ItemType.EVENTHOUSE,
-        ItemType.KQL_DATABASE,
-        ItemType.EVENTSTREAM,
-    ])
+    @mv_item_to_item_unsupported_failure_params
     def test_mv_item_to_item_unsupported_failure(
         self,
         workspace_factory,
@@ -500,11 +497,7 @@ class TestMV:
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("source_type,target_type", [
-        (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
-        (ItemType.REPORT, ItemType.LAKEHOUSE),
-        (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
-    ])
+    @mv_item_to_item_type_mismatch_failure_params
     def test_mv_item_to_item_type_mismatch_failure(
         self,
         item_factory,
@@ -524,12 +517,7 @@ class TestMV:
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-    ])
+    @mv_item_within_workspace_rename_success_params
     def test_mv_item_within_workspace_rename_success(
         self,
         workspace_factory,
