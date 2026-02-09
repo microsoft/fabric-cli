@@ -484,6 +484,7 @@ def virtual_workspace_item_factory(
     vcr_instance,
     cassette_name,
     test_data: StaticTestData,
+    vcr_mode,
 ):
     # Keep track of all workspaces created during this test
     created_virtual_workspace_items = []
@@ -516,6 +517,7 @@ def virtual_workspace_item_factory(
         metadata = EntityMetadata(
             generated_name, virtual_workspace_name, virtual_workspace_item_path
         )
+        metadata.type = type
         created_virtual_workspace_items.append(metadata)
         return metadata
 
@@ -523,6 +525,8 @@ def virtual_workspace_item_factory(
 
     # Teardown: remove everything we created during the test
     for metadata in created_virtual_workspace_items:
+        if vcr_mode == "none" and metadata.type == VirtualWorkspaceType.CAPACITY:
+            continue
         rm(metadata.full_path)
 
 
