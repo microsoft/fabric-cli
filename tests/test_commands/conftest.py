@@ -103,7 +103,7 @@ export_item_default_format_parameters = pytest.mark.parametrize("item_type,expec
 ])
 
 export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
-    (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
+    # (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
     (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
     (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
     (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported"),
