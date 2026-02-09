@@ -13,16 +13,12 @@ from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType
 from tests.test_commands.data.static_test_data import StaticTestData
+from tests.test_commands.conftest import unassign_entity_workspace_success_params, unassign_failure_params
 
 
 class TestUnassign:
     # region Parametrized Tests
-    @pytest.mark.parametrize("entity_type,factory_key,path_template,assertion_key", [
-        (VirtualWorkspaceType.CAPACITY, "test_data",
-         "/.capacities/{}.Capacity", "id"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory",
-         "{}.full_path", "display_name"),
-    ])
+    @unassign_entity_workspace_success_params
     def test_unassign_entity_workspace_success(
         self,
         entity_type,
@@ -66,10 +62,7 @@ class TestUnassign:
             for call in mock_questionary_print.mock_calls
         )
 
-    @pytest.mark.parametrize("entity_type,factory_key,path_template", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
-    ])
+    @unassign_failure_params
     def test_unassign_entity_workspace_not_assigned_failure(
         self,
         entity_type,
@@ -101,10 +94,7 @@ class TestUnassign:
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
-    @pytest.mark.parametrize("entity_type,factory_key,path_template", [
-        (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-        (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
-    ])
+    @unassign_failure_params
     def test_unassign_entity_item_not_supported_failure(
         self,
         entity_type,
