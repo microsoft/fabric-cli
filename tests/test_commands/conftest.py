@@ -41,7 +41,8 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
-custom_parametrize = pytest.mark.parametrize("item_type", [
+# Base item types list for reuse
+ALL_ITEM_TYPES = [
     ItemType.DATA_PIPELINE,
     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
@@ -52,13 +53,27 @@ custom_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
     ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET, ItemType.DIGITAL_TWIN_BUILDER
-])
+]
+
+custom_parametrize = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
 
 basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+])
+
+rm_item_without_force_cancel_operation_success_params = pytest.mark.parametrize("item_type", [
+    item_type for item_type in ALL_ITEM_TYPES if item_type != ItemType.REPORT
+])
+
+rm_unsupported_item_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.DASHBOARD,
+    ItemType.DATAMART,
+    ItemType.MIRRORED_WAREHOUSE,
+    ItemType.PAGINATED_REPORT,
+    ItemType.SQL_ENDPOINT,
 ])
 
 FILTER_HEADERS = [
