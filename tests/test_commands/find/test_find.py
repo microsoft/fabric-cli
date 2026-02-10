@@ -11,6 +11,7 @@ import pytest
 
 from fabric_cli.commands.find import fab_find
 from fabric_cli.client.fab_api_types import ApiResponse
+from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 # Sample API responses for testing
@@ -80,8 +81,8 @@ class TestBuildSearchPayload:
         assert result["pageSize"] == 10
 
     def test_query_with_single_type(self):
-        """Test search with single type filter."""
-        args = Namespace(query="report", type="Report", limit=None)
+        """Test search with single type filter (as list from nargs='+')."""
+        args = Namespace(query="report", type=["Report"], limit=None)
         payload = fab_find._build_search_payload(args)
         result = json.loads(payload)
 
@@ -89,8 +90,8 @@ class TestBuildSearchPayload:
         assert result["filter"] == "Type eq 'Report'"
 
     def test_query_with_multiple_types(self):
-        """Test search with multiple type filters."""
-        args = Namespace(query="data", type="Lakehouse,Warehouse", limit=None)
+        """Test search with multiple type filters (as list from nargs='+')."""
+        args = Namespace(query="data", type=["Lakehouse", "Warehouse"], limit=None)
         payload = fab_find._build_search_payload(args)
         result = json.loads(payload)
 
@@ -101,7 +102,7 @@ class TestBuildSearchPayload:
 
     def test_query_with_all_options(self):
         """Test search with all options."""
-        args = Namespace(query="monthly", type="Report,Notebook", limit=25)
+        args = Namespace(query="monthly", type=["Report", "Notebook"], limit=25)
         payload = fab_find._build_search_payload(args)
         result = json.loads(payload)
 
@@ -194,34 +195,76 @@ class TestDisplayResults:
 
 
 class TestTypeValidation:
-    """Tests for type validation warnings."""
+    """Tests for type validation errors."""
 
-    @patch("fabric_cli.utils.fab_ui.print_warning")
-    def test_unsupported_type_warning(self, mock_print_warning):
-        """Test warning for unsupported item types."""
-        args = Namespace(query="test", type="Dashboard", limit=None)
-        fab_find._build_search_payload(args)
+    def test_unsupported_type_raises_error(self):
+        """Test error for unsupported item types like Dashboard."""
+        args = Namespace(query="test", type=["Dashboard"], limit=None)
 
-        mock_print_warning.assert_called()
-        warning_msg = mock_print_warning.call_args[0][0]
-        assert "Dashboard" in warning_msg
-        assert "not supported" in warning_msg
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._build_search_payload(args)
 
-    @patch("fabric_cli.utils.fab_ui.print_warning")
-    def test_unknown_type_warning(self, mock_print_warning):
-        """Test warning for unknown item types."""
-        args = Namespace(query="test", type="InvalidType", limit=None)
-        fab_find._build_search_payload(args)
+        assert "Dashboard" in str(exc_info.value)
+        assert "not supported" in str(exc_info.value)
 
-        mock_print_warning.assert_called()
-        warning_msg = mock_print_warning.call_args[0][0]
-        assert "InvalidType" in warning_msg
-        assert "Unknown" in warning_msg
+    def test_unknown_type_raises_error(self):
+        """Test error for unknown item types."""
+        args = Namespace(query="test", type=["InvalidType"], limit=None)
 
-    @patch("fabric_cli.utils.fab_ui.print_warning")
-    def test_valid_type_no_warning(self, mock_print_warning):
-        """Test no warning for valid item types."""
-        args = Namespace(query="test", type="Report", limit=None)
-        fab_find._build_search_payload(args)
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._build_search_payload(args)
 
-        mock_print_warning.assert_not_called()
+        assert "InvalidType" in str(exc_info.value)
+        assert "Unknown" in str(exc_info.value)
+
+    def test_valid_type_no_error(self):
+        """Test no error for valid item types."""
+        args = Namespace(query="test", type=["Report"], limit=None)
+        # Should not raise
+        payload = fab_find._build_search_payload(args)
+        result = json.loads(payload)
+        assert result["filter"] == "Type eq 'Report'"
+
+
+class TestHandleResponse:
+    """Tests for _handle_response function."""
+
+    @patch("fabric_cli.commands.find.fab_find._display_results")
+    def test_success_response(self, mock_display):
+        """Test successful response handling."""
+        args = Namespace(detailed=False)
+        response = MagicMock()
+        response.status_code = 200
+        response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
+
+        fab_find._handle_response(args, response)
+
+        mock_display.assert_called_once_with(args, response)
+
+    def test_error_response_raises_fabric_cli_error(self):
+        """Test error response raises FabricCLIError."""
+        args = Namespace(detailed=False)
+        response = MagicMock()
+        response.status_code = 403
+        response.text = json.dumps({
+            "errorCode": "InsufficientScopes",
+            "message": "Missing required scope: Catalog.Read.All"
+        })
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._handle_response(args, response)
+
+        assert "Catalog search failed" in str(exc_info.value)
+        assert "Missing required scope" in str(exc_info.value)
+
+    def test_error_response_non_json(self):
+        """Test error response with non-JSON body."""
+        args = Namespace(detailed=False)
+        response = MagicMock()
+        response.status_code = 500
+        response.text = "Internal Server Error"
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._handle_response(args, response)
+
+        assert "Catalog search failed" in str(exc_info.value)

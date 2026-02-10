@@ -28,11 +28,11 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# search for lakehouses only",
         "$ find 'data' --type Lakehouse\n",
         "# search for multiple item types",
-        "$ find 'dashboard' --type Report,SemanticModel\n",
+        "$ find 'dashboard' --type Report SemanticModel\n",
         "# show detailed output with IDs",
         "$ find 'sales' --detailed\n",
         "# combine filters",
-        "$ find 'finance' --type Warehouse,Lakehouse --limit 20",
+        "$ find 'finance' --type Warehouse Lakehouse --limit 20",
     ]
 
     parser = subparsers.add_parser(
@@ -48,8 +48,9 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
     parser.add_argument(
         "--type",
-        metavar="",
-        help="Filter by item type(s), comma-separated. Examples: Report, Lakehouse, Warehouse, Notebook, DataPipeline",
+        nargs="+",
+        metavar="TYPE",
+        help="Filter by item type(s). Examples: Report, Lakehouse, Warehouse, Notebook, DataPipeline",
     )
     parser.add_argument(
         "--limit",
@@ -62,11 +63,6 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "--detailed",
         action="store_true",
         help="Show detailed output including item and workspace IDs",
-    )
-    parser.add_argument(
-        "--endpoint",
-        metavar="",
-        help="Custom API endpoint URL (for internal testing). Can also set FAB_CATALOG_ENDPOINT env var.",
     )
 
     parser.usage = f"{utils_error_parser.get_usage_prog(parser)}"
