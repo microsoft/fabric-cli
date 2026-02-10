@@ -65,51 +65,46 @@ class TestBuildSearchPayload:
         """Test basic search query."""
         args = Namespace(query="sales report", type=None, limit=None)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
 
-        assert result["search"] == "sales report"
-        assert "filter" not in result
-        assert "pageSize" not in result
+        assert payload["search"] == "sales report"
+        assert "filter" not in payload
+        assert "pageSize" not in payload
 
     def test_query_with_limit(self):
         """Test search with limit."""
         args = Namespace(query="data", type=None, limit=10)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
 
-        assert result["search"] == "data"
-        assert result["pageSize"] == 10
+        assert payload["search"] == "data"
+        assert payload["pageSize"] == 10
 
     def test_query_with_single_type(self):
         """Test search with single type filter (as list from nargs='+')."""
         args = Namespace(query="report", type=["Report"], limit=None)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
 
-        assert result["search"] == "report"
-        assert result["filter"] == "Type eq 'Report'"
+        assert payload["search"] == "report"
+        assert payload["filter"] == "Type eq 'Report'"
 
     def test_query_with_multiple_types(self):
         """Test search with multiple type filters (as list from nargs='+')."""
         args = Namespace(query="data", type=["Lakehouse", "Warehouse"], limit=None)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
 
-        assert result["search"] == "data"
-        assert "Type eq 'Lakehouse'" in result["filter"]
-        assert "Type eq 'Warehouse'" in result["filter"]
-        assert " or " in result["filter"]
+        assert payload["search"] == "data"
+        assert "Type eq 'Lakehouse'" in payload["filter"]
+        assert "Type eq 'Warehouse'" in payload["filter"]
+        assert " or " in payload["filter"]
 
     def test_query_with_all_options(self):
         """Test search with all options."""
         args = Namespace(query="monthly", type=["Report", "Notebook"], limit=25)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
 
-        assert result["search"] == "monthly"
-        assert result["pageSize"] == 25
-        assert "Type eq 'Report'" in result["filter"]
-        assert "Type eq 'Notebook'" in result["filter"]
+        assert payload["search"] == "monthly"
+        assert payload["pageSize"] == 25
+        assert "Type eq 'Report'" in payload["filter"]
+        assert "Type eq 'Notebook'" in payload["filter"]
 
 
 class TestDisplayResults:
@@ -221,17 +216,15 @@ class TestTypeValidation:
         """Test valid type builds correct filter."""
         args = Namespace(query="test", type=["Report"], limit=None)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
-        assert result["filter"] == "Type eq 'Report'"
+        assert payload["filter"] == "Type eq 'Report'"
 
     def test_multiple_types_build_or_filter(self):
         """Test multiple types build OR filter."""
         args = Namespace(query="test", type=["Report", "Lakehouse"], limit=None)
         payload = fab_find._build_search_payload(args)
-        result = json.loads(payload)
-        assert "Type eq 'Report'" in result["filter"]
-        assert "Type eq 'Lakehouse'" in result["filter"]
-        assert " or " in result["filter"]
+        assert "Type eq 'Report'" in payload["filter"]
+        assert "Type eq 'Lakehouse'" in payload["filter"]
+        assert " or " in payload["filter"]
 
     def test_searchable_types_list(self):
         """Test SEARCHABLE_ITEM_TYPES excludes unsupported types."""
