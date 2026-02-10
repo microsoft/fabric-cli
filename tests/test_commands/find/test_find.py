@@ -217,13 +217,28 @@ class TestTypeValidation:
         assert "InvalidType" in str(exc_info.value)
         assert "Unknown" in str(exc_info.value)
 
-    def test_valid_type_no_error(self):
-        """Test no error for valid item types."""
+    def test_valid_type_builds_filter(self):
+        """Test valid type builds correct filter."""
         args = Namespace(query="test", type=["Report"], limit=None)
-        # Should not raise
         payload = fab_find._build_search_payload(args)
         result = json.loads(payload)
         assert result["filter"] == "Type eq 'Report'"
+
+    def test_multiple_types_build_or_filter(self):
+        """Test multiple types build OR filter."""
+        args = Namespace(query="test", type=["Report", "Lakehouse"], limit=None)
+        payload = fab_find._build_search_payload(args)
+        result = json.loads(payload)
+        assert "Type eq 'Report'" in result["filter"]
+        assert "Type eq 'Lakehouse'" in result["filter"]
+        assert " or " in result["filter"]
+
+    def test_searchable_types_list(self):
+        """Test SEARCHABLE_ITEM_TYPES excludes unsupported types."""
+        assert "Dashboard" not in fab_find.SEARCHABLE_ITEM_TYPES
+        assert "Dataflow" not in fab_find.SEARCHABLE_ITEM_TYPES
+        assert "Report" in fab_find.SEARCHABLE_ITEM_TYPES
+        assert "Lakehouse" in fab_find.SEARCHABLE_ITEM_TYPES
 
 
 class TestCompleteItemTypes:

@@ -62,7 +62,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "--type",
         nargs="+",
         metavar="TYPE",
-        help="Filter by item type(s). Examples: Report, Lakehouse, Warehouse, Notebook, DataPipeline",
+        help="Filter by item type(s). Examples: Report, Lakehouse, Warehouse. Use <TAB> for full list.",
     )
     # Add tab-completion for item types
     type_arg.completer = find.complete_item_types
