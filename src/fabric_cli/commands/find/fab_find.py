@@ -156,6 +156,7 @@ def _display_results(args: Namespace, response) -> None:
     has_more = results.get("continuationToken") is not None
     count_msg = f"{count} item(s) found" + (" (more available)" if has_more else "")
     utils_ui.print_grey(count_msg)
+    utils_ui.print_grey("")  # Blank line separator
 
     # Check if detailed output is requested
     detailed = getattr(args, "long", False)
