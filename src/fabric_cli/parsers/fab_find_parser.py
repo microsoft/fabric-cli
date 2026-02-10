@@ -21,8 +21,8 @@ commands = {
 }
 
 
-def _limit_type(value: str) -> int:
-    """Validate --limit is between 1 and 1000."""
+def _max_items_type(value: str) -> int:
+    """Validate --max-items is between 1 and 1000."""
     try:
         ivalue = int(value)
     except ValueError:
@@ -44,7 +44,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# show detailed output with IDs",
         "$ find 'sales' -l\n",
         "# combine filters",
-        "$ find 'finance' --type Warehouse Lakehouse --limit 20",
+        "$ find 'finance' --type Warehouse Lakehouse --max-items 20",
     ]
 
     parser = subparsers.add_parser(
@@ -69,9 +69,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     type_arg.completer = find.complete_item_types
 
     parser.add_argument(
-        "--limit",
+        "--max-items",
+        dest="limit",
         metavar="N",
-        type=_limit_type,
+        type=_max_items_type,
         default=50,
         help="Maximum number of results to return (1-1000, default: 50)",
     )
@@ -82,7 +83,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Show detailed output. Optional",
     )
     parser.add_argument(
-        "--continue",
+        "--next-token",
         dest="continue_token",
         metavar="TOKEN",
         help="Continuation token from previous search to get next page of results",
