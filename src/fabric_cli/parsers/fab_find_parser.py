@@ -42,7 +42,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# search for multiple item types",
         "$ find 'dashboard' --type Report SemanticModel\n",
         "# show detailed output with IDs",
-        "$ find 'sales' --detailed\n",
+        "$ find 'sales' -l\n",
         "# combine filters",
         "$ find 'finance' --type Warehouse Lakehouse --limit 20",
     ]
@@ -75,9 +75,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Maximum number of results to return (1-1000, default: 50)",
     )
     parser.add_argument(
-        "--detailed",
+        "-l",
+        "--long",
         action="store_true",
-        help="Show detailed output including item and workspace IDs",
+        help="Show detailed output. Optional",
     )
 
     parser.usage = f"{utils_error_parser.get_usage_prog(parser)}"
