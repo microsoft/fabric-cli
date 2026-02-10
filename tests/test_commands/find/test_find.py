@@ -122,8 +122,10 @@ class TestDisplayResults:
 
         # Should print count message
         mock_print_grey.assert_called()
-        # Count message is the second-to-last call (blank before, count, blank after)
-        count_call = mock_print_grey.call_args_list[-2][0][0]
+        # Find the count message in the call list
+        count_calls = [c[0][0] for c in mock_print_grey.call_args_list if "item(s) found" in c[0][0]]
+        assert len(count_calls) == 1
+        count_call = count_calls[0]
         assert "2 item(s) found" in count_call
         assert "(more available)" in count_call  # Has continuation token
 
@@ -185,8 +187,10 @@ class TestDisplayResults:
         fab_find._display_results(args, response)
 
         # Should not show "(more available)"
-        # Count message is the second-to-last call (blank before, count, blank after)
-        count_call = mock_print_grey.call_args_list[-2][0][0]
+        # Find the count message in the call list
+        count_calls = [c[0][0] for c in mock_print_grey.call_args_list if "item(s) found" in c[0][0]]
+        assert len(count_calls) == 1
+        count_call = count_calls[0]
         assert "1 item(s) found" in count_call
         assert "(more available)" not in count_call
 

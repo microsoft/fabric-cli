@@ -80,6 +80,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         action="store_true",
         help="Show detailed output. Optional",
     )
+    parser.add_argument(
+        "--continue",
+        dest="continue_token",
+        metavar="TOKEN",
+        help="Continuation token from previous search to get next page of results",
+    )
 
     parser.usage = f"{utils_error_parser.get_usage_prog(parser)}"
     parser.set_defaults(func=find.find_command)
