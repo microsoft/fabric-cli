@@ -205,7 +205,7 @@ class TestTypeValidation:
             fab_find._build_search_payload(args)
 
         assert "Dashboard" in str(exc_info.value)
-        assert "not supported" in str(exc_info.value)
+        assert "not searchable" in str(exc_info.value)
 
     def test_unknown_type_raises_error(self):
         """Test error for unknown item types."""
@@ -224,6 +224,39 @@ class TestTypeValidation:
         payload = fab_find._build_search_payload(args)
         result = json.loads(payload)
         assert result["filter"] == "Type eq 'Report'"
+
+
+class TestCompleteItemTypes:
+    """Tests for the item type completer."""
+
+    def test_complete_with_prefix(self):
+        """Test completion with a prefix."""
+        result = fab_find.complete_item_types("Lake")
+        assert "Lakehouse" in result
+
+    def test_complete_case_insensitive(self):
+        """Test completion is case-insensitive."""
+        result = fab_find.complete_item_types("report")
+        assert "Report" in result
+
+    def test_complete_multiple_matches(self):
+        """Test completion returns multiple matches."""
+        result = fab_find.complete_item_types("Data")
+        assert "Datamart" in result
+        assert "DataPipeline" in result
+
+    def test_complete_excludes_unsupported_types(self):
+        """Test completion excludes unsupported types like Dashboard."""
+        result = fab_find.complete_item_types("Da")
+        assert "Dashboard" not in result
+        assert "Dataflow" not in result
+        assert "Datamart" in result
+
+    def test_complete_empty_prefix(self):
+        """Test completion with empty prefix returns all searchable types."""
+        result = fab_find.complete_item_types("")
+        assert len(result) == len(fab_find.SEARCHABLE_ITEM_TYPES)
+        assert "Dashboard" not in result
 
 
 class TestHandleResponse:

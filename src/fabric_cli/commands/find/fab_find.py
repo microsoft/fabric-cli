@@ -14,57 +14,69 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_ui as utils_ui
 
 
-# Supported item types for the catalog search API
-SUPPORTED_ITEM_TYPES = [
-    "Report",
-    "SemanticModel",
-    "PaginatedReport",
-    "Datamart",
-    "Lakehouse",
-    "Eventhouse",
-    "Environment",
-    "KQLDatabase",
-    "KQLQueryset",
-    "KQLDashboard",
-    "DataPipeline",
-    "Notebook",
-    "SparkJobDefinition",
-    "MLExperiment",
-    "MLModel",
-    "Warehouse",
-    "Eventstream",
-    "SQLEndpoint",
-    "MirroredWarehouse",
-    "MirroredDatabase",
-    "Reflex",
-    "GraphQLApi",
-    "MountedDataFactory",
-    "SQLDatabase",
-    "CopyJob",
-    "VariableLibrary",
+# All Fabric item types (from API spec, alphabetically sorted)
+ALL_ITEM_TYPES = [
+    "AnomalyDetector",
     "ApacheAirflowJob",
-    "WarehouseSnapshot",
+    "CopyJob",
+    "CosmosDBDatabase",
+    "Dashboard",
+    "Dataflow",
+    "Datamart",
+    "DataPipeline",
     "DigitalTwinBuilder",
     "DigitalTwinBuilderFlow",
-    "MirroredAzureDatabricksCatalog",
-    "Map",
-    "AnomalyDetector",
-    "UserDataFunction",
-    "GraphModel",
-    "GraphQuerySet",
-    "SnowflakeDatabase",
-    "OperationsAgent",
-    "CosmosDBDatabase",
-    "Ontology",
+    "Environment",
+    "Eventhouse",
     "EventSchemaSet",
+    "Eventstream",
+    "GraphModel",
+    "GraphQLApi",
+    "GraphQuerySet",
+    "KQLDashboard",
+    "KQLDatabase",
+    "KQLQueryset",
+    "Lakehouse",
+    "Map",
+    "MirroredAzureDatabricksCatalog",
+    "MirroredDatabase",
+    "MirroredWarehouse",
+    "MLExperiment",
+    "MLModel",
+    "MountedDataFactory",
+    "Notebook",
+    "Ontology",
+    "OperationsAgent",
+    "PaginatedReport",
+    "Reflex",
+    "Report",
+    "SemanticModel",
+    "SnowflakeDatabase",
+    "SparkJobDefinition",
+    "SQLDatabase",
+    "SQLEndpoint",
+    "UserDataFunction",
+    "VariableLibrary",
+    "Warehouse",
+    "WarehouseSnapshot",
 ]
 
-# Types NOT supported by the catalog search API
+# Types that exist in Fabric but are NOT searchable via the Catalog Search API
 UNSUPPORTED_ITEM_TYPES = [
     "Dashboard",
-    "Dataflow",  # Gen1 and Gen2
+    "Dataflow",
     "Scorecard",
 ]
+
+# Types that ARE searchable (for validation)
+SEARCHABLE_ITEM_TYPES = [t for t in ALL_ITEM_TYPES if t not in UNSUPPORTED_ITEM_TYPES]
+
+
+def complete_item_types(prefix: str, **kwargs) -> list[str]:
+    """Completer for --type flag. Returns matching searchable item types."""
+    prefix_lower = prefix.lower()
+    # Only complete searchable types to avoid user frustration
+    return [t for t in SEARCHABLE_ITEM_TYPES if t.lower().startswith(prefix_lower)]
 
 
 @handle_exceptions()
@@ -92,19 +104,17 @@ def _build_search_payload(args: Namespace) -> str:
         types = args.type  # Already a list from argparse nargs="+"
         # Validate types
         for t in types:
-            if t not in SUPPORTED_ITEM_TYPES:
-                if t in UNSUPPORTED_ITEM_TYPES:
-                    raise FabricCLIError(
-                        f"Item type '{t}' is not supported by catalog search API. "
-                        f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
-                        fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
-                    )
-                else:
-                    raise FabricCLIError(
-                        f"Unknown item type: '{t}'. "
-                        f"See supported types at https://aka.ms/fabric-cli",
-                        fab_constant.ERROR_INVALID_ITEM_TYPE,
-                    )
+            if t in UNSUPPORTED_ITEM_TYPES:
+                raise FabricCLIError(
+                    f"Item type '{t}' is not searchable via catalog search API. "
+                    f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
+                    fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
+                )
+            if t not in ALL_ITEM_TYPES:
+                raise FabricCLIError(
+                    f"Unknown item type: '{t}'. Use tab completion to see valid types.",
+                    fab_constant.ERROR_INVALID_ITEM_TYPE,
+                )
 
         filter_parts = [f"Type eq '{t}'" for t in types]
         request["filter"] = " or ".join(filter_parts)

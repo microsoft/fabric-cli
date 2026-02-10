@@ -46,12 +46,15 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "query",
         help="Search text (matches display name, description, and workspace name)",
     )
-    parser.add_argument(
+    type_arg = parser.add_argument(
         "--type",
         nargs="+",
         metavar="TYPE",
         help="Filter by item type(s). Examples: Report, Lakehouse, Warehouse, Notebook, DataPipeline",
     )
+    # Add tab-completion for item types
+    type_arg.completer = find.complete_item_types
+
     parser.add_argument(
         "--limit",
         metavar="",
