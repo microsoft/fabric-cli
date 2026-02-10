@@ -186,4 +186,4 @@ def _display_results(args: Namespace, response) -> None:
         ]
 
     # Format output based on output_format setting (supports --output_format json|text)
-    utils_ui.print_output_format(args, display_items)
+    utils_ui.print_output_format(args, data=display_items, show_headers=True)
