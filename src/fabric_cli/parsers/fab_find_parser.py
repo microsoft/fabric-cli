@@ -3,6 +3,7 @@
 
 """Parser for the find command."""
 
+import argparse
 from argparse import Namespace, _SubParsersAction
 
 from fabric_cli.commands.find import fab_find as find
@@ -18,6 +19,17 @@ commands = {
         "find": "Search across all workspaces by name, description, or workspace name.",
     },
 }
+
+
+def _limit_type(value: str) -> int:
+    """Validate --limit is between 1 and 1000."""
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid int value: '{value}'")
+    if ivalue < 1 or ivalue > 1000:
+        raise argparse.ArgumentTypeError(f"must be between 1 and 1000, got {ivalue}")
+    return ivalue
 
 
 def register_parser(subparsers: _SubParsersAction) -> None:
@@ -57,10 +69,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
 
     parser.add_argument(
         "--limit",
-        metavar="",
-        type=int,
+        metavar="N",
+        type=_limit_type,
         default=50,
-        help="Maximum number of results to return (default: 50)",
+        help="Maximum number of results to return (1-1000, default: 50)",
     )
     parser.add_argument(
         "--detailed",
