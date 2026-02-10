@@ -114,7 +114,7 @@ class TestDisplayResults:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_results_with_items(self, mock_print_format, mock_print_grey):
         """Test displaying results with items."""
-        args = Namespace(detailed=False, output_format="text")
+        args = Namespace(long=False, output_format="text")
         response = MagicMock()
         response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
 
@@ -139,7 +139,7 @@ class TestDisplayResults:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_results_empty(self, mock_print_format, mock_print_grey):
         """Test displaying empty results."""
-        args = Namespace(detailed=False, output_format="text")
+        args = Namespace(long=False, output_format="text")
         response = MagicMock()
         response.text = json.dumps(SAMPLE_RESPONSE_EMPTY)
 
@@ -152,8 +152,8 @@ class TestDisplayResults:
     @patch("fabric_cli.utils.fab_ui.print_grey")
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_results_detailed(self, mock_print_format, mock_print_grey):
-        """Test displaying results with detailed flag."""
-        args = Namespace(detailed=True, output_format="text")
+        """Test displaying results with long flag."""
+        args = Namespace(long=True, output_format="text")
         response = MagicMock()
         response.text = json.dumps(SAMPLE_RESPONSE_SINGLE)
 
@@ -177,7 +177,7 @@ class TestDisplayResults:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_results_no_continuation_token(self, mock_print_format, mock_print_grey):
         """Test count message without continuation token."""
-        args = Namespace(detailed=False, output_format="text")
+        args = Namespace(long=False, output_format="text")
         response = MagicMock()
         response.text = json.dumps(SAMPLE_RESPONSE_SINGLE)
 
@@ -273,7 +273,7 @@ class TestHandleResponse:
     @patch("fabric_cli.commands.find.fab_find._display_results")
     def test_success_response(self, mock_display):
         """Test successful response handling."""
-        args = Namespace(detailed=False)
+        args = Namespace(long=False)
         response = MagicMock()
         response.status_code = 200
         response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
@@ -284,7 +284,7 @@ class TestHandleResponse:
 
     def test_error_response_raises_fabric_cli_error(self):
         """Test error response raises FabricCLIError."""
-        args = Namespace(detailed=False)
+        args = Namespace(long=False)
         response = MagicMock()
         response.status_code = 403
         response.text = json.dumps({
@@ -300,7 +300,7 @@ class TestHandleResponse:
 
     def test_error_response_non_json(self):
         """Test error response with non-JSON body."""
-        args = Namespace(detailed=False)
+        args = Namespace(long=False)
         response = MagicMock()
         response.status_code = 500
         response.text = "Internal Server Error"

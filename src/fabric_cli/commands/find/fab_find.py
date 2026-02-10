@@ -158,7 +158,7 @@ def _display_results(args: Namespace, response) -> None:
     utils_ui.print_grey(count_msg)
 
     # Check if detailed output is requested
-    detailed = getattr(args, "detailed", False)
+    detailed = getattr(args, "long", False)
 
     if detailed:
         # Detailed output: vertical key-value list with all fields
