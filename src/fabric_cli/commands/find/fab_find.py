@@ -99,6 +99,10 @@ def _build_search_payload(args: Namespace) -> dict[str, Any]:
     if hasattr(args, "limit") and args.limit:
         request["pageSize"] = args.limit
 
+    # Add continuation token if specified
+    if hasattr(args, "continue_token") and args.continue_token:
+        request["continuationToken"] = args.continue_token
+
     # Build type filter if specified
     if hasattr(args, "type") and args.type:
         types = args.type  # Already a list from argparse nargs="+"
@@ -146,6 +150,7 @@ def _display_results(args: Namespace, response) -> None:
     """Format and display search results."""
     results = json.loads(response.text)
     items = results.get("value", [])
+    continuation_token = results.get("continuationToken")
 
     if not items:
         utils_ui.print_grey("No items found.")
@@ -153,7 +158,7 @@ def _display_results(args: Namespace, response) -> None:
 
     # Add result count info
     count = len(items)
-    has_more = results.get("continuationToken") is not None
+    has_more = continuation_token is not None
     count_msg = f"{count} item(s) found" + (" (more available)" if has_more else "")
     utils_ui.print_grey("")  # Blank line after "Searching..."
     utils_ui.print_grey(count_msg)
@@ -192,3 +197,8 @@ def _display_results(args: Namespace, response) -> None:
             for item in items
         ]
         utils_ui.print_output_format(args, data=display_items, show_headers=True)
+
+    # Output continuation token if more results available
+    if continuation_token:
+        utils_ui.print_grey("")
+        utils_ui.print_grey(f"To get more results, use: --continue \"{continuation_token}\"")
