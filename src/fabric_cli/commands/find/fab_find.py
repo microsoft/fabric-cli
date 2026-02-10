@@ -167,11 +167,11 @@ def _display_results(args: Namespace, response) -> None:
         display_items = []
         for item in items:
             entry = {
-                "id": item.get("id"),
                 "name": item.get("displayName") or item.get("name"),
+                "id": item.get("id"),
                 "type": item.get("type"),
-                "workspace_id": item.get("workspaceId"),
                 "workspace": item.get("workspaceName"),
+                "workspace_id": item.get("workspaceId"),
             }
             # Only add description if it has a value
             if item.get("description"):
