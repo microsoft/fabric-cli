@@ -83,13 +83,13 @@ def complete_item_types(prefix: str, **kwargs) -> list[str]:
 @set_command_context()
 def find_command(args: Namespace) -> None:
     """Search the Fabric catalog for items."""
-    # Validate: either query or --continue must be provided
+    # Validate: either query or --next-token must be provided
     has_query = hasattr(args, "query") and args.query
     has_continue = hasattr(args, "continue_token") and args.continue_token
 
     if not has_query and not has_continue:
         raise FabricCLIError(
-            "Either a search query or --continue token is required.",
+            "Either a search query or --next-token is required.",
             fab_constant.ERROR_INVALID_INPUT,
         )
 
@@ -222,4 +222,4 @@ def _display_results(args: Namespace, response) -> None:
     # Output continuation token if more results available
     if continuation_token:
         utils_ui.print_grey("")
-        utils_ui.print_grey(f"To get more results, use: --continue \"{continuation_token}\"")
+        utils_ui.print_grey(f"To get more results, use: --next-token \"{continuation_token}\"")
