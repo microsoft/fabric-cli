@@ -56,6 +56,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
 
     parser.add_argument(
         "query",
+        nargs="?",
         help="Search text (matches display name, description, and workspace name)",
     )
     type_arg = parser.add_argument(

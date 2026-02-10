@@ -83,9 +83,23 @@ def complete_item_types(prefix: str, **kwargs) -> list[str]:
 @set_command_context()
 def find_command(args: Namespace) -> None:
     """Search the Fabric catalog for items."""
+    # Validate: either query or --continue must be provided
+    has_query = hasattr(args, "query") and args.query
+    has_continue = hasattr(args, "continue_token") and args.continue_token
+
+    if not has_query and not has_continue:
+        raise FabricCLIError(
+            "Either a search query or --continue token is required.",
+            fab_constant.ERROR_INVALID_INPUT,
+        )
+
     payload = _build_search_payload(args)
 
-    utils_ui.print_grey(f"Searching catalog for '{args.query}'...")
+    if has_continue:
+        utils_ui.print_grey("Fetching next page of results...")
+    else:
+        utils_ui.print_grey(f"Searching catalog for '{args.query}'...")
+
     response = catalog_api.catalog_search(args, payload)
 
     _handle_response(args, response)
@@ -93,15 +107,22 @@ def find_command(args: Namespace) -> None:
 
 def _build_search_payload(args: Namespace) -> dict[str, Any]:
     """Build the search request payload from command arguments."""
-    request: dict[str, Any] = {"search": args.query}
+    request: dict[str, Any] = {}
+
+    # If continuation token is provided, only send that (search/filter are encoded in token)
+    if hasattr(args, "continue_token") and args.continue_token:
+        request["continuationToken"] = args.continue_token
+        # Add page size if specified (allowed with continuation token)
+        if hasattr(args, "limit") and args.limit:
+            request["pageSize"] = args.limit
+        return request
+
+    # Normal search request
+    request["search"] = args.query
 
     # Add page size if specified
     if hasattr(args, "limit") and args.limit:
         request["pageSize"] = args.limit
-
-    # Add continuation token if specified
-    if hasattr(args, "continue_token") and args.continue_token:
-        request["continuationToken"] = args.continue_token
 
     # Build type filter if specified
     if hasattr(args, "type") and args.type:
