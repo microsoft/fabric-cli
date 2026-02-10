@@ -161,20 +161,22 @@ def _display_results(args: Namespace, response) -> None:
     detailed = getattr(args, "detailed", False)
 
     if detailed:
-        # Detailed output: show all fields including IDs
+        # Detailed output: vertical key-value list with all fields
+        # Use snake_case keys for proper Title Case formatting by fab_ui
         display_items = [
             {
                 "id": item.get("id"),
                 "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
-                "workspaceId": item.get("workspaceId"),
+                "workspace_id": item.get("workspaceId"),
                 "workspace": item.get("workspaceName"),
-                "description": item.get("description"),
+                "description": item.get("description") or "",
             }
             for item in items
         ]
+        utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
-        # Default output: compact view aligned with CLI path format
+        # Default output: compact table view
         display_items = [
             {
                 "name": item.get("displayName") or item.get("name"),
@@ -184,6 +186,4 @@ def _display_results(args: Namespace, response) -> None:
             }
             for item in items
         ]
-
-    # Format output based on output_format setting (supports --output_format json|text)
-    utils_ui.print_output_format(args, data=display_items, show_headers=True)
+        utils_ui.print_output_format(args, data=display_items, show_headers=True)
