@@ -91,7 +91,7 @@ def find_command(args: Namespace) -> None:
     _handle_response(args, response)
 
 
-def _build_search_payload(args: Namespace) -> str:
+def _build_search_payload(args: Namespace) -> dict[str, Any]:
     """Build the search request payload from command arguments."""
     request: dict[str, Any] = {"search": args.query}
 
@@ -119,7 +119,7 @@ def _build_search_payload(args: Namespace) -> str:
         filter_parts = [f"Type eq '{t}'" for t in types]
         request["filter"] = " or ".join(filter_parts)
 
-    return json.dumps(request)
+    return request
 
 
 def _handle_response(args: Namespace, response) -> None:
@@ -165,7 +165,7 @@ def _display_results(args: Namespace, response) -> None:
         display_items = [
             {
                 "id": item.get("id"),
-                "name": item.get("displayName"),
+                "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
                 "workspaceId": item.get("workspaceId"),
                 "workspace": item.get("workspaceName"),
@@ -177,7 +177,7 @@ def _display_results(args: Namespace, response) -> None:
         # Default output: compact view aligned with CLI path format
         display_items = [
             {
-                "name": item.get("displayName"),
+                "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
                 "workspace": item.get("workspaceName"),
                 "description": item.get("description"),
