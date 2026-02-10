@@ -163,17 +163,20 @@ def _display_results(args: Namespace, response) -> None:
     if detailed:
         # Detailed output: vertical key-value list with all fields
         # Use snake_case keys for proper Title Case formatting by fab_ui
-        display_items = [
-            {
+        # Only include keys with non-empty values
+        display_items = []
+        for item in items:
+            entry = {
                 "id": item.get("id"),
                 "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
                 "workspace_id": item.get("workspaceId"),
                 "workspace": item.get("workspaceName"),
-                "description": item.get("description") or "",
             }
-            for item in items
-        ]
+            # Only add description if it has a value
+            if item.get("description"):
+                entry["description"] = item.get("description")
+            display_items.append(entry)
         utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
         # Default output: compact table view
