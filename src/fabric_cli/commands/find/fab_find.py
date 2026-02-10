@@ -99,7 +99,7 @@ def _build_search_payload(args: Namespace) -> str:
     if hasattr(args, "limit") and args.limit:
         request["pageSize"] = args.limit
 
-    # Build type filter if specified (now a list from nargs="+")
+    # Build type filter if specified
     if hasattr(args, "type") and args.type:
         types = args.type  # Already a list from argparse nargs="+"
         # Validate types
@@ -110,7 +110,7 @@ def _build_search_payload(args: Namespace) -> str:
                     f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
                     fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
                 )
-            if t not in ALL_ITEM_TYPES:
+            if t not in SEARCHABLE_ITEM_TYPES:
                 raise FabricCLIError(
                     f"Unknown item type: '{t}'. Use tab completion to see valid types.",
                     fab_constant.ERROR_INVALID_ITEM_TYPE,
