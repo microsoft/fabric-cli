@@ -128,7 +128,7 @@ class TestDisplayResults:
 
         # Should call print_output_format with display items
         mock_print_format.assert_called_once()
-        display_items = mock_print_format.call_args[0][1]
+        display_items = mock_print_format.call_args.kwargs["data"]
         assert len(display_items) == 2
         assert display_items[0]["name"] == "Monthly Sales Revenue"
         assert display_items[0]["type"] == "Report"
@@ -161,17 +161,17 @@ class TestDisplayResults:
 
         # Should call print_output_format with detailed items
         mock_print_format.assert_called_once()
-        display_items = mock_print_format.call_args[0][1]
+        display_items = mock_print_format.call_args.kwargs["data"]
         assert len(display_items) == 1
 
-        # Detailed view should include id and workspaceId
+        # Detailed view should include id and workspace_id (snake_case)
         item = display_items[0]
         assert item["name"] == "Data Analysis"
         assert item["type"] == "Notebook"
         assert item["workspace"] == "Analytics Team"
         assert item["description"] == "Notebook for data analysis tasks."
         assert item["id"] == "abc12345-1234-5678-9abc-def012345678"
-        assert item["workspaceId"] == "workspace-id-123"
+        assert item["workspace_id"] == "workspace-id-123"
 
     @patch("fabric_cli.utils.fab_ui.print_grey")
     @patch("fabric_cli.utils.fab_ui.print_output_format")
