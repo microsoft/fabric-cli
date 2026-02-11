@@ -23,6 +23,19 @@ from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.processors import generate_random_string
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import (
+    set_item_metadata_success_params,
+    set_item_metadata_success_params_complete,
+    set_item_metadata_for_all_types_success_item_params,
+    set_item_metadata_success_params,
+    set_workspace_success_params,
+    set_sparkpool_success_params,
+    set_capacity_success_params,
+    set_domain_success_params,
+    set_connection_metadata_success_params,
+    set_gateway_virtualNetwork_success_params,
+    set_folder_success_params,
+)
 
 
 class TestSET:
@@ -53,13 +66,7 @@ class TestSET:
         assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
         mock_upsert_item_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize(
-        "metadata_to_set,should_upsert_to_cache",
-        [
-            ("description", False),
-            ("displayName", True),
-        ],
-    )
+    @set_item_metadata_success_params_complete
     def test_set_item_metadata_success(
         self,
         item_factory,
@@ -84,13 +91,8 @@ class TestSET:
             should_upsert_to_cache,
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
-        ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
-    ])
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @set_item_metadata_for_all_types_success_item_params
+    @set_item_metadata_success_params
     def test_set_item_metadata_for_all_types_success(
         self,
         item_factory,
@@ -119,7 +121,6 @@ class TestSET:
             should_upsert_to_cache,
         )
 
-    @pytest.mark.parametrize("metadata_to_set", ["description"])
     def test_set_cosmosdb_database_metadata_success(
         self,
         item_factory,
@@ -127,14 +128,9 @@ class TestSET:
         mock_questionary_print,
         mock_print_done,
         mock_upsert_item_to_cache,
-        metadata_to_set,
         vcr_instance,
         cassette_name,
     ):
-        """Test setting description for CosmosDB Database.
-
-        Note: displayName cannot be changed for CosmosDB Database items.
-        """
         # Setup
         item = item_factory(ItemType.COSMOS_DB_DATABASE)
         should_upsert_to_cache = False
@@ -144,7 +140,7 @@ class TestSET:
             mock_questionary_print,
             mock_print_done,
             mock_upsert_item_to_cache,
-            metadata_to_set,
+            "description",
             cli_executor,
             vcr_instance,
             cassette_name,
@@ -296,7 +292,7 @@ class TestSET:
         )
         mock_upsert_workspace_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @set_item_metadata_success_params
     def test_set_workspace_metadata_success(
         self,
         workspace_factory,
@@ -319,12 +315,7 @@ class TestSET:
             cassette_name,
         )
 
-    @pytest.mark.parametrize(
-        "metadata_to_set, input_value",
-        [
-            ("sparkSettings.automaticLog.enabled", "false"),
-        ],
-    )
+    @set_workspace_success_params
     def test_set_workspace_success(
         self,
         metadata_to_set,
@@ -387,16 +378,7 @@ class TestSET:
         )
         mock_upsert_spark_pool_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize(
-        "metadata_to_set, input_value",
-        [
-            ("nodeSize", "Medium"),
-            ("autoScale.enabled", "True"),
-            ("autoScale.minNodeCount", "2"),
-            ("autoScale.maxNodeCount", "5"),
-            ("name", None),  # Use None to trigger generate_random_string
-        ],
-    )
+    @set_sparkpool_success_params
     def test_set_sparkpool_success(
         self,
         metadata_to_set,
@@ -459,7 +441,7 @@ class TestSET:
             "Query 'workspaceId' is not supported for set command",
         )
 
-    @pytest.mark.parametrize("query, input", [("sku.name", "F4")])
+    @set_capacity_success_params
     def test_set_capacity_success(
         self,
         query,
@@ -518,7 +500,7 @@ class TestSET:
             "Query 'parentDomainId' is not supported for set command",
         )
 
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @set_item_metadata_success_params
     def test_set_domain_metadata_success(
         self,
         virtual_workspace_item_factory,
@@ -541,7 +523,7 @@ class TestSET:
             cassette_name,
         )
 
-    @pytest.mark.parametrize("query, input", [("contributorsScope", "AdminsOnly")])
+    @set_domain_success_params
     def test_set_domain_success(
         self,
         query,
@@ -575,12 +557,7 @@ class TestSET:
     # endregion
 
     # region Connection
-    @pytest.mark.parametrize(
-        "metadata_to_set,input_value",
-        [
-            ("privacyLevel", "Organizational"),
-        ],
-    )
+    @set_connection_metadata_success_params
     def test_set_connection_metadata_success(
         self,
         virtual_workspace_item_factory,
@@ -645,14 +622,7 @@ class TestSET:
     # endregion
 
     # region Gateway
-    @pytest.mark.parametrize(
-        "query,input",
-        [
-            ("numberOfMemberGateways", "2"),
-            ("inactivityMinutesBeforeSleep", "60"),
-            ("displayName", None),  # Use None to trigger generate_random_string
-        ],
-    )
+    @set_gateway_virtualNetwork_success_params
     def test_set_gateway_virtualNetwork_success(
         self,
         query,
@@ -860,7 +830,7 @@ class TestSET:
 
     # region Folder
 
-    @pytest.mark.parametrize("query, input", [("displayName", "randomFolder")])
+    @set_folder_success_params
     def test_set_folder_success(
         self,
         query,
