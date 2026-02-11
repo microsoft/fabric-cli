@@ -50,14 +50,16 @@ item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.REPORT,
     ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-    ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+    ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
 basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION, ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
 # Export command parametrizations

@@ -20,10 +20,10 @@ from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import basic_item_parametrize, item_type_paramerter
 
 
 class TestLS:
-
     _workspace_long_columns = [
         "name",
         "id",
@@ -100,6 +100,8 @@ class TestLS:
     ]
 
     # region ITEM
+
+    @item_type_paramerter
     @pytest.mark.parametrize("command", ["ls", "dir"])
     def test_ls_workspace_items_success(
         self,
@@ -107,12 +109,11 @@ class TestLS:
         item_factory,
         mock_questionary_print,
         command,
+        item_type,
         cli_executor: CLIExecutor,
     ):
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK)
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
-        data_pipeline = item_factory(ItemType.DATA_PIPELINE)
+        # Setup item of parametrized type
+        item = item_factory(item_type)
 
         # Test 1: without args
         cli_executor.exec_command(f"{command} {workspace.full_path}")
@@ -120,8 +121,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -140,8 +140,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -163,8 +162,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -184,8 +182,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -199,24 +196,26 @@ class TestLS:
             self._virtual_workspace_items, True, mock_questionary_print.mock_calls
         )
 
+    @basic_item_parametrize
     def test_ls_query_filter_success(
         self,
         workspace,
         item_factory,
         mock_questionary_print,
         assert_fabric_cli_error,
+        item_type,
         cli_executor: CLIExecutor,
     ):
-        # Setup items with different names and types
-        notebook1 = item_factory(ItemType.NOTEBOOK)
-        notebook2 = item_factory(ItemType.NOTEBOOK)
-        notebook3 = item_factory(ItemType.NOTEBOOK)
+        # Setup items with different names and same parametrized type
+        item1 = item_factory(item_type)
+        item2 = item_factory(item_type)
+        item3 = item_factory(item_type)
 
         # Test 1: Basic JMESPath syntax
         cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            [item1.display_name, item2.display_name, item3.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -229,7 +228,7 @@ class TestLS:
         )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook1.display_name, notebook2.display_name, notebook3.display_name],
+            [item1.display_name, item2.display_name, item3.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -246,8 +245,7 @@ class TestLS:
         # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
         cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
         _assert_strings_in_mock_calls(
-            [f"['{notebook1.name}']", f"['{notebook2.name}']",
-                f"['{notebook3.name}']"],
+            [f"['{item1.name}']", f"['{item2.name}']", f"['{item3.name}']"],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -259,27 +257,27 @@ class TestLS:
             f'ls {workspace.full_path} -q "[].{{displayName: name, itemId: id}}"')
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [f'{notebook1.name}   None', f'{notebook2.name}   None',
-                f'{notebook3.name}   None'],
+            ["displayName", "itemId"],
             True,
             mock_questionary_print.mock_calls,
+            require_all_in_same_args=True
         )
 
         mock_questionary_print.reset_mock()
 
         # Test 5: JMESPath query filters specific value
         cli_executor.exec_command(
-            f"ls {workspace.full_path} -q \"[?name=='{notebook1.name}'].name\""
+            f"ls {workspace.full_path} -q \"[?name=='{item1.name}'].name\""
         )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [f'{notebook1.name}'],
+            [f'{item1.name}'],
             True,
             mock_questionary_print.mock_calls,
         )
 
         _assert_strings_in_mock_calls(
-            [f'{notebook2.name}', f'{notebook3.name}'],
+            [f'{item2.name}', f'{item3.name}'],
             False,
             mock_questionary_print.mock_calls,
         )
@@ -560,15 +558,28 @@ class TestLS:
     # endregion
 
     # region ITEM FOLDERS
-    @pytest.mark.parametrize("item_type, expected_folders", 
-                             [(ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
-                              (ItemType.COSMOS_DB_DATABASE, ["Files", "Tables", "Code", "Audit"])])
+    @pytest.mark.parametrize("item_type, expected_folders",
+                             [
+                                 (ItemType.LAKEHOUSE, [
+                                  "Files", "Tables", "TableMaintenance"]),
+                                 (ItemType.COSMOS_DB_DATABASE, [
+                                  "Files", "Tables", "Code", "Audit"]),
+                                 (ItemType.LAKEHOUSE, [
+                                  "Files", "Tables", "TableMaintenance"]),
+                                 (ItemType.WAREHOUSE, ["Files", "Tables"]),
+                                 (ItemType.SPARK_JOB_DEFINITION,
+                                  ["Libs", "Main", "Snapshots"]),
+                                 (ItemType.KQL_DATABASE, [
+                                  "Tables", "Shortcut"]),
+                                 (ItemType.SQL_DATABASE, [
+                                  "Tables", "Files", "Code"]),
+                             ]
+                             )
     def test_ls_item_folders_success(
         self, item_type, expected_folders, item_factory, mock_questionary_print, cli_executor: CLIExecutor
     ):
         # Setup
         item = item_factory(item_type)
-        expected_output = expected_folders
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {item.full_path}")
@@ -576,7 +587,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            expected_output, True, mock_questionary_print.mock_calls
+            expected_folders, True, mock_questionary_print.mock_calls
         )
         _assert_strings_in_mock_calls(
             self._item_folders_long_columns, False, mock_questionary_print.mock_calls
@@ -590,7 +601,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            expected_output, True, mock_questionary_print.mock_calls
+            expected_folders, True, mock_questionary_print.mock_calls
         )
         _assert_strings_in_mock_calls(
             self._item_folders_long_columns, True, mock_questionary_print.mock_calls
@@ -1114,22 +1125,31 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE,
+        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.GRAPHQLAPI,
+        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+        ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+    ])
     def test_ls_folder_content_success(
         self,
-        workspace,
         folder_factory,
         item_factory,
         mock_questionary_print,
+        item_type,
         cli_executor: CLIExecutor,
     ):
         # Setup
         folder = folder_factory()
 
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK, path=folder.full_path)
-        lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(
-            ItemType.DATA_PIPELINE, path=folder.full_path)
+        # Setup item of parametrized type
+        item = item_factory(item_type, path=folder.full_path)
 
         # Test 1: without args
         cli_executor.exec_command(f"ls {folder.full_path}")
@@ -1137,8 +1157,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1154,8 +1173,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1174,8 +1192,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1191,8 +1208,7 @@ class TestLS:
         # Assert
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1203,30 +1219,41 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
+    @pytest.mark.parametrize("item_type", [
+        ItemType.DATA_PIPELINE,
+        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+        ItemType.REFLEX, ItemType.GRAPHQLAPI,
+        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+        ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+    ])
     def test_ls_workspace_items_no_list_folders_support_success(
         self,
         workspace,
         folder_factory,
         item_factory,
         mock_questionary_print,
+        item_type,
         cli_executor: CLIExecutor,
     ):
         # Setup
         folder = folder_factory()
 
-        # Setup 3 items
-        notebook = item_factory(ItemType.NOTEBOOK)
-        lakehouse = item_factory(ItemType.LAKEHOUSE, path=folder.full_path)
-        data_pipeline = item_factory(
-            ItemType.DATA_PIPELINE, path=folder.full_path)
+        # Setup 2 items of the same parametrized type - one in workspace, one in folder
+        workspace_item = item_factory(item_type)
+        folder_item = item_factory(item_type, path=folder.full_path)
 
         # Test 1: workspace ls
         cli_executor.exec_command(f"ls {workspace.full_path}")
 
-        # Assert that only the notebook and folder are listed
+        # Assert that only the workspace item and folder are listed
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, folder.display_name],
+            [workspace_item.display_name, folder.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1239,10 +1266,10 @@ class TestLS:
         # Test 2: Folder ls
         cli_executor.exec_command(f"ls {folder.full_path}")
 
-        # Assert that only the lakehouse and data pipeline are listed
+        # Assert that only the folder item is listed
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [lakehouse.display_name, data_pipeline.display_name],
+            [folder_item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
@@ -1259,11 +1286,10 @@ class TestLS:
         # Test 3: workspace ls
         cli_executor.exec_command(f"ls {workspace.full_path}")
 
-        # Assert that only the items are listed
+        # Assert that both items are listed (folder and its contents flattened)
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [notebook.display_name, lakehouse.display_name,
-                data_pipeline.display_name],
+            [workspace_item.display_name, folder_item.display_name],
             True,
             mock_questionary_print.mock_calls,
         )
