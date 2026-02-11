@@ -20,7 +20,7 @@ from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
-from tests.test_commands.conftest import basic_item_parametrize, custom_parametrize
+from tests.test_commands.conftest import basic_item_parametrize, item_type_paramerter
 
 
 class TestLS:
@@ -101,7 +101,7 @@ class TestLS:
 
     # region ITEM
 
-    @custom_parametrize
+    @item_type_paramerter
     @pytest.mark.parametrize("command", ["ls", "dir"])
     def test_ls_workspace_items_success(
         self,
