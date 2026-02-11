@@ -79,18 +79,18 @@ class EntityMetadata:
     def full_path(self) -> str:
         return self._full_path
 
+    # This setter is required for the mv command
+    @full_path.setter
+    def full_path(self, new_path: str) -> None:
+        self._full_path = new_path
+
     @property
     def type(self) -> Any:
         return self._type
 
-    # This setter is required for the mv command
-    @full_path.setter
-    def full_path(self, new_path):
-        self._full_path = new_path
-
     # This setter is required for cleanup during test teardown
     @type.setter
-    def type(self, value: Any):
+    def type(self, value: Any) -> None:
         self._type = value
 
 
