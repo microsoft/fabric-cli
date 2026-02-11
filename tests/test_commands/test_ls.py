@@ -558,15 +558,25 @@ class TestLS:
     # endregion
 
     # region ITEM FOLDERS
-    @pytest.mark.parametrize("item_type,expected_folders", [
-        (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
-        (ItemType.WAREHOUSE, ["Files", "Tables"]),
-        (ItemType.SPARK_JOB_DEFINITION, ["Libs", "Main", "Snapshots"]),
-        (ItemType.KQL_DATABASE, ["Tables", "Shortcut"]),
-        (ItemType.SQL_DATABASE, ["Tables", "Files", "Code"]),
-    ])
+    @pytest.mark.parametrize("item_type, expected_folders",
+                             [
+                                 (ItemType.LAKEHOUSE, [
+                                  "Files", "Tables", "TableMaintenance"]),
+                                 (ItemType.COSMOS_DB_DATABASE, [
+                                  "Files", "Tables", "Code", "Audit"]),
+                                 (ItemType.LAKEHOUSE, [
+                                  "Files", "Tables", "TableMaintenance"]),
+                                 (ItemType.WAREHOUSE, ["Files", "Tables"]),
+                                 (ItemType.SPARK_JOB_DEFINITION,
+                                  ["Libs", "Main", "Snapshots"]),
+                                 (ItemType.KQL_DATABASE, [
+                                  "Tables", "Shortcut"]),
+                                 (ItemType.SQL_DATABASE, [
+                                  "Tables", "Files", "Code"]),
+                             ]
+                             )
     def test_ls_item_folders_success(
-        self, item_factory, mock_questionary_print, item_type, expected_folders, cli_executor: CLIExecutor
+        self, item_type, expected_folders, item_factory, mock_questionary_print, cli_executor: CLIExecutor
     ):
         # Setup
         item = item_factory(item_type)
