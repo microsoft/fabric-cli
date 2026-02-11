@@ -64,7 +64,6 @@ ALL_ITEM_TYPES = [
 # Types that exist in Fabric but are NOT searchable via the Catalog Search API
 UNSUPPORTED_ITEM_TYPES = [
     "Dashboard",
-    "Dataflow",
 ]
 
 # Types that ARE searchable (for validation)
