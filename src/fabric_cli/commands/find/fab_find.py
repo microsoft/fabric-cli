@@ -65,7 +65,6 @@ ALL_ITEM_TYPES = [
 UNSUPPORTED_ITEM_TYPES = [
     "Dashboard",
     "Dataflow",
-    "Scorecard",
 ]
 
 # Types that ARE searchable (for validation)
