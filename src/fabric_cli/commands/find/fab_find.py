@@ -208,15 +208,20 @@ def _display_results(args: Namespace, response) -> None:
         utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
         # Default output: compact table view
-        display_items = [
-            {
+        # Check if any items have descriptions
+        has_descriptions = any(item.get("description") for item in items)
+        
+        display_items = []
+        for item in items:
+            entry = {
                 "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
                 "workspace": item.get("workspaceName"),
-                "description": item.get("description"),
             }
-            for item in items
-        ]
+            # Only include description column if any item has a description
+            if has_descriptions:
+                entry["description"] = item.get("description") or ""
+            display_items.append(entry)
         utils_ui.print_output_format(args, data=display_items, show_headers=True)
 
     # Output continuation token if more results available
