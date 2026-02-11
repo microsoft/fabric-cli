@@ -23,6 +23,19 @@ from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.processors import generate_random_string
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import (
+    set_item_metadata_success_params,
+    set_item_metadata_success_params_complete,
+    set_item_metadata_for_all_types_success_item_params,
+    set_item_metadata_success_params,
+    set_workspace_success_params,
+    set_sparkpool_success_params,
+    set_capacity_success_params,
+    set_domain_success_params,
+    set_connection_metadata_success_params,
+    set_gateway_virtualNetwork_success_params,
+    set_folder_success_params,
+)
 
 
 class TestSET:
@@ -53,13 +66,7 @@ class TestSET:
         assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
         mock_upsert_item_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize(
-        "metadata_to_set,should_upsert_to_cache",
-        [
-            ("description", False),
-            ("displayName", True),
-        ],
-    )
+    @set_item_metadata_success_params_complete
     def test_set_item_metadata_success(
         self,
         item_factory,
@@ -83,6 +90,83 @@ class TestSET:
             cassette_name,
             should_upsert_to_cache,
         )
+
+    @set_item_metadata_for_all_types_success_item_params
+    @set_item_metadata_success_params
+    def test_set_item_metadata_for_all_types_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+        metadata_to_set,
+        item_type,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item = item_factory(item_type)
+        should_upsert_to_cache = metadata_to_set == "displayName"
+
+        self._test_set_metadata_success(
+            item,
+            mock_questionary_print,
+            mock_print_done,
+            mock_upsert_item_to_cache,
+            metadata_to_set,
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache,
+        )
+
+    def test_set_cosmosdb_database_metadata_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        should_upsert_to_cache = False
+
+        self._test_set_metadata_success(
+            item,
+            mock_questionary_print,
+            mock_print_done,
+            mock_upsert_item_to_cache,
+            "description",
+            cli_executor,
+            vcr_instance,
+            cassette_name,
+            should_upsert_to_cache,
+        )
+
+    def test_set_cosmosdb_database_displayname_not_supported_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test that changing displayName for CosmosDB Database fails with appropriate error."""
+        # Setup
+        item = item_factory(ItemType.COSMOS_DB_DATABASE)
+        new_name = generate_random_string(vcr_instance, cassette_name)
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {item.full_path} --query displayName --input {new_name} --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error("CosmosDBDatabaseDisplayNameCannotBeChanged")
 
     def test_set_item_report_definition_semantic_model_id_success(
         self,
@@ -158,6 +242,36 @@ class TestSET:
 
     # endregion
 
+    def test_set_domain_contributors_scope_success(
+        self,
+        virtual_workspace_item_factory,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_domain_to_cache,
+    ):
+        # Setup
+        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        if mock_upsert_domain_to_cache:
+            mock_upsert_domain_to_cache.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"set {domain.full_path} --query contributorsScope --input AdminsOnly --force"
+        )
+
+        # Assert
+        mock_print_done.assert_called_once()
+        if mock_upsert_domain_to_cache:
+            mock_upsert_domain_to_cache.assert_not_called()
+
+        get(domain.full_path, query="contributorsScope")
+        assert mock_questionary_print.call_args[0][0].lower() == "adminsonly"
+
     # region Workspace
     def test_set_workspace_invalid_query_failure(
         self,
@@ -178,7 +292,7 @@ class TestSET:
         )
         mock_upsert_workspace_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @set_item_metadata_success_params
     def test_set_workspace_metadata_success(
         self,
         workspace_factory,
@@ -201,12 +315,7 @@ class TestSET:
             cassette_name,
         )
 
-    @pytest.mark.parametrize(
-        "metadata_to_set, input_value",
-        [
-            ("sparkSettings.automaticLog.enabled", "false"),
-        ],
-    )
+    @set_workspace_success_params
     def test_set_workspace_success(
         self,
         metadata_to_set,
@@ -269,16 +378,7 @@ class TestSET:
         )
         mock_upsert_spark_pool_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize(
-        "metadata_to_set, input_value",
-        [
-            ("nodeSize", "Medium"),
-            ("autoScale.enabled", "True"),
-            ("autoScale.minNodeCount", "2"),
-            ("autoScale.maxNodeCount", "5"),
-            ("name", None),  # Use None to trigger generate_random_string
-        ],
-    )
+    @set_sparkpool_success_params
     def test_set_sparkpool_success(
         self,
         metadata_to_set,
@@ -341,7 +441,7 @@ class TestSET:
             "Query 'workspaceId' is not supported for set command",
         )
 
-    @pytest.mark.parametrize("query, input", [("sku.name", "F4")])
+    @set_capacity_success_params
     def test_set_capacity_success(
         self,
         query,
@@ -400,7 +500,7 @@ class TestSET:
             "Query 'parentDomainId' is not supported for set command",
         )
 
-    @pytest.mark.parametrize("metadata_to_set", ["description", "displayName"])
+    @set_item_metadata_success_params
     def test_set_domain_metadata_success(
         self,
         virtual_workspace_item_factory,
@@ -423,7 +523,7 @@ class TestSET:
             cassette_name,
         )
 
-    @pytest.mark.parametrize("query, input", [("contributorsScope", "AdminsOnly")])
+    @set_domain_success_params
     def test_set_domain_success(
         self,
         query,
@@ -457,12 +557,7 @@ class TestSET:
     # endregion
 
     # region Connection
-    @pytest.mark.parametrize(
-        "metadata_to_set,input_value",
-        [
-            ("privacyLevel", "Organizational"),
-        ],
-    )
+    @set_connection_metadata_success_params
     def test_set_connection_metadata_success(
         self,
         virtual_workspace_item_factory,
@@ -527,14 +622,7 @@ class TestSET:
     # endregion
 
     # region Gateway
-    @pytest.mark.parametrize(
-        "query,input",
-        [
-            ("numberOfMemberGateways", "2"),
-            ("inactivityMinutesBeforeSleep", "60"),
-            ("displayName", None),  # Use None to trigger generate_random_string
-        ],
-    )
+    @set_gateway_virtualNetwork_success_params
     def test_set_gateway_virtualNetwork_success(
         self,
         query,
@@ -742,7 +830,7 @@ class TestSET:
 
     # region Folder
 
-    @pytest.mark.parametrize("query, input", [("displayName", "randomFolder")])
+    @set_folder_success_params
     def test_set_folder_success(
         self,
         query,
