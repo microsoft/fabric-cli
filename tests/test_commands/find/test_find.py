@@ -235,7 +235,7 @@ class TestTypeValidation:
     def test_searchable_types_list(self):
         """Test SEARCHABLE_ITEM_TYPES excludes unsupported types."""
         assert "Dashboard" not in fab_find.SEARCHABLE_ITEM_TYPES
-        assert "Dataflow" not in fab_find.SEARCHABLE_ITEM_TYPES
+        assert "Dataflow" in fab_find.SEARCHABLE_ITEM_TYPES
         assert "Report" in fab_find.SEARCHABLE_ITEM_TYPES
         assert "Lakehouse" in fab_find.SEARCHABLE_ITEM_TYPES
 
@@ -263,7 +263,7 @@ class TestCompleteItemTypes:
         """Test completion excludes unsupported types like Dashboard."""
         result = fab_find.complete_item_types("Da")
         assert "Dashboard" not in result
-        assert "Dataflow" not in result
+        assert "Dataflow" in result
         assert "Datamart" in result
 
     def test_complete_empty_prefix(self):

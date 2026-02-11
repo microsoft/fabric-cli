@@ -33,7 +33,11 @@ def catalog_search(args: Namespace, payload: dict) -> ApiResponse:
 
     Note:
         The following item types are NOT searchable via this API:
-        Dashboard, Dataflow (Gen1), Dataflow (Gen2), Scorecard
+        Dashboard
+
+        Note: Dataflow results may include Gen1 and Gen2 variants alongside
+        Dataflow Gen2 CI/CD. These are indistinguishable in the response.
+        Scorecards are returned as type 'Report'.
     """
     args.uri = "catalog/search"
     args.method = "post"
