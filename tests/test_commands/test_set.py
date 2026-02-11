@@ -27,57 +27,6 @@ from tests.test_commands.utils import cli_path_join
 
 class TestSET:
     # region Item
-    @pytest.mark.parametrize("entity_type,factory_method,entity_setup,should_cache", [
-        ("item", "item_factory", ItemType.LAKEHOUSE, False),
-        ("workspace", "workspace_factory", None, False),
-        ("sparkpool", "virtual_item_factory",
-         VirtualItemContainerType.SPARK_POOL, False),
-        ("domain", "virtual_workspace_item_factory",
-         VirtualWorkspaceType.DOMAIN, False),
-    ])
-    def test_set_entity_invalid_query_failure(
-        self,
-        entity_type,
-        factory_method,
-        entity_setup,
-        should_cache,
-        item_factory,
-        workspace_factory,
-        virtual_item_factory,
-        virtual_workspace_item_factory,
-        cli_executor,
-        assert_fabric_cli_error,
-        mock_questionary_print,
-        mock_print_done,
-        upsert_item_to_cache,
-        setup_config_values_for_capacity,
-    ):
-        # Setup based on entity type
-        if entity_type == "item":
-            entity = item_factory(entity_setup)
-        elif entity_type == "workspace":
-            entity = workspace_factory()
-        elif entity_type == "sparkpool":
-            entity = virtual_item_factory(entity_setup)
-        elif entity_type == "domain":
-            entity = virtual_workspace_item_factory(entity_setup)
-
-        # Reset mocks
-        mock_questionary_print.reset_mock()
-        mock_print_done.reset_mock()
-        if should_cache:
-            upsert_item_to_cache.reset_mock()
-
-        # Execute command
-        cli_executor.exec_command(
-            f"set {entity.full_path} --query non_existent_query --input new_value --force"
-        )
-
-        # Assert
-        assert_fabric_cli_error(constant.ERROR_INVALID_QUERY)
-        if should_cache:
-            upsert_item_to_cache.assert_not_called()
-
     def test_set_item_invalid_query_failure(
         self,
         item_factory,
@@ -303,8 +252,7 @@ class TestSET:
         cli_executor,
         mock_questionary_print,
         mock_print_done,
-        setup_config_values_for_capacity,
-        upsert_domain_to_cache,
+        mock_upsert_domain_to_cache,
     ):
         # Setup
         domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
@@ -312,8 +260,8 @@ class TestSET:
         # Reset mocks
         mock_questionary_print.reset_mock()
         mock_print_done.reset_mock()
-        if upsert_domain_to_cache:
-            upsert_domain_to_cache.reset_mock()
+        if mock_upsert_domain_to_cache:
+            mock_upsert_domain_to_cache.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -322,8 +270,8 @@ class TestSET:
 
         # Assert
         mock_print_done.assert_called_once()
-        if upsert_domain_to_cache:
-            upsert_domain_to_cache.assert_not_called()
+        if mock_upsert_domain_to_cache:
+            mock_upsert_domain_to_cache.assert_not_called()
 
         get(domain.full_path, query="contributorsScope")
         assert mock_questionary_print.call_args[0][0].lower() == "adminsonly"
