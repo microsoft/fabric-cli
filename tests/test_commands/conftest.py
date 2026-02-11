@@ -112,6 +112,19 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
 ])
 
+cp_virtual_workspace_item_failure_params = pytest.mark.parametrize("virtual_workspace_type", [
+    VirtualWorkspaceType.DOMAIN,
+    VirtualWorkspaceType.CAPACITY,
+    VirtualWorkspaceType.GATEWAY,
+])
+
+cp_item_types_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",

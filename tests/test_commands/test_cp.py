@@ -18,7 +18,9 @@ from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import LocalPath, OneLakeItem
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
-from tests.test_commands.conftest import rm
+from tests.test_commands.conftest import (
+    rm, cp_item_types_success_params, cp_virtual_workspace_item_failure_params
+)
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.utils import cli_path_join
 
@@ -295,12 +297,7 @@ class TestCP:
             rm(copied_notebook.full_path)
             rm(copied_eventhouse.full_path)
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-    ])
+    @cp_item_types_success_params
     def test_cp_item_to_item_success(
         self,
         workspace_factory,
@@ -390,11 +387,7 @@ class TestCP:
         # Assert
         assert_fabric_cli_error(constant.ERROR_UNSUPPORTED_COMMAND)
 
-    @pytest.mark.parametrize("virtual_workspace_type", [
-        VirtualWorkspaceType.DOMAIN,
-        VirtualWorkspaceType.CAPACITY,
-        VirtualWorkspaceType.GATEWAY,
-    ])
+    @cp_virtual_workspace_item_failure_params
     def test_cp_virtual_workspace_item_not_supported_failure(
         self,
         virtual_workspace_item_factory,
@@ -1120,12 +1113,7 @@ class TestCP:
             ErrorMessages.Cp.item_exists_different_path(),
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-    ])
+    @cp_item_types_success_params
     def test_cp_folder_with_different_item_types_success(
         self,
         workspace_factory,
