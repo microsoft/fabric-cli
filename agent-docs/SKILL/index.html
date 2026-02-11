@@ -1,0 +1,3799 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Use Microsoft Fabric CLI (fab) to manage workspaces, semantic models, reports, notebooks, lakehouses, and other Fabric resources via file-system metaphor and commands. Use when deploying Fabric items, running jobs, querying data, managing OneLake files, or automating Fabric operations. Invoke this skill automatically whenever a user mentions the Fabric CLI, fab, or Fabric.">
+      
+      
+      
+        <link rel="canonical" href="https://micorosft.github.io/fabric-cli/agent-docs/SKILL/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../config/assets/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Microsoft Fabric CLI Operations - fabric-cli</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Merriweather+Sans:300,300i,400,400i,700,700i%7CRed+Hat+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Merriweather Sans";--md-code-font:"Red Hat Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#microsoft-fabric-cli-operations" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="fabric-cli" class="md-header__button md-logo" aria-label="fabric-cli" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M9.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L146.7 256zM224 384h256c17.7 0 32 14.3 32 32s-14.3 32-32 32H224c-17.7 0-32-14.3-32-32s14.3-32 32-32"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fabric-cli
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Microsoft Fabric CLI Operations
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/microsoft/fabric-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    microsoft/fabric-cli
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../essentials/hierarchy/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Essentials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../commands/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Commands
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../release-notes/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Release Notes
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fabric-cli" class="md-nav__button md-logo" aria-label="fabric-cli" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M9.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L146.7 256zM224 384h256c17.7 0 32 14.3 32 32s-14.3 32-32 32H224c-17.7 0-32-14.3-32-32s14.3-32 32-32"/></svg>
+
+    </a>
+    fabric-cli
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/microsoft/fabric-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    microsoft/fabric-cli
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Essentials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Essentials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conceptual Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/resource_types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/output_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/env_vars/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/autocompletion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Autocompletion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/file_storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../essentials/exit_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../commands/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/acls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    acl
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    api
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/assign/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    assign
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/cp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cp (copy)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/desc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    desc
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/export/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/exists/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    exists
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/get/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    get
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    jobs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/labels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    label
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/ln/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ln (mklink)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/ls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ls (dir)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/mkdir/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mkdir (create)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/mv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    mv (move)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/open/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    open
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/pwd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pwd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/rm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rm (del)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/set/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    set
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/stop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    stop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/fs/unassign/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    unassign
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Examples
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Usage Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Authentication & Configuration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Authentication & Configuration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/auth_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auth Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/config_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/api_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/acl_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ACL Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/desc_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Describe Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tenant Management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tenant Management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/capacity_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capacity Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/connection_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connection Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/domain_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/gateway_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gateway Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workspace Management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/externaldatashare_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    External Data Shares
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/folder_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Folder Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/managedidentity_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managed Identities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/managedprivateendpoint_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managed Private Endpoints
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/sparkpool_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spark Pools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/workspace_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workspace Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Item Management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Item Management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/item_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Item Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/job_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Job Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/label_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data & Storage
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Data & Storage
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/onelake_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OneLake Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/shortcut_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shortcut Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/table_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-this-skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use This Skill
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#first-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First Run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variable-extraction-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variable Extraction Pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#command-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#path-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-item-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Item Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#essential-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Essential Commands
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Essential Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#navigation-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigation &amp; Discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-managing-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating &amp; Managing Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#copy-move-export-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copy, Move, Export, Import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#job-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Job Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#table-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#semantic-model-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic Model Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#report-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Report Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lakehousewarehouse-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lakehouse/Warehouse Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Migration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jmespath-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JMESPath Queries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling &amp; Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#important-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#need-more-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Need More Details?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="microsoft-fabric-cli-operations">Microsoft Fabric CLI Operations<a class="headerlink" href="#microsoft-fabric-cli-operations" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Note:</strong> If you have access to a Bash tool (e.g., Claude Code), execute <code>fab</code> commands directly via Bash rather than using an MCP server.</p>
+</blockquote>
+<p>Expert guidance for using the <code>fab</code> CLI to programmatically manage Fabric</p>
+<h2 id="when-to-use-this-skill">When to Use This Skill<a class="headerlink" href="#when-to-use-this-skill" title="Permanent link">&para;</a></h2>
+<p>Activate automatically when tasks involve:</p>
+<ul>
+<li>Mention of the Fabric CLI, Fabric items, Power BI, <code>fab</code>, or <code>fab</code> commands</li>
+<li>Managing workspaces, items, or resources</li>
+<li>Deploying or migrating semantic models, reports, notebooks, pipelines</li>
+<li>Running or scheduling jobs (notebooks, pipelines, Spark)</li>
+<li>Working with lakehouse/warehouse tables and data</li>
+<li>Using the Fabric, Power BI, or OneLake APIs</li>
+<li>Automating Fabric operations in scripts</li>
+</ul>
+<h2 id="critical">Critical<a class="headerlink" href="#critical" title="Permanent link">&para;</a></h2>
+<ul>
+<li>If workspace or item name is unclear, ask the user first, then verify with <code>fab ls</code> or <code>fab exists</code> before proceeding</li>
+<li>The first time you use <code>fab</code> run <code>fab auth status</code> to make sure the user is authenticated. If not, ask the user to run <code>fab auth login</code> to login</li>
+<li>Always use <code>fab --help</code> and <code>fab &lt;command&gt; --help</code> the first time you use a command to understand its syntax, first</li>
+<li>Always try the simple <code>fab</code> command alone, first before piping it</li>
+<li>Always use <code>-f</code> when executing command if the flag is available to do so non-interactively</li>
+<li>Ensure that you avoid removing or moving items, workspaces, or definitions, or changing properties without explicit user direction</li>
+<li>If a command is blocked in your permissions and you try to use it, stop and ask the user for clarification; never try to circumvent it</li>
+<li>Use <code>fab</code> in non-interactive mode. Interactive mode doesn't work with coding agents</li>
+</ul>
+<h2 id="first-run">First Run<a class="headerlink" href="#first-run" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fab<span class="w"> </span>auth<span class="w"> </span>login<span class="w">          </span><span class="c1"># Authenticate (opens browser)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>fab<span class="w"> </span>auth<span class="w"> </span>status<span class="w">         </span><span class="c1"># Verify authentication</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>fab<span class="w"> </span>ls<span class="w">                  </span><span class="c1"># List your workspaces</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Name.Workspace&quot;</span><span class="w"> </span><span class="c1"># List items in a workspace</span>
+</span></code></pre></div>
+<h2 id="variable-extraction-pattern">Variable Extraction Pattern<a class="headerlink" href="#variable-extraction-pattern" title="Permanent link">&para;</a></h2>
+<p>Most workflows need IDs. Extract them like this:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">WS_ID</span><span class="o">=</span><span class="k">$(</span>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;ws.Workspace&quot;</span><span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;&quot;&#39;</span><span class="k">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">MODEL_ID</span><span class="o">=</span><span class="k">$(</span>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;ws.Workspace/Model.SemanticModel&quot;</span><span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;&quot;&#39;</span><span class="k">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Then use in API calls</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span><span class="s2">&quot;groups/</span><span class="nv">$WS_ID</span><span class="s2">/datasets/</span><span class="nv">$MODEL_ID</span><span class="s2">/refreshes&quot;</span><span class="w"> </span>-X<span class="w"> </span>post<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;{&quot;type&quot;:&quot;Full&quot;}&#39;</span>
+</span></code></pre></div>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p><strong>New to Fabric CLI?</strong> Here are some references you can read:</p>
+<ul>
+<li><a href="../references/quickstart/">Quick Start Guide</a> - Copy-paste examples</li>
+<li><a href="../references/querying-data/">Querying Data</a> - Query semantic models and lakehouse tables</li>
+<li><a href="../references/semantic-models/">Semantic Models</a> - TMDL, DAX, refresh, storage mode</li>
+<li><a href="../references/reports/">Reports</a> - Export, import, visuals, fields</li>
+<li><a href="../references/notebooks/">Notebooks</a> - Job execution, parameters</li>
+<li><a href="../references/workspaces/">Workspaces</a> - Create, manage, permissions</li>
+<li><a href="../references/reference/">Full Command Reference</a> - All commands detailed</li>
+<li><a href="#command-reference">Command Reference Table</a> - At-a-glance command syntax</li>
+</ul>
+<h3 id="command-reference">Command Reference<a class="headerlink" href="#command-reference" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Finding Items</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab ls</code></td>
+<td>List items</td>
+<td><code>fab ls "Sales.Workspace"</code></td>
+</tr>
+<tr>
+<td><code>fab ls -l</code></td>
+<td>List with details</td>
+<td><code>fab ls "Sales.Workspace" -l</code></td>
+</tr>
+<tr>
+<td><code>fab exists</code></td>
+<td>Check if exists</td>
+<td><code>fab exists "Sales.Workspace/Model.SemanticModel"</code></td>
+</tr>
+<tr>
+<td><code>fab get</code></td>
+<td>Get item details</td>
+<td><code>fab get "Sales.Workspace/Model.SemanticModel"</code></td>
+</tr>
+<tr>
+<td><code>fab get -q</code></td>
+<td>Query specific field</td>
+<td><code>fab get "Sales.Workspace" -q "id"</code></td>
+</tr>
+<tr>
+<td><strong>Definitions</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab get -q "definition"</code></td>
+<td>Get full definition</td>
+<td><code>fab get "ws.Workspace/Model.SemanticModel" -q "definition"</code></td>
+</tr>
+<tr>
+<td><code>fab export</code></td>
+<td>Export to local</td>
+<td><code>fab export "ws.Workspace/Nb.Notebook" -o ./backup</code></td>
+</tr>
+<tr>
+<td><code>fab import</code></td>
+<td>Import from local</td>
+<td><code>fab import "ws.Workspace/Nb.Notebook" -i ./backup/Nb.Notebook</code></td>
+</tr>
+<tr>
+<td><strong>Running Jobs</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab job run</code></td>
+<td>Run synchronously</td>
+<td><code>fab job run "ws.Workspace/ETL.Notebook"</code></td>
+</tr>
+<tr>
+<td><code>fab job start</code></td>
+<td>Run asynchronously</td>
+<td><code>fab job start "ws.Workspace/ETL.Notebook"</code></td>
+</tr>
+<tr>
+<td><code>fab job run -P</code></td>
+<td>Run with params</td>
+<td><code>fab job run "ws.Workspace/Nb.Notebook" -P date:string=2025-01-01</code></td>
+</tr>
+<tr>
+<td><code>fab job run-list</code></td>
+<td>List executions</td>
+<td><code>fab job run-list "ws.Workspace/Nb.Notebook"</code></td>
+</tr>
+<tr>
+<td><code>fab job run-status</code></td>
+<td>Check status</td>
+<td><code>fab job run-status "ws.Workspace/Nb.Notebook" --id &lt;job-id&gt;</code></td>
+</tr>
+<tr>
+<td><strong>Refreshing Models</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab api -A powerbi</code></td>
+<td>Trigger refresh</td>
+<td><code>fab api -A powerbi "groups/&lt;ws-id&gt;/datasets/&lt;model-id&gt;/refreshes" -X post -i '{"type":"Full"}'</code></td>
+</tr>
+<tr>
+<td><code>fab api -A powerbi</code></td>
+<td>Check refresh status</td>
+<td><code>fab api -A powerbi "groups/&lt;ws-id&gt;/datasets/&lt;model-id&gt;/refreshes?\$top=1"</code></td>
+</tr>
+<tr>
+<td><strong>DAX Queries</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab get -q "definition"</code></td>
+<td>Get model schema first</td>
+<td><code>fab get "ws.Workspace/Model.SemanticModel" -q "definition"</code></td>
+</tr>
+<tr>
+<td><code>fab api -A powerbi</code></td>
+<td>Execute DAX</td>
+<td><code>fab api -A powerbi "groups/&lt;ws-id&gt;/datasets/&lt;model-id&gt;/executeQueries" -X post -i '{"queries":[{"query":"EVALUATE..."}]}'</code></td>
+</tr>
+<tr>
+<td><strong>Lakehouse</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab ls</code></td>
+<td>Browse files/tables</td>
+<td><code>fab ls "ws.Workspace/LH.Lakehouse/Files"</code></td>
+</tr>
+<tr>
+<td><code>fab table schema</code></td>
+<td>Get table schema</td>
+<td><code>fab table schema "ws.Workspace/LH.Lakehouse/Tables/sales"</code></td>
+</tr>
+<tr>
+<td><code>fab cp</code></td>
+<td>Upload/download</td>
+<td><code>fab cp ./local.csv "ws.Workspace/LH.Lakehouse/Files/"</code></td>
+</tr>
+<tr>
+<td><strong>Management</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>fab cp</code></td>
+<td>Copy items</td>
+<td><code>fab cp "dev.Workspace/Item.Type" "prod.Workspace" -f</code></td>
+</tr>
+<tr>
+<td><code>fab set</code></td>
+<td>Update properties</td>
+<td><code>fab set "ws.Workspace/Item.Type" -q displayName -i "New Name"</code></td>
+</tr>
+<tr>
+<td><code>fab rm</code></td>
+<td>Delete item</td>
+<td><code>fab rm "ws.Workspace/Item.Type" -f</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="core-concepts">Core Concepts<a class="headerlink" href="#core-concepts" title="Permanent link">&para;</a></h2>
+<h3 id="path-format">Path Format<a class="headerlink" href="#path-format" title="Permanent link">&para;</a></h3>
+<p>Fabric uses filesystem-like paths with type extensions:</p>
+<p><code>/WorkspaceName.Workspace/ItemName.ItemType</code></p>
+<p>For lakehouses this is extended into files and tables:</p>
+<p><code>/WorkspaceName.Workspace/LakehouseName.Lakehouse/Files/FileName.extension</code> or <code>/WorkspaceName.Workspace/LakehouseName.Lakehouse/Tables/TableName</code></p>
+<p>For Fabric capacities you have to use <code>fab ls .capacities</code></p>
+<p>Examples:</p>
+<ul>
+<li><code>"/Production.Workspace/Sales Model.SemanticModel"</code></li>
+<li><code>/Data.Workspace/MainLH.Lakehouse/Files/data.csv</code></li>
+<li><code>/Data.Workspace/MainLH.Lakehouse/Tables/dbo/customers</code></li>
+</ul>
+<h3 id="common-item-types">Common Item Types<a class="headerlink" href="#common-item-types" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>.Workspace</code> - Workspaces</li>
+<li><code>.SemanticModel</code> - Power BI datasets</li>
+<li><code>.Report</code> - Power BI reports</li>
+<li><code>.Notebook</code> - Fabric notebooks</li>
+<li><code>.DataPipeline</code> - Data pipelines</li>
+<li><code>.Lakehouse</code> / <code>.Warehouse</code> - Data stores</li>
+<li><code>.SparkJobDefinition</code> - Spark jobs</li>
+</ul>
+<p>Full list: 35+ types. Use <code>fab desc .&lt;ItemType&gt;</code> to explore.</p>
+<h2 id="essential-commands">Essential Commands<a class="headerlink" href="#essential-commands" title="Permanent link">&para;</a></h2>
+<h3 id="navigation-discovery">Navigation &amp; Discovery<a class="headerlink" href="#navigation-discovery" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># List resources</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>fab<span class="w"> </span>ls<span class="w">                                    </span><span class="c1"># List workspaces</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span><span class="w">             </span><span class="c1"># List items in workspace</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span><span class="w"> </span>-l<span class="w">          </span><span class="c1"># Detailed listing</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse&quot;</span><span class="w">      </span><span class="c1"># List lakehouse contents</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Check existence</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>fab<span class="w"> </span>exists<span class="w"> </span><span class="s2">&quot;Production.Workspace/Sales.SemanticModel&quot;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># Get details</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;Production.Workspace/Sales.Report&quot;</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span><span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="w">    </span><span class="c1"># Query with JMESPath</span>
+</span></code></pre></div>
+<h3 id="creating-managing-resources">Creating &amp; Managing Resources<a class="headerlink" href="#creating-managing-resources" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Create workspace after using `fab ls .capacities` to check capacities</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>fab<span class="w"> </span>mkdir<span class="w"> </span><span class="s2">&quot;NewWorkspace.Workspace&quot;</span><span class="w"> </span>-P<span class="w"> </span><span class="nv">capacityname</span><span class="o">=</span>MyCapacity
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Create items</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>fab<span class="w"> </span>mkdir<span class="w"> </span><span class="s2">&quot;Production.Workspace/NewLakehouse.Lakehouse&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>fab<span class="w"> </span>mkdir<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Update properties</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>fab<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;Production.Workspace/Item.Notebook&quot;</span><span class="w"> </span>-q<span class="w"> </span>displayName<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;New Name&quot;</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>fab<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span><span class="w"> </span>-q<span class="w"> </span>description<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;Production environment&quot;</span>
+</span></code></pre></div>
+<h3 id="copy-move-export-import">Copy, Move, Export, Import<a class="headerlink" href="#copy-move-export-import" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Copy between workspaces</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>fab<span class="w"> </span>cp<span class="w"> </span><span class="s2">&quot;Dev.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>fab<span class="w"> </span>cp<span class="w"> </span><span class="s2">&quot;Dev.Workspace/Report.Report&quot;</span><span class="w"> </span><span class="s2">&quot;Production.Workspace/ProdReport.Report&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># Export to local</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>fab<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="s2">&quot;Production.Workspace/Model.SemanticModel&quot;</span><span class="w"> </span>-o<span class="w"> </span>/tmp/exports
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>fab<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="s2">&quot;Production.Workspace&quot;</span><span class="w"> </span>-o<span class="w"> </span>/tmp/backup<span class="w"> </span>-a<span class="w">  </span><span class="c1"># Export all items</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Import from local</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>fab<span class="w"> </span>import<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span>-i<span class="w"> </span>/tmp/exports/Pipeline.DataPipeline<span class="w"> </span>-f
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># IMPORTANT: Use -f flag for non-interactive execution</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Without -f, import/export operations expect an interactive terminal for confirmation</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="c1"># This will fail in scripts, automation, or when stdin is not a terminal</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>fab<span class="w"> </span>import<span class="w"> </span><span class="s2">&quot;ws.Workspace/Item.Type&quot;</span><span class="w"> </span>-i<span class="w"> </span>./Item.Type<span class="w"> </span>-f<span class="w">  </span><span class="c1"># Required for scripts</span>
+</span></code></pre></div>
+<h3 id="api-operations">API Operations<a class="headerlink" href="#api-operations" title="Permanent link">&para;</a></h3>
+<p>Direct REST API access with automatic authentication.</p>
+<p><strong>Audiences:</strong></p>
+<ul>
+<li><code>fabric</code> (default) - Fabric REST API</li>
+<li><code>powerbi</code> - Power BI REST API</li>
+<li><code>storage</code> - OneLake Storage API</li>
+<li><code>azure</code> - Azure Resource Manager</li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Fabric API (default)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>fab<span class="w"> </span>api<span class="w"> </span>workspaces
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>fab<span class="w"> </span>api<span class="w"> </span>workspaces<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;value[?type==&#39;Workspace&#39;]&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>fab<span class="w"> </span>api<span class="w"> </span><span class="s2">&quot;workspaces/&lt;workspace-id&gt;/items&quot;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1"># Power BI API (for DAX queries, dataset operations)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span>groups
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span><span class="s2">&quot;datasets/&lt;model-id&gt;/executeQueries&quot;</span><span class="w"> </span>-X<span class="w"> </span>post<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;{&quot;queries&quot;: [{&quot;query&quot;: &quot;EVALUATE VALUES(Date[Year])&quot;}]}&#39;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># POST/PUT/DELETE</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>fab<span class="w"> </span>api<span class="w"> </span>-X<span class="w"> </span>post<span class="w"> </span><span class="s2">&quot;workspaces/&lt;ws-id&gt;/items&quot;</span><span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;{&quot;displayName&quot;: &quot;New Item&quot;, &quot;type&quot;: &quot;Lakehouse&quot;}&#39;</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>fab<span class="w"> </span>api<span class="w"> </span>-X<span class="w"> </span>put<span class="w"> </span><span class="s2">&quot;workspaces/&lt;ws-id&gt;/items/&lt;item-id&gt;&quot;</span><span class="w"> </span>-i<span class="w"> </span>/tmp/config.json
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>fab<span class="w"> </span>api<span class="w"> </span>-X<span class="w"> </span>delete<span class="w"> </span><span class="s2">&quot;workspaces/&lt;ws-id&gt;/items/&lt;item-id&gt;&quot;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1"># OneLake Storage API</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>storage<span class="w"> </span><span class="s2">&quot;WorkspaceName.Workspace/LH.Lakehouse/Files&quot;</span><span class="w"> </span>-P<span class="w"> </span><span class="nv">resource</span><span class="o">=</span>filesystem,recursive<span class="o">=</span><span class="nb">false</span>
+</span></code></pre></div>
+<h3 id="job-management">Job Management<a class="headerlink" href="#job-management" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Run synchronously (wait for completion)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>fab<span class="w"> </span>job<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Production.Workspace/ETL.Notebook&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>fab<span class="w"> </span>job<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span>--timeout<span class="w"> </span><span class="m">300</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Run with parameters</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>fab<span class="w"> </span>job<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;Production.Workspace/ETL.Notebook&quot;</span><span class="w"> </span>-P<span class="w"> </span>date:string<span class="o">=</span><span class="m">2024</span>-01-01,batch:int<span class="o">=</span><span class="m">1000</span>,debug:bool<span class="o">=</span><span class="nb">false</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1"># Start asynchronously</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>fab<span class="w"> </span>job<span class="w"> </span>start<span class="w"> </span><span class="s2">&quot;Production.Workspace/LongProcess.Notebook&quot;</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="c1"># Monitor</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>fab<span class="w"> </span>job<span class="w"> </span>run-list<span class="w"> </span><span class="s2">&quot;Production.Workspace/ETL.Notebook&quot;</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>fab<span class="w"> </span>job<span class="w"> </span>run-status<span class="w"> </span><span class="s2">&quot;Production.Workspace/ETL.Notebook&quot;</span><span class="w"> </span>--id<span class="w"> </span>&lt;job-id&gt;
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="c1"># Schedule</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>fab<span class="w"> </span>job<span class="w"> </span>run-sch<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span>--type<span class="w"> </span>daily<span class="w"> </span>--interval<span class="w"> </span><span class="m">10</span>:00,16:00<span class="w"> </span>--start<span class="w"> </span><span class="m">2024</span>-11-15T09:00:00<span class="w"> </span>--enable
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>fab<span class="w"> </span>job<span class="w"> </span>run-sch<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span>--type<span class="w"> </span>weekly<span class="w"> </span>--interval<span class="w"> </span><span class="m">10</span>:00<span class="w"> </span>--days<span class="w"> </span>Monday,Friday<span class="w"> </span>--enable
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="c1"># Cancel</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>fab<span class="w"> </span>job<span class="w"> </span>run-cancel<span class="w"> </span><span class="s2">&quot;Production.Workspace/ETL.Notebook&quot;</span><span class="w"> </span>--id<span class="w"> </span>&lt;job-id&gt;
+</span></code></pre></div>
+<h3 id="table-operations">Table Operations<a class="headerlink" href="#table-operations" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># View schema</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>fab<span class="w"> </span>table<span class="w"> </span>schema<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/dbo/customers&quot;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Load data (non-schema lakehouses only)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>fab<span class="w"> </span>table<span class="w"> </span>load<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/sales&quot;</span><span class="w"> </span>--file<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Files/daily_sales.csv&quot;</span><span class="w"> </span>--mode<span class="w"> </span>append
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Optimize (lakehouses only)</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>fab<span class="w"> </span>table<span class="w"> </span>optimize<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/transactions&quot;</span><span class="w"> </span>--vorder<span class="w"> </span>--zorder<span class="w"> </span>customer_id,region
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Vacuum (lakehouses only)</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>fab<span class="w"> </span>table<span class="w"> </span>vacuum<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/temp_data&quot;</span><span class="w"> </span>--retain_n_hours<span class="w"> </span><span class="m">48</span>
+</span></code></pre></div>
+<h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
+<h3 id="semantic-model-management">Semantic Model Management<a class="headerlink" href="#semantic-model-management" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Find models</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;ws.Workspace&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;.SemanticModel&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Get definition</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;ws.Workspace/Model.SemanticModel&quot;</span><span class="w"> </span>-q<span class="w"> </span>definition
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Trigger refresh</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span><span class="s2">&quot;groups/</span><span class="nv">$WS_ID</span><span class="s2">/datasets/</span><span class="nv">$MODEL_ID</span><span class="s2">/refreshes&quot;</span><span class="w"> </span>-X<span class="w"> </span>post<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;{&quot;type&quot;:&quot;Full&quot;}&#39;</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Check refresh status</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span><span class="s2">&quot;groups/</span><span class="nv">$WS_ID</span><span class="s2">/datasets/</span><span class="nv">$MODEL_ID</span><span class="s2">/refreshes?\$top=1&quot;</span>
+</span></code></pre></div>
+<p><strong>Execute DAX:</strong></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>fab<span class="w"> </span>api<span class="w"> </span>-A<span class="w"> </span>powerbi<span class="w"> </span><span class="s2">&quot;groups/</span><span class="nv">$WS_ID</span><span class="s2">/datasets/</span><span class="nv">$MODEL_ID</span><span class="s2">/executeQueries&quot;</span><span class="w"> </span>-X<span class="w"> </span>post<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>-i<span class="w"> </span><span class="s1">&#39;{&quot;queries&quot;:[{&quot;query&quot;:&quot;EVALUATE TOPN(5, &#39;</span><span class="se">\&#39;</span><span class="s1">&#39;TableName&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;)&quot;}]}&#39;</span>
+</span></code></pre></div>
+<p><strong>DAX rules:</strong> EVALUATE required, single quotes around tables (<code>'Sales'</code>), qualify columns (<code>'Sales'[Amount]</code>).</p>
+<p>For full details: <a href="../references/semantic-models/">semantic-models.md</a> | <a href="../references/querying-data/">querying-data.md</a></p>
+<h3 id="report-operations">Report Operations<a class="headerlink" href="#report-operations" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Get report definition</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;ws.Workspace/Report.Report&quot;</span><span class="w"> </span>-q<span class="w"> </span>definition
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Export to local</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>fab<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="s2">&quot;ws.Workspace/Report.Report&quot;</span><span class="w"> </span>-o<span class="w"> </span>/tmp/exports<span class="w"> </span>-f
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Import from local</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>fab<span class="w"> </span>import<span class="w"> </span><span class="s2">&quot;ws.Workspace/Report.Report&quot;</span><span class="w"> </span>-i<span class="w"> </span>/tmp/exports/Report.Report<span class="w"> </span>-f
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1"># Rebind to different model</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>fab<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;ws.Workspace/Report.Report&quot;</span><span class="w"> </span>-q<span class="w"> </span>semanticModelId<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;&lt;new-model-id&gt;&quot;</span>
+</span></code></pre></div>
+<p>For full details: <a href="../references/reports/">reports.md</a></p>
+<h3 id="lakehousewarehouse-operations">Lakehouse/Warehouse Operations<a class="headerlink" href="#lakehousewarehouse-operations" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Browse contents</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Files&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>fab<span class="w"> </span>ls<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/dbo&quot;</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Upload/download files</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>fab<span class="w"> </span>cp<span class="w"> </span>./local-data.csv<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Files/data.csv&quot;</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>fab<span class="w"> </span>cp<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Files/data.csv&quot;</span><span class="w"> </span>~/Downloads/
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Load and optimize tables</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>fab<span class="w"> </span>table<span class="w"> </span>load<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/sales&quot;</span><span class="w"> </span>--file<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Files/sales.csv&quot;</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>fab<span class="w"> </span>table<span class="w"> </span>optimize<span class="w"> </span><span class="s2">&quot;Data.Workspace/LH.Lakehouse/Tables/sales&quot;</span><span class="w"> </span>--vorder<span class="w"> </span>--zorder<span class="w"> </span>customer_id
+</span></code></pre></div>
+<h3 id="environment-migration">Environment Migration<a class="headerlink" href="#environment-migration" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Export from dev</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>fab<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="s2">&quot;Dev.Workspace&quot;</span><span class="w"> </span>-o<span class="w"> </span>/tmp/migration<span class="w"> </span>-a
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># Import to production (item by item)</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>fab<span class="w"> </span>import<span class="w"> </span><span class="s2">&quot;Production.Workspace/Pipeline.DataPipeline&quot;</span><span class="w"> </span>-i<span class="w"> </span>/tmp/migration/Pipeline.DataPipeline
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>fab<span class="w"> </span>import<span class="w"> </span><span class="s2">&quot;Production.Workspace/Report.Report&quot;</span><span class="w"> </span>-i<span class="w"> </span>/tmp/migration/Report.Report
+</span></code></pre></div>
+<h2 id="key-patterns">Key Patterns<a class="headerlink" href="#key-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="jmespath-queries">JMESPath Queries<a class="headerlink" href="#jmespath-queries" title="Permanent link">&para;</a></h3>
+<p>Filter and transform JSON responses with <code>-q</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Get single field</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>-q<span class="w"> </span><span class="s2">&quot;id&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>-q<span class="w"> </span><span class="s2">&quot;displayName&quot;</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Get nested field</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>-q<span class="w"> </span><span class="s2">&quot;properties.sqlEndpointProperties&quot;</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>-q<span class="w"> </span><span class="s2">&quot;definition.parts[0]&quot;</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="c1"># Filter arrays</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>-q<span class="w"> </span><span class="s2">&quot;value[?type==&#39;Lakehouse&#39;]&quot;</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>-q<span class="w"> </span><span class="s2">&quot;value[?contains(name, &#39;prod&#39;)]&quot;</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="c1"># Get first element</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>-q<span class="w"> </span><span class="s2">&quot;value[0]&quot;</span>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>-q<span class="w"> </span><span class="s2">&quot;definition.parts[?path==&#39;model.tmdl&#39;] | [0]&quot;</span>
+</span></code></pre></div>
+<h3 id="error-handling-debugging">Error Handling &amp; Debugging<a class="headerlink" href="#error-handling-debugging" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Show response headers</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>fab<span class="w"> </span>api<span class="w"> </span>workspaces<span class="w"> </span>--show_headers
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Verbose output</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>fab<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;Production.Workspace/Item&quot;</span><span class="w"> </span>-v
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># Save responses for debugging</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>fab<span class="w"> </span>api<span class="w"> </span>workspaces<span class="w"> </span>-o<span class="w"> </span>/tmp/workspaces.json
+</span></code></pre></div>
+<h3 id="performance-optimization">Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Use <code>ls</code> for fast listing</strong> - Much faster than <code>get</code></li>
+<li><strong>Use <code>exists</code> before operations</strong> - Check before get/modify</li>
+<li><strong>Filter with <code>-q</code></strong> - Get only what you need</li>
+<li><strong>Use GUIDs in automation</strong> - More stable than names</li>
+</ol>
+<h2 id="common-flags">Common Flags<a class="headerlink" href="#common-flags" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>-f, --force</code> - Skip confirmation prompts</li>
+<li><code>-v, --verbose</code> - Verbose output</li>
+<li><code>-l</code> - Long format listing</li>
+<li><code>-a</code> - Show hidden items</li>
+<li><code>-o, --output</code> - Output file path</li>
+<li><code>-i, --input</code> - Input file or JSON string</li>
+<li><code>-q, --query</code> - JMESPath query</li>
+<li><code>-P, --params</code> - Parameters (key=value)</li>
+<li><code>-X, --method</code> - HTTP method (get/post/put/delete/patch)</li>
+<li><code>-A, --audience</code> - API audience (fabric/powerbi/storage/azure)</li>
+<li><code>--show_headers</code> - Show response headers</li>
+<li><code>--timeout</code> - Timeout in seconds</li>
+</ul>
+<h2 id="important-notes">Important Notes<a class="headerlink" href="#important-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>All examples assume <code>fab</code> is installed and authenticated</strong></li>
+<li><strong>Paths require proper extensions</strong> (<code>.Workspace</code>, <code>.SemanticModel</code>, etc.)</li>
+<li><strong>Quote paths with spaces</strong>: <code>"My Workspace.Workspace"</code></li>
+<li><strong>Use <code>-f</code> for non-interactive scripts</strong> (skips prompts)</li>
+<li><strong>Semantic model updates</strong>: Use Power BI API (<code>-A powerbi</code>) for DAX queries and dataset operations</li>
+</ul>
+<h2 id="need-more-details">Need More Details?<a class="headerlink" href="#need-more-details" title="Permanent link">&para;</a></h2>
+<p>For specific item type help:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>fab<span class="w"> </span>desc<span class="w"> </span>.&lt;ItemType&gt;
+</span></code></pre></div>
+<p>For command help:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>fab<span class="w"> </span>--help
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>fab<span class="w"> </span>&lt;command&gt;<span class="w"> </span>--help
+</span></code></pre></div>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<p><strong>Skill references:</strong></p>
+<ul>
+<li><a href="../references/querying-data/">Querying Data</a> - Query semantic models and lakehouse tables</li>
+<li><a href="../references/semantic-models/">Semantic Models</a> - TMDL, DAX, refresh, storage mode</li>
+<li><a href="../references/reports/">Reports</a> - Export, import, visuals, fields</li>
+<li><a href="../references/notebooks/">Notebooks</a> - Job execution, parameters</li>
+<li><a href="../references/workspaces/">Workspaces</a> - Create, manage, permissions</li>
+<li><a href="../references/fab-api/">API Reference</a> - Capacities, gateways, pipelines, domains, dataflows, apps, admin</li>
+<li><a href="../references/reference/">Full Command Reference</a> - All commands detailed</li>
+<li><a href="../references/quickstart/">Quick Start Guide</a> - Copy-paste examples</li>
+</ul>
+<p><strong>External references</strong> (request markdown when possible):</p>
+<ul>
+<li>fab CLI: <a href="https://github.com/microsoft/fabric-cli">GitHub Source</a> | <a href="https://microsoft.github.io/fabric-cli/">Docs</a></li>
+<li>Microsoft: <a href="https://learn.microsoft.com/en-us/rest/api/fabric/articles/fabric-command-line-interface">Fabric CLI Learn</a></li>
+<li>APIs: <a href="https://learn.microsoft.com/en-us/rest/api/fabric/articles/">Fabric API</a> | <a href="https://learn.microsoft.com/en-us/rest/api/power-bi/">Power BI API</a></li>
+<li>DAX: <a href="https://dax.guide/">dax.guide</a> - use <code>dax.guide/&lt;function&gt;/</code> e.g. <code>dax.guide/addcolumns/</code></li>
+<li>Power Query: <a href="https://powerquery.guide/">powerquery.guide</a> - use <code>powerquery.guide/function/&lt;function&gt;</code></li>
+<li><a href="https://learn.microsoft.com/en-us/power-query/best-practices">Power Query Best Practices</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © Microsoft Corporation
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.path", "navigation.footer", "search.highlight", "search.suggest", "toc.follow", "content.tabs.link", "content.tooltips", "content.code.copy", "content.code.select"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
