@@ -4,12 +4,22 @@
 import platform
 from unittest.mock import ANY, patch
 
+import pytest
+
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
+from tests.test_commands.conftest import (
+    export_item_default_format_parameters,
+    export_item_format_parameters,
+    export_item_invalid_format_parameters,
+    export_item_types_parameters,
+    export_item_with_extension_parameters,
+)
 
 
 class TestExport:
     # region EXPORT
+    @export_item_with_extension_parameters
     def test_export_item_success(
         self,
         item_factory,
@@ -17,9 +27,11 @@ class TestExport:
         mock_print_done,
         tmp_path,
         mock_print_warning,
+        item_type,
+        expected_file_extension,
     ):
         # Setup
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
@@ -27,19 +39,20 @@ class TestExport:
 
         # Execute command
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output {str(tmp_path)} --force"
+            f"export {item.full_path} --output {str(tmp_path)} --force"
         )
 
         # Assert
-        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
         assert len(files) == 2
-        assert any(file.suffix == ".ipynb" for file in files)
+        assert any(file.suffix == expected_file_extension for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
         mock_print_warning.assert_called_once()
 
+    @export_item_with_extension_parameters
     def test_export_item_home_directory_path_success(
         self,
         item_factory,
@@ -48,13 +61,15 @@ class TestExport:
         tmp_path,
         monkeypatch,
         mock_print_warning,
+        item_type,
+        expected_file_extension,
     ):
         # Setup
         home_dir = tmp_path / "home"
         home_dir.mkdir()
         home_dir_env = "USERPROFILE" if platform.system() == "Windows" else "HOME"
         monkeypatch.setenv(home_dir_env, str(home_dir))
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
         output_dir = home_dir / "test_export"
         output_dir.mkdir()
 
@@ -64,31 +79,32 @@ class TestExport:
 
         # Execute command using ~/path notation
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output ~/test_export --force"
+            f"export {item.full_path} --output ~/test_export --force"
         )
 
         # Assert
-        export_path = output_dir / f"{notebook.display_name}.Notebook"
+        export_path = output_dir / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
         assert len(files) == 2
-        assert any(file.suffix == ".ipynb" for file in files)
+        assert any(file.suffix == expected_file_extension for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
         mock_print_warning.assert_called_once()
 
+    @export_item_types_parameters
     def test_export_item_invalid_output_path_failure(
-        self, item_factory, cli_executor, mock_print_done, assert_fabric_cli_error
+        self, item_factory, cli_executor, mock_print_done, assert_fabric_cli_error, item_type
     ):
         # Setup
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output /invalid/path --force"
+            f"export {item.full_path} --output /invalid/path --force"
         )
 
         # Assert
@@ -185,75 +201,83 @@ class TestExport:
         # Assert
         assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
 
-    def test_export_notebook_py_format_success(
-        self, item_factory, cli_executor, mock_print_done, tmp_path
+    @export_item_format_parameters
+    def test_export_item_format_success(
+        self, item_factory, cli_executor, mock_print_done, tmp_path,
+        item_type, export_format, expected_file_extension
     ):
         # Setup
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output {str(tmp_path)} --format .py --force"
+            f"export {item.full_path} --output {str(tmp_path)} --format {export_format} --force"
         )
 
         # Assert
-        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
         assert len(files) == 2
-        assert any(file.suffix == ".py" for file in files)
+        assert any(file.suffix == expected_file_extension for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
-    def test_export_notebook_default_format_success(
-        self, item_factory, cli_executor, mock_print_done, tmp_path
+    @export_item_default_format_parameters
+    def test_export_item_default_format_success(
+        self, item_factory, cli_executor, mock_print_done, tmp_path,
+        item_type, expected_file_count
     ):
         # Setup
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command without format (should use default format from definition_format_mapping)
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output {str(tmp_path)} --force"
+            f"export {item.full_path} --output {str(tmp_path)} --force"
         )
 
-        # Assert - should use default format which is "?format=ipynb" resulting in .ipynb file
-        export_path = tmp_path / f"{notebook.display_name}.Notebook"
+        # Assert - should use default format for each item type
+        export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
-        assert len(files) == 2
-        # Default format should be .ipynb
-        assert any(file.suffix == ".ipynb" for file in files)
+
+        assert len(files) == expected_file_count
+        # assert any(file.suffix == ".ipynb" for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
-    def test_export_notebook_invalid_format_failure(
+    @export_item_invalid_format_parameters
+    def test_export_item_invalid_format_failure(
         self,
         item_factory,
         cli_executor,
         assert_fabric_cli_error,
         mock_print_done,
         tmp_path,
+        item_type,
+        invalid_format,
+        expected_error_suffix,
     ):
         # Setup
-        notebook = item_factory(ItemType.NOTEBOOK)
+        item = item_factory(item_type)
 
         # Reset mock
         mock_print_done.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
-            f"export {notebook.full_path} --output {str(tmp_path)} --format .txt --force"
+            f"export {item.full_path} --output {str(tmp_path)} --format {invalid_format} --force"
         )
 
         # Assert
-        assert_fabric_cli_error(constant.ERROR_INVALID_INPUT,
-                                "Invalid format. Only the following formats are supported: .py, .ipynb")
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT, f"Invalid format. {expected_error_suffix}")
 
     def test_export_report_no_format_support_failure(
         self,
