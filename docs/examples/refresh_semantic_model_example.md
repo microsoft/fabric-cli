@@ -17,11 +17,20 @@ Where `$SEMANTIC_MODEL_ID` and `$WORKSPACE_ID` are set to your semantic model ID
 You can also provide additional parameters to the refresh job, based on the supported payload documented in [Refresh Dataset In Group](https://learn.microsoft.com/rest/api/power-bi/datasets/refresh-dataset-in-group#request-body), as follows:
 
 ```bash
-REQUEST_BODY='{"retryCount":"1","timeout":"00:20:00"}'
-fab api -A powerbi -X post "groups/$WORKSPACE_ID/datasets/$SEMANTIC_MODEL_ID/refreshes" --show_headers -i "$REQUEST_BODY"
+fab api -A powerbi -X post "groups/$WORKSPACE_ID/datasets/$SEMANTIC_MODEL_ID/refreshes" --show_headers -i '{"retryCount":"1","timeout":"00:20:00"}'
 ```
 
-## Run Refresh With Polling for Completion
+## Check Refresh Status
+
+You can check the status of a specific refresh operation using the refresh ID. The refresh ID is returned in the `Location` or `RequestId` response headers when you run a refresh.
+
+```bash
+fab api -A powerbi -X get "groups/$WORKSPACE_ID/datasets/$SEMANTIC_MODEL_ID/refreshes/$REFRESH_ID"
+```
+
+This command uses the [Get Refresh Execution Details In Group](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/get-refresh-execution-details-in-group) API endpoint.
+
+## End-to-End Example: Run Refresh and Poll for Completion
 
 Replace the following placeholders before running:
 
