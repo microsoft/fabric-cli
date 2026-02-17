@@ -383,9 +383,9 @@ Stop mirrored database without confirmation.
 fab stop ws1.Workspace/mir1.MirroredDatabase -f
 ```
 
-### Dataset Refresh
+### Semantic Model Refresh
 
-For detailed examples on triggering and monitoring semantic model (dataset) refresh operations using the API command, see the [Dataset Refresh Example](refresh_dataset_example.md).
+For detailed examples on triggering and monitoring semantic model refresh using the API command, see the [Semantic Model Refresh Example](refresh_semantic_model_example.md).
 
 ### Open in Browser
 
