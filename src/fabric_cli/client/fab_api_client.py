@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import os
 import platform
 import re
 import time
@@ -96,9 +97,10 @@ def do_request(
     from fabric_cli.core.fab_context import Context as FabContext
 
     ctxt_cmd = FabContext().command
+
     headers = {
         "Authorization": "Bearer " + str(token),
-        "User-Agent": f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} ({ctxt_cmd}; {platform.system()}; {platform.machine()}; {platform.release()})",
+        "User-Agent": _build_user_agent(ctxt_cmd),
     }
 
     if files is None:
@@ -277,6 +279,54 @@ def _handle_successful_response(args: Namespace, response: ApiResponse) -> ApiRe
         response.append_text(_response.text)
 
     return response
+
+
+def _build_user_agent(ctxt_cmd: str) -> str:
+    """Build the User-Agent header for API requests.
+
+    Example:
+        ms-fabric-cli/1.0.0 (create; Windows/10; Python/3.10.2) host-app/ado/2.0.0
+    """
+    user_agent = f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} ({ctxt_cmd}; {platform.system()}/{platform.release()}; Python/{platform.python_version()})"
+    host_app = _get_host_app()
+    if host_app:
+        user_agent += host_app
+
+    return user_agent
+
+
+def _get_host_app() -> str:
+    """Get the HostApp suffix for the User-Agent header based on environment variables.
+
+    Returns an empty string if the environment variable is not set or has an invalid value.
+    """
+    _host_app_in_env = os.environ.get(fab_constant.FAB_HOST_APP_ENV_VAR)
+    if not _host_app_in_env:
+        return ""
+
+    host_app_name = next(
+        (
+            allowed_app
+            for allowed_app in fab_constant.ALLOWED_FAB_HOST_APP_VALUES
+            if _host_app_in_env.lower() == allowed_app.lower()
+        ),
+        None,
+    )
+
+    if not host_app_name:
+        return ""
+
+    host_app = f" host-app/{host_app_name.lower()}"
+
+    # Check for optional version
+    host_app_version = os.environ.get(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR)
+
+    # validate host_app_version format is a valid version (e.g., 1.0.0)
+    if host_app_version and re.match(
+        r"^\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?$", host_app_version
+    ):
+        host_app += f"/{host_app_version}"
+    return host_app
 
 
 def _print_response_details(response: ApiResponse) -> None:

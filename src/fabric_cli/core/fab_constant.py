@@ -66,6 +66,9 @@ AUTH_KEYS = {
     IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
 }
 
+FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
+FAB_HOST_APP_VERSION_ENV_VAR = "FAB_HOST_APP_VERSION"
+
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"
 FAB_DEFAULT_OPEN_EXPERIENCE_FABRIC = "fabric-developer"
@@ -326,6 +329,12 @@ ITEM_METADATA_PROPERTIES = {
     "folderId",
     "properties",
 }
+
+################################################
+### Only allowed for modification by CLI team ##
+
+ALLOWED_FAB_HOST_APP_VALUES = ["Fabric-AzureDevops-Extension"]
+################################################
 
 # Item set constants
 ITEM_QUERY_DEFINITION = "definition"
