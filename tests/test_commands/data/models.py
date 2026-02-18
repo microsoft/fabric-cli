@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from typing import Any
+
+
 class User:
     def __init__(self, user_data: dict[str, str]):
         # Expecting keys: "id", "upn"
@@ -56,10 +59,13 @@ class Label:
 
 
 class EntityMetadata:
-    def __init__(self, display_name: str, name: str, full_path: str):
+    def __init__(
+        self, display_name: str, name: str, full_path: str, type: Any = None
+    ):
         self._display_name = display_name
         self._name = name
         self._full_path = full_path
+        self._type = type
 
     @property
     def display_name(self) -> str:
@@ -75,8 +81,17 @@ class EntityMetadata:
 
     # This setter is required for the mv command
     @full_path.setter
-    def full_path(self, new_path):
+    def full_path(self, new_path: str) -> None:
         self._full_path = new_path
+
+    @property
+    def type(self) -> Any:
+        return self._type
+
+    # This setter is required for cleanup during test teardown
+    @type.setter
+    def type(self, value: Any) -> None:
+        self._type = value
 
 
 class SQLServer:
@@ -123,11 +138,13 @@ class CredentialDetails:
     def password(self) -> str:
         return self._password
 
+
 class OnPremisesGatewayDetails:
     def __init__(self, gateway_data: dict[str, str]):
         # Expecting keys: "id", "encrypted_credentials"
         self._id = gateway_data.get("id") or ""
-        self._encrypted_credentials = gateway_data.get("encrypted_credentials") or ""
+        self._encrypted_credentials = gateway_data.get(
+            "encrypted_credentials") or ""
 
     @property
     def id(self) -> str:

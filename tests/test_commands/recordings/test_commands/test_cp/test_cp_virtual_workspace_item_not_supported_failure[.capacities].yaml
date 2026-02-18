@@ -1,0 +1,603 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "Central US", "state":
+        "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '427'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:33:31 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - d35d7dd2-e3ac-4750-8193-d2eef59aca35
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"properties": {"administration": {"members": ["mocked@admin_test_user"]}},
+      "sku": {"name": "F2", "tier": "Fabric"}, "location": "mocked_fabriccli_azure_location"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '165'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: PUT
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Fabric/capacities/fabcli000001?api-version=2023-11-01
+  response:
+    body:
+      string: '{"properties": {"provisioningState": "Provisioning", "state": "Provisioning",
+        "administration": {"members": ["mocked@admin_test_user"]}}, "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Fabric/capacities/fabcli000001",
+        "name": "fabcli000001", "type": "Microsoft.Fabric/capacities", "location":
+        "westeurope", "sku": {"name": "F2", "tier": "Fabric"}}'
+    headers:
+      Azure-AsyncOperation:
+      - https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/8099C74C-F7C6-4077-87A6-71BA7ED56AB8?api-version=2022-07-01-preview&t=639062156182374194&c=MIIHpTCCBo2gAwIBAgITfwaYLauAh8CxuiWTWAAEBpgtqzANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDIwHhcNMjYwMTMxMTA0MjQxWhcNMjYwNTI0MjI1NzAzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMPQCxt_lHFzrqPQEyg1mRwUkbcfwDQry6lja2cs4oGoTlTv9XCivEbrKMiLeiz41KI3OTivNFp1b6NtzsBt0-pMm6HX0EdXrKPoAoLdFgYrf4uW3Fwb8yaOCV9d4kBHx0Net5QdisU5EaPG4uLxhV2GcBXA69SQ26_zrQDhxDm6_Xacr0CTTUPldUmNbkYXNmNu08cxv2pch1fCmWQ-v-RCMKyc5tlKrsplGYXif1enpIan3UfWux5xor9bVsSjmmeMJlmbuv4-zFnh2GhrRsGhI2gpxJIeurbaQ9kJ2HhWJTqw4Cn3jc_T6f0O4NT9hhY1FQ1dQjZ3MVDQc3XuvfUCAwEAAaOCBJIwggSOMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHaBggrBgEFBQcBAQSCAcwwggHIMGYGCCsGAQUFBzAChlpodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmwxLmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MFYGCCsGAQUFBzAChkpodHRwOi8vY3JsMi5hbWUuZ2JsL2FpYS9CTDJQS0lJTlRDQTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDAyKDQpLmNydDBWBggrBgEFBQcwAoZKaHR0cDovL2NybDMuYW1lLmdibC9haWEvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmw0LmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MB0GA1UdDgQWBBQPtjuKP6Po5Hqe7l22sK_U3aRNEjAOBgNVHQ8BAf8EBAMCBaAwggE1BgNVHR8EggEsMIIBKDCCASSgggEgoIIBHIZCaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraWluZnJhL0NSTC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMS5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMi5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMy5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsNC5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JsMIGdBgNVHSAEgZUwgZIwDAYKKwYBBAGCN3sBATBmBgorBgEEAYI3ewICMFgwVgYIKwYBBQUHAgIwSh5IADMAMwBlADAAMQA5ADIAMQAtADQAZAA2ADQALQA0AGYAOABjAC0AYQAwADUANQAtADUAYgBkAGEAZgBmAGQANQBlADMAMwBkMAwGCisGAQQBgjd7AwIwDAYKKwYBBAGCN3sEAjAfBgNVHSMEGDAWgBSuecJrXSWIEwb2BwnDl3x7l48dVTAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcNAQELBQADggEBAEX7Bk8ovIOJqOPedzii1E3dQnfPjeq-XhmuFbHG3eD0wMaw0uvIv-ClED_eVAmHlLkEfLRgglpxUu1En0BuDXJMVZaSA4ImynKL8MJ6Y-1r5RPvZcmrUWvGluG03FltmAtt63WZ6KLkBabRsxM-yp0ZPpFYCbF85Ig8HeQlwAevvgDQEHY0H1eLFa9olc3ooZNfK0K258SmjaKUAn910q3aqQKdiNGjol6sH1jGilWTcbesDRosYjFsK9cmr0qqRUf-JpFHGrrGHf0ZzwignCtD0odanGi4eQUVagu5gsOHSr-kd70JV5pSEDDz-FZF7ecARkjrroX2OHEL7Doo7J0&s=vgbmuD4_PhJ57yTbMg5hSKIyPd-Fb-l-wUVkRxm33wItQy9i7SRNzL8DaIXveS6WvhrqKJJQoKliyf8HOHsPknxiYPnWn2YZ1RmlZxlKwsTE_zFiCJ-90h3aEqgD2srosek5UL9J_SBDK5Xq-NAKv29UsiY7jhcZ9QQ5RWov04cCrTgr0SkuVwifUumjRSclrfiRbONFs9MwQkO_HVgOOHY8s-7R3HVGQuCNuayg0lXp5jfBdN0R79phl-32QtnNCpakrjszI5CSD-wm0qkOyIgI_lrUFdOWC5Pfr0wR8Q8uLi4htisGtz9DT1X1b3APNNc9vWmmCsgUHgQj3xL6jA&h=UShV8m6edQmUfEyciG13VIETQEHp1Qsn_ZiIhkpaZXs
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '422'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:33:38 GMT
+      Expires:
+      - '-1'
+      Location:
+      - https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationresults/8099C74C-F7C6-4077-87A6-71BA7ED56AB8?api-version=2022-07-01-preview&t=639062156182374194&c=MIIHpTCCBo2gAwIBAgITfwaYLauAh8CxuiWTWAAEBpgtqzANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDIwHhcNMjYwMTMxMTA0MjQxWhcNMjYwNTI0MjI1NzAzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMPQCxt_lHFzrqPQEyg1mRwUkbcfwDQry6lja2cs4oGoTlTv9XCivEbrKMiLeiz41KI3OTivNFp1b6NtzsBt0-pMm6HX0EdXrKPoAoLdFgYrf4uW3Fwb8yaOCV9d4kBHx0Net5QdisU5EaPG4uLxhV2GcBXA69SQ26_zrQDhxDm6_Xacr0CTTUPldUmNbkYXNmNu08cxv2pch1fCmWQ-v-RCMKyc5tlKrsplGYXif1enpIan3UfWux5xor9bVsSjmmeMJlmbuv4-zFnh2GhrRsGhI2gpxJIeurbaQ9kJ2HhWJTqw4Cn3jc_T6f0O4NT9hhY1FQ1dQjZ3MVDQc3XuvfUCAwEAAaOCBJIwggSOMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHaBggrBgEFBQcBAQSCAcwwggHIMGYGCCsGAQUFBzAChlpodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmwxLmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MFYGCCsGAQUFBzAChkpodHRwOi8vY3JsMi5hbWUuZ2JsL2FpYS9CTDJQS0lJTlRDQTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDAyKDQpLmNydDBWBggrBgEFBQcwAoZKaHR0cDovL2NybDMuYW1lLmdibC9haWEvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmw0LmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MB0GA1UdDgQWBBQPtjuKP6Po5Hqe7l22sK_U3aRNEjAOBgNVHQ8BAf8EBAMCBaAwggE1BgNVHR8EggEsMIIBKDCCASSgggEgoIIBHIZCaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraWluZnJhL0NSTC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMS5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMi5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMy5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsNC5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JsMIGdBgNVHSAEgZUwgZIwDAYKKwYBBAGCN3sBATBmBgorBgEEAYI3ewICMFgwVgYIKwYBBQUHAgIwSh5IADMAMwBlADAAMQA5ADIAMQAtADQAZAA2ADQALQA0AGYAOABjAC0AYQAwADUANQAtADUAYgBkAGEAZgBmAGQANQBlADMAMwBkMAwGCisGAQQBgjd7AwIwDAYKKwYBBAGCN3sEAjAfBgNVHSMEGDAWgBSuecJrXSWIEwb2BwnDl3x7l48dVTAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcNAQELBQADggEBAEX7Bk8ovIOJqOPedzii1E3dQnfPjeq-XhmuFbHG3eD0wMaw0uvIv-ClED_eVAmHlLkEfLRgglpxUu1En0BuDXJMVZaSA4ImynKL8MJ6Y-1r5RPvZcmrUWvGluG03FltmAtt63WZ6KLkBabRsxM-yp0ZPpFYCbF85Ig8HeQlwAevvgDQEHY0H1eLFa9olc3ooZNfK0K258SmjaKUAn910q3aqQKdiNGjol6sH1jGilWTcbesDRosYjFsK9cmr0qqRUf-JpFHGrrGHf0ZzwignCtD0odanGi4eQUVagu5gsOHSr-kd70JV5pSEDDz-FZF7ecARkjrroX2OHEL7Doo7J0&s=qKqYlFoAMh3153cDGFHh1BXAwvtOsBaOmz9Vu4CRDxlxUrOw5Odv-Jf2rcMUKVDpw6Tx6e0OiEoftaa-GgifFu7WkfjRsswFmHoFjhXY4V1I3O6LAwGNYXeFo0QjudjzsxcIilrlGDeJ13XQ5Kfn7BSVhcGAoOsfxGR9IJUmEpCZE_FAXi64Uvieq5dmmw9k3LPc7sCTX2wc45beKx5JVarJSdDcUtkVX4p_bVllvZf3eCYsMbMFQMKJgJxHA_SGP75s1Ct8GtdIn-lfAtffECAtK5b29VDP4__ZQzefR65rPl7udHhwMWYK1NPj1Q-vf9BGqNqf5Zh50G-hktQynw&h=2T1eUeagq9e2wFAXtjXOfE_uq_grkt1HcS6AV40w0Jo
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 201
+      message: Created
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/8099C74C-F7C6-4077-87A6-71BA7ED56AB8?api-version=2022-07-01-preview&t=639062156182374194&c=MIIHpTCCBo2gAwIBAgITfwaYLauAh8CxuiWTWAAEBpgtqzANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDIwHhcNMjYwMTMxMTA0MjQxWhcNMjYwNTI0MjI1NzAzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMPQCxt_lHFzrqPQEyg1mRwUkbcfwDQry6lja2cs4oGoTlTv9XCivEbrKMiLeiz41KI3OTivNFp1b6NtzsBt0-pMm6HX0EdXrKPoAoLdFgYrf4uW3Fwb8yaOCV9d4kBHx0Net5QdisU5EaPG4uLxhV2GcBXA69SQ26_zrQDhxDm6_Xacr0CTTUPldUmNbkYXNmNu08cxv2pch1fCmWQ-v-RCMKyc5tlKrsplGYXif1enpIan3UfWux5xor9bVsSjmmeMJlmbuv4-zFnh2GhrRsGhI2gpxJIeurbaQ9kJ2HhWJTqw4Cn3jc_T6f0O4NT9hhY1FQ1dQjZ3MVDQc3XuvfUCAwEAAaOCBJIwggSOMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHaBggrBgEFBQcBAQSCAcwwggHIMGYGCCsGAQUFBzAChlpodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmwxLmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MFYGCCsGAQUFBzAChkpodHRwOi8vY3JsMi5hbWUuZ2JsL2FpYS9CTDJQS0lJTlRDQTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDAyKDQpLmNydDBWBggrBgEFBQcwAoZKaHR0cDovL2NybDMuYW1lLmdibC9haWEvQkwyUEtJSU5UQ0EwMS5BTUUuR0JMX0FNRSUyMEluZnJhJTIwQ0ElMjAwMig0KS5jcnQwVgYIKwYBBQUHMAKGSmh0dHA6Ly9jcmw0LmFtZS5nYmwvYWlhL0JMMlBLSUlOVENBMDEuQU1FLkdCTF9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3J0MB0GA1UdDgQWBBQPtjuKP6Po5Hqe7l22sK_U3aRNEjAOBgNVHQ8BAf8EBAMCBaAwggE1BgNVHR8EggEsMIIBKDCCASSgggEgoIIBHIZCaHR0cDovL2NybC5taWNyb3NvZnQuY29tL3BraWluZnJhL0NSTC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMS5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMi5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsMy5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JshjRodHRwOi8vY3JsNC5hbWUuZ2JsL2NybC9BTUUlMjBJbmZyYSUyMENBJTIwMDIoNCkuY3JsMIGdBgNVHSAEgZUwgZIwDAYKKwYBBAGCN3sBATBmBgorBgEEAYI3ewICMFgwVgYIKwYBBQUHAgIwSh5IADMAMwBlADAAMQA5ADIAMQAtADQAZAA2ADQALQA0AGYAOABjAC0AYQAwADUANQAtADUAYgBkAGEAZgBmAGQANQBlADMAMwBkMAwGCisGAQQBgjd7AwIwDAYKKwYBBAGCN3sEAjAfBgNVHSMEGDAWgBSuecJrXSWIEwb2BwnDl3x7l48dVTAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcNAQELBQADggEBAEX7Bk8ovIOJqOPedzii1E3dQnfPjeq-XhmuFbHG3eD0wMaw0uvIv-ClED_eVAmHlLkEfLRgglpxUu1En0BuDXJMVZaSA4ImynKL8MJ6Y-1r5RPvZcmrUWvGluG03FltmAtt63WZ6KLkBabRsxM-yp0ZPpFYCbF85Ig8HeQlwAevvgDQEHY0H1eLFa9olc3ooZNfK0K258SmjaKUAn910q3aqQKdiNGjol6sH1jGilWTcbesDRosYjFsK9cmr0qqRUf-JpFHGrrGHf0ZzwignCtD0odanGi4eQUVagu5gsOHSr-kd70JV5pSEDDz-FZF7ecARkjrroX2OHEL7Doo7J0&s=vgbmuD4_PhJ57yTbMg5hSKIyPd-Fb-l-wUVkRxm33wItQy9i7SRNzL8DaIXveS6WvhrqKJJQoKliyf8HOHsPknxiYPnWn2YZ1RmlZxlKwsTE_zFiCJ-90h3aEqgD2srosek5UL9J_SBDK5Xq-NAKv29UsiY7jhcZ9QQ5RWov04cCrTgr0SkuVwifUumjRSclrfiRbONFs9MwQkO_HVgOOHY8s-7R3HVGQuCNuayg0lXp5jfBdN0R79phl-32QtnNCpakrjszI5CSD-wm0qkOyIgI_lrUFdOWC5Pfr0wR8Q8uLi4htisGtz9DT1X1b3APNNc9vWmmCsgUHgQj3xL6jA&h=UShV8m6edQmUfEyciG13VIETQEHp1Qsn_ZiIhkpaZXs
+  response:
+    body:
+      string: '{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/locations/westeurope/operationstatuses/8099C74C-F7C6-4077-87A6-71BA7ED56AB8",
+        "name": "8099C74C-F7C6-4077-87A6-71BA7ED56AB8", "status": "Succeeded", "startTime":
+        "2026-02-09T06:33:37.0030000Z", "endTime": "2026-02-09T06:33:39.7330000Z"}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '287'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:33:48 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "Central US", "state":
+        "Active"}, {"id": "b14cb74d-9a9b-43d1-9798-7a7d6c66683c", "displayName": "fabcli000001",
+        "sku": "F2", "region": "West Europe", "state": "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '461'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:33:53 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 4b74f312-88ae-45e1-9b02-b26e55e8e68d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "Central US", "state":
+        "Active"}, {"id": "b14cb74d-9a9b-43d1-9798-7a7d6c66683c", "displayName": "fabcli000001",
+        "sku": "F2", "region": "West Europe", "state": "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '463'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:33:57 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 460a4ebc-828b-420f-ad23-76a2112c658a
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "b14cb74d-9a9b-43d1-9798-7a7d6c66683c", "displayName":
+        "fabcli000001", "sku": "F2", "region": "West Europe", "state": "Active"},
+        {"id": "00000000-0000-0000-0000-000000000004", "displayName": "mocked_fabriccli_capacity_name",
+        "sku": "F16", "region": "Central US", "state": "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '463'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:03 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 93bc6b3a-1fa0-4a2c-a129-ea0b1164239d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/capacities
+  response:
+    body:
+      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000004", "displayName":
+        "mocked_fabriccli_capacity_name", "sku": "F16", "region": "Central US", "state":
+        "Active"}, {"id": "b14cb74d-9a9b-43d1-9798-7a7d6c66683c", "displayName": "fabcli000001",
+        "sku": "F2", "region": "West Europe", "state": "Active"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '463'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:09 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 4025af07-d812-43c4-8d7b-f9013bd1db92
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Fabric/capacities/fabcli000001?api-version=2023-11-01
+  response:
+    body:
+      string: '{"properties": {"provisioningState": "Succeeded", "state": "Active",
+        "administration": {"members": ["mocked@admin_test_user"]}}, "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Fabric/capacities/fabcli000001",
+        "name": "fabcli000001", "type": "Microsoft.Fabric/capacities", "location":
+        "West Europe", "sku": {"name": "F2", "tier": "Fabric"}, "tags": {}}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '424'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:09 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: DELETE
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mocked_fabriccli_resource_group/providers/Microsoft.Fabric/capacities/fabcli000001?api-version=2023-11-01
+  response:
+    body:
+      string: ''
+    headers:
+      Azure-AsyncOperation:
+      - https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32?api-version=2022-07-01-preview&t=639062156520599842&c=MIIIrzCCBpegAwIBAgITUQFAksjJXtdW64QOrwABAUCSyDANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDQwHhcNMjUxMDIyMTEzMDMzWhcNMjYwNDIwMTEzMDMzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANIL_ea4PX6tqxHLVF9EMduSXtibVvw_fvJo_2qVyVM_8guCpW7Vot8hAA3JXqJIuYF9h5wn2uWRXZXHyg4aaY2Lbqro1-tBMPU5rXoQZ9s2duM-rKR95C5eA8BbDTDoKjSTOnLAQ0-XWJI1upgmi1VDBnjo6o_RupQR7IimcAZdXrMl2LaN3lNyuldWaC5acWcw9L9ufxDGPdkfvUv_ScXQ-7BzgPXRS1UL7WyL9EV4bddWXpBBvZR80DH6tdfzz9pgHF4OIeUvSVm4QmcCVH5iCmbnVWDBGlhA1O6UBgUfxqnljc5MhLkkKH5OHPspPmRrsDTzYP15yZWFI82YMNECAwEAAaOCBJwwggSYMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHkBggrBgEFBQcBAQSCAdYwggHSMGgGCCsGAQUFBzAChlxodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDEuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDIuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDMuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDQuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDAdBgNVHQ4EFgQUxuJ8b7tUVxxF9Uh_S-aQfmEWkyswDgYDVR0PAQH_BAQDAgWgMIIBNQYDVR0fBIIBLDCCASgwggEkoIIBIKCCARyGQmh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9wa2lpbmZyYS9DUkwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDEuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDIuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDMuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDQuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybDCBnQYDVR0gBIGVMIGSMAwGCisGAQQBgjd7AQEwZgYKKwYBBAGCN3sCAjBYMFYGCCsGAQUFBwICMEoeSAAzADMAZQAwADEAOQAyADEALQA0AGQANgA0AC0ANABmADgAYwAtAGEAMAA1ADUALQA1AGIAZABhAGYAZgBkADUAZQAzADMAZDAMBgorBgEEAYI3ewMCMAwGCisGAQQBgjd7BAIwHwYDVR0jBBgwFoAUOXFdqRUQLcTffi9ZbkBNwN_vNpowHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4ICAQAm6ZIl-5JrU83aixl875_xu7AqUHCqv_i3nKCtjfGKmpGgizLsa4kt_p3sPApiqvF1Dv2p794N5czXWs9tOGrxIc4GO-YqMXcmdfuHAqfZw5zC8MaiJookTLex3yd4ExrGtH_UmV0RpxDfCTGIQTr7WP2q8veI5fYj2_EMzKkQmV8e8Xk8cHxiF3jLky9mihEvMKDMpOD2pHPNTUCHJcJaa7R6JpDqlmCjL7JHM_NPpLqJfERsYRMtyRsCXN7t2KDTMPTrD2X20__M_mBZUtDWSM4dq0TlSx6WYVZT6Hs4i2x7WVBm5GbpznQ7uULBH9s2tTlhBC4bKAEw72WrrUU-7N7sWw7lKj8GApdoKrpLVE1w41qQFcEBK_NNYcSmxpQqpxh1kmr4V5MRCdDYpavRe8RRg2kwY8nsu_p-aqHv1RIyPyLK6_Iv7VuL0fIzayygFC7rH1C4_-iB7BJRQZuMq_QF_GJe9i6k6M406KA4BsbrDZSRPSg_128fdWkocAxaC-VECmyOEBjomZ_zYc6ka_Q45Fj57OCFxXHLzlsGjlgQ3AyWGAhYhgGJ7v6HyOr5aElWz6Q533UvtLmH3JtIwMsiR-0L_a8Whyd39suFwhJ4xIYQXoewMTAhl8-mg_v6OqSjnHwZRfGDzMQrQGaiYJDE0p1oWz4E9CUEp2qmzw&s=oDUGR31RFdYFBqNWqqHb1GSWoMk19JKjGO98jxiRkLCi9M-ZxH9FhE5Oa4kaA7tPRrTAWhNcLVmcYtNwlJ2hgT8mzPYuhnIpP28dkp0mZ3P49-GcezUFNCLI3A1WPhRir5PNYwsbo-5qZcH7MAqkuJqvKKY3YyZJ9FCC8DZ_Afs5LyVNauubiL1RdX3ErMGtHq0KGKvgIJIuc2BPOCOlYquMm9vc6xT3BawQU5sfjvyBK68NGpyY3RQm8rnZAUit0YTnZKWllSpStOMfoiFwsaac5Ug8YL3iGq-dgBVXVtlPzWINxCtZLjOyzsr0GR4C7bokbIP6q2FOYzOYGH0w1A&h=ZJi53U47s6qdu6_Hsc-w4e4cXMwmsN-7sucJyC4-rlA
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '0'
+      Content-Security-Policy:
+      - script-src 'self'
+      Date:
+      - Mon, 09 Feb 2026 06:34:11 GMT
+      Expires:
+      - '-1'
+      Location:
+      - https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationresults/C779A5E5-961F-4B08-9D80-566C1C91ED32?api-version=2022-07-01-preview&t=639062156520599842&c=MIIIrzCCBpegAwIBAgITUQFAksjJXtdW64QOrwABAUCSyDANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDQwHhcNMjUxMDIyMTEzMDMzWhcNMjYwNDIwMTEzMDMzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANIL_ea4PX6tqxHLVF9EMduSXtibVvw_fvJo_2qVyVM_8guCpW7Vot8hAA3JXqJIuYF9h5wn2uWRXZXHyg4aaY2Lbqro1-tBMPU5rXoQZ9s2duM-rKR95C5eA8BbDTDoKjSTOnLAQ0-XWJI1upgmi1VDBnjo6o_RupQR7IimcAZdXrMl2LaN3lNyuldWaC5acWcw9L9ufxDGPdkfvUv_ScXQ-7BzgPXRS1UL7WyL9EV4bddWXpBBvZR80DH6tdfzz9pgHF4OIeUvSVm4QmcCVH5iCmbnVWDBGlhA1O6UBgUfxqnljc5MhLkkKH5OHPspPmRrsDTzYP15yZWFI82YMNECAwEAAaOCBJwwggSYMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHkBggrBgEFBQcBAQSCAdYwggHSMGgGCCsGAQUFBzAChlxodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDEuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDIuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDMuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDQuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDAdBgNVHQ4EFgQUxuJ8b7tUVxxF9Uh_S-aQfmEWkyswDgYDVR0PAQH_BAQDAgWgMIIBNQYDVR0fBIIBLDCCASgwggEkoIIBIKCCARyGQmh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9wa2lpbmZyYS9DUkwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDEuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDIuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDMuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDQuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybDCBnQYDVR0gBIGVMIGSMAwGCisGAQQBgjd7AQEwZgYKKwYBBAGCN3sCAjBYMFYGCCsGAQUFBwICMEoeSAAzADMAZQAwADEAOQAyADEALQA0AGQANgA0AC0ANABmADgAYwAtAGEAMAA1ADUALQA1AGIAZABhAGYAZgBkADUAZQAzADMAZDAMBgorBgEEAYI3ewMCMAwGCisGAQQBgjd7BAIwHwYDVR0jBBgwFoAUOXFdqRUQLcTffi9ZbkBNwN_vNpowHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4ICAQAm6ZIl-5JrU83aixl875_xu7AqUHCqv_i3nKCtjfGKmpGgizLsa4kt_p3sPApiqvF1Dv2p794N5czXWs9tOGrxIc4GO-YqMXcmdfuHAqfZw5zC8MaiJookTLex3yd4ExrGtH_UmV0RpxDfCTGIQTr7WP2q8veI5fYj2_EMzKkQmV8e8Xk8cHxiF3jLky9mihEvMKDMpOD2pHPNTUCHJcJaa7R6JpDqlmCjL7JHM_NPpLqJfERsYRMtyRsCXN7t2KDTMPTrD2X20__M_mBZUtDWSM4dq0TlSx6WYVZT6Hs4i2x7WVBm5GbpznQ7uULBH9s2tTlhBC4bKAEw72WrrUU-7N7sWw7lKj8GApdoKrpLVE1w41qQFcEBK_NNYcSmxpQqpxh1kmr4V5MRCdDYpavRe8RRg2kwY8nsu_p-aqHv1RIyPyLK6_Iv7VuL0fIzayygFC7rH1C4_-iB7BJRQZuMq_QF_GJe9i6k6M406KA4BsbrDZSRPSg_128fdWkocAxaC-VECmyOEBjomZ_zYc6ka_Q45Fj57OCFxXHLzlsGjlgQ3AyWGAhYhgGJ7v6HyOr5aElWz6Q533UvtLmH3JtIwMsiR-0L_a8Whyd39suFwhJ4xIYQXoewMTAhl8-mg_v6OqSjnHwZRfGDzMQrQGaiYJDE0p1oWz4E9CUEp2qmzw&s=tkRQmOscm2npBm2rr9I8cybdpj_1sL7GlmW2cJxOfWwAEHt1Srg81O0W0L8Xh0-Eiz7fqgzviU8S1aCqoYTpP3BSafCHAUyo75fDkA_LEs7SGra_NzTNd15SfDz_lCWEZivgXBuC8sRn4OZHU0CY-gygjBGElolBEnZJ9DyXStBAvvAB9ijWB-B12vawrQKIwg7VAyGYwdUa6Imuzi0fg84bUcjH9zii_2F4s6fOJuGbckH06qfcgIqZAI63i4UreeNvA7yWwBtL0ZaE_FD4LpMK_3oN0jmvseLJFouYqTjw8eTLWuAqq8nLiudGuvwdQP-D8qfMOngyNVaZfSoTww&h=2BT1MzwQ8ZeEM8-X1CerSD2_9SZOtP_qUOkpj1KQn9g
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 202
+      message: Accepted
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32?api-version=2022-07-01-preview&t=639062156520599842&c=MIIIrzCCBpegAwIBAgITUQFAksjJXtdW64QOrwABAUCSyDANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDQwHhcNMjUxMDIyMTEzMDMzWhcNMjYwNDIwMTEzMDMzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANIL_ea4PX6tqxHLVF9EMduSXtibVvw_fvJo_2qVyVM_8guCpW7Vot8hAA3JXqJIuYF9h5wn2uWRXZXHyg4aaY2Lbqro1-tBMPU5rXoQZ9s2duM-rKR95C5eA8BbDTDoKjSTOnLAQ0-XWJI1upgmi1VDBnjo6o_RupQR7IimcAZdXrMl2LaN3lNyuldWaC5acWcw9L9ufxDGPdkfvUv_ScXQ-7BzgPXRS1UL7WyL9EV4bddWXpBBvZR80DH6tdfzz9pgHF4OIeUvSVm4QmcCVH5iCmbnVWDBGlhA1O6UBgUfxqnljc5MhLkkKH5OHPspPmRrsDTzYP15yZWFI82YMNECAwEAAaOCBJwwggSYMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHkBggrBgEFBQcBAQSCAdYwggHSMGgGCCsGAQUFBzAChlxodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDEuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDIuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDMuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDQuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDAdBgNVHQ4EFgQUxuJ8b7tUVxxF9Uh_S-aQfmEWkyswDgYDVR0PAQH_BAQDAgWgMIIBNQYDVR0fBIIBLDCCASgwggEkoIIBIKCCARyGQmh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9wa2lpbmZyYS9DUkwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDEuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDIuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDMuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDQuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybDCBnQYDVR0gBIGVMIGSMAwGCisGAQQBgjd7AQEwZgYKKwYBBAGCN3sCAjBYMFYGCCsGAQUFBwICMEoeSAAzADMAZQAwADEAOQAyADEALQA0AGQANgA0AC0ANABmADgAYwAtAGEAMAA1ADUALQA1AGIAZABhAGYAZgBkADUAZQAzADMAZDAMBgorBgEEAYI3ewMCMAwGCisGAQQBgjd7BAIwHwYDVR0jBBgwFoAUOXFdqRUQLcTffi9ZbkBNwN_vNpowHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4ICAQAm6ZIl-5JrU83aixl875_xu7AqUHCqv_i3nKCtjfGKmpGgizLsa4kt_p3sPApiqvF1Dv2p794N5czXWs9tOGrxIc4GO-YqMXcmdfuHAqfZw5zC8MaiJookTLex3yd4ExrGtH_UmV0RpxDfCTGIQTr7WP2q8veI5fYj2_EMzKkQmV8e8Xk8cHxiF3jLky9mihEvMKDMpOD2pHPNTUCHJcJaa7R6JpDqlmCjL7JHM_NPpLqJfERsYRMtyRsCXN7t2KDTMPTrD2X20__M_mBZUtDWSM4dq0TlSx6WYVZT6Hs4i2x7WVBm5GbpznQ7uULBH9s2tTlhBC4bKAEw72WrrUU-7N7sWw7lKj8GApdoKrpLVE1w41qQFcEBK_NNYcSmxpQqpxh1kmr4V5MRCdDYpavRe8RRg2kwY8nsu_p-aqHv1RIyPyLK6_Iv7VuL0fIzayygFC7rH1C4_-iB7BJRQZuMq_QF_GJe9i6k6M406KA4BsbrDZSRPSg_128fdWkocAxaC-VECmyOEBjomZ_zYc6ka_Q45Fj57OCFxXHLzlsGjlgQ3AyWGAhYhgGJ7v6HyOr5aElWz6Q533UvtLmH3JtIwMsiR-0L_a8Whyd39suFwhJ4xIYQXoewMTAhl8-mg_v6OqSjnHwZRfGDzMQrQGaiYJDE0p1oWz4E9CUEp2qmzw&s=oDUGR31RFdYFBqNWqqHb1GSWoMk19JKjGO98jxiRkLCi9M-ZxH9FhE5Oa4kaA7tPRrTAWhNcLVmcYtNwlJ2hgT8mzPYuhnIpP28dkp0mZ3P49-GcezUFNCLI3A1WPhRir5PNYwsbo-5qZcH7MAqkuJqvKKY3YyZJ9FCC8DZ_Afs5LyVNauubiL1RdX3ErMGtHq0KGKvgIJIuc2BPOCOlYquMm9vc6xT3BawQU5sfjvyBK68NGpyY3RQm8rnZAUit0YTnZKWllSpStOMfoiFwsaac5Ug8YL3iGq-dgBVXVtlPzWINxCtZLjOyzsr0GR4C7bokbIP6q2FOYzOYGH0w1A&h=ZJi53U47s6qdu6_Hsc-w4e4cXMwmsN-7sucJyC4-rlA
+  response:
+    body:
+      string: '{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32",
+        "name": "C779A5E5-961F-4B08-9D80-566C1C91ED32", "status": "Deleting", "startTime":
+        "2026-02-09T06:34:11.4370000Z"}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '245'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:22 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32?api-version=2022-07-01-preview&t=639062156520599842&c=MIIIrzCCBpegAwIBAgITUQFAksjJXtdW64QOrwABAUCSyDANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDQwHhcNMjUxMDIyMTEzMDMzWhcNMjYwNDIwMTEzMDMzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANIL_ea4PX6tqxHLVF9EMduSXtibVvw_fvJo_2qVyVM_8guCpW7Vot8hAA3JXqJIuYF9h5wn2uWRXZXHyg4aaY2Lbqro1-tBMPU5rXoQZ9s2duM-rKR95C5eA8BbDTDoKjSTOnLAQ0-XWJI1upgmi1VDBnjo6o_RupQR7IimcAZdXrMl2LaN3lNyuldWaC5acWcw9L9ufxDGPdkfvUv_ScXQ-7BzgPXRS1UL7WyL9EV4bddWXpBBvZR80DH6tdfzz9pgHF4OIeUvSVm4QmcCVH5iCmbnVWDBGlhA1O6UBgUfxqnljc5MhLkkKH5OHPspPmRrsDTzYP15yZWFI82YMNECAwEAAaOCBJwwggSYMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHkBggrBgEFBQcBAQSCAdYwggHSMGgGCCsGAQUFBzAChlxodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDEuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDIuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDMuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDQuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDAdBgNVHQ4EFgQUxuJ8b7tUVxxF9Uh_S-aQfmEWkyswDgYDVR0PAQH_BAQDAgWgMIIBNQYDVR0fBIIBLDCCASgwggEkoIIBIKCCARyGQmh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9wa2lpbmZyYS9DUkwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDEuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDIuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDMuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDQuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybDCBnQYDVR0gBIGVMIGSMAwGCisGAQQBgjd7AQEwZgYKKwYBBAGCN3sCAjBYMFYGCCsGAQUFBwICMEoeSAAzADMAZQAwADEAOQAyADEALQA0AGQANgA0AC0ANABmADgAYwAtAGEAMAA1ADUALQA1AGIAZABhAGYAZgBkADUAZQAzADMAZDAMBgorBgEEAYI3ewMCMAwGCisGAQQBgjd7BAIwHwYDVR0jBBgwFoAUOXFdqRUQLcTffi9ZbkBNwN_vNpowHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4ICAQAm6ZIl-5JrU83aixl875_xu7AqUHCqv_i3nKCtjfGKmpGgizLsa4kt_p3sPApiqvF1Dv2p794N5czXWs9tOGrxIc4GO-YqMXcmdfuHAqfZw5zC8MaiJookTLex3yd4ExrGtH_UmV0RpxDfCTGIQTr7WP2q8veI5fYj2_EMzKkQmV8e8Xk8cHxiF3jLky9mihEvMKDMpOD2pHPNTUCHJcJaa7R6JpDqlmCjL7JHM_NPpLqJfERsYRMtyRsCXN7t2KDTMPTrD2X20__M_mBZUtDWSM4dq0TlSx6WYVZT6Hs4i2x7WVBm5GbpznQ7uULBH9s2tTlhBC4bKAEw72WrrUU-7N7sWw7lKj8GApdoKrpLVE1w41qQFcEBK_NNYcSmxpQqpxh1kmr4V5MRCdDYpavRe8RRg2kwY8nsu_p-aqHv1RIyPyLK6_Iv7VuL0fIzayygFC7rH1C4_-iB7BJRQZuMq_QF_GJe9i6k6M406KA4BsbrDZSRPSg_128fdWkocAxaC-VECmyOEBjomZ_zYc6ka_Q45Fj57OCFxXHLzlsGjlgQ3AyWGAhYhgGJ7v6HyOr5aElWz6Q533UvtLmH3JtIwMsiR-0L_a8Whyd39suFwhJ4xIYQXoewMTAhl8-mg_v6OqSjnHwZRfGDzMQrQGaiYJDE0p1oWz4E9CUEp2qmzw&s=oDUGR31RFdYFBqNWqqHb1GSWoMk19JKjGO98jxiRkLCi9M-ZxH9FhE5Oa4kaA7tPRrTAWhNcLVmcYtNwlJ2hgT8mzPYuhnIpP28dkp0mZ3P49-GcezUFNCLI3A1WPhRir5PNYwsbo-5qZcH7MAqkuJqvKKY3YyZJ9FCC8DZ_Afs5LyVNauubiL1RdX3ErMGtHq0KGKvgIJIuc2BPOCOlYquMm9vc6xT3BawQU5sfjvyBK68NGpyY3RQm8rnZAUit0YTnZKWllSpStOMfoiFwsaac5Ug8YL3iGq-dgBVXVtlPzWINxCtZLjOyzsr0GR4C7bokbIP6q2FOYzOYGH0w1A&h=ZJi53U47s6qdu6_Hsc-w4e4cXMwmsN-7sucJyC4-rlA
+  response:
+    body:
+      string: '{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32",
+        "name": "C779A5E5-961F-4B08-9D80-566C1C91ED32", "status": "Deleting", "startTime":
+        "2026-02-09T06:34:11.4370000Z"}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '245'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:33 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Fabric/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32?api-version=2022-07-01-preview&t=639062156520599842&c=MIIIrzCCBpegAwIBAgITUQFAksjJXtdW64QOrwABAUCSyDANBgkqhkiG9w0BAQsFADBEMRMwEQYKCZImiZPyLGQBGRYDR0JMMRMwEQYKCZImiZPyLGQBGRYDQU1FMRgwFgYDVQQDEw9BTUUgSW5mcmEgQ0EgMDQwHhcNMjUxMDIyMTEzMDMzWhcNMjYwNDIwMTEzMDMzWjBAMT4wPAYDVQQDEzVhc3luY29wZXJhdGlvbnNpZ25pbmdjZXJ0aWZpY2F0ZS5tYW5hZ2VtZW50LmF6dXJlLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANIL_ea4PX6tqxHLVF9EMduSXtibVvw_fvJo_2qVyVM_8guCpW7Vot8hAA3JXqJIuYF9h5wn2uWRXZXHyg4aaY2Lbqro1-tBMPU5rXoQZ9s2duM-rKR95C5eA8BbDTDoKjSTOnLAQ0-XWJI1upgmi1VDBnjo6o_RupQR7IimcAZdXrMl2LaN3lNyuldWaC5acWcw9L9ufxDGPdkfvUv_ScXQ-7BzgPXRS1UL7WyL9EV4bddWXpBBvZR80DH6tdfzz9pgHF4OIeUvSVm4QmcCVH5iCmbnVWDBGlhA1O6UBgUfxqnljc5MhLkkKH5OHPspPmRrsDTzYP15yZWFI82YMNECAwEAAaOCBJwwggSYMCcGCSsGAQQBgjcVCgQaMBgwCgYIKwYBBQUHAwEwCgYIKwYBBQUHAwIwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIhpDjDYTVtHiE8Ys-hZvdFs6dEoFghfmRS4WsmTQCAWQCAQcwggHkBggrBgEFBQcBAQSCAdYwggHSMGgGCCsGAQUFBzAChlxodHRwOi8vY3JsLm1pY3Jvc29mdC5jb20vcGtpaW5mcmEvQ2VydHMvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDEuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDIuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDMuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDBYBggrBgEFBQcwAoZMaHR0cDovL2NybDQuYW1lLmdibC9haWEvbWVsMDFwa2lpbnRjYTAxLkFNRS5HQkxfQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNydDAdBgNVHQ4EFgQUxuJ8b7tUVxxF9Uh_S-aQfmEWkyswDgYDVR0PAQH_BAQDAgWgMIIBNQYDVR0fBIIBLDCCASgwggEkoIIBIKCCARyGQmh0dHA6Ly9jcmwubWljcm9zb2Z0LmNvbS9wa2lpbmZyYS9DUkwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDEuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDIuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDMuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybIY0aHR0cDovL2NybDQuYW1lLmdibC9jcmwvQU1FJTIwSW5mcmElMjBDQSUyMDA0KDEpLmNybDCBnQYDVR0gBIGVMIGSMAwGCisGAQQBgjd7AQEwZgYKKwYBBAGCN3sCAjBYMFYGCCsGAQUFBwICMEoeSAAzADMAZQAwADEAOQAyADEALQA0AGQANgA0AC0ANABmADgAYwAtAGEAMAA1ADUALQA1AGIAZABhAGYAZgBkADUAZQAzADMAZDAMBgorBgEEAYI3ewMCMAwGCisGAQQBgjd7BAIwHwYDVR0jBBgwFoAUOXFdqRUQLcTffi9ZbkBNwN_vNpowHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUAA4ICAQAm6ZIl-5JrU83aixl875_xu7AqUHCqv_i3nKCtjfGKmpGgizLsa4kt_p3sPApiqvF1Dv2p794N5czXWs9tOGrxIc4GO-YqMXcmdfuHAqfZw5zC8MaiJookTLex3yd4ExrGtH_UmV0RpxDfCTGIQTr7WP2q8veI5fYj2_EMzKkQmV8e8Xk8cHxiF3jLky9mihEvMKDMpOD2pHPNTUCHJcJaa7R6JpDqlmCjL7JHM_NPpLqJfERsYRMtyRsCXN7t2KDTMPTrD2X20__M_mBZUtDWSM4dq0TlSx6WYVZT6Hs4i2x7WVBm5GbpznQ7uULBH9s2tTlhBC4bKAEw72WrrUU-7N7sWw7lKj8GApdoKrpLVE1w41qQFcEBK_NNYcSmxpQqpxh1kmr4V5MRCdDYpavRe8RRg2kwY8nsu_p-aqHv1RIyPyLK6_Iv7VuL0fIzayygFC7rH1C4_-iB7BJRQZuMq_QF_GJe9i6k6M406KA4BsbrDZSRPSg_128fdWkocAxaC-VECmyOEBjomZ_zYc6ka_Q45Fj57OCFxXHLzlsGjlgQ3AyWGAhYhgGJ7v6HyOr5aElWz6Q533UvtLmH3JtIwMsiR-0L_a8Whyd39suFwhJ4xIYQXoewMTAhl8-mg_v6OqSjnHwZRfGDzMQrQGaiYJDE0p1oWz4E9CUEp2qmzw&s=oDUGR31RFdYFBqNWqqHb1GSWoMk19JKjGO98jxiRkLCi9M-ZxH9FhE5Oa4kaA7tPRrTAWhNcLVmcYtNwlJ2hgT8mzPYuhnIpP28dkp0mZ3P49-GcezUFNCLI3A1WPhRir5PNYwsbo-5qZcH7MAqkuJqvKKY3YyZJ9FCC8DZ_Afs5LyVNauubiL1RdX3ErMGtHq0KGKvgIJIuc2BPOCOlYquMm9vc6xT3BawQU5sfjvyBK68NGpyY3RQm8rnZAUit0YTnZKWllSpStOMfoiFwsaac5Ug8YL3iGq-dgBVXVtlPzWINxCtZLjOyzsr0GR4C7bokbIP6q2FOYzOYGH0w1A&h=ZJi53U47s6qdu6_Hsc-w4e4cXMwmsN-7sucJyC4-rlA
+  response:
+    body:
+      string: '{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/locations/westeurope/operationstatuses/C779A5E5-961F-4B08-9D80-566C1C91ED32",
+        "name": "C779A5E5-961F-4B08-9D80-566C1C91ED32", "status": "Succeeded", "startTime":
+        "2026-02-09T06:34:11.4370000Z", "endTime": "2026-02-09T06:34:42.1030000Z"}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Length:
+      - '287'
+      Content-Security-Policy:
+      - script-src 'self'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 09 Feb 2026 06:34:43 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Cache:
+      - CONFIG_NOCACHE
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -112,6 +112,19 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
 ])
 
+cp_virtual_workspace_item_failure_params = pytest.mark.parametrize("virtual_workspace_type", [
+    VirtualWorkspaceType.DOMAIN,
+    VirtualWorkspaceType.CAPACITY,
+    VirtualWorkspaceType.GATEWAY,
+])
+
+cp_item_types_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
@@ -533,7 +546,10 @@ def workspace_factory(vcr_instance, cassette_name, test_data: StaticTestData):
 
 @pytest.fixture
 def virtual_workspace_item_factory(
-    vcr_instance, cassette_name, test_data: StaticTestData
+    vcr_instance,
+    cassette_name,
+    test_data: StaticTestData,
+    vcr_mode,
 ):
     # Keep track of all workspaces created during this test
     created_virtual_workspace_items = []
@@ -566,6 +582,7 @@ def virtual_workspace_item_factory(
         metadata = EntityMetadata(
             generated_name, virtual_workspace_name, virtual_workspace_item_path
         )
+        metadata.type = type
         created_virtual_workspace_items.append(metadata)
         return metadata
 
@@ -573,6 +590,8 @@ def virtual_workspace_item_factory(
 
     # Teardown: remove everything we created during the test
     for metadata in created_virtual_workspace_items:
+        if vcr_mode == "none" and metadata.type == VirtualWorkspaceType.CAPACITY:
+            continue
         rm(metadata.full_path)
 
 
