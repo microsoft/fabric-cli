@@ -50,7 +50,8 @@ item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.REPORT,
     ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-    ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+    ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
 basic_item_parametrize = pytest.mark.parametrize("item_type", [
@@ -111,6 +112,25 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.USER_DATA_FUNCTION, ".txt", "No formats are supported"),
     (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
 ])
+
+ONELAKE_FOLDER_PARAMS = [
+    (ItemType.LAKEHOUSE, "Files", True),
+    (ItemType.LAKEHOUSE, "Tables", True),
+    (ItemType.WAREHOUSE, "Files", False),
+    (ItemType.WAREHOUSE, "Tables", True),
+    (ItemType.SEMANTIC_MODEL, "Tables", False),
+    (ItemType.SPARK_JOB_DEFINITION, "Libs", True),
+    (ItemType.SPARK_JOB_DEFINITION, "Main", True),
+    (ItemType.KQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Files", True),
+    (ItemType.MIRRORED_DATABASE, "Tables", True),
+    (ItemType.MIRRORED_DATABASE, "Files", True),
+]
+
+exists_onelake_parameters = pytest.mark.parametrize(
+    "item_type,folder_name,created_by_default", ONELAKE_FOLDER_PARAMS
+)
 
 FILTER_HEADERS = [
     "authorization",
