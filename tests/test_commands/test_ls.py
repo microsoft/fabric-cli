@@ -213,7 +213,7 @@ class TestLS:
         notebook3 = item_factory(ItemType.NOTEBOOK)
 
         # Test 1: Basic JMESPath syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].name")
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [notebook1.display_name, notebook2.display_name, notebook3.display_name],
@@ -238,13 +238,13 @@ class TestLS:
             ["displayName", "itemID"],
             True,
             mock_questionary_print.mock_calls,
-            require_all_in_same_args=True
+            require_all_in_same_args=True,
         )
 
         mock_questionary_print.reset_mock()
 
         # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].[name]")
         _assert_strings_in_mock_calls(
             [f"['{notebook1.name}']", f"['{notebook2.name}']",
                 f"['{notebook3.name}']"],
@@ -273,13 +273,13 @@ class TestLS:
         )
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
-            [f'{notebook1.name}'],
+            [f"{notebook1.name}"],
             True,
             mock_questionary_print.mock_calls,
         )
 
         _assert_strings_in_mock_calls(
-            [f'{notebook2.name}', f'{notebook3.name}'],
+            [f"{notebook2.name}", f"{notebook3.name}"],
             False,
             mock_questionary_print.mock_calls,
         )
@@ -1201,6 +1201,69 @@ class TestLS:
             True,
             mock_questionary_print.mock_calls,
             require_all_in_same_args=True,
+        )
+
+    def test_ls_workspace_with_folders_and_items_divider(
+        self,
+        workspace,
+        folder_factory,
+        item_factory,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        """Test that a divider appears between folders and items when folder_listing_enabled=true"""
+        # Setup: Create folders and items in workspace root
+        folder1 = folder_factory()
+        folder2 = folder_factory()
+        notebook = item_factory(ItemType.NOTEBOOK, path=workspace.full_path)
+        lakehouse = item_factory(ItemType.LAKEHOUSE, path=workspace.full_path)
+
+        # Test 1: List workspace (folder_listing_enabled is true by default in tests)
+        cli_executor.exec_command(f"ls {workspace.full_path}")
+
+        # Assert: Check that the divider is present
+        mock_questionary_print.assert_called()
+
+        # Verify divider appears in output
+        _assert_strings_in_mock_calls(
+            ["------------------------------"], True, mock_questionary_print.mock_calls
+        )
+
+        # Verify folders and items are present
+        _assert_strings_in_mock_calls(
+            [
+                folder1.display_name,
+                folder2.display_name,
+                notebook.display_name,
+                lakehouse.display_name,
+            ],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
+        mock_questionary_print.reset_mock()
+
+        # Test 2: with long flag
+        cli_executor.exec_command(f"ls {workspace.full_path} --long")
+
+        # Assert
+        mock_questionary_print.assert_called()
+
+        # Verify divider appears with long format
+        _assert_strings_in_mock_calls(
+            ["------------------------------"], True, mock_questionary_print.mock_calls
+        )
+
+        # Verify all items are present
+        _assert_strings_in_mock_calls(
+            [
+                folder1.display_name,
+                folder2.display_name,
+                notebook.display_name,
+                lakehouse.display_name,
+            ],
+            True,
+            mock_questionary_print.mock_calls,
         )
 
     def test_ls_workspace_items_no_list_folders_support_success(
