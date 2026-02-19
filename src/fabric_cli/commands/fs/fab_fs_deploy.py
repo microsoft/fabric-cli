@@ -9,6 +9,6 @@ from fabric_cli.utils import fab_ui
 
 
 def exec_command(args: Namespace, context: FabricElement) -> None:
-    """Deploy using config file and environment parameters - CICD flow."""
+    """deploy fabric items to a workspace using a configuration file and target environment - CICD flow."""
     if args.force or fab_ui.prompt_confirm():
         deploy_with_config_file(args)
