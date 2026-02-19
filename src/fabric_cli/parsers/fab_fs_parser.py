@@ -424,6 +424,56 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
     import_parser.usage = f"{utils_error_parser.get_usage_prog(import_parser)}"
     import_parser.set_defaults(func=fs.import_command)
 
+# Command for 'deploy'
+
+
+def register_deploy_parser(subparsers: _SubParsersAction) -> None:
+    deploy_examples = [
+        "# deploy using config file and environment",
+        "$ deploy --config-file config.yml --env dev\n",
+        "# deploy with config file, environment, and optional parameters",
+        "$ deploy --config-file config.yml --env prod -P '[{\"param1\":\"value1\"}]' -f",
+    ]
+
+    deploy_parser = subparsers.add_parser(
+        "deploy",
+        help=fab_constant.COMMAND_FS_DEPLOY_DESCRIPTION,
+        fab_examples=deploy_examples,
+        fab_learnmore=["_"],
+    )
+
+    deploy_parser.add_argument(
+        "-dcf",
+        "--deploy_config_file",
+        metavar="PATH",
+        type=str,
+        required=True,
+        help="Path to local deployment config file.",
+    )
+
+    deploy_parser.add_argument(
+        "-tenv",
+        "--target_env",
+        metavar="ENV_NAME",
+        type=str,
+        required=True,
+        help="Environment name as defined in deployment config file.",
+    )
+
+    deploy_parser.add_argument(
+        "-P",
+        "--params",
+        metavar="JSON",
+        type=str,
+        help="parameters for deployment in JSON format (e.g., '[{\"p1\":\"v1\",\"p2\":\"v2\"}]'). Optional",
+    )
+
+    deploy_parser.add_argument(
+        "-f", "--force", required=False, action="store_true", help="Force. Optional"
+    )
+
+    deploy_parser.set_defaults(func=fs.deploy_command)
+    deploy_parser.usage = f"{utils_error_parser.get_usage_prog(deploy_parser)}"
 
 # Command for 'set'
 def register_set_parser(subparsers: _SubParsersAction) -> None:

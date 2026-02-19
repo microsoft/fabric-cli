@@ -15,6 +15,7 @@ from fabric_cli.commands.fs import fab_fs_exists as fs_exists
 from fabric_cli.commands.fs import fab_fs_export as fs_export
 from fabric_cli.commands.fs import fab_fs_get as fs_get
 from fabric_cli.commands.fs import fab_fs_import as fs_import
+from fabric_cli.commands.fs import fab_fs_deploy as fs_deploy
 from fabric_cli.commands.fs import fab_fs_ln as fs_ln
 from fabric_cli.commands.fs import fab_fs_ls as fs_ls
 from fabric_cli.commands.fs import fab_fs_mkdir as fs_mkdir
@@ -142,6 +143,14 @@ def import_command(args: Namespace) -> None:
     context = handle_context.get_command_context(args.path, raise_error=False)
     context.check_command_support(Command.FS_IMPORT)
     fs_import.exec_command(args, context)
+
+
+@handle_exceptions()
+@set_command_context()
+def deploy_command(args: Namespace) -> None:
+    context = handle_context.get_command_context(args.path if hasattr(
+        args, 'path') and args.path else [], raise_error=False)
+    fs_deploy.exec_command(args, context)
 
 
 @handle_exceptions()
