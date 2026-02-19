@@ -560,15 +560,18 @@ class TestLS:
     # endregion
 
     # region ITEM FOLDERS
+    @pytest.mark.parametrize("item_type, expected_folders", 
+                             [(ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+                              (ItemType.COSMOS_DB_DATABASE, ["Files", "Tables", "Code", "Audit"])])
     def test_ls_item_folders_success(
-        self, item_factory, mock_questionary_print, cli_executor: CLIExecutor
+        self, item_type, expected_folders, item_factory, mock_questionary_print, cli_executor: CLIExecutor
     ):
         # Setup
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
-        expected_output = ["Files", "Tables", "TableMaintenance"]
+        item = item_factory(item_type)
+        expected_output = expected_folders
 
         # Test 1: without args
-        cli_executor.exec_command(f"ls {lakehouse.full_path}")
+        cli_executor.exec_command(f"ls {item.full_path}")
 
         # Assert
         mock_questionary_print.assert_called()
@@ -582,7 +585,7 @@ class TestLS:
         mock_questionary_print.reset_mock()
 
         # Test 2: with long
-        cli_executor.exec_command(f"ls {lakehouse.full_path} --long")
+        cli_executor.exec_command(f"ls {item.full_path} --long")
 
         # Assert
         mock_questionary_print.assert_called()

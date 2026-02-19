@@ -110,3 +110,7 @@ Retrieve Power BI workspace details.
 ```
 fab api -A powerbi groups/00000000-0000-0000-0000-000000000000
 ```
+
+### Refresh Semantic Model
+
+For detailed examples on triggering and monitoring semantic model refresh using the API command, see the [Semantic Model Refresh Example](refresh_semantic_model_example.md).
