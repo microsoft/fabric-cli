@@ -39,8 +39,7 @@ class Item(_BaseItem):
             return _item_type
         else:
             raise FabricCLIError(
-                ErrorMessages.Hierarchy.item_type_not_valid(
-                    str(super().item_type)),
+                ErrorMessages.Hierarchy.item_type_not_valid(str(super().item_type)),
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
             )
 
@@ -112,6 +111,7 @@ class Item(_BaseItem):
                 | ItemType.EVENTHOUSE
                 | ItemType.KQL_DATABASE
                 | ItemType.MIRRORED_DATABASE
+                | ItemType.DIGITAL_TWIN_BUILDER
                 | ItemType.REFLEX
                 | ItemType.EVENTSTREAM
                 | ItemType.MOUNTED_DATA_FACTORY

@@ -11,13 +11,13 @@ from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_DOMAINS = ["contributorsScope", "description", "displayName"]
+INVALID_QUERIES = ["parentDomainId"]
 
 
 def exec(virtual_ws_item: VirtualWorkspaceItem, args: Namespace) -> None:
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_DOMAINS)
+    utils_set.validate_query_not_in_blocklist(query, INVALID_QUERIES)
 
     utils_set.print_set_warning()
     if args.force or utils_ui.prompt_confirm():

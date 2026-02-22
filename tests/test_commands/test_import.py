@@ -848,11 +848,11 @@ def _import_create_new_item_success(
 ):
     # Setup
     item = item_factory(item_type)
-    
+
     # TODO: delete this line after mirrored db fix the API GAP for Create
     if item_type == ItemType.MIRRORED_DATABASE:
         time.sleep(60)
-    
+
     export(item.full_path, output=os.path.expanduser(str(tmp_path)))
 
     # Reset mock
@@ -897,11 +897,11 @@ def _import_update_existing_item_success(
 ):
     # Setup
     item = item_factory(item_type)
-    
+
     # TODO: delete this line after mirrored db fix the API GAP for Create
     if item_type == ItemType.MIRRORED_DATABASE:
         time.sleep(60)
-    
+
     export(item.full_path, output=str(tmp_path))
 
     # Reset mock
@@ -940,7 +940,8 @@ def _import_create_new_item_fail(
     new_item_path = cli_path_join(workspace.full_path, item_name)
 
     # Execute command
-    cli_executor.exec_command(f"import {new_item_path} --input {str(tmp_path)} --force")
+    cli_executor.exec_command(
+        f"import {new_item_path} --input {str(tmp_path)} --force")
 
     # Assert
     assert_fabric_cli_error(fab_constant.ERROR_UNSUPPORTED_COMMAND)

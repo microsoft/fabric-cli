@@ -41,6 +41,77 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
+item_type_paramerter = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.REPORT,
+    ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    ItemType.GRAPHQLAPI, ItemType.DATAFLOW,
+])
+
+basic_item_parametrize = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
+    ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+])
+
+# Export command parametrizations
+export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
+    (ItemType.NOTEBOOK, ".ipynb"),
+    (ItemType.SPARK_JOB_DEFINITION, ".json"),
+    (ItemType.DATA_PIPELINE, ".json"),
+    (ItemType.MIRRORED_DATABASE, ".json"),
+    (ItemType.COSMOS_DB_DATABASE, ".json"),
+    (ItemType.USER_DATA_FUNCTION, ".json"),
+    (ItemType.GRAPH_QUERY_SET, ".json")
+])
+
+export_item_types_parameters = pytest.mark.parametrize("item_type", [
+    ItemType.NOTEBOOK,
+    ItemType.SPARK_JOB_DEFINITION,
+    ItemType.DATA_PIPELINE,
+    ItemType.MIRRORED_DATABASE,
+    ItemType.REPORT,
+    ItemType.SEMANTIC_MODEL,
+    ItemType.KQL_DATABASE,
+    ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION,
+    ItemType.GRAPH_QUERY_SET
+])
+
+export_item_format_parameters = pytest.mark.parametrize("item_type,export_format,expected_file_extension", [
+    (ItemType.NOTEBOOK, ".py", ".py"),
+    (ItemType.NOTEBOOK, ".ipynb", ".ipynb")
+])
+
+export_item_default_format_parameters = pytest.mark.parametrize("item_type,expected_file_count", [
+    (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
+    (ItemType.SPARK_JOB_DEFINITION, 2),
+    (ItemType.DATA_PIPELINE, 2),
+    (ItemType.MIRRORED_DATABASE, 2),
+    (ItemType.REPORT, 4),
+    (ItemType.SEMANTIC_MODEL, 3),
+    (ItemType.KQL_DATABASE, 3),
+    (ItemType.COSMOS_DB_DATABASE, 2),
+    (ItemType.USER_DATA_FUNCTION, 2),
+    (ItemType.GRAPH_QUERY_SET, 2)
+])
+
+export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
+    # (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
+    (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
+    (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
+    (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported"),
+    (ItemType.COSMOS_DB_DATABASE, ".txt", "No formats are supported"),
+    (ItemType.USER_DATA_FUNCTION, ".txt", "No formats are supported"),
+    (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
+])
+
 FILTER_HEADERS = [
     "authorization",
     "client-request-id",
@@ -248,7 +319,8 @@ def workspace(vcr_instance, test_data):
         workspace_name = f"{display_name}.Workspace"
         workspace_path = f"/{workspace_name}"
 
-        mkdir(workspace_path, params=[f"capacityName={test_data.capacity.name}"])
+        mkdir(workspace_path, params=[
+              f"capacityName={test_data.capacity.name}"])
         yield EntityMetadata(display_name, workspace_name, workspace_path)
         rm(workspace_path)
 
@@ -273,7 +345,8 @@ def item_factory(vcr_instance, cassette_name, workspace):
             generated_name = custom_name
         else:
             # Use the test's specific recording file
-            generated_name = generate_random_string(vcr_instance, cassette_name)
+            generated_name = generate_random_string(
+                vcr_instance, cassette_name)
 
         item_name = f"{generated_name}.{type}"
         item_path = cli_path_join(path, item_name)
@@ -299,7 +372,8 @@ def item_factory(vcr_instance, cassette_name, workspace):
 @pytest.fixture
 def folder_factory(vcr_instance, cassette_name, workspace):
     # Keep track of all folders created during this test
-    current_config = state_config.get_config(fab_constant.FAB_FOLDER_LISTING_ENABLED)
+    current_config = state_config.get_config(
+        fab_constant.FAB_FOLDER_LISTING_ENABLED)
     state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, "true")
     created_folders = []
 
@@ -329,7 +403,8 @@ def folder_factory(vcr_instance, cassette_name, workspace):
     for metadata in reversed(created_folders):
         rm(metadata.full_path)
 
-    state_config.set_config(fab_constant.FAB_FOLDER_LISTING_ENABLED, current_config)
+    state_config.set_config(
+        fab_constant.FAB_FOLDER_LISTING_ENABLED, current_config)
 
 
 @pytest.fixture
@@ -355,7 +430,8 @@ def virtual_item_factory(
         """
         generated_name = generate_random_string(vcr_instance, cassette_name)
         virtual_item_name = f"{generated_name}.{str(VICMap[type])}"
-        virtual_item_path = cli_path_join(workspace_path, str(type), virtual_item_name)
+        virtual_item_path = cli_path_join(
+            workspace_path, str(type), virtual_item_name)
 
         match type:
 
@@ -408,7 +484,8 @@ def virtual_item_factory(
                 mkdir(virtual_item_path, params)
 
         # Build the metadata for the created resource
-        metadata = EntityMetadata(generated_name, virtual_item_name, virtual_item_path)
+        metadata = EntityMetadata(
+            generated_name, virtual_item_name, virtual_item_path)
         if should_clean:
             created_virtual_items.append(metadata)
         return metadata
@@ -438,10 +515,12 @@ def workspace_factory(vcr_instance, cassette_name, test_data: StaticTestData):
         workspace_name = f"{generated_name}.Workspace"
         workspace_path = f"/{workspace_name}"
 
-        mkdir(workspace_path, params=[f"capacityName={test_data.capacity.name}"])
+        mkdir(workspace_path, params=[
+              f"capacityName={test_data.capacity.name}"])
 
         # Build the metadata for the created resource
-        metadata = EntityMetadata(generated_name, workspace_name, workspace_path)
+        metadata = EntityMetadata(
+            generated_name, workspace_name, workspace_path)
         created_workspaces.append(metadata)
         return metadata
 
@@ -546,7 +625,8 @@ def delete_cassette_if_record_mode_all(vcr_instance, cassette_name):
     :param cassette_name: The name of the cassette file.
     """
     if vcr_instance.record_mode == "all":
-        cassette_path = os.path.join(vcr_instance.cassette_library_dir, cassette_name)
+        cassette_path = os.path.join(
+            vcr_instance.cassette_library_dir, cassette_name)
         if os.path.exists(cassette_path):
             os.remove(cassette_path)
 
@@ -654,7 +734,8 @@ def setup_config_values_for_capacity(test_data: StaticTestData):
     fab_default_az_location = state_config.get_config(
         fab_constant.FAB_DEFAULT_AZ_LOCATION
     )
-    fab_default_az_admin = state_config.get_config(fab_constant.FAB_DEFAULT_AZ_ADMIN)
+    fab_default_az_admin = state_config.get_config(
+        fab_constant.FAB_DEFAULT_AZ_ADMIN)
 
     # Setup new values
     state_config.set_config(
@@ -668,7 +749,8 @@ def setup_config_values_for_capacity(test_data: StaticTestData):
     state_config.set_config(
         fab_constant.FAB_DEFAULT_AZ_LOCATION, test_data.azure_location
     )
-    state_config.set_config(fab_constant.FAB_DEFAULT_AZ_ADMIN, test_data.admin.upn)
+    state_config.set_config(
+        fab_constant.FAB_DEFAULT_AZ_ADMIN, test_data.admin.upn)
 
     yield
 
@@ -682,7 +764,8 @@ def setup_config_values_for_capacity(test_data: StaticTestData):
     state_config.set_config(
         fab_constant.FAB_DEFAULT_AZ_LOCATION, fab_default_az_location
     )
-    state_config.set_config(fab_constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
+    state_config.set_config(
+        fab_constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
 
 
 # endregion

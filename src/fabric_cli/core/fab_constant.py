@@ -183,6 +183,7 @@ COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
 COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
 COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
+COMMAND_FS_DEPLOY_DESCRIPTION = "Deploy items using configuration file and environment parameters."
 COMMAND_FS_SET_DESCRIPTION = "Set workspace or item properties."
 COMMAND_FS_CLEAR_DESCRIPTION = "Clear the terminal screen."
 COMMAND_FS_LN_DESCRIPTION = "Create a shortcut."
@@ -339,3 +340,6 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
     ITEM_QUERY_DESCRIPTION,
     ITEM_QUERY_PROPERTIES,
 ]
+
+# Invalid query parameters for set command across all fabric resources
+SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
