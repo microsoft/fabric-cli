@@ -429,7 +429,24 @@ class FabAuth:
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
-    def get_access_token(self, scope: list[str], interactive_renew=True) -> str:
+    def acquire_token(self, scope: list[str], interactive_renew=True) -> dict:
+        """
+        Core MSAL token acquisition method that returns the full MSAL result.
+        
+        This method contains the common authentication logic shared between
+        get_access_token and msal_bridge.get_token. It performs no validation
+        on scopes - callers are responsible for their own validation needs.
+        
+        Args:
+            scope: The scopes for which to request the token
+            interactive_renew: Whether to allow interactive authentication for user flows
+            
+        Returns:
+            Full MSAL result dictionary containing access_token, expires_on, etc.
+            
+        Raises:
+            FabricCLIError: When token acquisition fails
+        """
         token = None
         env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
 
@@ -476,8 +493,11 @@ class FabAuth:
                     self.set_tenant(token.get("id_token_claims")["tid"])
 
         if token and token.get("error"):
+            fab_logger.log_debug(
+                f"Error in get token: {token.get('error_description')}")
             raise FabricCLIError(
-                ErrorMessages.Auth.access_token_error(token.get("error_description")),
+                ErrorMessages.Auth.access_token_error(
+                    "Please run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         if token is None or not token.get("access_token"):
@@ -486,7 +506,30 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        return token.get("access_token", None)
+        return token
+
+    def get_access_token(self, scope: list[str], interactive_renew=True) -> str:
+        """
+        Get an access token string for the specified scopes.
+        
+        This method maintains the existing CLI API - returns just the token string
+        for backward compatibility. Uses the shared acquire_token method internally.
+        
+        Args:
+            scope: The scopes for which to request the token
+            interactive_renew: Whether to allow interactive authentication for user flows
+            
+        Returns:
+            Access token string
+            
+        Raises:
+            FabricCLIError: When token acquisition fails
+        """
+        # Delegate to shared authentication logic
+        token_result = self.acquire_token(scope, interactive_renew)
+
+        # Return just the token string for CLI backward compatibility
+        return token_result.get("access_token", None)
 
     def logout(self):
         self._auth_info = {}
