@@ -24,63 +24,12 @@ All AI-related resources (skills, context, prompts, modes) are organized in the 
 
 ### Key Resources
 
-| Resource | Location |
-|----------|----------|
-| AI Assets Overview | `.ai-assets/README.md` |
-| Skills (Usage) | `.ai-assets/skills/` |
-| Prompts (Templates) | `.ai-assets/prompts/` |
-| Modes (Agents) | `.ai-assets/modes/` |
-| Context (Contributor) | `.ai-assets/context/` |
-
-### External Documentation
-
 | Resource | URL |
 |----------|-----|
+| AI Assets | `.ai-assets/README.md` |
 | Documentation | https://microsoft.github.io/fabric-cli/ |
 | Command Reference | https://microsoft.github.io/fabric-cli/commands/ |
 | Usage Examples | https://microsoft.github.io/fabric-cli/examples/ |
-
----
-
-## For AI Agents Helping Users (Operating Fabric CLI)
-
-When assisting users who want to **use the CLI** (not develop it), load skills from `.ai-assets/skills/`:
-
-### Available Skills
-
-| Skill | When to Load |
-|-------|--------------|
-| `fabric-cli-core` | **Always load first** — paths, auth, safety, item types |
-| `fabric-cli-cicd` | Deploying, CI/CD pipelines, automation |
-| `fabric-cli-powerbi` | Semantic models, reports, DAX, refresh |
-| `fabric-cli-governance` | Permissions, ACLs, domains, capacity |
-| `fabric-cli-dataengineering` | Lakehouses, tables, shortcuts, Spark |
-| `fabric-cli-realtime` | Eventhouses, KQL, eventstreams |
-
-### Quick Start Commands
-
-```bash
-# Check authentication
-fab auth status
-
-# List workspaces
-fab ls
-
-# List items in workspace
-fab ls "MyWorkspace.Workspace"
-
-# Get help for any command
-fab --help
-fab ls --help
-```
-
-### Critical Operational Rules
-
-1. **First run** — Always verify auth with `fab auth status`
-2. **Learn before executing** — Use `fab <command> --help` to understand syntax
-3. **Verify before acting** — Use `fab exists` or `fab ls` to confirm paths
-4. **Non-interactive mode** — Use `-f` flag for automation
-5. **Safety first** — Confirm before destructive operations
 
 ---
 

@@ -6,12 +6,7 @@ Reusable prompt templates for common Fabric CLI tasks. Use these with any AI cod
 
 | Prompt | Description |
 |--------|-------------|
-| [deploy-to-workspace](deploy-to-workspace.prompt.md) | Deploy Fabric items from source to target workspace |
-| [analyze-semantic-model](analyze-semantic-model.prompt.md) | Analyze a semantic model's structure, tables, and measures |
-| [troubleshoot-refresh](troubleshoot-refresh.prompt.md) | Diagnose and fix refresh failures |
-| [create-lakehouse-pipeline](create-lakehouse-pipeline.prompt.md) | Create a data pipeline to load a Lakehouse |
-| [workspace-audit](workspace-audit.prompt.md) | Audit workspace items, permissions, and capacity |
-| [migrate-items](migrate-items.prompt.md) | Migrate items between workspaces with validation |
+| [create-workspace](create-workspace.prompt.md) | Create a new Microsoft Fabric workspace with configuration |
 
 ## Usage
 
