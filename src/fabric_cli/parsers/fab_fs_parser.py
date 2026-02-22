@@ -445,7 +445,6 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_parser.add_argument(
         "-dcf",
         "--deploy_config_file",
-        metavar="PATH",
         type=str,
         required=True,
         help="Path to local deployment config file.",
@@ -454,7 +453,6 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_parser.add_argument(
         "-tenv",
         "--target_env",
-        metavar="ENV_NAME",
         type=str,
         required=True,
         help="Environment name as defined in deployment config file.",
@@ -463,7 +461,6 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_parser.add_argument(
         "-P",
         "--params",
-        metavar="JSON",
         type=str,
         help="parameters for deployment in JSON format (e.g., '[{\"p1\":\"v1\",\"p2\":\"v2\"}]'). Optional",
     )
