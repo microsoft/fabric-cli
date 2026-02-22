@@ -26,7 +26,6 @@ from azure.core.exceptions import ClientAuthenticationError
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_auth import FabAuth
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 class MsalTokenCredential(TokenCredential):
