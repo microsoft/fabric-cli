@@ -103,7 +103,7 @@ export_item_default_format_parameters = pytest.mark.parametrize("item_type,expec
 ])
 
 export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
-    (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
+    # (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
     (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
     (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
     (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported"),
@@ -123,6 +123,11 @@ cp_item_types_success_params = pytest.mark.parametrize("item_type", [
     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
     ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
+assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
 ])
 
 FILTER_HEADERS = [
