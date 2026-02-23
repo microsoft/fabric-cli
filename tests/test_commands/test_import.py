@@ -971,7 +971,7 @@ class TestImport:
         # Assert
         assert_fabric_cli_error(
             fab_constant.ERROR_INVALID_INPUT,
-            f"Invalid format. Only {', '.join(supported_extensions)} are supported",
+            f"Invalid format. Only the following formats are supported: {', '.join(supported_extensions)}",
         )
         mock_print_grey.assert_not_called()
         spy_create_item.assert_not_called()

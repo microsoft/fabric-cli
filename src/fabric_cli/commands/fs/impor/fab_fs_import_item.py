@@ -21,20 +21,19 @@ def import_single_item(item: Item, args: Namespace) -> None:
     if args.format:
         _input_format = args.format
         if item.item_type in definition_format_mapping:
-            valid_formats = []
             valid_formats = list(
                 definition_format_mapping[item.item_type].keys())
             if _input_format not in valid_formats:
                 available_formats = [
                     k for k in valid_formats if k != "default"]
                 raise FabricCLIError(
-                    f"Invalid format. Only {', '.join(available_formats)} are supported.",
+                    f"Invalid format. Only the following formats are supported: {', '.join(available_formats)}",
                     fab_constant.ERROR_INVALID_INPUT,
                 )
         else:
             raise FabricCLIError(
-                f"Import format not supported for item type '{item.item_type}'",
-                fab_constant.ERROR_NOT_SUPPORTED,
+                f"Invalid format. No formats are supported",
+                fab_constant.ERROR_INVALID_INPUT,
             )
 
     args.ws_id = item.workspace.id
