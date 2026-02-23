@@ -60,6 +60,28 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
 ])
 
+import_update_existing_item_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
+])
+
+import_create_new_item_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.NOTEBOOK, ItemType.SPARK_JOB_DEFINITION, ItemType.DATA_PIPELINE,
+    ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
+    ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
+    ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
+])
+
+import_create_new_item_fail_params = pytest.mark.parametrize("item_type", [
+    ItemType.DASHBOARD, ItemType.DATAMART, ItemType.LAKEHOUSE,
+    ItemType.MIRRORED_WAREHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    ItemType.PAGINATED_REPORT, ItemType.SQL_ENDPOINT, ItemType.WAREHOUSE,
+])
+
 # Export command parametrizations
 export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
     (ItemType.NOTEBOOK, ".ipynb"),
