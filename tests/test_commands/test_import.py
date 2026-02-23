@@ -938,18 +938,17 @@ class TestImport:
         upsert_item_to_cache.assert_not_called()
 
     @pytest.mark.parametrize(
-        "item_type, supported_extensions",
+        "item_type",
         [
-            (ItemType.NOTEBOOK, [".py", ".ipynb"]),
-            (ItemType.SPARK_JOB_DEFINITION, [
-             "SparkJobDefinitionV1", "SparkJobDefinitionV2"]),
-            (ItemType.SEMANTIC_MODEL, ["TMDL", "TMSL"]),
+            (ItemType.NOTEBOOK),
+            (ItemType.SPARK_JOB_DEFINITION),
+            (ItemType.SEMANTIC_MODEL),
+            (ItemType.DATA_PIPELINE),
         ],
     )
     def test_import_item_wrong_format_fail(
         self,
         item_type,
-        supported_extensions,
         workspace,
         mock_print_done,
         tmp_path,
@@ -968,10 +967,17 @@ class TestImport:
             f"import {new_item_path} --input {str(tmp_path)} --format pyt"
         )
 
+        expected_error_messages = {
+            ItemType.NOTEBOOK: "Invalid format. Only the following formats are supported: .py, .ipynb",
+            ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
+            ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
+            ItemType.DATA_PIPELINE: "Invalid format. No formats are supported",
+        }
+
         # Assert
         assert_fabric_cli_error(
             fab_constant.ERROR_INVALID_INPUT,
-            f"Invalid format. Only the following formats are supported: {', '.join(supported_extensions)}",
+            expected_error_messages[item_type],
         )
         mock_print_grey.assert_not_called()
         spy_create_item.assert_not_called()
