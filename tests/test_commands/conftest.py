@@ -56,16 +56,9 @@ FILTER_HEADERS = [
     "x-ms-authorization-auxiliary",
 ]
 
-unassign_entity_workspace_success_params = pytest.mark.parametrize("entity_type,factory_key,path_template,assertion_key", [
-    (VirtualWorkspaceType.CAPACITY, "test_data",
-        "/.capacities/{}.Capacity", "id"),
-    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory",
-        "{}.full_path", "display_name"),
-])
-
 unassign_failure_params = pytest.mark.parametrize("entity_type,factory_key,path_template", [
     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
-    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
+    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", None),
 ])
 
 

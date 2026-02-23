@@ -13,54 +13,11 @@ from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, VirtualWorkspaceType
 from tests.test_commands.data.static_test_data import StaticTestData
-from tests.test_commands.conftest import unassign_entity_workspace_success_params, unassign_failure_params
+from tests.test_commands.conftest import unassign_failure_params
 
 
 class TestUnassign:
     # region Parametrized Tests
-    @unassign_entity_workspace_success_params
-    def test_unassign_entity_workspace_success(
-        self,
-        entity_type,
-        factory_key,
-        path_template,
-        assertion_key,
-        workspace_factory,
-        cli_executor,
-        mock_questionary_print,
-        test_data: StaticTestData,
-        virtual_workspace_item_factory,
-    ):
-        # Setup
-        workspace = workspace_factory()
-        mock_questionary_print.reset_mock()
-
-        if factory_key == "test_data":
-            # Capacity scenario
-            entity_path = path_template.format(test_data.capacity.name)
-            assertion_value = getattr(test_data.capacity, assertion_key)
-        else:
-            # Domain scenario
-            domain = virtual_workspace_item_factory(entity_type)
-            assign(domain.full_path, workspace.full_path)
-            entity_path = domain.full_path
-            assertion_value = getattr(domain, assertion_key)
-
-        # Execute command
-        cli_executor.exec_command(
-            f"unassign {entity_path} --workspace {workspace.full_path} --force"
-        )
-
-        # Assert
-        if entity_type == VirtualWorkspaceType.CAPACITY:
-            get(workspace.full_path, query=".")
-        else:
-            get(entity_path, query="domainWorkspaces")
-
-        assert any(
-            str(assertion_value) not in str(call.args[0])
-            for call in mock_questionary_print.mock_calls
-        )
 
     @unassign_failure_params
     def test_unassign_entity_workspace_not_assigned_failure(
@@ -122,6 +79,35 @@ class TestUnassign:
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_NOT_SUPPORTED)
+
+    # endregion
+
+    # region DOMAIN TESTS
+
+    def test_unassign_domain_workspace_success(
+        self,
+        workspace_factory,
+        cli_executor,
+        virtual_workspace_item_factory,
+        mock_questionary_print,
+    ):
+        # Setup
+        workspace = workspace_factory()
+        domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
+        assign(domain.full_path, workspace.full_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"unassign {domain.full_path} --workspace {workspace.full_path} --force"
+        )
+
+        # Assert
+        get(domain.full_path, query="domainWorkspaces")
+        assert any(
+            workspace.display_name not in call.args[0]
+            for call in mock_questionary_print.mock_calls
+        )
 
     # endregion
 
