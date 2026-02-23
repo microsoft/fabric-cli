@@ -112,6 +112,7 @@ commands:
           - connection
           - gateway
           - sql_database
+          - cosmos_db_database
           - graph_ql_api
       rm:
         supported_elements: 
@@ -142,7 +143,6 @@ commands:
           - retail_data_manager
           - healthcare_data_solution
           - sustainability_data_solution
-          - user_data_function
           - ai_skill
       mv:
         supported_elements:
@@ -160,6 +160,7 @@ commands:
           # - eventhouse
           # - kql_database
           - mirrored_database
+          - cosmos_db_database
           - reflex
           # - eventstream
           - mounted_data_factory
@@ -169,6 +170,7 @@ commands:
           #- lakehouse # this is included just to support underlying /Files
           - dataflow
           - sql_database
+          - user_data_function
       cp:
         supported_elements:
           - workspace
@@ -186,6 +188,7 @@ commands:
           # - eventhouse
           # - kql_database
           - mirrored_database
+          - cosmos_db_database
           - reflex
           # - eventstream
           - mounted_data_factory
@@ -195,6 +198,7 @@ commands:
           #- lakehouse # this is included just to support underlying /Files
           - dataflow
           - sql_database
+          - user_data_function
       ln:
         supported_elements:
           - onelake
@@ -246,6 +250,9 @@ commands:
           - graph_ql_api
           - dataflow
           - sql_database
+          - cosmos_db_database
+          - user_data_function
+          - graph_query_set
       import:
         supported_items:
           - report
@@ -267,6 +274,10 @@ commands:
           - graph_ql_api
           - dataflow
           - sql_database
+          - cosmos_db_database
+          - user_data_function
+        unsupported_items:
+          - graph_query_set
       get:
         supported_elements:
           - workspace
@@ -281,6 +292,9 @@ commands:
           - connection
           - gateway
           - external_data_share
+          - cosmos_db_database
+          - user_data_function
+          - graph_query_set
         unsupported_items:
           - dashboard
           - paginated_report
@@ -294,7 +308,6 @@ commands:
           - retail_data_manager
           - healthcare_data_solution
           - sustainability_data_solution
-          - user_data_function
           - ai_skill
       set:
         supported_elements:
@@ -321,8 +334,8 @@ commands:
           - retail_data_manager
           - healthcare_data_solution
           - sustainability_data_solution
-          - user_data_function
           - ai_skill
+          - graph_query_set
       open:
         supported_elements: 
           - workspace
@@ -355,7 +368,6 @@ commands:
           - retail_data_manager
           - healthcare_data_solution
           - sustainability_data_solution
-          - user_data_function
           - ai_skill
       start:
         supported_items:

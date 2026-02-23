@@ -380,8 +380,12 @@ fab stop ws1.Workspace/mir1.MirroredDatabase
 Stop mirrored database without confirmation.
 
 ```
-fab stop ws1.Workspacemir1.MirroredDatabase -f
+fab stop ws1.Workspace/mir1.MirroredDatabase -f
 ```
+
+### Semantic Model Refresh
+
+For detailed examples on triggering and monitoring semantic model refresh using the API command, see the [Semantic Model Refresh Example](refresh_semantic_model_example.md).
 
 ### Open in Browser
 

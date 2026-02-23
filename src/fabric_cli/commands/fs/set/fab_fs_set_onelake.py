@@ -12,13 +12,11 @@ from fabric_cli.core.hiearchy.fab_hiearchy import OneLakeItem
 from fabric_cli.utils import fab_cmd_set_utils as utils_set
 from fabric_cli.utils import fab_ui as utils_ui
 
-JMESPATH_UPDATE_SHORTCUT = ["name", "target"]
-
 
 def onelake_shortcut(onelake: OneLakeItem, args: Namespace) -> None:
     query = args.query
 
-    utils_set.validate_expression(query, JMESPATH_UPDATE_SHORTCUT)
+    utils_set.validate_query_not_in_blocklist(query)
 
     # Get shortcut
     args.output = None

@@ -244,3 +244,7 @@ class CommonErrors:
         property_name: str, gateway_type: str
     ) -> str:
         return f"Setting '{property_name}' is not supported for Gateway type '{gateway_type}'"
+
+    @staticmethod
+    def query_not_supported_for_set(query: str) -> str:
+        return f"Query '{query}' is not supported for set command"

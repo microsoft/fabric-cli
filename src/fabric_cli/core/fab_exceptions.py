@@ -5,12 +5,27 @@ import html
 import json
 import re
 
+# Default error constants - avoids circular imports
+DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
+DEFAULT_ERROR_CODE = "UnknownError"
+
 
 class FabricCLIError(Exception):
-    def __init__(self, message, status_code=None):
+    def __init__(self, message=None, status_code=None):
+        # Use default values if not provided
+        message = message or DEFAULT_ERROR_MESSAGE
+        status_code = status_code or DEFAULT_ERROR_CODE
+
         super().__init__(message)
         self.message = message.rstrip(".")
         self.status_code = status_code
+
+    @staticmethod
+    def _parse_json_response(response_text):
+        try:
+            return json.loads(response_text) if response_text else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
 
     def __str__(self):
         return (
@@ -63,10 +78,10 @@ class FabricAPIError(FabricCLIError):
             related_resource (dict): Details about the main related resource, if available.
             request_id (str): The ID of the request associated with the error.
         """
-        response = json.loads(response_text)
+        response = self._parse_json_response(response_text)
+
         message = response.get("message")
         error_code = response.get("errorCode")
-
         self.more_details: list[dict] = response.get("moreDetails", [])
         self.request_id = response.get("requestId")
 
@@ -111,7 +126,11 @@ class OnelakeAPIError(FabricCLIError):
             code (str): The error code returned by the API.
             message (str): A descriptive message about the error.
         """
-        response_data = json.loads(response_text)
+        # Initialize properties before parsing
+        self.request_id = None
+        self.timestamp = None
+
+        response_data = self._parse_json_response(response_text)
         error_data = response_data.get("error", {})
         code = error_data.get("code")
         message = error_data.get("message")
@@ -122,16 +141,12 @@ class OnelakeAPIError(FabricCLIError):
             if match:
                 self.request_id = match.group(1)
                 message = message.replace(match.group(0), "")
-            else:
-                self.request_id = None
 
             message = re.sub(r"\n(?=Time:)", "", message)
             match = re.search(r"Time:(\S+)", message)
             if match:
                 self.timestamp = match.group(1)
                 message = message.replace(match.group(0), "")
-            else:
-                self.timestamp = None
 
         super().__init__(message, code)
 
@@ -188,15 +203,16 @@ class AzureAPIError(FabricCLIError):
             details (list): A list of additional error details, if available.
             additional_info (list): Additional info at the main error level, if available.
         """
-        response_data = json.loads(response_text)
+        # Initialize properties before parsing
+        self.request_id = None
+
+        response_data = self._parse_json_response(response_text)
         error_data = response_data.get("error", {})
         code = error_data.get("code")
         message = error_data.get("message")
 
         details: list[dict] = error_data.get("details", [])
 
-        # Extract RootActivityId from the details
-        self.request_id = None
         for detail in details:
             if detail.get("code") == "RootActivityId":
                 self.request_id = detail.get("message")
