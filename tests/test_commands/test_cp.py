@@ -5,7 +5,6 @@ import argparse
 import os
 import shutil
 import tempfile
-import pytest
 from unittest.mock import patch
 
 import fabric_cli.commands.fs.fab_fs_cp as fab_cp

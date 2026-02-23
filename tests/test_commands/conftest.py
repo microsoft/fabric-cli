@@ -580,9 +580,8 @@ def virtual_workspace_item_factory(
 
         # Build the metadata for the created resource
         metadata = EntityMetadata(
-            generated_name, virtual_workspace_name, virtual_workspace_item_path
+            generated_name, virtual_workspace_name, virtual_workspace_item_path, type
         )
-        metadata.type = type
         created_virtual_workspace_items.append(metadata)
         return metadata
 
