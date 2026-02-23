@@ -404,6 +404,7 @@ class SQLDatabaseFolders(Enum):
     FILES = "Files"
     CODE = "Code"
 
+
 class CosmosDBDatabaseFolders(Enum):
     TABLES = "Tables"
     FILES = "Files"
@@ -576,11 +577,20 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
-    ItemType.SPARK_JOB_DEFINITION: {"default": "?format=SparkJobDefinitionV1"},
+    ItemType.SPARK_JOB_DEFINITION: {
+        "default": "?format=SparkJobDefinitionV1",
+        "SparkJobDefinitionV1": "?format=SparkJobDefinitionV1",
+        "SparkJobDefinitionV2": "?format=SparkJobDefinitionV2",
+    },
     ItemType.NOTEBOOK: {
         "default": "?format=ipynb",
         ".py": "?format=fabricGitSource",
         ".ipynb": "?format=ipynb",
+    },
+    ItemType.SEMANTIC_MODEL: {
+        "default": "",
+        "TMDL": "?format=TMDL",
+        "TMSL": "?format=TMSL",
     },
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},

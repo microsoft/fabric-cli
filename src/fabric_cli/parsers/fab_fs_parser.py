@@ -415,7 +415,7 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
     import_parser.add_argument(
         "--format",
         metavar="",
-        help="Input format. Optional, supported for notebooks (.ipynb, .py)",
+        help="Input format. Optional",
     )
     import_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"

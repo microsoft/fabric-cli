@@ -84,10 +84,17 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.GRAPH_QUERY_SET
 ])
 
-export_item_format_parameters = pytest.mark.parametrize("item_type,export_format,expected_file_extension", [
-    (ItemType.NOTEBOOK, ".py", ".py"),
-    (ItemType.NOTEBOOK, ".ipynb", ".ipynb")
-])
+export_item_format_parameters = pytest.mark.parametrize(
+    "item_type,export_format,expected_file_extensions,expected_folders",
+    [
+        (ItemType.NOTEBOOK, ".py", [".py"], []),
+        (ItemType.NOTEBOOK, ".ipynb", [".ipynb"], []),
+        (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV1", [".json"], []),
+        (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV2", [".json"], []),
+        (ItemType.SEMANTIC_MODEL, "TMDL", [".pbism"], ["definition"]),
+        (ItemType.SEMANTIC_MODEL, "TMSL", [".pbism", ".bim"], []),
+    ],
+)
 
 export_item_default_format_parameters = pytest.mark.parametrize("item_type,expected_file_count", [
     (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
@@ -102,14 +109,15 @@ export_item_default_format_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.GRAPH_QUERY_SET, 2)
 ])
 
-export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format,expected_error_suffix", [
-    # (ItemType.NOTEBOOK, ".txt", "Only the following formats are supported: .py, .ipynb"),
-    (ItemType.SPARK_JOB_DEFINITION, ".txt", "No formats are supported"),
-    (ItemType.DATA_PIPELINE, ".txt", "No formats are supported"),
-    (ItemType.MIRRORED_DATABASE, ".txt", "No formats are supported"),
-    (ItemType.COSMOS_DB_DATABASE, ".txt", "No formats are supported"),
-    (ItemType.USER_DATA_FUNCTION, ".txt", "No formats are supported"),
-    (ItemType.GRAPH_QUERY_SET, ".txt", "No formats are supported")
+export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format", [
+    (ItemType.NOTEBOOK, ".txt"),
+    (ItemType.SPARK_JOB_DEFINITION, ".txt"),
+    (ItemType.SEMANTIC_MODEL, ".txt"),
+    (ItemType.DATA_PIPELINE, ".txt"),
+    (ItemType.MIRRORED_DATABASE, ".txt"),
+    (ItemType.COSMOS_DB_DATABASE, ".txt"),
+    (ItemType.USER_DATA_FUNCTION, ".txt"),
+    (ItemType.GRAPH_QUERY_SET, ".txt")
 ])
 
 assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
