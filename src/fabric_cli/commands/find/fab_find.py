@@ -70,84 +70,149 @@ UNSUPPORTED_ITEM_TYPES = [
 SEARCHABLE_ITEM_TYPES = [t for t in ALL_ITEM_TYPES if t not in UNSUPPORTED_ITEM_TYPES]
 
 
-def complete_item_types(prefix: str, **kwargs) -> list[str]:
-    """Completer for --type flag. Returns matching searchable item types."""
-    prefix_lower = prefix.lower()
-    # Only complete searchable types to avoid user frustration
-    return [t for t in SEARCHABLE_ITEM_TYPES if t.lower().startswith(prefix_lower)]
-
-
 @handle_exceptions()
 @set_command_context()
 def find_command(args: Namespace) -> None:
     """Search the Fabric catalog for items."""
-    # Validate: either query or --next-token must be provided
-    has_query = hasattr(args, "query") and args.query
-    has_continue = hasattr(args, "continue_token") and args.continue_token
+    is_interactive = getattr(args, "fab_mode", None) == fab_constant.FAB_MODE_INTERACTIVE
+    payload = _build_search_payload(args, is_interactive)
 
-    if not has_query and not has_continue:
-        raise FabricCLIError(
-            "Either a search query or --next-token is required.",
-            fab_constant.ERROR_INVALID_INPUT,
-        )
+    utils_ui.print_grey(f"Searching catalog for '{args.query}'...")
 
-    payload = _build_search_payload(args)
-
-    if has_continue:
-        utils_ui.print_grey("Fetching next page of results...")
+    if is_interactive:
+        _find_interactive(args, payload)
     else:
-        utils_ui.print_grey(f"Searching catalog for '{args.query}'...")
+        _find_commandline(args, payload)
 
+
+def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
+    """Fetch and display results page by page, prompting between pages."""
+    total_count = 0
+
+    while True:
+        response = catalog_api.catalog_search(args, payload)
+        _raise_on_error(response)
+
+        results = json.loads(response.text)
+        items = results.get("value", [])
+        continuation_token = results.get("continuationToken")
+
+        if not items and total_count == 0:
+            utils_ui.print_grey("No items found.")
+            return
+
+        total_count += len(items)
+        has_more = continuation_token is not None
+
+        count_msg = f"{len(items)} item(s) found" + (" (more available)" if has_more else "")
+        utils_ui.print_grey("")
+        utils_ui.print_grey(count_msg)
+        utils_ui.print_grey("")
+
+        _display_items(args, items)
+
+        if not has_more:
+            break
+
+        try:
+            utils_ui.print_grey("")
+            input("Press any key to continue... (Ctrl+C to stop)")
+        except (KeyboardInterrupt, EOFError):
+            utils_ui.print_grey("")
+            break
+
+        payload = {"continuationToken": continuation_token}
+
+    if total_count > 0:
+        utils_ui.print_grey("")
+        utils_ui.print_grey(f"{total_count} total item(s)")
+
+
+def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
+    """Fetch up to 1000 results in a single request and display."""
     response = catalog_api.catalog_search(args, payload)
+    _raise_on_error(response)
 
-    _handle_response(args, response)
+    results = json.loads(response.text)
+    items = results.get("value", [])
+
+    if not items:
+        utils_ui.print_grey("No items found.")
+        return
+
+    utils_ui.print_grey("")
+    utils_ui.print_grey(f"{len(items)} item(s) found")
+    utils_ui.print_grey("")
+
+    _display_items(args, items)
 
 
-def _build_search_payload(args: Namespace) -> dict[str, Any]:
+def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
     """Build the search request payload from command arguments."""
-    request: dict[str, Any] = {}
+    request: dict[str, Any] = {"search": args.query}
 
-    # If continuation token is provided, only send that (search/filter are encoded in token)
-    if hasattr(args, "continue_token") and args.continue_token:
-        request["continuationToken"] = args.continue_token
-        # Add page size if specified (allowed with continuation token)
-        if hasattr(args, "limit") and args.limit:
-            request["pageSize"] = args.limit
-        return request
+    # Interactive pages through 50 at a time; command-line fetches up to 1000
+    request["pageSize"] = 50 if is_interactive else 1000
 
-    # Normal search request
-    request["search"] = args.query
-
-    # Add page size if specified
-    if hasattr(args, "limit") and args.limit:
-        request["pageSize"] = args.limit
-
-    # Build type filter if specified
-    if hasattr(args, "type") and args.type:
-        types = args.type  # Already a list from argparse nargs="+"
-        # Validate types
-        for t in types:
-            if t in UNSUPPORTED_ITEM_TYPES:
-                raise FabricCLIError(
-                    f"Item type '{t}' is not searchable via catalog search API. "
-                    f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
-                    fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
-                )
-            if t not in SEARCHABLE_ITEM_TYPES:
-                raise FabricCLIError(
-                    f"Unknown item type: '{t}'. Use tab completion to see valid types.",
-                    fab_constant.ERROR_INVALID_ITEM_TYPE,
-                )
-
+    # Build type filter from -P params
+    types = _parse_type_param(args)
+    if types:
         filter_parts = [f"Type eq '{t}'" for t in types]
         request["filter"] = " or ".join(filter_parts)
 
     return request
 
 
-def _handle_response(args: Namespace, response) -> None:
-    """Handle the API response, including error cases."""
-    # Check for error responses
+def _parse_type_param(args: Namespace) -> list[str]:
+    """Extract and validate item types from -P params.
+
+    Supports: -P type=Report or -P type=Report,Lakehouse
+    """
+    params = getattr(args, "params", None)
+    if not params:
+        return []
+
+    # params is a list from argparse nargs="*", e.g. ["type=Report,Lakehouse"]
+    type_value = None
+    for param in params:
+        if "=" not in param:
+            raise FabricCLIError(
+                f"Invalid parameter format: '{param}'. Expected key=value.",
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        key, value = param.split("=", 1)
+        if key.lower() == "type":
+            type_value = value
+        else:
+            raise FabricCLIError(
+                f"Unknown parameter: '{key}'. Supported: type",
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+
+    if not type_value:
+        return []
+
+    types = [t.strip() for t in type_value.split(",") if t.strip()]
+
+    # Validate types
+    for t in types:
+        if t in UNSUPPORTED_ITEM_TYPES:
+            raise FabricCLIError(
+                f"Item type '{t}' is not searchable via catalog search API. "
+                f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
+                fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
+            )
+        if t not in SEARCHABLE_ITEM_TYPES:
+            raise FabricCLIError(
+                f"Unknown item type: '{t}'. Valid types: {', '.join(SEARCHABLE_ITEM_TYPES)}",
+                fab_constant.ERROR_INVALID_ITEM_TYPE,
+            )
+
+    return types
+
+
+def _raise_on_error(response) -> None:
+    """Raise FabricCLIError if the API response indicates failure."""
     if response.status_code != 200:
         try:
             error_data = json.loads(response.text)
@@ -162,34 +227,12 @@ def _handle_response(args: Namespace, response) -> None:
             error_code,
         )
 
-    _display_results(args, response)
 
-
-def _display_results(args: Namespace, response) -> None:
-    """Format and display search results."""
-    results = json.loads(response.text)
-    items = results.get("value", [])
-    continuation_token = results.get("continuationToken")
-
-    if not items:
-        utils_ui.print_grey("No items found.")
-        return
-
-    # Add result count info
-    count = len(items)
-    has_more = continuation_token is not None
-    count_msg = f"{count} item(s) found" + (" (more available)" if has_more else "")
-    utils_ui.print_grey("")  # Blank line after "Searching..."
-    utils_ui.print_grey(count_msg)
-    utils_ui.print_grey("")  # Blank line separator
-
-    # Check if detailed output is requested
+def _display_items(args: Namespace, items: list[dict]) -> None:
+    """Format and display search result items."""
     detailed = getattr(args, "long", False)
 
     if detailed:
-        # Detailed output: vertical key-value list with all fields
-        # Use snake_case keys for proper Title Case formatting by fab_ui
-        # Only include keys with non-empty values
         display_items = []
         for item in items:
             entry = {
@@ -199,16 +242,13 @@ def _display_results(args: Namespace, response) -> None:
                 "workspace": item.get("workspaceName"),
                 "workspace_id": item.get("workspaceId"),
             }
-            # Only add description if it has a value
             if item.get("description"):
                 entry["description"] = item.get("description")
             display_items.append(entry)
         utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
-        # Default output: compact table view
-        # Check if any items have descriptions
         has_descriptions = any(item.get("description") for item in items)
-        
+
         display_items = []
         for item in items:
             entry = {
@@ -216,13 +256,7 @@ def _display_results(args: Namespace, response) -> None:
                 "type": item.get("type"),
                 "workspace": item.get("workspaceName"),
             }
-            # Only include description column if any item has a description
             if has_descriptions:
                 entry["description"] = item.get("description") or ""
             display_items.append(entry)
         utils_ui.print_output_format(args, data=display_items, show_headers=True)
-
-    # Output continuation token if more results available
-    if continuation_token:
-        utils_ui.print_grey("")
-        utils_ui.print_grey(f"To get more results, use: --next-token \"{continuation_token}\"")
