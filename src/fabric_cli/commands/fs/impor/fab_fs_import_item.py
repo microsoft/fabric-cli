@@ -8,7 +8,7 @@ from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType
+from fabric_cli.core.fab_types import ItemType, definition_format_mapping
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.utils import fab_cmd_import_utils as utils_import
 from fabric_cli.utils import fab_mem_store as utils_mem_store
@@ -20,9 +20,19 @@ def import_single_item(item: Item, args: Namespace) -> None:
     _input_format = None
     if args.format:
         _input_format = args.format
-        if _input_format not in (".py", ".ipynb"):
+        if item.item_type in definition_format_mapping:
+            valid_formats = list(
+                definition_format_mapping[item.item_type].keys())
+            if _input_format not in valid_formats:
+                available_formats = [
+                    k for k in valid_formats if k != "default"]
+                raise FabricCLIError(
+                    f"Invalid format. Only the following formats are supported: {', '.join(available_formats)}",
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+        else:
             raise FabricCLIError(
-                "Invalid format. Only '.py' and '.ipynb' are supported.",
+                f"Invalid format. No formats are supported",
                 fab_constant.ERROR_INVALID_INPUT,
             )
 
@@ -64,11 +74,12 @@ def import_single_item(item: Item, args: Namespace) -> None:
                 else:
                     _import_update_item(args, payload)
 
-                utils_ui.print_output_format(args, message=f"'{item.name}' imported"
-                )
+                utils_ui.print_output_format(
+                    args, message=f"'{item.name}' imported")
         else:
             # Create
-            utils_ui.print_grey(f"Importing '{_input_path}' → '{item.path}'...")
+            utils_ui.print_grey(
+                f"Importing '{_input_path}' → '{item.path}'...")
 
             # Environment item type, not supporting definition yet
             if item.item_type == ItemType.ENVIRONMENT:
@@ -77,8 +88,8 @@ def import_single_item(item: Item, args: Namespace) -> None:
                 response = _import_create_item(args, payload)
 
             if response.status_code in (200, 201):
-                utils_ui.print_output_format(args, message=f"'{item.name}' imported"
-                )
+                utils_ui.print_output_format(
+                    args, message=f"'{item.name}' imported")
                 data = json.loads(response.text)
                 item._id = data["id"]
 

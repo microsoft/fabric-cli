@@ -345,9 +345,6 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-**Supported Import Formats:** `.ipynb` (default) and `.py`.
-
-
 ### Start/Stop Mirrored Databases
 
 #### Start Mirrored Database

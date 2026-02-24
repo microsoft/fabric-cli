@@ -204,7 +204,7 @@ class TestExport:
     @export_item_format_parameters
     def test_export_item_format_success(
         self, item_factory, cli_executor, mock_print_done, tmp_path,
-        item_type, export_format, expected_file_extension
+        item_type, export_format, expected_file_extensions, expected_folders
     ):
         # Setup
         item = item_factory(item_type)
@@ -221,8 +221,11 @@ class TestExport:
         export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.suffix == expected_file_extension for file in files)
+        # +1 for .platform file
+        assert len(files) == len(expected_file_extensions) + \
+            len(expected_folders) + 1
+        for ext in expected_file_extensions:
+            assert any(file.suffix == ext for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
 
@@ -262,7 +265,6 @@ class TestExport:
         tmp_path,
         item_type,
         invalid_format,
-        expected_error_suffix,
     ):
         # Setup
         item = item_factory(item_type)
@@ -275,9 +277,20 @@ class TestExport:
             f"export {item.full_path} --output {str(tmp_path)} --format {invalid_format} --force"
         )
 
+        error_messages = {
+            ItemType.NOTEBOOK: "Invalid format. Only the following formats are supported: .py, .ipynb",
+            ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
+            ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
+            ItemType.DATA_PIPELINE: "Invalid format. No formats are supported",
+            ItemType.MIRRORED_DATABASE: "Invalid format. No formats are supported",
+            ItemType.COSMOS_DB_DATABASE: "Invalid format. No formats are supported",
+            ItemType.USER_DATA_FUNCTION: "Invalid format. No formats are supported",
+            ItemType.GRAPH_QUERY_SET: "Invalid format. No formats are supported"
+        }
+
         # Assert
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_INPUT, f"Invalid format. {expected_error_suffix}")
+            constant.ERROR_INVALID_INPUT, error_messages[item_type])
 
     def test_export_report_no_format_support_failure(
         self,
