@@ -84,7 +84,11 @@ class Item(_BaseItem):
                     "folderId": self.folder_id,
                     "displayName": self.short_name,
                     "definition": {
-                        "format": "SparkJobDefinitionV1",
+                        "format": (
+                            "SparkJobDefinitionV1"
+                            if input_format is None
+                            else input_format
+                        ),
                         "parts": definition["parts"],
                     },
                 }
@@ -102,9 +106,23 @@ class Item(_BaseItem):
                         )
                     },
                 }
+            case ItemType.SEMANTIC_MODEL:
+                return {
+                    "type": str(self.item_type),
+                    "description": "Imported from fab",
+                    "folderId": self.folder_id,
+                    "displayName": self.short_name,
+                    "definition": (
+                        definition
+                        if input_format is None
+                        else {
+                            "format": input_format,
+                            "parts": definition["parts"],
+                        }
+                    ),
+                }
             case (
                 ItemType.REPORT
-                | ItemType.SEMANTIC_MODEL
                 | ItemType.KQL_DASHBOARD
                 | ItemType.DATA_PIPELINE
                 | ItemType.KQL_QUERYSET
