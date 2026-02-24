@@ -1,21 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-MSAL-Azure Identity Bridge Module
-
-This module provides a bridge between MSAL (Microsoft Authentication Library) 
-and Azure Identity by implementing the TokenCredential interface. This allows 
-existing MSAL authentication flows to be used with Azure SDKs that expect 
-TokenCredential objects.
-
-Key Features:
-- Supports all authentication types: user, service principal, managed identity
-- Handles refresh token management automatically via MSAL's silent acquisition
-- Provides proper error handling for headless scenarios
-- Ensures scope compatibility with Azure SDKs (.default scopes)
-"""
-
 import os
 from typing import Optional
 from datetime import datetime, timezone
@@ -74,8 +59,8 @@ class MsalTokenCredential(TokenCredential):
         Raises:
             ClientAuthenticationError: When authentication is not available
         """
-        # Bridge-specific security validations
-        fab_logger.log_info(f"Token requested for deployment, scopes: {list(scopes)}")
+        fab_logger.log_debug(
+            f"Token requested for deployment, scopes: {list(scopes)}")
         
         # Bridge-specific: strict .default scope validation
         valid_default_scopes = {
@@ -90,9 +75,6 @@ class MsalTokenCredential(TokenCredential):
                     f"Invalid scope: {scope}. "
                     f"Allowed scopes: {', '.join(valid_default_scopes)}"
                 )
-        
-        fab_logger.log_debug(f"Requesting token for scopes: {list(scopes)}")
-        
         try:
             # Delegate to shared authentication logic
             msal_result = self._fab_auth.acquire_token(
@@ -101,7 +83,7 @@ class MsalTokenCredential(TokenCredential):
             )
             
             # Bridge-specific: Convert to AccessToken for Azure SDK compatibility
-            return self._create_access_token(msal_result)
+            return self._to_azure_access_token(msal_result)
             
         except Exception as e:
             fab_logger.log_debug(f"Token acquisition failed: {e}")
@@ -109,7 +91,7 @@ class MsalTokenCredential(TokenCredential):
                 f"\n{str(e)}"
             ) from e
 
-    def _create_access_token(self, msal_result: dict) -> AccessToken:
+    def _to_azure_access_token(self, msal_result: dict) -> AccessToken:
         """Convert MSAL result to AccessToken object."""
         access_token = msal_result["access_token"]
         
@@ -128,9 +110,6 @@ class MsalTokenCredential(TokenCredential):
                 # Default to 1 hour from now if no expiration info
                 import time
                 expires_on = int(time.time() + 3600)
-        
-        fab_logger.log_debug(f"Token acquired, expires at: {datetime.fromtimestamp(expires_on, tz=timezone.utc)}")
-        
         return AccessToken(access_token, expires_on)
 
     def close(self) -> None:
@@ -138,25 +117,20 @@ class MsalTokenCredential(TokenCredential):
         pass
 
 
-def create_fabric_token_credential(fab_auth: Optional[FabAuth] = None) -> TokenCredential:
+def create_fabric_token_credential() -> TokenCredential:
     """
     Create a TokenCredential that uses the current Fabric CLI authentication.
     
     This function creates a TokenCredential that wraps the existing MSAL authentication
     from the Fabric CLI. It will use whatever authentication the user has already
     configured (user login, service principal, managed identity, or environment tokens).
-    
-    Args:
-        fab_auth: Optional FabAuth instance. If None, uses the singleton instance.
-        
     Returns:
         TokenCredential that can be used with Azure SDKs
         
     Raises:
         ClientAuthenticationError: When no authentication is configured
     """
-    if fab_auth is None:
-        fab_auth = FabAuth()  # Uses singleton
+    fab_auth = FabAuth()
     
     identity_type = fab_auth.get_identity_type()
     
