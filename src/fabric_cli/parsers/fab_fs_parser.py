@@ -319,7 +319,7 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
     export_parser.add_argument(
         "--format",
         metavar="",
-        help="Export format. Optional",
+        help="Format of the item definition to export. Optional",
     )
     export_parser.add_argument(
         "-f",
@@ -415,7 +415,7 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
     import_parser.add_argument(
         "--format",
         metavar="",
-        help="Input format. Optional, supported for notebooks (.ipynb, .py)",
+        help="Format of the item definition to import. Optional",
     )
     import_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"

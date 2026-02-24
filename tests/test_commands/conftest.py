@@ -41,7 +41,7 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
-custom_parametrize = pytest.mark.parametrize("item_type", [
+item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE,
     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
@@ -91,6 +91,90 @@ get_virtual_workspace_success_params = pytest.mark.parametrize("virtual_workspac
     (VirtualWorkspaceType.GATEWAY, [
         "type", "capacityId", "numberOfMemberGateways"]),
 ])
+
+# Export command parametrizations
+export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
+    (ItemType.NOTEBOOK, ".ipynb"),
+    (ItemType.SPARK_JOB_DEFINITION, ".json"),
+    (ItemType.DATA_PIPELINE, ".json"),
+    (ItemType.MIRRORED_DATABASE, ".json"),
+    (ItemType.COSMOS_DB_DATABASE, ".json"),
+    (ItemType.USER_DATA_FUNCTION, ".json"),
+    (ItemType.GRAPH_QUERY_SET, ".json")
+])
+
+export_item_types_parameters = pytest.mark.parametrize("item_type", [
+    ItemType.NOTEBOOK,
+    ItemType.SPARK_JOB_DEFINITION,
+    ItemType.DATA_PIPELINE,
+    ItemType.MIRRORED_DATABASE,
+    ItemType.REPORT,
+    ItemType.SEMANTIC_MODEL,
+    ItemType.KQL_DATABASE,
+    ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION,
+    ItemType.GRAPH_QUERY_SET
+])
+
+export_item_format_parameters = pytest.mark.parametrize(
+    "item_type,export_format,expected_file_extensions,expected_folders",
+    [
+        (ItemType.NOTEBOOK, ".py", [".py"], []),
+        (ItemType.NOTEBOOK, ".ipynb", [".ipynb"], []),
+        (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV1", [".json"], []),
+        (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV2", [".json"], []),
+        (ItemType.SEMANTIC_MODEL, "TMDL", [".pbism"], ["definition"]),
+        (ItemType.SEMANTIC_MODEL, "TMSL", [".pbism", ".bim"], []),
+    ],
+)
+
+export_item_default_format_parameters = pytest.mark.parametrize("item_type,expected_file_count", [
+    (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
+    (ItemType.SPARK_JOB_DEFINITION, 2),
+    (ItemType.DATA_PIPELINE, 2),
+    (ItemType.MIRRORED_DATABASE, 2),
+    (ItemType.REPORT, 4),
+    (ItemType.SEMANTIC_MODEL, 3),
+    (ItemType.KQL_DATABASE, 3),
+    (ItemType.COSMOS_DB_DATABASE, 2),
+    (ItemType.USER_DATA_FUNCTION, 2),
+    (ItemType.GRAPH_QUERY_SET, 2)
+])
+
+export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format", [
+    (ItemType.NOTEBOOK, ".txt"),
+    (ItemType.SPARK_JOB_DEFINITION, ".txt"),
+    (ItemType.SEMANTIC_MODEL, ".txt"),
+    (ItemType.DATA_PIPELINE, ".txt"),
+    (ItemType.MIRRORED_DATABASE, ".txt"),
+    (ItemType.COSMOS_DB_DATABASE, ".txt"),
+    (ItemType.USER_DATA_FUNCTION, ".txt"),
+    (ItemType.GRAPH_QUERY_SET, ".txt")
+])
+
+assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
+])
+
+ONELAKE_FOLDER_PARAMS = [
+    (ItemType.LAKEHOUSE, "Files", True),
+    (ItemType.LAKEHOUSE, "Tables", True),
+    (ItemType.WAREHOUSE, "Files", False),
+    (ItemType.WAREHOUSE, "Tables", True),
+    (ItemType.SEMANTIC_MODEL, "Tables", False),
+    (ItemType.SPARK_JOB_DEFINITION, "Libs", True),
+    (ItemType.SPARK_JOB_DEFINITION, "Main", True),
+    (ItemType.KQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Tables", True),
+    (ItemType.SQL_DATABASE, "Files", True),
+    (ItemType.MIRRORED_DATABASE, "Tables", True),
+    (ItemType.MIRRORED_DATABASE, "Files", True),
+]
+
+exists_onelake_parameters = pytest.mark.parametrize(
+    "item_type,folder_name,created_by_default", ONELAKE_FOLDER_PARAMS
+)
 
 FILTER_HEADERS = [
     "authorization",

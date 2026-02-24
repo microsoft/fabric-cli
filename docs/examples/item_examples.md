@@ -345,9 +345,6 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-**Supported Import Formats:** `.ipynb` (default) and `.py`.
-
-
 ### Start/Stop Mirrored Databases
 
 #### Start Mirrored Database
@@ -380,8 +377,12 @@ fab stop ws1.Workspace/mir1.MirroredDatabase
 Stop mirrored database without confirmation.
 
 ```
-fab stop ws1.Workspacemir1.MirroredDatabase -f
+fab stop ws1.Workspace/mir1.MirroredDatabase -f
 ```
+
+### Semantic Model Refresh
+
+For detailed examples on triggering and monitoring semantic model refresh using the API command, see the [Semantic Model Refresh Example](refresh_semantic_model_example.md).
 
 ### Open in Browser
 
