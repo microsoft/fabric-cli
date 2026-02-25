@@ -350,6 +350,50 @@ class TestImport:
             cli_executor,
         )
 
+    def test_import_create_new_notebook_py_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.NOTEBOOK,
+            ".py",
+            cli_executor,
+        )
+
+    def test_import_create_new_notebook_ipynb_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.NOTEBOOK,
+            ".ipynb",
+            cli_executor,
+        )
+
     def test_import_create_new_sjd_item_success(
         self,
         item_factory,
@@ -368,6 +412,50 @@ class TestImport:
             mock_print_grey,
             upsert_item_to_cache,
             ItemType.SPARK_JOB_DEFINITION,
+            cli_executor,
+        )
+
+    def test_import_create_new_sjd_SparkJobDefinitionV1_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SPARK_JOB_DEFINITION,
+            "SparkJobDefinitionV1",
+            cli_executor,
+        )
+
+    def test_import_create_new_sjd_SparkJobDefinitionV2_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SPARK_JOB_DEFINITION,
+            "SparkJobDefinitionV2",
             cli_executor,
         )
 
@@ -431,6 +519,51 @@ class TestImport:
             mock_print_grey,
             upsert_item_to_cache,
             ItemType.SEMANTIC_MODEL,
+            cli_executor,
+        )
+
+    # Semantic model tests, same as for notebook with format
+    def test_import_create_new_semantic_model_tmdl_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SEMANTIC_MODEL,
+            "TMDL",
+            cli_executor,
+        )
+
+    def test_import_create_new_semantic_model_tmsl_item_success(
+        self,
+        item_factory,
+        mock_print_done,
+        tmp_path,
+        spy_create_item,
+        mock_print_grey,
+        upsert_item_to_cache,
+        cli_executor,
+    ):
+        _import_create_new_item_with_format_success(
+            item_factory,
+            mock_print_done,
+            tmp_path,
+            spy_create_item,
+            mock_print_grey,
+            upsert_item_to_cache,
+            ItemType.SEMANTIC_MODEL,
+            "TMSL",
             cli_executor,
         )
 
@@ -804,8 +937,18 @@ class TestImport:
         mock_print_done.assert_not_called()
         upsert_item_to_cache.assert_not_called()
 
+    @pytest.mark.parametrize(
+        "item_type",
+        [
+            (ItemType.NOTEBOOK),
+            (ItemType.SPARK_JOB_DEFINITION),
+            (ItemType.SEMANTIC_MODEL),
+            (ItemType.DATA_PIPELINE),
+        ],
+    )
     def test_import_item_wrong_format_fail(
         self,
+        item_type,
         workspace,
         mock_print_done,
         tmp_path,
@@ -816,7 +959,7 @@ class TestImport:
         assert_fabric_cli_error,
     ):
         # Setup
-        item_name = f"newName.{str(ItemType.NOTEBOOK)}"
+        item_name = f"newName.{str(item_type)}"
         new_item_path = cli_path_join(workspace.full_path, item_name)
 
         # Execute command
@@ -824,10 +967,17 @@ class TestImport:
             f"import {new_item_path} --input {str(tmp_path)} --format pyt"
         )
 
+        expected_error_messages = {
+            ItemType.NOTEBOOK: "Invalid format. Only the following formats are supported: .py, .ipynb",
+            ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
+            ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
+            ItemType.DATA_PIPELINE: "Invalid format. No formats are supported",
+        }
+
         # Assert
         assert_fabric_cli_error(
             fab_constant.ERROR_INVALID_INPUT,
-            "Invalid format. Only '.py' and '.ipynb' are supported",
+            expected_error_messages[item_type],
         )
         mock_print_grey.assert_not_called()
         spy_create_item.assert_not_called()
@@ -874,6 +1024,56 @@ def _import_create_new_item_success(
     with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
         cli_executor.exec_command(
             f"import {new_item_path} --input {str(tmp_path)}/{item.name} --force"
+        )
+
+    # Assert
+    mock_print_grey.assert_called_once()
+    assert "Importing " in mock_print_grey.call_args[0][0]
+    spy_create_item.assert_called_once()
+    mock_print_done.assert_called_once()
+    upsert_item_to_cache.assert_called_once()
+
+
+def _import_create_new_item_with_format_success(
+    item_factory,
+    mock_print_done,
+    tmp_path,
+    spy_create_item,
+    mock_print_grey,
+    upsert_item_to_cache,
+    item_type: ItemType,
+    format,
+    cli_executor: CLIExecutor,
+):
+    # Setup
+    item = item_factory(item_type)
+
+    # TODO: delete this line after mirrored db fix the API GAP for Create
+    if item_type == ItemType.MIRRORED_DATABASE:
+        time.sleep(60)
+
+    export_format(item.full_path, output=os.path.expanduser(
+        str(tmp_path)), format=format)
+
+    # Reset mock
+    mock_print_done.reset_mock()
+    mock_print_grey.reset_mock()
+    upsert_item_to_cache.reset_mock()
+    spy_create_item.reset_mock()
+
+    # Execute command
+    item_path = item.full_path
+    global new_name_index
+    new_item_path = item_path.replace(
+        item.display_name, item.display_name + "_new_" + str(new_name_index)
+    )
+    new_name_index += 1
+    new_item_path = item_path.replace(
+        item.display_name, item.display_name + "_new_" + str(new_name_index)
+    )
+    with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
+        cli_executor.exec_command(
+            f"import {new_item_path} --input {str(tmp_path)}/{item.name} --force --format {format}"
         )
 
     # Assert
@@ -965,6 +1165,24 @@ def _build_export_args(path, output, force=True):
         path=path,
         output=output,
         force=force,
+    )
+
+
+def export_format(path, output, force=True, format=None):
+    args = _build_export_format_args(path, output, force, format)
+    context = handle_context.get_command_context(args.path)
+    fab_export.exec_command(args, context)
+
+
+def _build_export_format_args(path, output, force=True, format=None):
+    return argparse.Namespace(
+        command="export",
+        acl_subcommand="export",
+        command_path="export",
+        path=path,
+        output=output,
+        force=force,
+        format=format,
     )
 
 
