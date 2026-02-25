@@ -22,7 +22,7 @@ from tests.test_commands.conftest import assert_fabric_cli_error
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
 from tests.test_commands.conftest import (
-    custom_parametrize,
+    item_type_paramerter,
     get_item_with_properties_success_params,
     get_item_warning_behavior_success_params,
     get_virtual_workspace_success_params,
@@ -83,7 +83,7 @@ class TestGet:
     # endregion
 
     # region Item
-    @custom_parametrize
+    @item_type_paramerter
     def test_get_item_query_all_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_print_warning, item_type
     ):
