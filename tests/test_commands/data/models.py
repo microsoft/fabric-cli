@@ -84,15 +84,6 @@ class EntityMetadata:
     def full_path(self, new_path: str) -> None:
         self._full_path = new_path
 
-    @property
-    def type(self) -> Any:
-        return self._type
-
-    # This setter is required for cleanup during test teardown
-    @type.setter
-    def type(self, value: Any) -> None:
-        self._type = value
-
 
 class SQLServer:
     def __init__(self, sql_server_data: dict[str, str]):
