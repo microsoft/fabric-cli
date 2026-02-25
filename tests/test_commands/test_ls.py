@@ -1134,8 +1134,7 @@ class TestLS:
         ItemType.REFLEX, ItemType.GRAPHQLAPI,
         ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
         ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-        ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
     ])
     def test_ls_folder_content_success(
         self,
@@ -1228,8 +1227,7 @@ class TestLS:
         ItemType.REFLEX, ItemType.GRAPHQLAPI,
         ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
         ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
-        ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
     ])
     def test_ls_workspace_items_no_list_folders_support_success(
         self,
