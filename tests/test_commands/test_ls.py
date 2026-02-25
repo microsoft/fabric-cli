@@ -20,7 +20,13 @@ from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.utils import cli_path_join
-from tests.test_commands.conftest import basic_item_parametrize, item_type_paramerter
+from tests.test_commands.conftest import (
+    basic_item_parametrize,
+    item_type_paramerter,
+    command_ls_parameters,
+    ls_item_folders_success_params,
+    ls_folder_content_success_params
+)
 
 
 class TestLS:
@@ -102,7 +108,7 @@ class TestLS:
     # region ITEM
 
     @item_type_paramerter
-    @pytest.mark.parametrize("command", ["ls", "dir"])
+    @command_ls_parameters
     def test_ls_workspace_items_success(
         self,
         workspace,
@@ -558,23 +564,7 @@ class TestLS:
     # endregion
 
     # region ITEM FOLDERS
-    @pytest.mark.parametrize("item_type, expected_folders",
-                             [
-                                 (ItemType.LAKEHOUSE, [
-                                  "Files", "Tables", "TableMaintenance"]),
-                                 (ItemType.COSMOS_DB_DATABASE, [
-                                  "Files", "Tables", "Code", "Audit"]),
-                                 (ItemType.LAKEHOUSE, [
-                                  "Files", "Tables", "TableMaintenance"]),
-                                 (ItemType.WAREHOUSE, ["Files", "Tables"]),
-                                 (ItemType.SPARK_JOB_DEFINITION,
-                                  ["Libs", "Main", "Snapshots"]),
-                                 (ItemType.KQL_DATABASE, [
-                                  "Tables", "Shortcut"]),
-                                 (ItemType.SQL_DATABASE, [
-                                  "Tables", "Files", "Code"]),
-                             ]
-                             )
+    @ls_item_folders_success_params
     def test_ls_item_folders_success(
         self, item_type, expected_folders, item_factory, mock_questionary_print, cli_executor: CLIExecutor
     ):
@@ -1125,17 +1115,7 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE,
-        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.GRAPHQLAPI,
-        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
-        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
-    ])
+    @ls_folder_content_success_params
     def test_ls_folder_content_success(
         self,
         folder_factory,
@@ -1218,17 +1198,7 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
-    @pytest.mark.parametrize("item_type", [
-        ItemType.DATA_PIPELINE,
-        ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
-        ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
-        ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
-        ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-        ItemType.REFLEX, ItemType.GRAPHQLAPI,
-        ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
-        ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
-        ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
-    ])
+    @ls_folder_content_success_params
     def test_ls_workspace_items_no_list_folders_support_success(
         self,
         workspace,
