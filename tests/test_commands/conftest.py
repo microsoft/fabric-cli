@@ -62,6 +62,32 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
+mv_item_to_item_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
+mv_item_to_item_unsupported_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.EVENTHOUSE,
+    ItemType.KQL_DATABASE,
+    ItemType.EVENTSTREAM,
+])
+
+mv_item_to_item_type_mismatch_failure_params = pytest.mark.parametrize("source_type,target_type", [
+    (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
+    (ItemType.REPORT, ItemType.LAKEHOUSE),
+    (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
+])
+
+mv_item_within_workspace_rename_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
 get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
     (ItemType.ENVIRONMENT, [
         "properties", "publishDetails", "connections", "published", "staging"]),
