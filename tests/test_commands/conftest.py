@@ -219,6 +219,11 @@ FILTER_HEADERS = [
     "x-ms-authorization-auxiliary",
 ]
 
+unassign_failure_params = pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", None),
+])
+
 
 def pytest_addoption(parser):
     parser.addoption(
