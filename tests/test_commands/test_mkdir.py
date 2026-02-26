@@ -30,7 +30,7 @@ from fabric_cli.core.fab_types import (
 )
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.conftest import (
-    custom_parametrize,
+    item_type_paramerter,
     mkdir_unsupported_item_failure_params,
     mkdir_item_with_creation_payload_success_params,
 )
@@ -43,7 +43,7 @@ from tests.test_commands.utils import cli_path_join
 class TestMkdir:
     # region ITEM
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_mkdir_item_name_already_exists_failure(
         self, item_type, item_factory, cli_executor, assert_fabric_cli_error
     ):
@@ -56,7 +56,7 @@ class TestMkdir:
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_mkdir_item_success(
         self,
         item_type,
