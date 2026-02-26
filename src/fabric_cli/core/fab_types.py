@@ -405,6 +405,13 @@ class SQLDatabaseFolders(Enum):
     CODE = "Code"
 
 
+class CosmosDBDatabaseFolders(Enum):
+    TABLES = "Tables"
+    FILES = "Files"
+    CODE = "Code"
+    AUDIT = "Audit"
+
+
 # TODO validate MirroredWarehouse OneLake folders
 class MirroredDatabaseFolders(Enum):
     FILES = "Files"
@@ -422,6 +429,7 @@ ItemFoldersMap: dict[ItemType, List[str]] = {
     ItemType.MIRRORED_DATABASE: [folder.value for folder in MirroredDatabaseFolders],
     ItemType.MIRRORED_WAREHOUSE: [folder.value for folder in MirroredDatabaseFolders],
     ItemType.SQL_DATABASE: [folder.value for folder in SQLDatabaseFolders],
+    ItemType.COSMOS_DB_DATABASE: [folder.value for folder in CosmosDBDatabaseFolders],
 }
 
 OnelakeWritableFolders = ["Files", "Libs", "Main"]
@@ -538,7 +546,7 @@ uri_mapping = {
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
-    ItemType.DIGITAL_TWIN_BUILDER: "digitaltwinbuilders",
+    ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -569,11 +577,20 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
-    ItemType.SPARK_JOB_DEFINITION: {"default": "?format=SparkJobDefinitionV1"},
+    ItemType.SPARK_JOB_DEFINITION: {
+        "default": "?format=SparkJobDefinitionV1",
+        "SparkJobDefinitionV1": "?format=SparkJobDefinitionV1",
+        "SparkJobDefinitionV2": "?format=SparkJobDefinitionV2",
+    },
     ItemType.NOTEBOOK: {
         "default": "?format=ipynb",
         ".py": "?format=fabricGitSource",
         ".ipynb": "?format=ipynb",
+    },
+    ItemType.SEMANTIC_MODEL: {
+        "default": "",
+        "TMDL": "?format=TMDL",
+        "TMSL": "?format=TMSL",
     },
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
