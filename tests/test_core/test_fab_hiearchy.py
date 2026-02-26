@@ -131,7 +131,8 @@ def test_create_virtual_item():
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
     )
-    container = VirtualItemContainer(name=".sparkpools", id=None, parent=workspace)
+    container = VirtualItemContainer(
+        name=".sparkpools", id=None, parent=workspace)
     item = VirtualItem(
         name="mySparkPool",
         id="virtual_item_id",
@@ -355,7 +356,8 @@ def test_create_virtual_item_container():
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
     )
-    container = VirtualItemContainer(name=".sparkpools", id=None, parent=workspace)
+    container = VirtualItemContainer(
+        name=".sparkpools", id=None, parent=workspace)
     assert container.parent == workspace
     assert container.tenant.id == "0000"
     assert container.tenant.name == "tenant_name.Tenant"
@@ -417,6 +419,21 @@ def test_get_item_payloads():
         "displayName": "item_name",
         "folderId": None,
         "definition": {
+            "format": "SparkJobDefinitionV2",
+            "parts": _base_payload["parts"],
+        },
+    }
+
+    # Check that the payload is correct
+    assert spark_job_def.get_payload(
+        _base_payload, "SparkJobDefinitionV2") == _expected_payload
+
+    _expected_payload = {
+        "type": "SparkJobDefinition",
+        "description": "Imported from fab",
+        "displayName": "item_name",
+        "folderId": None,
+        "definition": {
             "format": "SparkJobDefinitionV1",
             "parts": _base_payload["parts"],
         },
@@ -459,6 +476,41 @@ def test_get_item_payloads():
         "folderId": None,
         "definition": _base_payload,
     }
+
+    # Check that the payload is correct for SemanticModel which can have different formatting
+    smenticModel = Item(
+        name="item_name",
+        id="item_id",
+        parent=workspace,
+        item_type="SemanticModel",
+    )
+
+    _expected_payload_without_format = {
+        "type": "SemanticModel",
+        "description": "Imported from fab",
+        "displayName": "item_name",
+        "folderId": None,
+        "definition": _base_payload,
+    }
+
+    assert smenticModel.get_payload(
+        _base_payload) == _expected_payload_without_format
+
+    _expected_payload_with_format = {
+        "type": "SemanticModel",
+        "description": "Imported from fab",
+        "displayName": "item_name",
+        "folderId": None,
+        "definition": {
+            "format": "TMDL",
+            "parts": _base_payload["parts"],
+        },
+    }
+
+    assert (
+        smenticModel.get_payload(_base_payload, input_format="TMDL")
+        == _expected_payload_with_format
+    )
 
     # Check that the payload is correct
     assert report.get_payload(_base_payload) == _expected_payload
