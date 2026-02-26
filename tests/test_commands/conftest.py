@@ -58,7 +58,39 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION, ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+])
+
+get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
+    (ItemType.ENVIRONMENT, [
+        "properties", "publishDetails", "connections", "published", "staging"]),
+    (ItemType.LAKEHOUSE, ["properties", "oneLakeTablesPath",
+                          "oneLakeFilesPath", "sqlEndpointProperties"]),
+    (ItemType.WAREHOUSE, ["properties"]),
+    (ItemType.KQL_DATABASE, ["properties"]),
+    (ItemType.SQL_DATABASE, ["properties"]),
+    (ItemType.MIRRORED_DATABASE, [
+        "definition", "connections", "status", "tablesStatus"]),
+])
+
+get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,expects_warning", [
+    (ItemType.MIRRORED_DATABASE, True),
+    (ItemType.NOTEBOOK, True),
+    (ItemType.DATA_PIPELINE, True),
+    (ItemType.LAKEHOUSE, False),
+    (ItemType.ENVIRONMENT, False),
+    (ItemType.WAREHOUSE, False),
+    (ItemType.COSMOS_DB_DATABASE, True),
+    (ItemType.USER_DATA_FUNCTION, True),
+    (ItemType.GRAPH_QUERY_SET, True)
+])
+
+get_virtual_workspace_success_params = pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
+    (VirtualWorkspaceType.DOMAIN, [
+        "contributorsScope", "domainWorkspaces"]),
+    (VirtualWorkspaceType.GATEWAY, [
+        "type", "capacityId", "numberOfMemberGateways"]),
 ])
 
 # Export command parametrizations
@@ -124,6 +156,33 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
 assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
+])
+
+command_ls_parameters = pytest.mark.parametrize("command", ["ls", "dir"])
+
+ls_item_folders_success_params = pytest.mark.parametrize(
+    "item_type, expected_folders",
+    [
+        (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+        (ItemType.COSMOS_DB_DATABASE, ["Files", "Tables", "Code", "Audit"]),
+        (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+        (ItemType.WAREHOUSE, ["Files", "Tables"]),
+        (ItemType.SPARK_JOB_DEFINITION, ["Libs", "Main", "Snapshots"]),
+        (ItemType.KQL_DATABASE, ["Tables", "Shortcut"]),
+        (ItemType.SQL_DATABASE, ["Tables", "Files", "Code"]),
+    ]
+)
+
+ls_folder_content_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.GRAPHQLAPI,
+    ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
 ])
 
 ONELAKE_FOLDER_PARAMS = [
