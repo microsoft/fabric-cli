@@ -497,7 +497,7 @@ class FabAuth:
                 f"Error in get token: {token.get('error_description')}")
             raise FabricCLIError(
                 ErrorMessages.Auth.access_token_error(
-                    "Please run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."),
+                    "Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         if token is None or not token.get("access_token"):
