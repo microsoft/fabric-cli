@@ -26,7 +26,7 @@ from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
 from tests.test_commands.utils import cli_path_join
 from tests.test_commands.conftest import (
-    custom_parametrize,
+    item_type_paramerter,
     rm_item_without_force_cancel_operation_success_params,
     rm_unsupported_item_failure_params,
 )
@@ -35,7 +35,7 @@ from tests.test_commands.conftest import (
 class TestRM:
     # region ITEM
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_rm_item_success(
         self,
         workspace,
@@ -70,7 +70,7 @@ class TestRM:
 
         _assert_not_found(item.full_path)
 
-    @custom_parametrize
+    @item_type_paramerter
     def test_rm_item_without_force_success(
         self,
         workspace,
