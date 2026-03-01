@@ -454,7 +454,6 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "-tenv",
         "--target_env",
         type=str,
-        required=True,
         help="Environment name as defined in deployment config file.",
     )
 
@@ -462,6 +461,7 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "-P",
         "--params",
         type=str,
+        nargs="+",
         help="parameters for deployment in JSON format (e.g., '[{\"p1\":\"v1\",\"p2\":\"v2\"}]'). Optional",
     )
 

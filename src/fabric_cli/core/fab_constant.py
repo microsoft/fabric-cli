@@ -283,6 +283,7 @@ ERROR_UNAUTHORIZED = "Unauthorized"
 ERROR_UNIVERSAL_SECURITY_DISABLED = "UniversalSecurityDisabled"
 ERROR_SPN_AUTH_MISSING = "ServicePrincipalAuthMissing"
 ERROR_JOB_FAILED = "JobFailed"
+ERROR_IN_DEPLOYMENT = "ErrorDeployItems"
 
 # Exit codes
 EXIT_CODE_SUCCESS = 0

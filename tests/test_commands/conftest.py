@@ -255,6 +255,16 @@ def set_test_user_agent(monkeypatch):
         )
         kwargs["headers"] = headers
 
+        # Handle json parameter when it's a string (fix for fabric_cicd compatibility)
+        json_param = kwargs.get("json")
+        if isinstance(json_param, str) and json_param.strip().startswith(('{', '[')):
+            try:
+                import json
+                kwargs["json"] = json.loads(json_param)
+            except json.JSONDecodeError:
+                # If parsing fails, leave it as-is
+                pass
+
         # Call the original request method with updated headers
         return original_request(self, method, url, *args, **kwargs)
 
