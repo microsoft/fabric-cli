@@ -91,7 +91,7 @@ class MsalTokenCredential(TokenCredential):
 
     def _to_azure_access_token(self, msal_result: dict) -> AccessToken:
         """Convert MSAL result to AccessToken object."""
-        return AccessToken(msal_result["access_token"], msal_result.get("expires_on"))
+        return AccessToken(msal_result["access_token"], int(msal_result.get("expires_on")))
 
     def close(self) -> None:
         """Close the credential (no-op for this implementation)."""
