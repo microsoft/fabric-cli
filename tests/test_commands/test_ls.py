@@ -1212,24 +1212,18 @@ class TestLS:
         cli_executor: CLIExecutor,
     ):
         """Test that a divider appears between folders and items when folder_listing_enabled=true"""
-        # Setup: Create folders and items in workspace root
         folder1 = folder_factory()
         folder2 = folder_factory()
         notebook = item_factory(ItemType.NOTEBOOK, path=workspace.full_path)
         lakehouse = item_factory(ItemType.LAKEHOUSE, path=workspace.full_path)
 
-        # Test 1: List workspace (folder_listing_enabled is true by default in tests)
+        mock_questionary_print.reset_mock()
         cli_executor.exec_command(f"ls {workspace.full_path}")
-
-        # Assert: Check that the divider is present
         mock_questionary_print.assert_called()
 
-        # Verify divider appears in output
         _assert_strings_in_mock_calls(
-            ["------------------------------"], True, mock_questionary_print.mock_calls
+            ["[Folders]", "[Items]"], True, mock_questionary_print.mock_calls
         )
-
-        # Verify folders and items are present
         _assert_strings_in_mock_calls(
             [
                 folder1.display_name,
@@ -1241,20 +1235,23 @@ class TestLS:
             mock_questionary_print.mock_calls,
         )
 
+        # Verify ordering: folders before [Items], items after
+        all_output = " ".join(
+            call.args[0] for call in mock_questionary_print.mock_calls if call.args
+        )
+        assert all_output.index(folder1.display_name) < all_output.index("[Items]")
+        assert all_output.index(folder2.display_name) < all_output.index("[Items]")
+        assert all_output.index(notebook.display_name) > all_output.index("[Items]")
+        assert all_output.index(lakehouse.display_name) > all_output.index("[Items]")
+
         mock_questionary_print.reset_mock()
 
-        # Test 2: with long flag
         cli_executor.exec_command(f"ls {workspace.full_path} --long")
-
-        # Assert
         mock_questionary_print.assert_called()
 
-        # Verify divider appears with long format
         _assert_strings_in_mock_calls(
-            ["------------------------------"], True, mock_questionary_print.mock_calls
+            ["[Folders]", "[Items]"], True, mock_questionary_print.mock_calls
         )
-
-        # Verify all items are present
         _assert_strings_in_mock_calls(
             [
                 folder1.display_name,
