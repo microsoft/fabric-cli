@@ -76,13 +76,11 @@ class MsalTokenCredential(TokenCredential):
                     f"Allowed scopes: {', '.join(valid_default_scopes)}"
                 )
         try:
-            # Delegate to shared authentication logic
             msal_result = self._fab_auth.acquire_token(
                 list(scopes),
                 interactive_renew=False  # Bridge is always headless
             )
-            
-            # Bridge-specific: Convert to AccessToken for Azure SDK compatibility
+
             return self._to_azure_access_token(msal_result)
             
         except Exception as e:
@@ -93,24 +91,7 @@ class MsalTokenCredential(TokenCredential):
 
     def _to_azure_access_token(self, msal_result: dict) -> AccessToken:
         """Convert MSAL result to AccessToken object."""
-        access_token = msal_result["access_token"]
-        
-        # Handle expires_on - MSAL returns Unix timestamp as string or int
-        expires_on = msal_result.get("expires_on")
-        if expires_on:
-            if isinstance(expires_on, str):
-                expires_on = int(expires_on)
-        else:
-            # Fallback: calculate from expires_in if available
-            expires_in = msal_result.get("expires_in")
-            if expires_in:
-                import time
-                expires_on = int(time.time() + expires_in)
-            else:
-                # Default to 1 hour from now if no expiration info
-                import time
-                expires_on = int(time.time() + 3600)
-        return AccessToken(access_token, expires_on)
+        return AccessToken(msal_result["access_token"], msal_result.get("expires_on"))
 
     def close(self) -> None:
         """Close the credential (no-op for this implementation)."""
