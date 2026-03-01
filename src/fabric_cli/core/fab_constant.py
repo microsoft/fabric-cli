@@ -32,7 +32,7 @@ WEB_URI = "https://app.powerbi.com/groups"
 FAB_VERSION = __version__
 
 # Scopes
-SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
+SCOPE_FABRIC_DEFAULT = ["https://api.fabric.microsoft.com/.default"]
 SCOPE_ONELAKE_DEFAULT = ["https://storage.azure.com/.default"]
 SCOPE_AZURE_DEFAULT = ["https://management.azure.com/.default"]
 
