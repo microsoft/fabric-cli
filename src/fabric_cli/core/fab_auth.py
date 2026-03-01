@@ -525,10 +525,7 @@ class FabAuth:
         Raises:
             FabricCLIError: When token acquisition fails
         """
-        # Delegate to shared authentication logic
         token_result = self.acquire_token(scope, interactive_renew)
-
-        # Return just the token string for CLI backward compatibility
         return token_result.get("access_token", None)
 
     def logout(self):

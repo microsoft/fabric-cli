@@ -69,9 +69,9 @@ class MsalTokenCredential(TokenCredential):
         
         for scope in scopes:
             if scope not in valid_default_scopes:
-                fab_logger.log_info(f"Invalid scope rejected: {scope}")
+                fab_logger.log_debug(f"Invalid scope rejected: {scope}")
                 raise ClientAuthenticationError(
-                    f"Security validation failed: Only .default scopes are allowed. "
+                    f"Security validation failed: requested scope is not supported."
                     f"Invalid scope: {scope}. "
                     f"Allowed scopes: {', '.join(valid_default_scopes)}"
                 )
