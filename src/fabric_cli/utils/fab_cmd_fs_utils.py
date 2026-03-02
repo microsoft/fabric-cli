@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 
-from typing import Union
+from typing import Sequence, Union
 
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_commands import Command
@@ -78,7 +78,7 @@ def get_ws_elements(parent: Workspace | Folder) -> list[Union[Item, Folder]]:
     return ws_elements
 
 
-def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
+def sort_ws_elements(ws_elements: Sequence[Union[Item, Folder]], show_details):
 
     if not ws_elements:
         return []
