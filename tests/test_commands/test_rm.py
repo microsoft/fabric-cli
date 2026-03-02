@@ -28,7 +28,7 @@ from tests.test_commands.utils import cli_path_join
 from tests.test_commands.conftest import (
     item_type_paramerter,
     rm_item_without_force_cancel_operation_success_params,
-    rm_unsupported_item_failure_params,
+    unsupported_item_failure_params,
 )
 
 
@@ -142,7 +142,7 @@ class TestRM:
         mock_questionary_print.assert_not_called()
         mock_print_done.assert_not_called()
 
-    @rm_unsupported_item_failure_params
+    @unsupported_item_failure_params
     def test_rm_unsupported_item_failure(
         self,
         unsupported_item_type,
