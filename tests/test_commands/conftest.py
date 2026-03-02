@@ -41,7 +41,7 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
-item_type_paramerter = pytest.mark.parametrize("item_type", [
+ALL_ITEM_TYPES = [
     ItemType.DATA_PIPELINE,
     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
@@ -52,7 +52,9 @@ item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
     ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
-])
+]
+
+item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
 
 basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
@@ -62,7 +64,11 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
-mkdir_unsupported_item_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+rm_item_without_force_cancel_operation_success_params = pytest.mark.parametrize("item_type", [
+    item_type for item_type in ALL_ITEM_TYPES if item_type != ItemType.REPORT
+])
+
+unsupported_item_failure_params = pytest.mark.parametrize("unsupported_item_type", [
     ItemType.DASHBOARD,
     ItemType.DATAMART,
     ItemType.MIRRORED_WAREHOUSE,
@@ -76,6 +82,32 @@ mkdir_item_with_creation_payload_success_params = pytest.mark.parametrize("item_
         ["Latin1_General_100_CI_AS_KS_WS_SC_UTF8"]),
     (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
     (ItemType.REPORT, "", ["_auto"]),
+])
+
+mv_item_to_item_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
+mv_item_to_item_unsupported_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.EVENTHOUSE,
+    ItemType.KQL_DATABASE,
+    ItemType.EVENTSTREAM,
+])
+
+mv_item_to_item_type_mismatch_failure_params = pytest.mark.parametrize("source_type,target_type", [
+    (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
+    (ItemType.REPORT, ItemType.LAKEHOUSE),
+    (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
+])
+
+mv_item_within_workspace_rename_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
 ])
 
 get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
@@ -109,6 +141,66 @@ get_virtual_workspace_success_params = pytest.mark.parametrize("virtual_workspac
         "type", "capacityId", "numberOfMemberGateways"]),
 ])
 
+set_item_metadata_success_params_complete = pytest.mark.parametrize(
+    "metadata_to_set,should_upsert_to_cache",
+    [
+        ("description", False),
+        ("displayName", True),
+    ],
+)
+
+set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
+    ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
+])
+
+set_item_metadata_success_params = pytest.mark.parametrize(
+    "metadata_to_set", ["description", "displayName"])
+
+set_workspace_success_params = pytest.mark.parametrize(
+    "metadata_to_set, input_value",
+    [
+        ("sparkSettings.automaticLog.enabled", "false"),
+    ],
+)
+
+set_sparkpool_success_params = pytest.mark.parametrize(
+    "metadata_to_set, input_value",
+    [
+        ("nodeSize", "Medium"),
+        ("autoScale.enabled", "True"),
+        ("autoScale.minNodeCount", "2"),
+        ("autoScale.maxNodeCount", "5"),
+        ("name", None),  # Use None to trigger generate_random_string
+    ],
+)
+
+set_capacity_success_params = pytest.mark.parametrize(
+    "query, input", [("sku.name", "F4")])
+
+set_domain_success_params = pytest.mark.parametrize(
+    "query, input", [("contributorsScope", "AdminsOnly")])
+
+set_connection_metadata_success_params = pytest.mark.parametrize(
+    "metadata_to_set,input_value",
+    [
+        ("privacyLevel", "Organizational"),
+    ],
+)
+
+set_gateway_virtualNetwork_success_params = pytest.mark.parametrize(
+    "query,input",
+    [
+        ("numberOfMemberGateways", "2"),
+        ("inactivityMinutesBeforeSleep", "60"),
+        ("displayName", None),  # Use None to trigger generate_random_string
+    ],
+)
+
+set_folder_success_params = pytest.mark.parametrize(
+    "query, input", [("displayName", "randomFolder")])
 # Export command parametrizations
 export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
     (ItemType.NOTEBOOK, ".ipynb"),
