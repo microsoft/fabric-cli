@@ -443,8 +443,8 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     )
 
     deploy_parser.add_argument(
-        "-dcf",
-        "--deploy_config_file",
+        "-c",
+        "--config",
         type=str,
         required=True,
         help="Path to local deployment config file.",
@@ -454,6 +454,7 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "-tenv",
         "--target_env",
         type=str,
+        default="N/A",
         help="Environment name as defined in deployment config file.",
     )
 

@@ -5,7 +5,6 @@ import json
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_msal_bridge import create_fabric_token_credential
 from fabric_cli.utils import fab_ui
-from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cicd import append_feature_flag, change_log_level, deploy_with_config
 from argparse import Namespace
@@ -27,7 +26,7 @@ def deploy_with_config_file(args: Namespace) -> None:
         append_feature_flag("enable_config_deploy")
         append_feature_flag("enable_response_collection")
 
-        deplo_config_file = args.deploy_config_file
+        deploy_config_file = args.config
         deploy_parameters = get_dict_from_params(args.params, max_depth=1)
         for param in deploy_parameters:
             if isinstance(deploy_parameters[param], str):
@@ -38,10 +37,9 @@ def deploy_with_config_file(args: Namespace) -> None:
                     # If it's not a valid JSON string, keep it as is
                     pass
         result = deploy_with_config(
-            config_file_path=deplo_config_file,
-            environment=args.target_env or 'N/A',
-            token_credential=create_fabric_token_credential(
-                fab_auth=FabAuth()),  # MSAL bridge TokenCredential
+            config_file_path=deploy_config_file,
+            environment=args.target_env,
+            token_credential=create_fabric_token_credential(),  # MSAL bridge TokenCredential
             **deploy_parameters
         )
 
@@ -51,5 +49,5 @@ def deploy_with_config_file(args: Namespace) -> None:
 
     except Exception as e:
         raise FabricCLIError(
-            f"Deployment failed with error: {str(e)}",
+            f"Deployment failed: {str(e)}",
             fab_constant.ERROR_IN_DEPLOYMENT)
