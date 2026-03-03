@@ -11,7 +11,9 @@ from fabric_cli.client import fab_api_catalog as catalog_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_decorators import handle_exceptions, set_command_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.utils import fab_jmespath as utils_jmespath
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils import fab_util as utils
 
 
 # All Fabric item types (from API spec, alphabetically sorted)
@@ -74,10 +76,13 @@ SEARCHABLE_ITEM_TYPES = [t for t in ALL_ITEM_TYPES if t not in UNSUPPORTED_ITEM_
 @set_command_context()
 def find_command(args: Namespace) -> None:
     """Search the Fabric catalog for items."""
+    if args.query:
+        args.query = utils.process_nargs(args.query)
+
     is_interactive = getattr(args, "fab_mode", None) == fab_constant.FAB_MODE_INTERACTIVE
     payload = _build_search_payload(args, is_interactive)
 
-    utils_ui.print_grey(f"Searching catalog for '{args.query}'...")
+    utils_ui.print_grey(f"Searching catalog for '{args.search_text}'...")
 
     if is_interactive:
         _find_interactive(args, payload)
@@ -149,66 +154,110 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
 
 def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
     """Build the search request payload from command arguments."""
-    request: dict[str, Any] = {"search": args.query}
+    request: dict[str, Any] = {"search": args.search_text}
 
     # Interactive pages through 50 at a time; command-line fetches up to 1000
     request["pageSize"] = 50 if is_interactive else 1000
 
     # Build type filter from -P params
-    types = _parse_type_param(args)
-    if types:
-        filter_parts = [f"Type eq '{t}'" for t in types]
-        request["filter"] = " or ".join(filter_parts)
+    type_filter = _parse_type_param(args)
+    if type_filter:
+        op = type_filter["operator"]
+        types = type_filter["values"]
+
+        if op == "eq":
+            if len(types) == 1:
+                request["filter"] = f"Type eq '{types[0]}'"
+            else:
+                or_clause = " or ".join(f"Type eq '{t}'" for t in types)
+                request["filter"] = f"({or_clause})"
+        elif op == "ne":
+            if len(types) == 1:
+                request["filter"] = f"Type ne '{types[0]}'"
+            else:
+                ne_clause = " and ".join(f"Type ne '{t}'" for t in types)
+                request["filter"] = f"({ne_clause})"
 
     return request
 
 
-def _parse_type_param(args: Namespace) -> list[str]:
+def _parse_type_param(args: Namespace) -> dict[str, Any] | None:
     """Extract and validate item types from -P params.
 
-    Supports: -P type=Report or -P type=Report,Lakehouse
+    Supports:
+        -P type=Report          → eq single
+        -P type=[Report,Lakehouse]  → eq multiple (or)
+        -P type!=Dashboard      → ne single
+        -P type!=[Dashboard,Report] → ne multiple (and)
+    Legacy comma syntax also supported: -P type=Report,Lakehouse
+
+    Returns dict with 'operator' ('eq' or 'ne') and 'values' list, or None.
     """
     params = getattr(args, "params", None)
     if not params:
-        return []
+        return None
 
-    # params is a list from argparse nargs="*", e.g. ["type=Report,Lakehouse"]
+    # params is a list from argparse nargs="*", e.g. ["type=[Report,Lakehouse]"]
     type_value = None
+    operator = "eq"
     for param in params:
-        if "=" not in param:
-            raise FabricCLIError(
-                f"Invalid parameter format: '{param}'. Expected key=value.",
-                fab_constant.ERROR_INVALID_INPUT,
-            )
-        key, value = param.split("=", 1)
-        if key.lower() == "type":
-            type_value = value
+        if "!=" in param:
+            key, value = param.split("!=", 1)
+            if key.lower() == "type":
+                type_value = value
+                operator = "ne"
+            else:
+                raise FabricCLIError(
+                    f"Unknown parameter: '{key}'. Supported: type",
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+        elif "=" in param:
+            key, value = param.split("=", 1)
+            if key.lower() == "type":
+                type_value = value
+                operator = "eq"
+            else:
+                raise FabricCLIError(
+                    f"Unknown parameter: '{key}'. Supported: type",
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
         else:
             raise FabricCLIError(
-                f"Unknown parameter: '{key}'. Supported: type",
+                f"Invalid parameter format: '{param}'. Expected key=value or key!=value.",
                 fab_constant.ERROR_INVALID_INPUT,
             )
 
     if not type_value:
-        return []
+        return None
 
-    types = [t.strip() for t in type_value.split(",") if t.strip()]
+    # Parse bracket syntax: [val1,val2] or plain: val1 or legacy: val1,val2
+    if type_value.startswith("[") and type_value.endswith("]"):
+        inner = type_value[1:-1]
+        types = [t.strip() for t in inner.split(",") if t.strip()]
+    else:
+        types = [t.strip() for t in type_value.split(",") if t.strip()]
 
-    # Validate types
+    # Validate and normalize types (case-insensitive matching)
+    all_types_lower = {t.lower(): t for t in ALL_ITEM_TYPES}
+    unsupported_lower = {t.lower() for t in UNSUPPORTED_ITEM_TYPES}
+    normalized = []
     for t in types:
-        if t in UNSUPPORTED_ITEM_TYPES:
+        t_lower = t.lower()
+        if t_lower in unsupported_lower and operator == "eq":
+            canonical = all_types_lower.get(t_lower, t)
             raise FabricCLIError(
-                f"Item type '{t}' is not searchable via catalog search API. "
+                f"Item type '{canonical}' is not searchable via catalog search API. "
                 f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
                 fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
             )
-        if t not in SEARCHABLE_ITEM_TYPES:
+        if t_lower not in all_types_lower:
             raise FabricCLIError(
-                f"Unknown item type: '{t}'. Valid types: {', '.join(SEARCHABLE_ITEM_TYPES)}",
+                f"Unknown item type: '{t}'. Valid types: {', '.join(ALL_ITEM_TYPES)}",
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
             )
+        normalized.append(all_types_lower[t_lower])
 
-    return types
+    return {"operator": operator, "values": normalized}
 
 
 def _raise_on_error(response) -> None:
@@ -245,7 +294,6 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
             if item.get("description"):
                 entry["description"] = item.get("description")
             display_items.append(entry)
-        utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
         has_descriptions = any(item.get("description") for item in items)
 
@@ -259,4 +307,12 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
             if has_descriptions:
                 entry["description"] = item.get("description") or ""
             display_items.append(entry)
+
+    # Apply JMESPath client-side filtering if -q/--query specified
+    if getattr(args, "query", None):
+        display_items = utils_jmespath.search(display_items, args.query)
+
+    if detailed:
+        utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
+    else:
         utils_ui.print_output_format(args, data=display_items, show_headers=True)

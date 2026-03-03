@@ -64,7 +64,7 @@ class TestBuildSearchPayload:
 
     def test_basic_query_interactive(self):
         """Test basic search query in interactive mode."""
-        args = Namespace(query="sales report", params=None)
+        args = Namespace(search_text="sales report", params=None, query=None)
         payload = fab_find._build_search_payload(args, is_interactive=True)
 
         assert payload["search"] == "sales report"
@@ -73,7 +73,7 @@ class TestBuildSearchPayload:
 
     def test_basic_query_commandline(self):
         """Test basic search query in command-line mode."""
-        args = Namespace(query="sales report", params=None)
+        args = Namespace(search_text="sales report", params=None, query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "sales report"
@@ -82,21 +82,41 @@ class TestBuildSearchPayload:
 
     def test_query_with_single_type(self):
         """Test search with single type filter via -P."""
-        args = Namespace(query="report", params=["type=Report"])
+        args = Namespace(search_text="report", params=["type=Report"], query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "report"
         assert payload["filter"] == "Type eq 'Report'"
 
     def test_query_with_multiple_types(self):
-        """Test search with multiple type filters via -P."""
-        args = Namespace(query="data", params=["type=Lakehouse,Warehouse"])
+        """Test search with multiple type filters via -P bracket syntax."""
+        args = Namespace(search_text="data", params=["type=[Lakehouse,Warehouse]"], query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "data"
-        assert "Type eq 'Lakehouse'" in payload["filter"]
-        assert "Type eq 'Warehouse'" in payload["filter"]
-        assert " or " in payload["filter"]
+        assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
+
+    def test_query_with_multiple_types_legacy_comma(self):
+        """Test search with multiple type filters via legacy comma syntax."""
+        args = Namespace(search_text="data", params=["type=Lakehouse,Warehouse"], query=None)
+        payload = fab_find._build_search_payload(args, is_interactive=False)
+
+        assert payload["search"] == "data"
+        assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
+
+    def test_query_with_ne_single_type(self):
+        """Test search with ne filter for single type."""
+        args = Namespace(search_text="data", params=["type!=Dashboard"], query=None)
+        payload = fab_find._build_search_payload(args, is_interactive=False)
+
+        assert payload["filter"] == "Type ne 'Dashboard'"
+
+    def test_query_with_ne_multiple_types(self):
+        """Test search with ne filter for multiple types."""
+        args = Namespace(search_text="data", params=["type!=[Dashboard,Datamart]"], query=None)
+        payload = fab_find._build_search_payload(args, is_interactive=False)
+
+        assert payload["filter"] == "(Type ne 'Dashboard' and Type ne 'Datamart')"
 
 
 class TestParseTypeParam:
@@ -105,23 +125,48 @@ class TestParseTypeParam:
     def test_no_params(self):
         """Test with no params."""
         args = Namespace(params=None)
-        assert fab_find._parse_type_param(args) == []
+        assert fab_find._parse_type_param(args) is None
 
     def test_empty_params(self):
         """Test with empty params list."""
         args = Namespace(params=[])
-        assert fab_find._parse_type_param(args) == []
+        assert fab_find._parse_type_param(args) is None
 
     def test_single_type(self):
         """Test single type value."""
         args = Namespace(params=["type=Report"])
-        assert fab_find._parse_type_param(args) == ["Report"]
+        result = fab_find._parse_type_param(args)
+        assert result == {"operator": "eq", "values": ["Report"]}
 
     def test_multiple_types_comma_separated(self):
-        """Test comma-separated types."""
+        """Test comma-separated types (legacy syntax)."""
         args = Namespace(params=["type=Report,Lakehouse"])
         result = fab_find._parse_type_param(args)
-        assert result == ["Report", "Lakehouse"]
+        assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
+
+    def test_multiple_types_bracket_syntax(self):
+        """Test bracket syntax for multiple types."""
+        args = Namespace(params=["type=[Report,Lakehouse]"])
+        result = fab_find._parse_type_param(args)
+        assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
+
+    def test_ne_single_type(self):
+        """Test ne operator with single type."""
+        args = Namespace(params=["type!=Dashboard"])
+        result = fab_find._parse_type_param(args)
+        assert result == {"operator": "ne", "values": ["Dashboard"]}
+
+    def test_ne_multiple_types_bracket(self):
+        """Test ne operator with bracket syntax."""
+        args = Namespace(params=["type!=[Dashboard,Datamart]"])
+        result = fab_find._parse_type_param(args)
+        assert result == {"operator": "ne", "values": ["Dashboard", "Datamart"]}
+
+    def test_ne_unsupported_type_allowed(self):
+        """Test ne with unsupported type (Dashboard) is allowed — excluding makes sense."""
+        args = Namespace(params=["type!=Dashboard"])
+        result = fab_find._parse_type_param(args)
+        assert result == {"operator": "ne", "values": ["Dashboard"]}
 
     def test_invalid_format_raises_error(self):
         """Test invalid param format raises error."""
@@ -137,8 +182,15 @@ class TestParseTypeParam:
             fab_find._parse_type_param(args)
         assert "Unknown parameter" in str(exc_info.value)
 
-    def test_unsupported_type_raises_error(self):
-        """Test error for unsupported item types like Dashboard."""
+    def test_unknown_param_ne_raises_error(self):
+        """Test unknown param key with ne raises error."""
+        args = Namespace(params=["foo!=bar"])
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._parse_type_param(args)
+        assert "Unknown parameter" in str(exc_info.value)
+
+    def test_unsupported_type_eq_raises_error(self):
+        """Test error for unsupported item types like Dashboard with eq."""
         args = Namespace(params=["type=Dashboard"])
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
@@ -153,6 +205,14 @@ class TestParseTypeParam:
         assert "InvalidType" in str(exc_info.value)
         assert "Unknown item type" in str(exc_info.value)
 
+    def test_unknown_type_ne_raises_error(self):
+        """Test error for unknown item types with ne operator."""
+        args = Namespace(params=["type!=InvalidType"])
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._parse_type_param(args)
+        assert "InvalidType" in str(exc_info.value)
+        assert "Unknown item type" in str(exc_info.value)
+
 
 class TestDisplayItems:
     """Tests for _display_items function."""
@@ -160,7 +220,7 @@ class TestDisplayItems:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_items_table(self, mock_print_format):
         """Test displaying items in table mode."""
-        args = Namespace(long=False, output_format="text")
+        args = Namespace(long=False, output_format="text", query=None)
         items = SAMPLE_RESPONSE_WITH_RESULTS["value"]
 
         fab_find._display_items(args, items)
@@ -176,7 +236,7 @@ class TestDisplayItems:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_items_detailed(self, mock_print_format):
         """Test displaying items with long flag."""
-        args = Namespace(long=True, output_format="text")
+        args = Namespace(long=True, output_format="text", query=None)
         items = SAMPLE_RESPONSE_SINGLE["value"]
 
         fab_find._display_items(args, items)
@@ -192,6 +252,23 @@ class TestDisplayItems:
         assert item["description"] == "Notebook for data analysis tasks."
         assert item["id"] == "abc12345-1234-5678-9abc-def012345678"
         assert item["workspace_id"] == "workspace-id-123"
+
+    @patch("fabric_cli.utils.fab_ui.print_output_format")
+    @patch("fabric_cli.utils.fab_jmespath.search")
+    def test_display_items_with_jmespath(self, mock_jmespath, mock_print_format):
+        """Test JMESPath filtering is applied when -q is provided."""
+        filtered = [{"name": "Monthly Sales Revenue", "type": "Report"}]
+        mock_jmespath.return_value = filtered
+
+        args = Namespace(long=False, output_format="text", query="[?type=='Report']")
+        items = SAMPLE_RESPONSE_WITH_RESULTS["value"]
+
+        fab_find._display_items(args, items)
+
+        mock_jmespath.assert_called_once()
+        mock_print_format.assert_called_once()
+        display_items = mock_print_format.call_args.kwargs["data"]
+        assert display_items == filtered
 
 
 class TestRaiseOnError:
@@ -243,7 +320,7 @@ class TestFindCommandline:
         response.text = json.dumps(SAMPLE_RESPONSE_SINGLE)
         mock_search.return_value = response
 
-        args = Namespace(long=False, output_format="text")
+        args = Namespace(long=False, output_format="text", query=None)
         payload = {"search": "test", "pageSize": 1000}
 
         fab_find._find_commandline(args, payload)
@@ -260,7 +337,7 @@ class TestFindCommandline:
         response.text = json.dumps(SAMPLE_RESPONSE_EMPTY)
         mock_search.return_value = response
 
-        args = Namespace(long=False, output_format="text")
+        args = Namespace(long=False, output_format="text", query=None)
         payload = {"search": "nothing", "pageSize": 1000}
 
         fab_find._find_commandline(args, payload)
@@ -288,7 +365,7 @@ class TestFindInteractive:
 
         mock_search.side_effect = [page1, page2]
 
-        args = Namespace(long=False, output_format="text")
+        args = Namespace(long=False, output_format="text", query=None)
         payload = {"search": "sales", "pageSize": 50}
 
         fab_find._find_interactive(args, payload)
@@ -308,7 +385,7 @@ class TestFindInteractive:
         response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
         mock_search.return_value = response
 
-        args = Namespace(long=False, output_format="text")
+        args = Namespace(long=False, output_format="text", query=None)
         payload = {"search": "sales", "pageSize": 50}
 
         fab_find._find_interactive(args, payload)
