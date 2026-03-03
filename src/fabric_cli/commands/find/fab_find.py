@@ -100,7 +100,7 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         results = json.loads(response.text)
         items = results.get("value", [])
-        continuation_token = results.get("continuationToken")
+        continuation_token = results.get("continuationToken") or None
 
         if not items and total_count == 0:
             utils_ui.print_grey("No items found.")
