@@ -101,7 +101,7 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         results = json.loads(response.text)
         items = results.get("value", [])
-        continuation_token = results.get("continuationToken") or None
+        continuation_token = results.get("continuationToken", "") or None
 
         if not items and total_count == 0:
             utils_ui.print_grey("No items found.")
@@ -135,22 +135,31 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
 
 def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
-    """Fetch up to 1000 results in a single request and display."""
-    response = catalog_api.catalog_search(args, payload)
-    _raise_on_error(response)
+    """Fetch all results across pages and display."""
+    all_items: list[dict] = []
 
-    results = json.loads(response.text)
-    items = results.get("value", [])
+    while True:
+        response = catalog_api.catalog_search(args, payload)
+        _raise_on_error(response)
 
-    if not items:
+        results = json.loads(response.text)
+        all_items.extend(results.get("value", []))
+
+        continuation_token = results.get("continuationToken", "") or None
+        if not continuation_token:
+            break
+
+        payload = {"continuationToken": continuation_token}
+
+    if not all_items:
         utils_ui.print_grey("No items found.")
         return
 
     utils_ui.print_grey("")
-    utils_ui.print_grey(f"{len(items)} item(s) found")
+    utils_ui.print_grey(f"{len(all_items)} item(s) found")
     utils_ui.print_grey("")
 
-    _display_items(args, items)
+    _display_items(args, all_items)
 
 
 def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
