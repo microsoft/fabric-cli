@@ -26,12 +26,20 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "$ find 'sales report'\n",
         "# search for lakehouses only",
         "$ find 'data' -P type=Lakehouse\n",
-        "# search for multiple item types",
-        "$ find 'dashboard' -P type=Report,SemanticModel\n",
+        "# search for multiple item types (bracket syntax)",
+        "$ find 'dashboard' -P type=[Report,SemanticModel]\n",
+        "# exclude a type",
+        "$ find 'data' -P type!=Dashboard\n",
+        "# exclude multiple types",
+        "$ find 'data' -P type!=[Dashboard,Datamart]\n",
         "# show detailed output with IDs",
         "$ find 'sales' -l\n",
         "# combine filters",
-        "$ find 'finance' -P type=Warehouse,Lakehouse -l",
+        "$ find 'finance' -P type=[Warehouse,Lakehouse] -l\n",
+        "# filter results client-side with JMESPath",
+        "$ find 'sales' -q \"[?type=='Report']\"\n",
+        "# project specific fields",
+        "$ find 'data' -q \"[].{name: name, workspace: workspace}\"",
     ]
 
     parser = subparsers.add_parser(
@@ -42,7 +50,8 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     parser.add_argument(
-        "query",
+        "search_text",
+        metavar="query",
         help="Search text (matches display name, description, and workspace name)",
     )
     parser.add_argument(
@@ -51,13 +60,20 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         metavar="",
         nargs="*",
-        help="Parameters in key=value format. Supported: type=<ItemType>[,<ItemType>...]",
+        help="Parameters in key=value or key!=value format. Use brackets for multiple values: type=[Lakehouse,Notebook]. Use != to exclude: type!=Dashboard",
     )
     parser.add_argument(
         "-l",
         "--long",
         action="store_true",
         help="Show detailed output. Optional",
+    )
+    parser.add_argument(
+        "-q",
+        "--query",
+        required=False,
+        nargs="+",
+        help="JMESPath query to filter. Optional",
     )
 
     parser.usage = f"{utils_error_parser.get_usage_prog(parser)}"
