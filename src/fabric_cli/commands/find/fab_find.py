@@ -4,6 +4,7 @@
 """Find command for searching the Fabric catalog."""
 
 import json
+import shutil
 from argparse import Namespace
 from typing import Any
 
@@ -308,6 +309,10 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
                 entry["description"] = item.get("description") or ""
             display_items.append(entry)
 
+        # Truncate descriptions to avoid table wrapping beyond terminal width
+        if has_descriptions:
+            _truncate_descriptions(display_items)
+
     # Apply JMESPath client-side filtering if -q/--query specified
     if getattr(args, "query", None):
         display_items = utils_jmespath.search(display_items, args.query)
@@ -316,3 +321,20 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
         utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
     else:
         utils_ui.print_output_format(args, data=display_items, show_headers=True)
+
+
+def _truncate_descriptions(items: list[dict]) -> None:
+    """Truncate description column so the table fits within terminal width."""
+    term_width = shutil.get_terminal_size((120, 24)).columns
+    # Calculate width used by other columns (max value length + 2 padding + 1 gap each)
+    other_fields = ["name", "type", "workspace"]
+    used = sum(
+        max((len(str(item.get(f, ""))) for item in items), default=0) + 3
+        for f in other_fields
+    )
+    # Also account for "description" header length minimum
+    max_desc = max(term_width - used - 3, 20)
+    for item in items:
+        desc = item.get("description", "")
+        if len(desc) > max_desc:
+            item["description"] = desc[: max_desc - 1] + "…"
