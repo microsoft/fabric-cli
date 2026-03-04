@@ -218,7 +218,7 @@ def _parse_type_param(args: Namespace) -> dict[str, Any] | None:
                 operator = "ne"
             else:
                 raise FabricCLIError(
-                    f"Unknown parameter: '{key}'. Supported: type",
+                    f"'{key}' isn't a supported parameter. Supported: type",
                     fab_constant.ERROR_INVALID_INPUT,
                 )
         elif "=" in param:
@@ -228,12 +228,12 @@ def _parse_type_param(args: Namespace) -> dict[str, Any] | None:
                 operator = "eq"
             else:
                 raise FabricCLIError(
-                    f"Unknown parameter: '{key}'. Supported: type",
+                    f"'{key}' isn't a supported parameter. Supported: type",
                     fab_constant.ERROR_INVALID_INPUT,
                 )
         else:
             raise FabricCLIError(
-                f"Invalid parameter format: '{param}'. Expected key=value or key!=value.",
+                f"Invalid parameter format: '{param}'. Use key=value or key!=value.",
                 fab_constant.ERROR_INVALID_INPUT,
             )
 
@@ -256,13 +256,15 @@ def _parse_type_param(args: Namespace) -> dict[str, Any] | None:
         if t_lower in unsupported_lower and operator == "eq":
             canonical = all_types_lower.get(t_lower, t)
             raise FabricCLIError(
-                f"Item type '{canonical}' is not searchable via catalog search API. "
-                f"Unsupported types: {', '.join(UNSUPPORTED_ITEM_TYPES)}",
+                f"'{canonical}' isn't searchable via the catalog search API.",
                 fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
             )
         if t_lower not in all_types_lower:
+            # Suggest close matches instead of dumping the full list
+            close = [v for k, v in all_types_lower.items() if t_lower in k or k in t_lower]
+            hint = f" Did you mean {', '.join(close)}?" if close else " Use tab completion to see valid types."
             raise FabricCLIError(
-                f"Unknown item type: '{t}'. Valid types: {', '.join(ALL_ITEM_TYPES)}",
+                f"'{t}' isn't a recognized item type.{hint}",
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
             )
         normalized.append(all_types_lower[t_lower])
