@@ -180,14 +180,14 @@ class TestParseTypeParam:
         args = Namespace(params=["foo=bar"])
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
-        assert "Unknown parameter" in str(exc_info.value)
+        assert "isn't a supported parameter" in str(exc_info.value)
 
     def test_unknown_param_ne_raises_error(self):
         """Test unknown param key with ne raises error."""
         args = Namespace(params=["foo!=bar"])
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
-        assert "Unknown parameter" in str(exc_info.value)
+        assert "isn't a supported parameter" in str(exc_info.value)
 
     def test_unsupported_type_eq_raises_error(self):
         """Test error for unsupported item types like Dashboard with eq."""
@@ -195,7 +195,7 @@ class TestParseTypeParam:
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
         assert "Dashboard" in str(exc_info.value)
-        assert "not searchable" in str(exc_info.value)
+        assert "isn't searchable" in str(exc_info.value)
 
     def test_unknown_type_raises_error(self):
         """Test error for unknown item types."""
@@ -203,7 +203,7 @@ class TestParseTypeParam:
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
         assert "InvalidType" in str(exc_info.value)
-        assert "Unknown item type" in str(exc_info.value)
+        assert "isn't a recognized item type" in str(exc_info.value)
 
     def test_unknown_type_ne_raises_error(self):
         """Test error for unknown item types with ne operator."""
@@ -211,7 +211,7 @@ class TestParseTypeParam:
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_param(args)
         assert "InvalidType" in str(exc_info.value)
-        assert "Unknown item type" in str(exc_info.value)
+        assert "isn't a recognized item type" in str(exc_info.value)
 
 
 class TestDisplayItems:

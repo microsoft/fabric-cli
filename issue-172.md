@@ -22,22 +22,30 @@ fab find "sales report"
 # Filter by item type
 fab find "revenue" -P type=Lakehouse
 
-# Multiple types
-fab find "monthly" -P type=Report,Warehouse
+# Multiple types (bracket syntax)
+fab find "monthly" -P type=[Report,Warehouse]
+
+# Exclude types
+fab find "data" -P type!=Dashboard
+fab find "data" -P type!=[Dashboard,Datamart]
 
 # Detailed view (shows IDs for scripting)
 fab find "sales" -l
 
 # Combine filters
-fab find "finance" -P type=Warehouse,Lakehouse -l
+fab find "finance" -P type=[Warehouse,Lakehouse] -l
+
+# JMESPath client-side filtering
+fab find "sales" -q "[?type=='Lakehouse']"
 ```
 
 ### Flags
 
 | Flag            | Description                                                                    |
 | --------------- | ------------------------------------------------------------------------------ |
-| `-P`/`--params` | Parameters in key=value format. Supported: `type=<ItemType>[,<ItemType>...]`   |
+| `-P`/`--params` | Parameters in key=value format. Supported: `type=` (eq) and `type!=` (ne)     |
 | `-l`/`--long`   | Show detailed output with IDs                                                  |
+| `-q`/`--query`  | JMESPath expression for client-side filtering                                  |
 
 ### Search Matching
 
@@ -132,7 +140,7 @@ The command uses structured errors via `FabricCLIError`:
 Pagination is handled automatically based on CLI mode:
 
 - **Interactive mode**: Fetches 50 items per page. After each page, if more results are available, prompts "Press any key to continue... (Ctrl+C to stop)". Displays a running total at the end.
-- **Command-line mode**: Fetches up to 1,000 items in a single request. All results are displayed at once.
+- **Command-line mode**: Fetches all pages automatically (1,000 items per page). All results are accumulated and displayed as a single table.
 
 ### Alternatives Considered
 
@@ -156,9 +164,11 @@ Pagination is handled automatically based on CLI mode:
 ### Implementation Notes
 
 - Uses Catalog Search API (`POST /v1/catalog/search`)
-- Type filtering via `-P type=Report,Lakehouse` using key=value param pattern (consistent with `-P` usage in `mkdir`)
+- Type filtering via `-P type=Report,Lakehouse` using key=value param pattern; supports negation (`type!=Dashboard`) and bracket syntax (`type=[Report,Lakehouse]`)
+- Type names are case-insensitive (normalized to PascalCase internally)
 - Interactive mode: pages 50 at a time with continuation tokens behind the scenes
-- Command-line mode: single request with `pageSize=1000`
+- Command-line mode: fetches all pages automatically (1,000 per page)
+- Descriptions truncated to terminal width in compact view; full text available via `-l`
 - The API currently does not support searching: Dashboard
 - Note: Dataflow Gen1 and Gen2 are currently not searchable; only Dataflow Gen2 CI/CD items are returned (as type 'Dataflow'). Scorecards are returned as type 'Report'.
 - Uses `print_output_format()` for output format support
@@ -256,3 +266,47 @@ JMESPath is applied after API results are received, per-page in interactive mode
 #### Internal change: positional arg renamed
 
 The positional search text argument's internal `dest` was renamed from `query` to `search_text` to avoid collision with `-q`/`--query`. The CLI syntax is unchanged — `fab find 'search text'` still works.
+
+---
+
+### Comment: Type negation, case-insensitive matching, pagination fixes
+
+Several improvements to the `find` command:
+
+#### 1. Type negation with `!=`
+
+```bash
+# Exclude a single type
+fab find 'data' -P type!=Dashboard
+
+# Exclude multiple types
+fab find 'data' -P type!=[Dashboard,Datamart]
+```
+
+Filter generation:
+- Single negation: `Type ne 'Dashboard'`
+- Multiple negation: `(Type ne 'Dashboard' and Type ne 'Datamart')`
+
+#### 2. Case-insensitive type matching
+
+Type names in `-P` are now case-insensitive. All of these work:
+
+```bash
+fab find 'data' -P type=lakehouse
+fab find 'data' -P type=LAKEHOUSE
+fab find 'data' -P type=Lakehouse
+```
+
+Input is normalized to the canonical PascalCase before validation and filter building.
+
+#### 3. Command-line mode fetches all pages
+
+Command-line mode now paginates automatically across all pages instead of stopping at one page of 1000. Results are accumulated and displayed as a single table.
+
+#### 4. Description truncation
+
+Long descriptions are truncated with `…` to fit the terminal width, preventing the table separator from wrapping to a second line. Full descriptions are available via `-l`/`--long` mode.
+
+#### 5. Empty continuation token fix
+
+The API returns `""` (empty string) instead of `null` when there are no more pages. This was causing interactive mode to send an empty token on the next request, which the API treated as a fresh empty search. Fixed by treating empty string tokens as end-of-results.
