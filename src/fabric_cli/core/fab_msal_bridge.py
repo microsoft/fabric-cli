@@ -12,6 +12,10 @@ from fabric_cli.core import fab_constant as con
 from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_auth import FabAuth
 
+# Bridge-specific: strict .default scope validation
+VALID_DEFATULT_SCOPES = {
+    con.SCOPE_FABRIC_DEFAULT[0],
+}
 
 class MsalTokenCredential(TokenCredential):
     """
@@ -59,18 +63,13 @@ class MsalTokenCredential(TokenCredential):
             ClientAuthenticationError: When authentication is not available
         """
 
-        # Bridge-specific: strict .default scope validation
-        valid_default_scopes = {
-            con.SCOPE_FABRIC_DEFAULT[0],
-        }
-        
         for scope in scopes:
-            if scope not in valid_default_scopes:
+            if scope not in VALID_DEFATULT_SCOPES:
                 fab_logger.log_debug(f"Invalid scope rejected: {scope}")
                 raise ClientAuthenticationError(
                     f"Security validation failed: requested scope is not supported."
                     f"Invalid scope: {scope}. "
-                    f"Allowed scopes: {', '.join(valid_default_scopes)}"
+                    f"Allowed scopes: {', '.join(VALID_DEFATULT_SCOPES)}"
                 )
         try:
             msal_result = self._fab_auth.acquire_token(
