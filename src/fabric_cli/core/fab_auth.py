@@ -508,7 +508,7 @@ class FabAuth:
 
         return token
 
-    def get_access_token(self, scope: list[str], interactive_renew=True) -> str:
+    def get_access_token(self, scope: list[str], interactive_renew=True) -> str | None:
         """
         Get an access token string for the specified scopes.
         
@@ -520,7 +520,7 @@ class FabAuth:
             interactive_renew: Whether to allow interactive authentication for user flows
             
         Returns:
-            Access token string
+            Access token string or None if acquisition fails
             
         Raises:
             FabricCLIError: When token acquisition fails

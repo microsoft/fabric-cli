@@ -3,7 +3,6 @@
 
 import os
 from typing import Optional
-from datetime import datetime, timezone
 
 from azure.core.credentials import AccessToken, TokenCredential
 from azure.core.exceptions import ClientAuthenticationError
@@ -62,7 +61,6 @@ class MsalTokenCredential(TokenCredential):
         Raises:
             ClientAuthenticationError: When authentication is not available
         """
-
         for scope in scopes:
             if scope not in VALID_DEFATULT_SCOPES:
                 fab_logger.log_debug(f"Invalid scope rejected: {scope}")
@@ -100,7 +98,10 @@ class MsalTokenCredential(TokenCredential):
             if expires_in:
                 import time
                 expires_on = int(time.time() + expires_in)
-        return AccessToken(access_token, expires_on)
+            else:
+                raise ClientAuthenticationError(
+                    "Token expiration time is required but not available")
+        return AccessToken(access_token, expires_on or None)
 
     def close(self) -> None:
         """Close the credential (no-op for this implementation)."""

@@ -1,7 +1,7 @@
 import json
 from argparse import Namespace
 
-from fabric_cicd import append_feature_flag, configure_external_file_logging, deploy_with_config, disable_file_logging
+from fabric_cicd import append_feature_flag, configure_external_file_logging, deploy_with_config, disable_file_logging  # type: ignore
 
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core import fab_logger
@@ -17,11 +17,13 @@ def deploy_with_config_file(args: Namespace) -> None:
     try:
         if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) == "true":
             cli_logger = fab_logger.get_logger()
+            # configure file logging for CICD library to use the same file handler as the CLI
             configure_external_file_logging(cli_logger)
         else:
+            # prevent creation of a log file for fabric-cicd logs when debug mode is disabled
             disable_file_logging()
 
-        # feature flags required for this feature
+        # feature flags to avoid printing identity info in logs
         append_feature_flag("disable_print_identity")
 
         deploy_config_file = args.config
