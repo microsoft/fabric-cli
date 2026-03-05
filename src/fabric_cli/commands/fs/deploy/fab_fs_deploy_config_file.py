@@ -6,7 +6,6 @@ from fabric_cicd import append_feature_flag, configure_external_file_logging, de
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
-# from fabric_cli.core.fab_logger import get_logger
 from fabric_cli.core.fab_msal_bridge import create_fabric_token_credential
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_util import get_dict_from_params
