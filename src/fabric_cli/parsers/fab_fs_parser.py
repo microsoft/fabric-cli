@@ -425,8 +425,6 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
     import_parser.set_defaults(func=fs.import_command)
 
 # Command for 'deploy'
-
-
 def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_examples = [
         "# deploy fabric items to a workspace using a configuration file and target environment",
