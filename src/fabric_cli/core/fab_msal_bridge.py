@@ -58,9 +58,7 @@ class MsalTokenCredential(TokenCredential):
         Raises:
             ClientAuthenticationError: When authentication is not available
         """
-        fab_logger.log_debug(
-            f"Token requested for deployment, scopes: {list(scopes)}")
-        
+
         # Bridge-specific: strict .default scope validation
         valid_default_scopes = {
             con.SCOPE_FABRIC_DEFAULT[0],

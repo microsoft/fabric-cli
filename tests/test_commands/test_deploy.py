@@ -42,7 +42,7 @@ class TestDeploy:
 
         # Assert
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
 
     def test_deploy_multiple_items_success(
@@ -70,7 +70,7 @@ class TestDeploy:
 
         # Assert
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
 
     def test_deploy_config_without_tenv_with_prompt_success(
@@ -101,7 +101,7 @@ class TestDeploy:
         assert "Are you sure you want to deploy without a target environment using the specified configuration file?" in str(
             mock_questionary_confirm.call_args)
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
 
     def test_deploy_config_with_tenv_without_force_prompt_success(
@@ -132,7 +132,7 @@ class TestDeploy:
         assert "Are you sure you want to deploy to target environment 'dev' using the specified configuration file?" in str(
             mock_questionary_confirm.call_args)
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
 
     def test_deploy_config_missing_tenv_failure(
@@ -228,7 +228,7 @@ class TestDeploy:
 
         # Assert
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
 
     def test_deploy_invalid_config_file_path_failure(
@@ -313,5 +313,5 @@ class TestDeploy:
 
         # Assert
         mock_print_done.assert_called()
-        assert "Fabric items deployment completed" in str(
+        assert "Deployment completed successfully" in str(
             mock_print_done.call_args)

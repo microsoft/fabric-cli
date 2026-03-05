@@ -443,7 +443,6 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     )
 
     deploy_parser.add_argument(
-        "-c",
         "--config",
         type=str,
         required=True,
