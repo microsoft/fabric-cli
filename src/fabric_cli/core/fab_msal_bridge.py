@@ -101,7 +101,7 @@ class MsalTokenCredential(TokenCredential):
             else:
                 raise ClientAuthenticationError(
                     "Token expiration time is required but not available")
-        return AccessToken(access_token, expires_on or None)
+        return AccessToken(access_token, int(expires_on))
 
     def close(self) -> None:
         """Close the credential (no-op for this implementation)."""
