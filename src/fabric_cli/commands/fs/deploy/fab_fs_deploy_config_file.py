@@ -1,16 +1,15 @@
-
-
 import json
-
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_msal_bridge import create_fabric_token_credential
-from fabric_cli.utils import fab_ui
-from fabric_cli.core import fab_constant, fab_state_config
-from fabric_cicd import append_feature_flag, change_log_level, deploy_with_config
 from argparse import Namespace
 
-from fabric_cli.utils.fab_util import get_dict_from_params
+from fabric_cicd import append_feature_flag, configure_external_file_logging, deploy_with_config, disable_file_logging
 
+from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core import fab_logger
+from fabric_cli.core.fab_exceptions import FabricCLIError
+# from fabric_cli.core.fab_logger import get_logger
+from fabric_cli.core.fab_msal_bridge import create_fabric_token_credential
+from fabric_cli.utils import fab_ui
+from fabric_cli.utils.fab_util import get_dict_from_params
 
 
 def deploy_with_config_file(args: Namespace) -> None:
@@ -18,13 +17,13 @@ def deploy_with_config_file(args: Namespace) -> None:
 
     try:
         if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) == "true":
-            # Set CICD library log level to debug if FAB_DEBUG is enabled in Fabric CLI
-            change_log_level()
+            cli_logger = fab_logger.get_logger()
+            configure_external_file_logging(cli_logger)
+        else:
+            disable_file_logging()
 
         # feature flags required for this feature
-        append_feature_flag("enable_experimental_features")
-        append_feature_flag("enable_config_deploy")
-        append_feature_flag("enable_response_collection")
+        append_feature_flag("disable_print_identity")
 
         deploy_config_file = args.config
         deploy_parameters = get_dict_from_params(args.params, max_depth=1)
