@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 
-from typing import Union
+from typing import Sequence, Union
 
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_commands import Command
@@ -78,7 +78,7 @@ def get_ws_elements(parent: Workspace | Folder) -> list[Union[Item, Folder]]:
     return ws_elements
 
 
-def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
+def sort_ws_elements(ws_elements: Sequence[Union[Item, Folder]], show_details):
 
     if not ws_elements:
         return []
@@ -90,3 +90,27 @@ def sort_ws_elements(ws_elements: list[Union[Item, Folder]], show_details):
         {key: getattr(item, key) for key in columns if hasattr(item, key)}
         for item in sorted_elements
     ]
+
+
+def sort_ws_elements_with_divider(
+    ws_elements: list[Union[Item, Folder]], show_details: bool
+) -> list[dict]:
+    """Sort workspace elements: folders first, divider, then items."""
+    if not ws_elements:
+        return []
+
+    folders = [el for el in ws_elements if isinstance(el, Folder)]
+    items = [el for el in ws_elements if isinstance(el, Item)]
+    columns = ["name", "id"] if show_details else ["name"]
+
+    result = []
+    has_both = bool(folders and items)
+    if folders:
+        if has_both:
+            result.append({key: ("[Folders]" if key == "name" else "") for key in columns})
+        result.extend(sort_ws_elements(folders, show_details))
+    if items:
+        if has_both:
+            result.append({key: ("[Items]" if key == "name" else "") for key in columns})
+        result.extend(sort_ws_elements(items, show_details))
+    return result

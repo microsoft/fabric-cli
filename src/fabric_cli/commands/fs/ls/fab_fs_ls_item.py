@@ -15,7 +15,15 @@ def exec(workspace: Workspace, args):
     show_details = bool(args.long)
     show_all = bool(args.all)
     ws_elements: list[Union[Item, Folder]] = utils_fs.get_ws_elements(workspace)
-    sorted_elements_dict = utils_fs.sort_ws_elements(ws_elements, show_details)
+
+    folder_listing_enabled = (
+        fab_state_config.get_config(fab_constant.FAB_FOLDER_LISTING_ENABLED) == "true"
+    )
+
+    if folder_listing_enabled:
+        sorted_elements_dict = utils_fs.sort_ws_elements_with_divider(ws_elements, show_details)
+    else:
+        sorted_elements_dict = utils_fs.sort_ws_elements(ws_elements, show_details)
 
     show_hidden = (
         show_all or fab_state_config.get_config(fab_constant.FAB_SHOW_HIDDEN) == "true"
@@ -25,6 +33,6 @@ def exec(workspace: Workspace, args):
         data=sorted_elements_dict,
         args=args,
         show_details=show_details,
-        columns=sorted_elements_dict[0].keys() if sorted_elements_dict else [],
+        columns=list(sorted_elements_dict[0].keys()) if sorted_elements_dict else [],
         hidden_data=VirtualItemContainerType if show_hidden else None,
     )
