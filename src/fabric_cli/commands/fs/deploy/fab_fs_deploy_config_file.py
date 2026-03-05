@@ -45,7 +45,7 @@ def deploy_with_config_file(args: Namespace) -> None:
 
         if result:
             fab_ui.print_output_format(
-                args, message=result)
+                args, message=result.message)
 
     except Exception as e:
         raise FabricCLIError(
