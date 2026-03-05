@@ -3,12 +3,12 @@
 
 from argparse import Namespace
 
-from fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file import deploy_with_config_file 
-from fabric_cli.core.hiearchy.fab_element import FabricElement
+from fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file import deploy_with_config_file
 from fabric_cli.utils import fab_ui
 
 
-def exec_command(args: Namespace, context: FabricElement) -> None:
+def exec_command(args: Namespace) -> None:
     """deploy fabric items to a workspace using a configuration file and target environment - CICD flow."""
-    if args.force or fab_ui.prompt_confirm():
+    prompt = f"Are you sure you want to deploy {'without a target environment' if args.target_env == 'N/A' else f'to target environment \'{args.target_env}\''} using the specified configuration file?"
+    if args.force or fab_ui.prompt_confirm(prompt):
         deploy_with_config_file(args)

@@ -11,7 +11,6 @@ from azure.core.exceptions import ClientAuthenticationError
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_auth import FabAuth
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 class MsalTokenCredential(TokenCredential):
@@ -91,7 +90,20 @@ class MsalTokenCredential(TokenCredential):
 
     def _to_azure_access_token(self, msal_result: dict) -> AccessToken:
         """Convert MSAL result to AccessToken object."""
-        return AccessToken(msal_result["access_token"], int(msal_result.get("expires_on")))
+        access_token = msal_result["access_token"]
+
+        # Handle expires_on - MSAL returns Unix timestamp as string or int
+        expires_on = msal_result.get("expires_on")
+        if expires_on:
+            if isinstance(expires_on, str):
+                expires_on = int(expires_on)
+        else:
+            # Fallback: calculate from expires_in if available
+            expires_in = msal_result.get("expires_in")
+            if expires_in:
+                import time
+                expires_on = int(time.time() + expires_in)
+        return AccessToken(access_token, expires_on)
 
     def close(self) -> None:
         """Close the credential (no-op for this implementation)."""

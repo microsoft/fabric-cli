@@ -148,8 +148,7 @@ def import_command(args: Namespace) -> None:
 @handle_exceptions()
 @set_command_context()
 def deploy_command(args: Namespace) -> None:
-    context = handle_context.get_command_context(args.path)
-    fs_deploy.exec_command(args, context)
+    fs_deploy.exec_command(args)
 
 
 @handle_exceptions()
