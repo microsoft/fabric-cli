@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -837,6 +838,7 @@ def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
         target_env="dev",
         item_types=[ItemType.NOTEBOOK],
         parameter_file=None,
+        path_override=None,
     ):
         """Create a complete deploy scenario with items, repository, and config file.
         
@@ -845,13 +847,14 @@ def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
             target_env: Target environment name
             item_types: List of item type strings for config and creation
             parameter_file: Path to parameter file (optional)
-            
+            path_override: Path to override the default repository directory (optional)
         Returns:
             Path to the created configuration file
         """
         from fabric_cli.core.fab_types import ItemType
 
-        repository_dir = tmp_path / "repo"
+        path = Path(path_override) if path_override else tmp_path
+        repository_dir = path / "repo"
         repository_dir.mkdir(parents=True, exist_ok=True)
 
         for item_type in item_types:

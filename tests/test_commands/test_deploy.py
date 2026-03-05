@@ -23,7 +23,6 @@ class TestDeploy:
         self,
         deploy_setup_factory,
         cli_executor: CLIExecutor,
-        workspace,
         mock_print_done,
     ):
         """
@@ -158,7 +157,7 @@ class TestDeploy:
         mock_print_done.reset_mock()
 
         # Execute command (without --target_env flag)
-        result = cli_executor.exec_command(
+        cli_executor.exec_command(
             f"deploy --config {str(deploy_config_path)}")
 
         # Assert
@@ -194,7 +193,7 @@ class TestDeploy:
         mock_print_done.reset_mock()
 
         # Execute command (without --target_env flag)
-        result = cli_executor.exec_command(
+        cli_executor.exec_command(
             f"deploy --config {str(deploy_config_path)}")
 
         # Assert
@@ -239,8 +238,8 @@ class TestDeploy:
         tmp_path,
     ):
         """
-        Test deployment failure when config file path is invalid/doesn't exist.
-        """
+            Test deployment failure when config file path is invalid/doesn't exist.
+            """
         # Create a non-existent config path
         invalid_config_path = tmp_path / "non_existent_config.yml"
 
@@ -253,17 +252,41 @@ class TestDeploy:
 
         # Assert that error is printed
         mock_fab_ui_print_error.assert_called()
-        error_message = str(mock_fab_ui_print_error.call_args)
-        assert "No such file or directory" in error_message or "cannot find the file" in error_message.lower()
+        assert "Configuration validation failed with 1 error(s):\n  - Configuration file not found" in mock_fab_ui_print_error.call_args[
+            0][0].message
+
+    def test_deploy_invalid_config_file_failure(
+        self,
+        deploy_setup_factory,
+        cli_executor: CLIExecutor,
+        mock_fab_ui_print_error,
+    ):
+        """
+        Test deployment failure with invalid configuration file.
+        """
+        # Setup
+        deploy_config_path = deploy_setup_factory(
+            target_env="dev",
+            item_types=[ItemType.DATA_PIPELINE]
+        )
+
+        mock_fab_ui_print_error.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"deploy --config {str(deploy_config_path)} --target_env test --force")
+
+        # Assert
+        mock_fab_ui_print_error.assert_called()
+        assert "Environment 'test' not found in 'core.workspace' mappings. Available: ['dev']" in mock_fab_ui_print_error.call_args[0][0].message
 
     def test_deploy_with_home_directory_path_success(
         self,
         cli_executor: CLIExecutor,
-        workspace,
-        item_factory,
         mock_print_done,
         tmp_path,
         monkeypatch,
+        deploy_setup_factory
     ):
         """
         Test deployment success when repository path contains ~ (home directory).
@@ -276,43 +299,18 @@ class TestDeploy:
         # Mock the HOME environment variable
         monkeypatch.setenv(home_dir_env, str(home_dir))
 
-        repository_dir = home_dir / "repo"
-        repository_dir.mkdir()
-
-        # Create item and export it to the home-based repository
-        item = item_factory(ItemType.NOTEBOOK)
-
-        # Export to the home directory repository
-        cli_executor.exec_command(
-            f"export {item.full_path} --output {repository_dir} --force --format .py"
+        deploy_config_path = deploy_setup_factory(
+            target_env="dev",
+            item_types=[ItemType.DATA_PIPELINE],
+            path_override=str(home_dir)
         )
-        
-        # Create config with tilde path
-        config_data = {
-            "core": {
-                "workspace": {
-                    "dev": workspace.display_name
-                },
-                "repository_directory": "~/repo",  # Using tilde notation
-                "item_types_in_scope": ["Notebook"]
-            },
-            "publish": {
-                "skip": {
-                    "dev": False
-                }
-            }
-        }
-
-        config_path = tmp_path / "config_with_tilde.yml"
-        with open(config_path, 'w') as f:
-            yaml.dump(config_data, f, default_flow_style=False)
 
         mock_print_done.reset_mock()
-        
+
         # Execute command
         cli_executor.exec_command(
-            f"deploy --config {str(config_path)} --target_env dev --force")
-        
+            f"deploy --config {deploy_config_path} --target_env dev --force")
+
         # Assert
         mock_print_done.assert_called()
         assert "Fabric items deployment completed" in str(
