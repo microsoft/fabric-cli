@@ -253,6 +253,19 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.GRAPH_QUERY_SET, ".txt")
 ])
 
+cp_virtual_workspace_item_failure_params = pytest.mark.parametrize("virtual_workspace_type", [
+    VirtualWorkspaceType.DOMAIN,
+    VirtualWorkspaceType.CAPACITY,
+    VirtualWorkspaceType.GATEWAY,
+])
+
+cp_item_types_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
 assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
     (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
@@ -730,7 +743,10 @@ def workspace_factory(vcr_instance, cassette_name, test_data: StaticTestData):
 
 @pytest.fixture
 def virtual_workspace_item_factory(
-    vcr_instance, cassette_name, test_data: StaticTestData
+    vcr_instance,
+    cassette_name,
+    test_data: StaticTestData,
+    vcr_mode,
 ):
     # Keep track of all workspaces created during this test
     created_virtual_workspace_items = []
@@ -761,8 +777,7 @@ def virtual_workspace_item_factory(
 
         # Build the metadata for the created resource
         metadata = EntityMetadata(
-            generated_name, virtual_workspace_name, virtual_workspace_item_path
-        )
+            generated_name, virtual_workspace_name, virtual_workspace_item_path)
         created_virtual_workspace_items.append(metadata)
         return metadata
 
