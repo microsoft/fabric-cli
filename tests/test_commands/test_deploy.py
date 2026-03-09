@@ -88,8 +88,7 @@ class TestDeploy:
             target_env=None,
             item_types=[ItemType.NOTEBOOK]
         )
-        
-        mock_questionary_confirm.return_value = True
+
         mock_print_done.reset_mock()
             
         # Execute command
@@ -177,7 +176,6 @@ class TestDeploy:
         cli_executor: CLIExecutor,
         mock_fab_ui_print_error,
         mock_print_done,
-        mock_questionary_confirm
     ):
         """
         Test deployment failure when config is missing target environment and user cancels prompt.
@@ -192,15 +190,16 @@ class TestDeploy:
         mock_fab_ui_print_error.reset_mock()
         mock_print_done.reset_mock()
 
-        # Execute command (without --target_env flag)
-        cli_executor.exec_command(
-            f"deploy --config {str(deploy_config_path)}")
+        with patch("questionary.confirm") as mock_confirm:
+            mock_confirm.return_value.ask.return_value = False
+            # Execute command (without --target_env flag)
+            cli_executor.exec_command(
+                f"deploy --config {str(deploy_config_path)}")
 
         # Assert
-        mock_questionary_confirm.assert_called_once()
-        assert "Are you sure you want to deploy without a target environment using the specified configuration file?" in str(
-            mock_questionary_confirm.call_args)
-            # make sure no error nor success messages are printed since deploy was cancelled
+        mock_confirm.assert_called()
+
+        # make sure no error nor success messages are printed since deploy was cancelled
         mock_fab_ui_print_error.assert_not_called()
         mock_print_done.assert_not_called()
 

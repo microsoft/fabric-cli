@@ -14,7 +14,7 @@ from fabric_cli.utils.fab_hostname_validator import validate_and_get_env_variabl
 
 
 # region mock fixtures
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="class")
 def setup_default_format(mock_fab_set_state_config):
     mock_fab_set_state_config(fab_constant.FAB_OUTPUT_FORMAT, "text")
     yield

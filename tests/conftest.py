@@ -45,7 +45,7 @@ def mock_glob_glob():
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def mock_fab_set_state_config():
     original_values = {}
 
