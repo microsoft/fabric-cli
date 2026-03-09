@@ -897,10 +897,19 @@ def mock_fab_logger_log_warning():
 def mock_get_access_token(vcr_mode):
     if vcr_mode == "none":
         fab_auth_instance = FabAuth()  # Singleton
+
+        # Mock MSAL token result for acquire_token (used by MSAL bridge)
+        mock_msal_result = {
+            "access_token": "mocked_access_token",
+            "expires_in": 3600
+        }
+
         with patch.object(
             fab_auth_instance, "get_access_token", return_value="mocked_access_token"
-        ) as mock:
-            yield mock
+        ) as mock_get_token, patch.object(
+            fab_auth_instance, "acquire_token", return_value=mock_msal_result
+        ) as mock_acquire_token:
+            yield {"get_access_token": mock_get_token, "acquire_token": mock_acquire_token}
     else:
         yield
 
