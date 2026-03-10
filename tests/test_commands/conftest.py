@@ -898,18 +898,25 @@ def mock_get_access_token(vcr_mode):
     if vcr_mode == "none":
         fab_auth_instance = FabAuth()  # Singleton
 
-        # Mock MSAL token result for acquire_token (used by MSAL bridge)
+        # Mock JWT token in proper format for fabric-cicd library validation
+        # This is a minimal valid JWT structure: header.payload.signature
+        mock_jwt_token = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Im1vY2tfdXNlciIsImV4cCI6OTk5OTk5OTk5OX0."
+            "mock_signature"
+        )
+
+        # Mock acquire_token since both get_access_token() and MSAL bridge use it
         mock_msal_result = {
-            "access_token": "mocked_access_token",
+            "access_token": mock_jwt_token,
+            "expires_on": "9999999999",  # Far future timestamp
             "expires_in": 3600
         }
 
         with patch.object(
-            fab_auth_instance, "get_access_token", return_value="mocked_access_token"
-        ) as mock_get_token, patch.object(
             fab_auth_instance, "acquire_token", return_value=mock_msal_result
-        ) as mock_acquire_token:
-            yield {"get_access_token": mock_get_token, "acquire_token": mock_acquire_token}
+        ) as mock:
+            yield mock
     else:
         yield
 
