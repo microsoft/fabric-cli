@@ -1115,6 +1115,32 @@ class TestLS:
             require_all_in_same_args=True,
         )
 
+    def test_ls_workspace_with_folders_and_items_divider(
+        self,
+        workspace,
+        folder_factory,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup
+        folder = folder_factory()
+
+        # Execute
+        cli_executor.exec_command(f"ls {workspace.full_path}")
+
+        # Assert
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["[Folders]", "[Items]"],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+        _assert_strings_in_mock_calls(
+            [folder.display_name],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+
     @ls_folder_content_success_params
     def test_ls_folder_content_success(
         self,
