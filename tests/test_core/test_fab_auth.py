@@ -824,8 +824,8 @@ def test_get_access_token_token_error(monkeypatch):
     with pytest.raises(FabricCLIError) as exc_info:
         auth.get_access_token(["dummy_scope"])
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert "Failed to get access token: failed due to error" in str(exc_info.value)
-
+    assert exc_info.value.message == "Failed to get access token: Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens"
+    assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
 def test_set_access_mode_success(monkeypatch):
     """Test setting a valid access mode"""

@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -460,6 +461,16 @@ def set_test_user_agent(monkeypatch):
         )
         kwargs["headers"] = headers
 
+        # Handle json parameter when it's a string (fix for fabric_cicd compatibility)
+        json_param = kwargs.get("json")
+        if isinstance(json_param, str) and json_param.strip().startswith(('{', '[')):
+            try:
+                import json
+                kwargs["json"] = json.loads(json_param)
+            except json.JSONDecodeError:
+                # If parsing fails, leave it as-is
+                pass
+
         # Call the original request method with updated headers
         return original_request(self, method, url, *args, **kwargs)
 
@@ -886,8 +897,24 @@ def mock_fab_logger_log_warning():
 def mock_get_access_token(vcr_mode):
     if vcr_mode == "none":
         fab_auth_instance = FabAuth()  # Singleton
+
+        # Mock JWT token in proper format for fabric-cicd library validation
+        # This is a minimal valid JWT structure: header.payload.signature
+        mock_jwt_token = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Im1vY2tfdXNlciIsImV4cCI6OTk5OTk5OTk5OX0."
+            "mock_signature"
+        )
+
+        # Mock acquire_token since both get_access_token() and MSAL bridge use it
+        mock_msal_result = {
+            "access_token": mock_jwt_token,
+            "expires_on": "9999999999",  # Far future timestamp
+            "expires_in": 3600
+        }
+
         with patch.object(
-            fab_auth_instance, "get_access_token", return_value="mocked_access_token"
+            fab_auth_instance, "acquire_token", return_value=mock_msal_result
         ) as mock:
             yield mock
     else:
@@ -972,5 +999,100 @@ def setup_config_values_for_capacity(test_data: StaticTestData):
     state_config.set_config(
         fab_constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
 
+
+def _create_config_file(
+    tmp_path,
+    *,
+    workspace_name,
+    repository_dir,
+    item_types=[ItemType.NOTEBOOK.value],
+    target_env=None,
+    parameter_file=None,
+    config_name="config.yml"
+):
+    """Helper function for creating deploy configuration files with specified parameters.
+    
+    Args:
+        tmp_path: Temporary path for file creation
+        workspace_name: Name of the workspace
+        repository_dir: Path to the repository directory
+        item_types: List of item types in scope (defaults to [ItemType.NOTEBOOK.value])
+        target_env: Target environment name (if None, workspace_name is used directly)
+        parameter_file: Path to parameter file (optional)
+        config_name: Name of the config file to create
+        
+    Returns:
+        Path to the created configuration file
+    """
+    config_path = tmp_path / config_name
+
+    config_data = {
+        "core": {
+            "workspace": {
+                target_env: workspace_name
+            } if target_env else workspace_name,
+            "repository_directory": str(repository_dir),
+            "item_types_in_scope": item_types
+        },
+        "publish": {
+            "skip": {
+                target_env: False
+            } if target_env else False
+        }
+    }
+
+    if parameter_file:
+        config_data["core"]["parameter"] = str(parameter_file)
+
+    import yaml
+    with open(config_path, 'w') as f:
+        yaml.dump(config_data, f, default_flow_style=False)
+
+    return config_path
+
+
+@pytest.fixture
+def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
+    """Factory for setting up complete deploy scenarios with items, config files, and repositories."""
+    def _factory(
+        *,
+        target_env="dev",
+        item_types=[ItemType.NOTEBOOK],
+        parameter_file=None,
+        path_override=None,
+    ):
+        """Create a complete deploy scenario with items, repository, and config file.
+        
+        Args:
+            item_type: Type of item to create (backwards compatibility, deprecated)
+            target_env: Target environment name
+            item_types: List of item type strings for config and creation
+            parameter_file: Path to parameter file (optional)
+            path_override: Path to override the default repository directory (optional)
+        Returns:
+            Path to the created configuration file
+        """
+        from fabric_cli.core.fab_types import ItemType
+
+        path = Path(path_override) if path_override else tmp_path
+        repository_dir = path / "repo"
+        repository_dir.mkdir(parents=True, exist_ok=True)
+
+        for item_type in item_types:
+            item = item_factory(item_type)
+            cli_executor.exec_command(
+                f"export {item.full_path} --output {str(repository_dir)} {('--format .py' if item_type == ItemType.NOTEBOOK else '')} --force"
+            )
+
+        return _create_config_file(
+            tmp_path,
+            workspace_name=workspace.display_name,
+            repository_dir=repository_dir,
+            item_types=[item_type.value for item_type in item_types],
+            target_env=target_env,
+            parameter_file=parameter_file,
+        )
+
+    return _factory
 
 # endregion
