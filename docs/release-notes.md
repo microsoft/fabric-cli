@@ -11,11 +11,11 @@ hide:
 ### ✨ New Functionality
 
 * Add export and import formats support for Semantic Model and Spark job definition by [ohadedry](https://github.com/ohadedry)
-* Introduces the new deploy command that integrates with the fabric-cicd library, enabling users to deploy multiple Fabric items in a single by [aviatco](https://github.com/aviatco)
+* Introduce `deploy` command that integrates with the fabric-cicd library, enabling users to deploy multiple Fabric items into a Fabric workspace by [aviatco](https://github.com/aviatco)
 
 ### 📝 Documentation Update
 
-* Created refresh semantic model using API command example by [may-hartov](https://github.com/may-hartov)
+* Add refresh semantic model using API command example by [may-hartov](https://github.com/may-hartov)
 * Add AI assets for agent-assisted CLI usage including core and Power BI skills, workspace creation prompt, and context files for GitHub Copilot, Claude, and Cursor by [jeremyhoover](https://github.com/jeremyhoover)
 
 
