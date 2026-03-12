@@ -345,6 +345,41 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
+#### Deploy Items from Configuration
+
+Deploy items from local workspace content to a target workspace using a configuration file.
+
+```
+fab deploy --config config.yml -tenv dev
+```
+
+#### Deploy Specific Item Types
+
+Deploy only specific types of items using item_types_in_scope.
+
+```
+fab deploy --config config.yml -tenv dev -P config_override='{"core": {"item_types_in_scope": ["Notebook", "DataPipeline"]}}'
+```
+
+#### Deploy Specific Items
+
+Deploy only specified items using items_to_include.
+
+```
+fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"items_to_include": ["MainNotebook.Notebook", "ProductionPipeline.DataPipeline"]}}'
+```
+
+#### Deploy with Item Exclusions
+
+Deploy items while excluding specific items or patterns.
+
+```
+fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"exclude_regex": "^(TEMP|DEBUG|TEST).*"}}'
+```
+
+!!! note "Configuration Options"
+    All the configuration options shown above with `config_override` can also be defined directly in the configuration file instead of passing them as command-line overrides. The `config_override` examples are provided for demonstration and dynamic configuration purposes.
+
 ### Start/Stop Mirrored Databases
 
 #### Start Mirrored Database
