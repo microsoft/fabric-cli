@@ -218,7 +218,7 @@ WARNING_INVALID_PATHS = (
 )
 WARNING_NOT_SUPPORTED_PATHS = "mv is not supported for the specified source and destination items types. Check your paths"
 WARNING_INVALID_SPECIAL_CHARACTERS = (
-    "Special caracters not supported for this item type"
+    "Special characters not supported for this item type"
 )
 WARNING_INVALID_LS_ONELAKE = "No more subdirectories supported for this item"
 WARNING_INVALID_JSON_FORMAT = "Invalid JSON format"
