@@ -18,15 +18,15 @@ from fabric_cli.core.fab_types import (
 )
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
-from tests.test_commands.data.static_test_data import StaticTestData
-from tests.test_commands.utils import cli_path_join
 from tests.test_commands.conftest import (
     basic_item_parametrize,
-    item_type_paramerter,
     command_ls_parameters,
+    item_type_paramerter,
+    ls_folder_content_success_params,
     ls_item_folders_success_params,
-    ls_folder_content_success_params
 )
+from tests.test_commands.data.static_test_data import StaticTestData
+from tests.test_commands.utils import cli_path_join
 
 
 class TestLS:
@@ -218,7 +218,7 @@ class TestLS:
         item3 = item_factory(item_type)
 
         # Test 1: Basic JMESPath syntax
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].name')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].name")
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
             [item1.display_name, item2.display_name, item3.display_name],
@@ -243,13 +243,13 @@ class TestLS:
             ["displayName", "itemID"],
             True,
             mock_questionary_print.mock_calls,
-            require_all_in_same_args=True
+            require_all_in_same_args=True,
         )
 
         mock_questionary_print.reset_mock()
 
         # Test 3: JMESPath list syntax - here there are not keys so will be printed as list of arrays
-        cli_executor.exec_command(f'ls {workspace.full_path} -q [].[name]')
+        cli_executor.exec_command(f"ls {workspace.full_path} -q [].[name]")
         _assert_strings_in_mock_calls(
             [f"['{item1.name}']", f"['{item2.name}']", f"['{item3.name}']"],
             True,
@@ -1113,6 +1113,32 @@ class TestLS:
             True,
             mock_questionary_print.mock_calls,
             require_all_in_same_args=True,
+        )
+
+    def test_ls_workspace_with_folders_and_items_divider(
+        self,
+        workspace,
+        folder_factory,
+        mock_questionary_print,
+        cli_executor: CLIExecutor,
+    ):
+        # Setup
+        folder = folder_factory()
+
+        # Execute
+        cli_executor.exec_command(f"ls {workspace.full_path}")
+
+        # Assert
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["[Folders]", "[Items]"],
+            True,
+            mock_questionary_print.mock_calls,
+        )
+        _assert_strings_in_mock_calls(
+            [folder.display_name],
+            True,
+            mock_questionary_print.mock_calls,
         )
 
     @ls_folder_content_success_params
