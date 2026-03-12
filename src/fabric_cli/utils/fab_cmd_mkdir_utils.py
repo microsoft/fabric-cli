@@ -188,6 +188,27 @@ def add_type_specific_payload(item: Item, args, payload):
                 ]
             }
 
+        case ItemType.SQL_DATABASE:
+            _mode = params.get("mode")
+            _backup_retention_days = params.get("backupretentiondays")
+            _collation = params.get("collation")
+
+            if _mode or _backup_retention_days or _collation:
+                creation_payload: dict = {"creationMode": _mode if _mode else "new"}
+                if _backup_retention_days:
+                    try:
+                        creation_payload["backupRetentionDays"] = int(
+                            _backup_retention_days
+                        )
+                    except ValueError:
+                        raise FabricCLIError(
+                            f"'backupRetentionDays' must be a valid integer, got '{_backup_retention_days}'",
+                            fab_constant.ERROR_INVALID_INPUT,
+                        )
+                if _collation:
+                    creation_payload["collation"] = _collation
+                payload_dict["creationPayload"] = creation_payload
+
     return payload_dict
 
 
@@ -309,6 +330,8 @@ def get_params_per_item_type(item: Item):
             optional_params = ["semanticModelId"]
         case ItemType.MOUNTED_DATA_FACTORY:
             required_params = ["subscriptionId", "resourceGroup", "factoryName"]
+        case ItemType.SQL_DATABASE:
+            optional_params = ["mode", "backupRetentionDays", "collation"]
 
     return required_params, optional_params
 
