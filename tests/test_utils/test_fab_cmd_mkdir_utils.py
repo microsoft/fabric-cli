@@ -320,8 +320,8 @@ class TestAddTypeSpecificPayloadSqlDatabase:
         with pytest.raises(FabricCLIError) as exc_info:
             add_type_specific_payload(item, args, payload)
 
-        assert "backupRetentionDays" in str(exc_info.value.message)
         assert "abc" in str(exc_info.value.message)
+        assert "integer" in str(exc_info.value.message)
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
 
     def test_explicit_mode_success(self):

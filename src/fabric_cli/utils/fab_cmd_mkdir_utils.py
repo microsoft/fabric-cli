@@ -202,7 +202,9 @@ def add_type_specific_payload(item: Item, args, payload):
                         )
                     except ValueError:
                         raise FabricCLIError(
-                            f"'backupRetentionDays' must be a valid integer, got '{_backup_retention_days}'",
+                            ErrorMessages.Mkdir.invalid_parameter_format(
+                                _backup_retention_days, "integer"
+                            ),
                             fab_constant.ERROR_INVALID_INPUT,
                         )
                 if _collation:

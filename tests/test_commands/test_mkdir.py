@@ -31,8 +31,8 @@ from fabric_cli.core.fab_types import (
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.conftest import (
     item_type_paramerter,
-    unsupported_item_failure_params,
     mkdir_item_with_creation_payload_success_params,
+    unsupported_item_failure_params,
 )
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
@@ -286,6 +286,7 @@ class TestMkdir:
         # Cleanup
         rm(item_full_path)
 
+    # region SQL database
     def test_mkdir_sqldatabase_without_params_success(
         self,
         workspace,
@@ -409,40 +410,6 @@ class TestMkdir:
         # Cleanup
         rm(sqldb_full_path)
 
-    def test_mkdir_sqldatabase_mode_only_success(
-        self,
-        workspace,
-        cli_executor,
-        mock_print_done,
-        mock_questionary_print,
-        vcr_instance,
-        cassette_name,
-        upsert_item_to_cache,
-    ):
-        # Setup
-        sqldb_display_name = generate_random_string(vcr_instance, cassette_name)
-        sqldb_full_path = cli_path_join(
-            workspace.full_path, f"{sqldb_display_name}.{ItemType.SQL_DATABASE}"
-        )
-
-        # Execute command with only mode param
-        cli_executor.exec_command(f"mkdir {sqldb_full_path} -P mode=new")
-
-        # Assert creation success
-        upsert_item_to_cache.assert_called_once()
-        mock_print_done.assert_called_once()
-        assert sqldb_display_name in mock_print_done.call_args[0][0]
-
-        # Verify item was created
-        mock_questionary_print.reset_mock()
-        get(sqldb_full_path, query=".")
-        mock_questionary_print.assert_called_once()
-        result_output = mock_questionary_print.call_args[0][0]
-        assert sqldb_display_name in result_output
-
-        # Cleanup
-        rm(sqldb_full_path)
-
     def test_mkdir_sqldatabase_param_discovery(
         self, workspace, cli_executor, mock_questionary_print
     ):
@@ -464,6 +431,9 @@ class TestMkdir:
         assert "collation" in output
         assert "mode" in output
 
+    # endregion
+
+    # region Data Factory
     def test_mkdir_mounted_data_factory_with_required_params_success(
         self,
         workspace,

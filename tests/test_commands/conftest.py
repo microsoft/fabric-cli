@@ -84,7 +84,7 @@ mkdir_item_with_creation_payload_success_params = pytest.mark.parametrize("item_
     (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
     (ItemType.REPORT, "", ["_auto"]),
     (ItemType.SQL_DATABASE, "backupRetentionDays=21,collation=SQL_Latin1_General_CP1_CS_AS",
-        ["properties"]),
+        ["backupRetentionDays", "collation"]),
 ])
 
 mv_item_to_item_success_params = pytest.mark.parametrize("item_type", [
