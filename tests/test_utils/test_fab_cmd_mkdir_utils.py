@@ -10,9 +10,12 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils.fab_cmd_mkdir_utils import (
+    add_type_specific_payload,
     find_mpe_connection,
     get_connection_config_from_params,
+    get_params_per_item_type,
 )
+from fabric_cli.core.fab_types import ItemType
 
 
 def test_fabric_data_pipelines_workspace_identity_no_params_success():
@@ -209,4 +212,147 @@ class TestFindMpeConnection:
             called_url = call_args.args[1] if len(call_args.args) > 1 else call_args.kwargs['url']
             assert "privateEndpointConnections" in called_url
             assert "api-version=2023-11-01" in called_url
+
+
+class TestGetParamsPerItemTypeSqlDatabase:
+    """Test cases for get_params_per_item_type with SQL_DATABASE."""
+
+    def test_sql_database_returns_optional_params(self):
+        """Test that SQL_DATABASE returns the correct optional params."""
+        mock_item = Mock()
+        mock_item.item_type = ItemType.SQL_DATABASE
+
+        required, optional = get_params_per_item_type(mock_item)
+
+        assert required == []
+        assert optional == ["mode", "backupRetentionDays", "collation"]
+
+    def test_sql_database_has_no_required_params(self):
+        """Test that SQL_DATABASE has no required params."""
+        mock_item = Mock()
+        mock_item.item_type = ItemType.SQL_DATABASE
+
+        required, _ = get_params_per_item_type(mock_item)
+
+        assert len(required) == 0
+
+
+class TestAddTypeSpecificPayloadSqlDatabase:
+    """Test cases for add_type_specific_payload with SQL_DATABASE."""
+
+    def _make_item_and_args(self, params):
+        """Helper to create mock item and args for SQL_DATABASE."""
+        mock_item = Mock()
+        mock_item.item_type = ItemType.SQL_DATABASE
+        mock_args = Namespace(params=params)
+        return mock_item, mock_args
+
+    def test_all_params_success(self):
+        """Test SQL_DATABASE with all params provided."""
+        item, args = self._make_item_and_args(
+            {
+                "mode": "new",
+                "backupretentiondays": "21",
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+            }
+        )
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert "creationPayload" in result
+        cp = result["creationPayload"]
+        assert cp["creationMode"] == "new"
+        assert cp["backupRetentionDays"] == 21
+        assert cp["collation"] == "SQL_Latin1_General_CP1_CI_AS"
+
+    def test_partial_params_backup_only_success(self):
+        """Test SQL_DATABASE with only backupRetentionDays provided."""
+        item, args = self._make_item_and_args({"backupretentiondays": "7"})
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert "creationPayload" in result
+        cp = result["creationPayload"]
+        assert cp["creationMode"] == "new"  # Default
+        assert cp["backupRetentionDays"] == 7
+        assert "collation" not in cp
+
+    def test_partial_params_collation_only_success(self):
+        """Test SQL_DATABASE with only collation provided."""
+        item, args = self._make_item_and_args(
+            {"collation": "SQL_Latin1_General_CP1_CI_AS"}
+        )
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert "creationPayload" in result
+        cp = result["creationPayload"]
+        assert cp["creationMode"] == "new"  # Default
+        assert "backupRetentionDays" not in cp
+        assert cp["collation"] == "SQL_Latin1_General_CP1_CI_AS"
+
+    def test_no_recognized_params_no_creation_payload(self):
+        """Test SQL_DATABASE with no recognized params produces no creationPayload."""
+        item, args = self._make_item_and_args({"unrelated": "value"})
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert "creationPayload" not in result
+
+    def test_empty_params_no_creation_payload(self):
+        """Test SQL_DATABASE with empty params dict produces no creationPayload."""
+        item, args = self._make_item_and_args({})
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert "creationPayload" not in result
+
+    def test_invalid_backup_retention_days_failure(self):
+        """Test SQL_DATABASE with non-integer backupRetentionDays raises FabricCLIError."""
+        item, args = self._make_item_and_args({"backupretentiondays": "abc"})
+        payload = {"displayName": "testdb"}
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            add_type_specific_payload(item, args, payload)
+
+        assert "abc" in str(exc_info.value.message)
+        assert "integer" in str(exc_info.value.message)
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+    def test_explicit_mode_success(self):
+        """Test SQL_DATABASE with explicit mode value."""
+        item, args = self._make_item_and_args({"mode": "copy"})
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert result["creationPayload"]["creationMode"] == "copy"
+
+    def test_mode_only_success(self):
+        """Test SQL_DATABASE with only mode provided."""
+        item, args = self._make_item_and_args({"mode": "new"})
+        payload = {"displayName": "testdb"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        cp = result["creationPayload"]
+        assert cp["creationMode"] == "new"
+        assert "backupRetentionDays" not in cp
+        assert "collation" not in cp
+
+    def test_preserves_existing_payload_fields(self):
+        """Test that SQL_DATABASE creation doesn't remove existing payload fields."""
+        item, args = self._make_item_and_args({"mode": "new"})
+        payload = {"displayName": "testdb", "description": "A test database"}
+
+        result = add_type_specific_payload(item, args, payload)
+
+        assert result["displayName"] == "testdb"
+        assert result["description"] == "A test database"
+        assert "creationPayload" in result
             
