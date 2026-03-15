@@ -173,6 +173,29 @@ fab mv ws1.Workspace/source.Folder ws2.Workspace
 
     *Result:* `ws2.Workspace/dest.Folder/source.Folder`
 
+### Deploy Fabric workspace folders containing items
+
+Deploy specific folders from local content using configuration files. This allows selective deployment of folder contents.
+
+#### Deploy Specific Folders
+
+Deploy only items within specific folders to target workspace.
+
+```
+fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"folders_to_include": ["Production", "Core"]}, "features": ["enable_include_folder", "enable_experimental_features"]}'
+```
+
+#### Deploy with Folder Exclusions
+
+Deploy workspace content while excluding specific folders.
+
+```
+fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"folder_exclude_regex": "^temp|^debug"}, "features": ["enable_exclude_folder", "enable_experimental_features"]}'
+```
+
+!!! note "Configuration Options"
+    All the configuration options shown above with `config_override` can also be defined directly in the configuration file instead of passing them as command-line overrides. The `config_override` examples are provided for demonstration and dynamic configuration purposes.
+
 ---
 
 For managing folders within OneLake storage (e.g., `Lakehouse/Files`), see [OneLake Examples](./onelake_examples.md)
