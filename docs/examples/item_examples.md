@@ -366,7 +366,7 @@ fab deploy --config config.yml -tenv dev -P config_override='{"core": {"item_typ
 Deploy only specified items using items_to_include.
 
 ```
-fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"items_to_include": ["MainNotebook.Notebook", "ProductionPipeline.DataPipeline"]}}'
+fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"items_to_include": ["MainNotebook.Notebook", "ProductionPipeline.DataPipeline"]}, "features": ["enable_items_to_include"]}'
 ```
 
 #### Deploy with Item Exclusions
