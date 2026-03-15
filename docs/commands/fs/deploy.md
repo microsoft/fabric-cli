@@ -209,12 +209,6 @@ fab export  ws.Workspace/MyDataPipeline.DataPipeline -o C:\Users\myuser
 
 ---
 
-### Related Commands
-
-- `export` — Export a single item from a workspace
-- `import` — Import a single item from a workspace
-
-
 ### Usfull links
 
 - [Fabric cicd lib](https://microsoft.github.io/fabric-cicd/latest/)
