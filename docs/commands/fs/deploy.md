@@ -4,13 +4,13 @@ The `deploy` command imports workspace items from a local source into a target F
 
 You can deploy:
 
-- all items in a workspace
+- all items from the source workspace
 - specific folders that contain items
 - specific items
 
 **Supported Types:**
 
-- All Fabric workspace item types that support definition import (e.g., `.Notebook`, `.DataPipeline`, `.Report`, etc.)
+- All Fabric workspace item types that support definition import (e.g., `.Notebook`, `.DataPipeline`, `.Report`, )
 
 **Usage:**
 
@@ -20,7 +20,7 @@ fab deploy --config <config_file> [--target_env <environment>] [--params <parame
 
 **Parameters:**
 
-- `--config <file>`: Path to the deployment configuration file. **Required**.
+- `--config <file>`: Path to the deployment configuration YAML file. **Required**.
 - `--target_env, -tenv <env>`: Environment name used to select environment-specific settings from the configuration file and the parameter file (if present). Optional.
 - `--params, -P <params>`: JSON-formatted parameters provided to the deployment process at runtime. Optional.
 - `--force, -f`: Run the deployment without interactive confirmation prompts. Optional.
@@ -48,7 +48,7 @@ During execution, the command:
 By default, **both publish and unpublish operations are enabled and executed**.  
 To disable either operation for a specific environment, it must be explicitly skipped in the configuration file.
 
-The deployment to Fabric workspaces is executed via the Fabric REST APIs.
+The deployment to the Fabric workspaces is executed via the Fabric REST APIs.
 
 ---
 
@@ -57,7 +57,7 @@ The deployment to Fabric workspaces is executed via the Fabric REST APIs.
 - The configuration file controls what is published and unpublished.
 - Publish and unpublish operations are enabled by default.
 - Skipping publish or unpublish must be explicitly defined per environment.
-- Environment selection is resolved only when environment mappings are present in the configuration.
+- Target Environment selection is resolved only when environment mappings are present in the configuration.
 - If `--target_env` is not specified, the configuration must not contain environment-specific mappings.
 
 ---
@@ -186,7 +186,7 @@ fab deploy --config config.yml --target_env test -P '{"core":{"item_types_in_sco
 If the workspace is connected to Git, clone the repository locally:
 
 ```bash
-git clone https://github.com/org/fabric-workspace.git
+git clone <git-repository-url>.git
 ```
 
 Use the cloned repository as the deployment source.
@@ -203,7 +203,7 @@ fab export  ws.Workspace/MyDataPipeline.DataPipeline -o C:\Users\myuser
 
 ### Additional Notes
 
-- The deploy command can be applied to Fabric item files created via Git integration or the Get Item Definition API (export command).
+- The deploy command can be applied to Fabric item files created via Git integration or using the `export` command (utilizes Get Item Definition API).
 - `fab deploy` does not require items to be created via Git integration prior to deployment; however, using Git integration is strongly recommended for dependency resolution with minimal parameterization.
 - Parameterization is optional and can be applied in any deployment scenario.
 

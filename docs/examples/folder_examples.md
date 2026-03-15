@@ -182,7 +182,7 @@ Deploy specific folders from local content using configuration files. This allow
 Deploy only items within specific folders to target workspace.
 
 ```
-fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"folders_to_include": ["/Production/", "/Core/"]}}'
+fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"folders_to_include": ["Production", "Core"]}}'
 ```
 
 #### Deploy with Folder Exclusions
@@ -190,7 +190,7 @@ fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"folde
 Deploy workspace content while excluding specific folders.
 
 ```
-fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"folder_exclude_regex": "^/temp/|^/debug/"}}'
+fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"folder_exclude_regex": "^temp|^debug"}}'
 ```
 
 !!! note "Configuration Options"
