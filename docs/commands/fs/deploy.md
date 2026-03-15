@@ -10,7 +10,7 @@ You can deploy:
 
 **Supported Types:**
 
-- All Fabric workspace item types that support definition import (e.g., `.Notebook`, `.DataPipeline`, `.Report`, )
+- All Fabric workspace item types that support definition import (e.g., `.Notebook`, `.DataPipeline`, `.Report` )
 
 **Usage:**
 
