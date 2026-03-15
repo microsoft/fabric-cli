@@ -33,8 +33,6 @@ fab deploy --config config.yml --target_env dev
 
 ---
 
-## Advanced Usage
-
 ### Deployment Behavior
 
 The scope of the deployment, its operations (e.g., publish, unpublish), and settings are defined entirely by the configurations set in a YAML file.
