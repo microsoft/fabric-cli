@@ -56,7 +56,7 @@ The deployment to the Fabric workspaces is executed via the Fabric REST APIs.
 - Publish and unpublish operations are enabled by default.
 - Skipping publish or unpublish must be explicitly defined per environment.
 - Target Environment selection is resolved only when environment mappings are present in the configuration.
-- If `--target_env` is not specified, the configuration must not contain environment-specific mappings.
+- If `--target_env` is not specified, the configuration fields must not contain environment-mappings.
 
 ---
 
@@ -95,7 +95,7 @@ Relative paths for `repository_directory` and `parameter` fields are resolved re
 ```yaml
 publish:
   exclude_regex: "^DONT_DEPLOY.*"        # Excludes items matching this pattern from publishing
-  folder_exclude_regex: "^legacy/"       # Excludes items under matching folders from publishing (requires feature flags)
+  folder_exclude_regex: "^/legacy"       # Excludes items under matching folders from publishing (requires feature flags)
   folder_path_to_include:                # Publishes only the specified items under matching folder (requires feature flags)
     - /subfolder_1
   items_to_include:                      # Publishes only the specified items (requires feature flags)
@@ -137,7 +137,7 @@ It can be used to:
 
 The parameter file is optional and is applied only when specified in the configuration.
 
-When deploying item files that were not created via Git Integration but instead exported (for example, using the Fabric CLI export command), parameterization must be used to resolve dependencies. Otherwise, items will reference the original item.
+When deploying item files that were not created via Git Integration but instead exported (for example, using the Fabric CLI export command), parameterization should be used to resolve dependencies. Otherwise, items will reference the original item.
 
 #### Example
 
@@ -150,14 +150,14 @@ find_replace:
       prod: "prod-connection-string"
 ```
 
-#### Supported Variables
+#### Supported `replace_value` Variables
 
 - `$workspace.$id` — resolves to the target workspace ID
 - `$items.<ItemType>.<ItemName>.$id` — resolves to the deployed item ID
 
 Parameterization behavior follows the documented model described here:
 
-https://microsoft.github.io/fabric-cicd/0.1.3/how_to/parameterization/add
+https://microsoft.github.io/fabric-cicd/latest/how_to/parameterization
 
 ---
 
@@ -172,7 +172,7 @@ fab deploy --config config.yml --target_env prod
 #### Deployment with Runtime Parameters
 
 ```bash
-fab deploy --config config.yml --target_env test -P '{"core":{"item_types_in_scope":["Notebook"]}}'
+fab deploy --config config.yml --target_env test -P config_override='{"core":{"item_types_in_scope":["Notebook"]}}'
 ```
 
 ---

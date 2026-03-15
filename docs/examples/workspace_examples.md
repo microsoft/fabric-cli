@@ -262,7 +262,7 @@ fab export ws1.Workspace -o /ws1.Workspace/lh1.Lakehouse/Files -a
 
 ### Deploy Workspace Items
 
-Deploy workspace items from local content to target workspaces using configuration files.
+Deploy workspace items from local source to target workspaces using configuration files.
 
 #### Deploy Full Workspace
 

@@ -173,7 +173,7 @@ fab mv ws1.Workspace/source.Folder ws2.Workspace
 
     *Result:* `ws2.Workspace/dest.Folder/source.Folder`
 
-### Deploy Folder
+### Deploy Fabric workspace folders containing items
 
 Deploy specific folders from local content using configuration files. This allows selective deployment of folder contents.
 
