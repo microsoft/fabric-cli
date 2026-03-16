@@ -472,6 +472,11 @@ class TestSearchableItemTypes:
 class TestFindE2E:
     """End-to-end tests for the find command with VCR cassettes."""
 
+    @pytest.fixture(autouse=True)
+    def _mock_input(self, monkeypatch):
+        """Raise EOFError on input() to stop pagination after the first page."""
+        monkeypatch.setattr("builtins.input", lambda *args: (_ for _ in ()).throw(EOFError))
+
     def test_find_basic_search(
         self,
         cli_executor: CLIExecutor,
@@ -507,8 +512,8 @@ class TestFindE2E:
 
         mock_questionary_print.assert_called()
         output = str(mock_questionary_print.call_args_list)
-        # Long output should contain id and workspace_id fields
-        assert "id" in output
+        # Long output should contain ID and Workspace ID fields
+        assert "ID:" in output
 
     def test_find_no_results(
         self,
@@ -532,4 +537,5 @@ class TestFindE2E:
 
         mock_questionary_print.assert_called()
         output = str(mock_questionary_print.call_args_list)
-        assert "Dashboard" not in output
+        # No item should have Type: Dashboard (the word may appear in names)
+        assert "Type: Dashboard" not in output
