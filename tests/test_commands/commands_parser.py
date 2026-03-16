@@ -34,6 +34,9 @@ from fabric_cli.parsers.fab_fs_parser import (
     register_stop_parser,
     register_unassign_parser,
 )
+from fabric_cli.parsers.fab_find_parser import (
+    register_parser as register_find_parser,
+)
 from fabric_cli.parsers.fab_jobs_parser import register_parser as register_jobs_parser
 from fabric_cli.parsers.fab_labels_parser import (
     register_parser as register_labels_parser,
@@ -50,6 +53,7 @@ parserHandlers = [
     register_export_parser,
     register_import_parser,
     register_assign_parser,
+    register_find_parser,
     register_ln_parser,
     register_ls_parser,
     register_mv_parser,

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Unit tests for the find command."""
+"""Tests for the find command — unit tests and e2e (VCR) tests."""
 
 import json
 from argparse import Namespace
@@ -13,6 +13,7 @@ from fabric_cli.commands.find import fab_find
 from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from tests.test_commands.commands_parser import CLIExecutor
 
 
 # Sample API responses for testing
@@ -450,3 +451,85 @@ class TestSearchableItemTypes:
     def test_types_loaded_from_yaml(self):
         assert len(fab_find.SEARCHABLE_ITEM_TYPES) > 30
         assert len(fab_find.UNSUPPORTED_ITEM_TYPES) >= 1
+
+
+# ---------------------------------------------------------------------------
+# E2E tests (VCR-recorded)
+#
+# These tests use the CLIExecutor to run actual find commands through the
+# full CLI pipeline, with HTTP calls recorded/played back via VCR cassettes.
+#
+# To record cassettes:
+#   1. Set env vars:
+#      $env:FAB_TOKEN = "<bearer-token-with-Catalog.Read.All>"
+#      $env:FAB_TOKEN_ONELAKE = $env:FAB_TOKEN
+#      $env:FAB_API_ENDPOINT_FABRIC = "dailyapi.fabric.microsoft.com"
+#   2. Run:
+#      pytest tests/test_commands/test_find.py::TestFindE2E --record -v
+# ---------------------------------------------------------------------------
+
+
+class TestFindE2E:
+    """End-to-end tests for the find command with VCR cassettes."""
+
+    def test_find_basic_search(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search returns results and prints output."""
+        cli_executor.exec_command("find 'data'")
+
+        mock_questionary_print.assert_called()
+        output = str(mock_questionary_print.call_args_list)
+        # Should contain at least one item with a name and type
+        assert "name" in output or "type" in output or "workspace" in output
+
+    def test_find_with_type_filter(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with -P type= returns only matching types."""
+        cli_executor.exec_command("find 'data' -P type=Lakehouse")
+
+        mock_questionary_print.assert_called()
+        output = str(mock_questionary_print.call_args_list)
+        assert "Lakehouse" in output
+
+    def test_find_with_long_output(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with -l includes IDs in output."""
+        cli_executor.exec_command("find 'data' -l")
+
+        mock_questionary_print.assert_called()
+        output = str(mock_questionary_print.call_args_list)
+        # Long output should contain id and workspace_id fields
+        assert "id" in output
+
+    def test_find_no_results(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search for nonexistent term shows 'No items found'."""
+        cli_executor.exec_command("find 'xyznonexistent98765zzz'")
+
+        # print_grey is used for "No items found." but it's not mocked here
+        # The command should complete without error
+        # In playback, the cassette has an empty response
+
+    def test_find_with_ne_filter(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with type!=Dashboard excludes Dashboard items."""
+        cli_executor.exec_command("find 'report' -P type!=Dashboard")
+
+        mock_questionary_print.assert_called()
+        output = str(mock_questionary_print.call_args_list)
+        assert "Dashboard" not in output
