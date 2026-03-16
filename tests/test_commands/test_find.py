@@ -63,7 +63,6 @@ class TestBuildSearchPayload:
     """Tests for _build_search_payload function."""
 
     def test_basic_query_interactive(self):
-        """Test basic search query in interactive mode."""
         args = Namespace(search_text="sales report", params=None, query=None)
         payload = fab_find._build_search_payload(args, is_interactive=True)
 
@@ -72,7 +71,6 @@ class TestBuildSearchPayload:
         assert "filter" not in payload
 
     def test_basic_query_commandline(self):
-        """Test basic search query in command-line mode."""
         args = Namespace(search_text="sales report", params=None, query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
@@ -81,137 +79,191 @@ class TestBuildSearchPayload:
         assert "filter" not in payload
 
     def test_query_with_single_type(self):
-        """Test search with single type filter via -P."""
-        args = Namespace(search_text="report", params=["type=Report"], query=None)
+        args = Namespace(search_text="report", params="type=Report", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "report"
         assert payload["filter"] == "Type eq 'Report'"
 
     def test_query_with_multiple_types(self):
-        """Test search with multiple type filters via -P bracket syntax."""
-        args = Namespace(search_text="data", params=["type=[Lakehouse,Warehouse]"], query=None)
+        args = Namespace(search_text="data", params="type=[Lakehouse,Warehouse]", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "data"
         assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
 
     def test_query_with_multiple_types_legacy_comma(self):
-        """Test search with multiple type filters via legacy comma syntax."""
-        args = Namespace(search_text="data", params=["type=Lakehouse,Warehouse"], query=None)
+        args = Namespace(search_text="data", params="type=Lakehouse,Warehouse", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "data"
         assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
 
     def test_query_with_ne_single_type(self):
-        """Test search with ne filter for single type."""
-        args = Namespace(search_text="data", params=["type!=Dashboard"], query=None)
+        args = Namespace(search_text="data", params="type!=Dashboard", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["filter"] == "Type ne 'Dashboard'"
 
     def test_query_with_ne_multiple_types(self):
-        """Test search with ne filter for multiple types."""
-        args = Namespace(search_text="data", params=["type!=[Dashboard,Datamart]"], query=None)
+        args = Namespace(search_text="data", params="type!=[Dashboard,Datamart]", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["filter"] == "(Type ne 'Dashboard' and Type ne 'Datamart')"
 
 
-class TestParseTypeParam:
-    """Tests for _parse_type_param function."""
+class TestParseTypeFromParams:
+    """Tests for _parse_type_from_params function."""
 
     def test_no_params(self):
-        """Test with no params."""
         args = Namespace(params=None)
-        assert fab_find._parse_type_param(args) is None
+        assert fab_find._parse_type_from_params(args) is None
 
     def test_empty_params(self):
-        """Test with empty params list."""
-        args = Namespace(params=[])
-        assert fab_find._parse_type_param(args) is None
+        args = Namespace(params="")
+        assert fab_find._parse_type_from_params(args) is None
 
     def test_single_type(self):
-        """Test single type value."""
-        args = Namespace(params=["type=Report"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type=Report")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "eq", "values": ["Report"]}
 
     def test_multiple_types_comma_separated(self):
-        """Test comma-separated types (legacy syntax)."""
-        args = Namespace(params=["type=Report,Lakehouse"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type=Report,Lakehouse")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
 
     def test_multiple_types_bracket_syntax(self):
-        """Test bracket syntax for multiple types."""
-        args = Namespace(params=["type=[Report,Lakehouse]"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type=[Report,Lakehouse]")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
 
     def test_ne_single_type(self):
-        """Test ne operator with single type."""
-        args = Namespace(params=["type!=Dashboard"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type!=Dashboard")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "ne", "values": ["Dashboard"]}
 
     def test_ne_multiple_types_bracket(self):
-        """Test ne operator with bracket syntax."""
-        args = Namespace(params=["type!=[Dashboard,Datamart]"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type!=[Dashboard,Datamart]")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "ne", "values": ["Dashboard", "Datamart"]}
 
     def test_ne_unsupported_type_allowed(self):
-        """Test ne with unsupported type (Dashboard) is allowed — excluding makes sense."""
-        args = Namespace(params=["type!=Dashboard"])
-        result = fab_find._parse_type_param(args)
+        args = Namespace(params="type!=Dashboard")
+        result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "ne", "values": ["Dashboard"]}
 
     def test_invalid_format_raises_error(self):
-        """Test invalid param format raises error."""
-        args = Namespace(params=["notakeyvalue"])
+        args = Namespace(params="notakeyvalue")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "Invalid parameter format" in str(exc_info.value)
 
     def test_unknown_param_raises_error(self):
-        """Test unknown param key raises error."""
-        args = Namespace(params=["foo=bar"])
+        args = Namespace(params="foo=bar")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "isn't a supported parameter" in str(exc_info.value)
 
     def test_unknown_param_ne_raises_error(self):
-        """Test unknown param key with ne raises error."""
-        args = Namespace(params=["foo!=bar"])
+        args = Namespace(params="foo!=bar")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "isn't a supported parameter" in str(exc_info.value)
 
     def test_unsupported_type_eq_raises_error(self):
-        """Test error for unsupported item types like Dashboard with eq."""
-        args = Namespace(params=["type=Dashboard"])
+        args = Namespace(params="type=Dashboard")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "Dashboard" in str(exc_info.value)
         assert "isn't searchable" in str(exc_info.value)
 
     def test_unknown_type_raises_error(self):
-        """Test error for unknown item types."""
-        args = Namespace(params=["type=InvalidType"])
+        args = Namespace(params="type=InvalidType")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "InvalidType" in str(exc_info.value)
         assert "isn't a recognized item type" in str(exc_info.value)
 
     def test_unknown_type_ne_raises_error(self):
-        """Test error for unknown item types with ne operator."""
-        args = Namespace(params=["type!=InvalidType"])
+        args = Namespace(params="type!=InvalidType")
         with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_param(args)
+            fab_find._parse_type_from_params(args)
         assert "InvalidType" in str(exc_info.value)
         assert "isn't a recognized item type" in str(exc_info.value)
+
+    def test_list_input_backward_compat(self):
+        """Ensure list input (from nargs='*') still works."""
+        args = Namespace(params=["type=Report"])
+        result = fab_find._parse_type_from_params(args)
+        assert result == {"operator": "eq", "values": ["Report"]}
+
+
+class TestSplitParams:
+    """Tests for _split_params helper."""
+
+    def test_single_param(self):
+        assert fab_find._split_params("type=Report") == ["type=Report"]
+
+    def test_bracket_param(self):
+        assert fab_find._split_params("type=[Report,Lakehouse]") == ["type=[Report,Lakehouse]"]
+
+    def test_multiple_params_with_equals(self):
+        assert fab_find._split_params("type=Report,workspace=Sales") == [
+            "type=Report",
+            "workspace=Sales",
+        ]
+
+    def test_bracket_with_trailing_param(self):
+        result = fab_find._split_params("type=[Report,Lakehouse],workspace=Sales")
+        assert result == ["type=[Report,Lakehouse]", "workspace=Sales"]
+
+    def test_legacy_comma_values_merged(self):
+        """Legacy comma syntax: values without '=' merge back to previous param."""
+        result = fab_find._split_params("type=Report,Lakehouse")
+        assert result == ["type=Report,Lakehouse"]
+
+
+class TestFetchResults:
+    """Tests for _fetch_results helper."""
+
+    @patch("fabric_cli.client.fab_api_catalog.search")
+    def test_returns_items_and_token(self, mock_search):
+        response = MagicMock()
+        response.status_code = 200
+        response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
+        mock_search.return_value = response
+
+        args = Namespace()
+        items, token = fab_find._fetch_results(args, {"search": "test"})
+
+        assert len(items) == 2
+        assert token == "lyJ1257lksfdfG=="
+
+    @patch("fabric_cli.client.fab_api_catalog.search")
+    def test_returns_none_token_when_empty(self, mock_search):
+        response = MagicMock()
+        response.status_code = 200
+        response.text = json.dumps(SAMPLE_RESPONSE_EMPTY)
+        mock_search.return_value = response
+
+        args = Namespace()
+        items, token = fab_find._fetch_results(args, {"search": "test"})
+
+        assert items == []
+        assert token is None
+
+    @patch("fabric_cli.client.fab_api_catalog.search")
+    def test_raises_on_invalid_json(self, mock_search):
+        response = MagicMock()
+        response.status_code = 200
+        response.text = "not json"
+        mock_search.return_value = response
+
+        args = Namespace()
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_find._fetch_results(args, {"search": "test"})
+        assert "invalid response" in str(exc_info.value)
 
 
 class TestDisplayItems:
@@ -219,7 +271,6 @@ class TestDisplayItems:
 
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_items_table(self, mock_print_format):
-        """Test displaying items in table mode."""
         args = Namespace(long=False, output_format="text", query=None)
         items = SAMPLE_RESPONSE_WITH_RESULTS["value"]
 
@@ -235,7 +286,6 @@ class TestDisplayItems:
 
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     def test_display_items_detailed(self, mock_print_format):
-        """Test displaying items with long flag."""
         args = Namespace(long=True, output_format="text", query=None)
         items = SAMPLE_RESPONSE_SINGLE["value"]
 
@@ -256,7 +306,6 @@ class TestDisplayItems:
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     @patch("fabric_cli.utils.fab_jmespath.search")
     def test_display_items_with_jmespath(self, mock_jmespath, mock_print_format):
-        """Test JMESPath filtering is applied when -q is provided."""
         filtered = [{"name": "Monthly Sales Revenue", "type": "Report"}]
         mock_jmespath.return_value = filtered
 
@@ -275,13 +324,11 @@ class TestRaiseOnError:
     """Tests for _raise_on_error function."""
 
     def test_success_response(self):
-        """Test successful response does not raise."""
         response = MagicMock()
         response.status_code = 200
-        fab_find._raise_on_error(response)  # Should not raise
+        fab_find._raise_on_error(response)
 
     def test_error_response_raises_fabric_cli_error(self):
-        """Test error response raises FabricCLIError."""
         response = MagicMock()
         response.status_code = 403
         response.text = json.dumps({
@@ -296,7 +343,6 @@ class TestRaiseOnError:
         assert "Missing required scope" in str(exc_info.value)
 
     def test_error_response_non_json(self):
-        """Test error response with non-JSON body."""
         response = MagicMock()
         response.status_code = 500
         response.text = "Internal Server Error"
@@ -312,9 +358,8 @@ class TestFindCommandline:
 
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     @patch("fabric_cli.utils.fab_ui.print_grey")
-    @patch("fabric_cli.client.fab_api_catalog.catalog_search")
+    @patch("fabric_cli.client.fab_api_catalog.search")
     def test_displays_results(self, mock_search, mock_print_grey, mock_print_format):
-        """Test command-line mode displays results."""
         response = MagicMock()
         response.status_code = 200
         response.text = json.dumps(SAMPLE_RESPONSE_SINGLE)
@@ -329,9 +374,8 @@ class TestFindCommandline:
         mock_print_format.assert_called_once()
 
     @patch("fabric_cli.utils.fab_ui.print_grey")
-    @patch("fabric_cli.client.fab_api_catalog.catalog_search")
+    @patch("fabric_cli.client.fab_api_catalog.search")
     def test_empty_results(self, mock_search, mock_print_grey):
-        """Test command-line mode with no results."""
         response = MagicMock()
         response.status_code = 200
         response.text = json.dumps(SAMPLE_RESPONSE_EMPTY)
@@ -351,10 +395,8 @@ class TestFindInteractive:
     @patch("builtins.input", return_value="")
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     @patch("fabric_cli.utils.fab_ui.print_grey")
-    @patch("fabric_cli.client.fab_api_catalog.catalog_search")
+    @patch("fabric_cli.client.fab_api_catalog.search")
     def test_pages_through_results(self, mock_search, mock_print_grey, mock_print_format, mock_input):
-        """Test interactive mode pages through multiple responses."""
-        # First page has continuation token, second page does not
         page1 = MagicMock()
         page1.status_code = 200
         page1.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
@@ -377,9 +419,8 @@ class TestFindInteractive:
     @patch("builtins.input", side_effect=KeyboardInterrupt)
     @patch("fabric_cli.utils.fab_ui.print_output_format")
     @patch("fabric_cli.utils.fab_ui.print_grey")
-    @patch("fabric_cli.client.fab_api_catalog.catalog_search")
+    @patch("fabric_cli.client.fab_api_catalog.search")
     def test_ctrl_c_stops_pagination(self, mock_search, mock_print_grey, mock_print_format, mock_input):
-        """Test Ctrl+C stops pagination."""
         response = MagicMock()
         response.status_code = 200
         response.text = json.dumps(SAMPLE_RESPONSE_WITH_RESULTS)
@@ -390,17 +431,22 @@ class TestFindInteractive:
 
         fab_find._find_interactive(args, payload)
 
-        # Should only fetch one page (stopped by Ctrl+C)
         assert mock_search.call_count == 1
         assert mock_print_format.call_count == 1
 
 
 class TestSearchableItemTypes:
-    """Tests for item type lists."""
+    """Tests for item type lists loaded from YAML."""
 
     def test_searchable_types_excludes_unsupported(self):
-        """Test SEARCHABLE_ITEM_TYPES excludes unsupported types."""
         assert "Dashboard" not in fab_find.SEARCHABLE_ITEM_TYPES
         assert "Dataflow" in fab_find.SEARCHABLE_ITEM_TYPES
         assert "Report" in fab_find.SEARCHABLE_ITEM_TYPES
         assert "Lakehouse" in fab_find.SEARCHABLE_ITEM_TYPES
+
+    def test_all_types_includes_unsupported(self):
+        assert "Dashboard" in fab_find.ALL_ITEM_TYPES
+
+    def test_types_loaded_from_yaml(self):
+        assert len(fab_find.SEARCHABLE_ITEM_TYPES) > 30
+        assert len(fab_find.UNSUPPORTED_ITEM_TYPES) >= 1

@@ -57,9 +57,8 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     parser.add_argument(
         "-P",
         "--params",
-        required=False,
         metavar="",
-        nargs="*",
+        nargs="?",
         help="Parameters in key=value or key!=value format. Use brackets for multiple values: type=[Lakehouse,Notebook]. Use != to exclude: type!=Dashboard",
     )
     parser.add_argument(
@@ -71,7 +70,6 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     parser.add_argument(
         "-q",
         "--query",
-        required=False,
         nargs="+",
         help="JMESPath query to filter. Optional",
     )

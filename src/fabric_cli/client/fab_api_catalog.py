@@ -13,7 +13,7 @@ from fabric_cli.client import fab_api_client as fabric_api
 from fabric_cli.client.fab_api_types import ApiResponse
 
 
-def catalog_search(args: Namespace, payload: dict) -> ApiResponse:
+def search(args: Namespace, payload: dict) -> ApiResponse:
     """Search the Fabric catalog for items.
 
     https://learn.microsoft.com/en-us/rest/api/fabric/core/catalog/search
@@ -41,7 +41,7 @@ def catalog_search(args: Namespace, payload: dict) -> ApiResponse:
     """
     args.uri = "catalog/search"
     args.method = "post"
-    # Use raw_response to avoid auto-pagination (we handle pagination in display)
+    # raw_response=True so we handle pagination ourselves in fab_find
     args.raw_response = True
     return fabric_api.do_request(args, json=payload)
 

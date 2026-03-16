@@ -20,6 +20,7 @@ The module includes functions for:
 import json
 import platform
 import re
+import shutil
 from typing import Any
 
 from fabric_cli.core import fab_constant, fab_state_config
@@ -242,3 +243,26 @@ def get_capacity_settings(
         az_resource_group,
         sku,
     )
+
+
+def truncate_descriptions(items: list[dict], other_fields: list[str] | None = None) -> None:
+    """Truncate description column so a table fits within terminal width.
+
+    Args:
+        items: List of dicts with a 'description' key to truncate in place.
+        other_fields: Column names used to estimate non-description width.
+            Defaults to ["name", "type", "workspace"].
+    """
+    if other_fields is None:
+        other_fields = ["name", "type", "workspace"]
+
+    term_width = shutil.get_terminal_size((120, 24)).columns
+    used = sum(
+        max((len(str(item.get(f, ""))) for item in items), default=0) + 3
+        for f in other_fields
+    )
+    max_desc = max(term_width - used - 3, 20)
+    for item in items:
+        desc = item.get("description", "")
+        if len(desc) > max_desc:
+            item["description"] = desc[: max_desc - 1] + "…"
