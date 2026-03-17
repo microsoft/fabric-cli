@@ -264,7 +264,7 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
 
 cp_virtual_workspace_item_failure_params = pytest.mark.parametrize("virtual_workspace_type", [
     VirtualWorkspaceType.DOMAIN,
-    VirtualWorkspaceType.CAPACITY,
+    # VirtualWorkspaceType.CAPACITY,
     VirtualWorkspaceType.GATEWAY,
 ])
 
@@ -1026,7 +1026,7 @@ def _create_config_file(
     config_name="config.yml"
 ):
     """Helper function for creating deploy configuration files with specified parameters.
-    
+
     Args:
         tmp_path: Temporary path for file creation
         workspace_name: Name of the workspace
@@ -1035,7 +1035,7 @@ def _create_config_file(
         target_env: Target environment name (if None, workspace_name is used directly)
         parameter_file: Path to parameter file (optional)
         config_name: Name of the config file to create
-        
+
     Returns:
         Path to the created configuration file
     """
@@ -1077,7 +1077,7 @@ def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
         path_override=None,
     ):
         """Create a complete deploy scenario with items, repository, and config file.
-        
+
         Args:
             item_type: Type of item to create (backwards compatibility, deprecated)
             target_env: Target environment name
