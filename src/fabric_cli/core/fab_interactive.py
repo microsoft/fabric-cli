@@ -15,17 +15,13 @@ from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import singleton
 from fabric_cli.utils import fab_commands
 from fabric_cli.utils import fab_ui as utils_ui
-
+from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
 @singleton
 class InteractiveCLI:
     def __init__(self, parser=None, subparsers=None):
         """Initialize the interactive CLI."""
         if parser is None or subparsers is None:
-            from fabric_cli.core.fab_parser_setup import (
-                get_global_parser_and_subparsers,
-            )
-
             parser, subparsers = get_global_parser_and_subparsers()
 
         self.parser = parser

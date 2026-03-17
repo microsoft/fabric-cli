@@ -21,6 +21,7 @@ from tests.test_commands.conftest import (
     import_update_existing_item_success_params,
     import_create_new_item_success_params,
     import_create_new_item_fail_params,
+    import_item_wrong_format_fail_params,
 )
 
 new_name_index = 1
@@ -178,8 +179,10 @@ class TestImport:
         mock_print_done.assert_not_called()
         upsert_item_to_cache.assert_not_called()
 
+    @import_item_wrong_format_fail_params
     def test_import_item_wrong_format_fail(
         self,
+        item_type,
         workspace,
         mock_print_done,
         tmp_path,
@@ -190,7 +193,7 @@ class TestImport:
         assert_fabric_cli_error,
     ):
         # Setup
-        item_name = f"newName.{str(ItemType.NOTEBOOK)}"
+        item_name = f"newName.{str(item_type)}"
         new_item_path = cli_path_join(workspace.full_path, item_name)
 
         # Execute command
@@ -198,10 +201,17 @@ class TestImport:
             f"import {new_item_path} --input {str(tmp_path)} --format pyt"
         )
 
+        expected_error_messages = {
+            ItemType.NOTEBOOK: "Invalid format. Only the following formats are supported: .py, .ipynb",
+            ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
+            ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
+            ItemType.DATA_PIPELINE: "Invalid format. No formats are supported",
+        }
+
         # Assert
         assert_fabric_cli_error(
             fab_constant.ERROR_INVALID_INPUT,
-            "Invalid format. Only '.py' and '.ipynb' are supported",
+            expected_error_messages[item_type],
         )
         mock_print_grey.assert_not_called()
         spy_create_item.assert_not_called()
@@ -341,6 +351,24 @@ def _build_export_args(path, output, force=True):
         path=path,
         output=output,
         force=force,
+    )
+
+
+def export_format(path, output, force=True, format=None):
+    args = _build_export_format_args(path, output, force, format)
+    context = handle_context.get_command_context(args.path)
+    fab_export.exec_command(args, context)
+
+
+def _build_export_format_args(path, output, force=True, format=None):
+    return argparse.Namespace(
+        command="export",
+        acl_subcommand="export",
+        command_path="export",
+        path=path,
+        output=output,
+        force=force,
+        format=format,
     )
 
 

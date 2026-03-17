@@ -18,7 +18,7 @@ fab import <path> -i <input_path> [--format <format>] [-f]
 
 - `<path>`: Path to import to.
 - `-i, --input <input_path>`: Input path.
-- `--format <format>`: Format of the input. Supported only for Notebooks (`.ipynb`, `.py`). Optional.
+- `--format <format>`: Format of the item definition to import. Supported only for Notebooks (`.ipynb`, `.py`), Semantic Models (`TMDL`, `TMSL`) and Spark Job Definition (`SparkJobDefinitionV1`, `SparkJobDefinitionV2`). Optional.
 - `-f, --force`: Force import without confirmation. Optional.
 
 **Example:**
