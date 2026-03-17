@@ -32,7 +32,7 @@ WEB_URI = "https://app.powerbi.com/groups"
 FAB_VERSION = __version__
 
 # Scopes
-SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
+SCOPE_FABRIC_DEFAULT = ["https://api.fabric.microsoft.com/.default"]
 SCOPE_ONELAKE_DEFAULT = ["https://storage.azure.com/.default"]
 SCOPE_AZURE_DEFAULT = ["https://management.azure.com/.default"]
 
@@ -183,6 +183,7 @@ COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
 COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
 COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
+COMMAND_FS_DEPLOY_DESCRIPTION = "Deploy items using a configuration file."
 COMMAND_FS_SET_DESCRIPTION = "Set workspace or item properties."
 COMMAND_FS_CLEAR_DESCRIPTION = "Clear the terminal screen."
 COMMAND_FS_LN_DESCRIPTION = "Create a shortcut."
@@ -217,7 +218,7 @@ WARNING_INVALID_PATHS = (
 )
 WARNING_NOT_SUPPORTED_PATHS = "mv is not supported for the specified source and destination items types. Check your paths"
 WARNING_INVALID_SPECIAL_CHARACTERS = (
-    "Special caracters not supported for this item type"
+    "Special characters not supported for this item type"
 )
 WARNING_INVALID_LS_ONELAKE = "No more subdirectories supported for this item"
 WARNING_INVALID_JSON_FORMAT = "Invalid JSON format"
@@ -282,6 +283,7 @@ ERROR_UNAUTHORIZED = "Unauthorized"
 ERROR_UNIVERSAL_SECURITY_DISABLED = "UniversalSecurityDisabled"
 ERROR_SPN_AUTH_MISSING = "ServicePrincipalAuthMissing"
 ERROR_JOB_FAILED = "JobFailed"
+ERROR_IN_DEPLOYMENT = "DeploymentFailed"
 
 # Exit codes
 EXIT_CODE_SUCCESS = 0

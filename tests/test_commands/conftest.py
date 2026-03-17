@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -41,7 +42,7 @@ from tests.test_commands.processors import (
 )
 from tests.test_commands.utils import cli_path_join, set_vcr_mode_env
 
-item_type_paramerter = pytest.mark.parametrize("item_type", [
+ALL_ITEM_TYPES = [
     ItemType.DATA_PIPELINE,
     ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
@@ -52,15 +53,155 @@ item_type_paramerter = pytest.mark.parametrize("item_type", [
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
     ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
-])
+]
+
+item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
 
 basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
-    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION, ItemType.COSMOS_DB_DATABASE,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
 ])
 
+rm_item_without_force_cancel_operation_success_params = pytest.mark.parametrize("item_type", [
+    item_type for item_type in ALL_ITEM_TYPES if item_type != ItemType.REPORT
+])
+
+unsupported_item_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.DASHBOARD,
+    ItemType.DATAMART,
+    ItemType.MIRRORED_WAREHOUSE,
+    ItemType.PAGINATED_REPORT,
+    ItemType.SQL_ENDPOINT,
+])
+
+mkdir_item_with_creation_payload_success_params = pytest.mark.parametrize("item_type,params,expected_assertions", [
+    (ItemType.LAKEHOUSE, "enableSchemas=true", ["defaultSchema"]),
+    (ItemType.WAREHOUSE, "enableCaseInsensitive=true",
+        ["Latin1_General_100_CI_AS_KS_WS_SC_UTF8"]),
+    (ItemType.WAREHOUSE, "", ["Latin1_General_100_BIN2_UTF8"]),
+    (ItemType.REPORT, "", ["_auto"]),
+])
+
+mv_item_to_item_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
+mv_item_to_item_unsupported_failure_params = pytest.mark.parametrize("unsupported_item_type", [
+    ItemType.EVENTHOUSE,
+    ItemType.KQL_DATABASE,
+    ItemType.EVENTSTREAM,
+])
+
+mv_item_to_item_type_mismatch_failure_params = pytest.mark.parametrize("source_type,target_type", [
+    (ItemType.NOTEBOOK, ItemType.DATA_PIPELINE),
+    (ItemType.REPORT, ItemType.LAKEHOUSE),
+    (ItemType.SEMANTIC_MODEL, ItemType.WAREHOUSE)
+])
+
+mv_item_within_workspace_rename_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+])
+
+get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
+    (ItemType.ENVIRONMENT, [
+        "properties", "publishDetails", "connections", "published", "staging"]),
+    (ItemType.LAKEHOUSE, ["properties", "oneLakeTablesPath",
+                          "oneLakeFilesPath", "sqlEndpointProperties"]),
+    (ItemType.WAREHOUSE, ["properties"]),
+    (ItemType.KQL_DATABASE, ["properties"]),
+    (ItemType.SQL_DATABASE, ["properties"]),
+    (ItemType.MIRRORED_DATABASE, [
+        "definition", "connections", "status", "tablesStatus"]),
+])
+
+get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,expects_warning", [
+    (ItemType.MIRRORED_DATABASE, True),
+    (ItemType.NOTEBOOK, True),
+    (ItemType.DATA_PIPELINE, True),
+    (ItemType.LAKEHOUSE, False),
+    (ItemType.ENVIRONMENT, False),
+    (ItemType.WAREHOUSE, False),
+    (ItemType.COSMOS_DB_DATABASE, True),
+    (ItemType.USER_DATA_FUNCTION, True),
+    (ItemType.GRAPH_QUERY_SET, True)
+])
+
+get_virtual_workspace_success_params = pytest.mark.parametrize("virtual_workspace_type,expected_properties", [
+    (VirtualWorkspaceType.DOMAIN, [
+        "contributorsScope", "domainWorkspaces"]),
+    (VirtualWorkspaceType.GATEWAY, [
+        "type", "capacityId", "numberOfMemberGateways"]),
+])
+
+set_item_metadata_success_params_complete = pytest.mark.parametrize(
+    "metadata_to_set,should_upsert_to_cache",
+    [
+        ("description", False),
+        ("displayName", True),
+    ],
+)
+
+set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
+    ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
+])
+
+set_item_metadata_success_params = pytest.mark.parametrize(
+    "metadata_to_set", ["description", "displayName"])
+
+set_workspace_success_params = pytest.mark.parametrize(
+    "metadata_to_set, input_value",
+    [
+        ("sparkSettings.automaticLog.enabled", "false"),
+    ],
+)
+
+set_sparkpool_success_params = pytest.mark.parametrize(
+    "metadata_to_set, input_value",
+    [
+        ("nodeSize", "Medium"),
+        ("autoScale.enabled", "True"),
+        ("autoScale.minNodeCount", "2"),
+        ("autoScale.maxNodeCount", "5"),
+        ("name", None),  # Use None to trigger generate_random_string
+    ],
+)
+
+set_capacity_success_params = pytest.mark.parametrize(
+    "query, input", [("sku.name", "F4")])
+
+set_domain_success_params = pytest.mark.parametrize(
+    "query, input", [("contributorsScope", "AdminsOnly")])
+
+set_connection_metadata_success_params = pytest.mark.parametrize(
+    "metadata_to_set,input_value",
+    [
+        ("privacyLevel", "Organizational"),
+    ],
+)
+
+set_gateway_virtualNetwork_success_params = pytest.mark.parametrize(
+    "query,input",
+    [
+        ("numberOfMemberGateways", "2"),
+        ("inactivityMinutesBeforeSleep", "60"),
+        ("displayName", None),  # Use None to trigger generate_random_string
+    ],
+)
+
+set_folder_success_params = pytest.mark.parametrize(
+    "query, input", [("displayName", "randomFolder")])
 # Export command parametrizations
 export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expected_file_extension", [
     (ItemType.NOTEBOOK, ".ipynb"),
@@ -139,6 +280,33 @@ assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("e
     (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", "{}.full_path"),
 ])
 
+command_ls_parameters = pytest.mark.parametrize("command", ["ls", "dir"])
+
+ls_item_folders_success_params = pytest.mark.parametrize(
+    "item_type, expected_folders",
+    [
+        (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+        (ItemType.COSMOS_DB_DATABASE, ["Files", "Tables", "Code", "Audit"]),
+        (ItemType.LAKEHOUSE, ["Files", "Tables", "TableMaintenance"]),
+        (ItemType.WAREHOUSE, ["Files", "Tables"]),
+        (ItemType.SPARK_JOB_DEFINITION, ["Libs", "Main", "Snapshots"]),
+        (ItemType.KQL_DATABASE, ["Tables", "Shortcut"]),
+        (ItemType.SQL_DATABASE, ["Tables", "Files", "Code"]),
+    ]
+)
+
+ls_folder_content_success_params = pytest.mark.parametrize("item_type", [
+    ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT, ItemType.EVENTHOUSE, ItemType.EVENTSTREAM,
+    ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
+    ItemType.LAKEHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
+    ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
+    ItemType.REFLEX, ItemType.GRAPHQLAPI,
+    ItemType.SQL_DATABASE, ItemType.SEMANTIC_MODEL,
+    ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.GRAPH_QUERY_SET,
+])
+
 ONELAKE_FOLDER_PARAMS = [
     (ItemType.LAKEHOUSE, "Files", True),
     (ItemType.LAKEHOUSE, "Tables", True),
@@ -172,6 +340,11 @@ FILTER_HEADERS = [
     "x-ms-served-by",
     "x-ms-authorization-auxiliary",
 ]
+
+unassign_failure_params = pytest.mark.parametrize("entity_type,factory_key,path_template", [
+    (VirtualWorkspaceType.CAPACITY, "test_data", "/.capacities/{}.Capacity"),
+    (VirtualWorkspaceType.DOMAIN, "virtual_workspace_item_factory", None),
+])
 
 
 def pytest_addoption(parser):
@@ -300,6 +473,16 @@ def set_test_user_agent(monkeypatch):
             f"{fab_constant.API_USER_AGENT_TEST}/{fab_constant.FAB_VERSION}"
         )
         kwargs["headers"] = headers
+
+        # Handle json parameter when it's a string (fix for fabric_cicd compatibility)
+        json_param = kwargs.get("json")
+        if isinstance(json_param, str) and json_param.strip().startswith(('{', '[')):
+            try:
+                import json
+                kwargs["json"] = json.loads(json_param)
+            except json.JSONDecodeError:
+                # If parsing fails, leave it as-is
+                pass
 
         # Call the original request method with updated headers
         return original_request(self, method, url, *args, **kwargs)
@@ -729,8 +912,24 @@ def mock_fab_logger_log_warning():
 def mock_get_access_token(vcr_mode):
     if vcr_mode == "none":
         fab_auth_instance = FabAuth()  # Singleton
+
+        # Mock JWT token in proper format for fabric-cicd library validation
+        # This is a minimal valid JWT structure: header.payload.signature
+        mock_jwt_token = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Im1vY2tfdXNlciIsImV4cCI6OTk5OTk5OTk5OX0."
+            "mock_signature"
+        )
+
+        # Mock acquire_token since both get_access_token() and MSAL bridge use it
+        mock_msal_result = {
+            "access_token": mock_jwt_token,
+            "expires_on": "9999999999",  # Far future timestamp
+            "expires_in": 3600
+        }
+
         with patch.object(
-            fab_auth_instance, "get_access_token", return_value="mocked_access_token"
+            fab_auth_instance, "acquire_token", return_value=mock_msal_result
         ) as mock:
             yield mock
     else:
@@ -815,5 +1014,100 @@ def setup_config_values_for_capacity(test_data: StaticTestData):
     state_config.set_config(
         fab_constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
 
+
+def _create_config_file(
+    tmp_path,
+    *,
+    workspace_name,
+    repository_dir,
+    item_types=[ItemType.NOTEBOOK.value],
+    target_env=None,
+    parameter_file=None,
+    config_name="config.yml"
+):
+    """Helper function for creating deploy configuration files with specified parameters.
+    
+    Args:
+        tmp_path: Temporary path for file creation
+        workspace_name: Name of the workspace
+        repository_dir: Path to the repository directory
+        item_types: List of item types in scope (defaults to [ItemType.NOTEBOOK.value])
+        target_env: Target environment name (if None, workspace_name is used directly)
+        parameter_file: Path to parameter file (optional)
+        config_name: Name of the config file to create
+        
+    Returns:
+        Path to the created configuration file
+    """
+    config_path = tmp_path / config_name
+
+    config_data = {
+        "core": {
+            "workspace": {
+                target_env: workspace_name
+            } if target_env else workspace_name,
+            "repository_directory": str(repository_dir),
+            "item_types_in_scope": item_types
+        },
+        "publish": {
+            "skip": {
+                target_env: False
+            } if target_env else False
+        }
+    }
+
+    if parameter_file:
+        config_data["core"]["parameter"] = str(parameter_file)
+
+    import yaml
+    with open(config_path, 'w') as f:
+        yaml.dump(config_data, f, default_flow_style=False)
+
+    return config_path
+
+
+@pytest.fixture
+def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
+    """Factory for setting up complete deploy scenarios with items, config files, and repositories."""
+    def _factory(
+        *,
+        target_env="dev",
+        item_types=[ItemType.NOTEBOOK],
+        parameter_file=None,
+        path_override=None,
+    ):
+        """Create a complete deploy scenario with items, repository, and config file.
+        
+        Args:
+            item_type: Type of item to create (backwards compatibility, deprecated)
+            target_env: Target environment name
+            item_types: List of item type strings for config and creation
+            parameter_file: Path to parameter file (optional)
+            path_override: Path to override the default repository directory (optional)
+        Returns:
+            Path to the created configuration file
+        """
+        from fabric_cli.core.fab_types import ItemType
+
+        path = Path(path_override) if path_override else tmp_path
+        repository_dir = path / "repo"
+        repository_dir.mkdir(parents=True, exist_ok=True)
+
+        for item_type in item_types:
+            item = item_factory(item_type)
+            cli_executor.exec_command(
+                f"export {item.full_path} --output {str(repository_dir)} {('--format .py' if item_type == ItemType.NOTEBOOK else '')} --force"
+            )
+
+        return _create_config_file(
+            tmp_path,
+            workspace_name=workspace.display_name,
+            repository_dir=repository_dir,
+            item_types=[item_type.value for item_type in item_types],
+            target_env=target_env,
+            parameter_file=parameter_file,
+        )
+
+    return _factory
 
 # endregion

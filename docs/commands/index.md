@@ -65,6 +65,7 @@ It supports both Unix-style and Windows-style command names for file system oper
 | [`start`](./fs/start.md) | Start a resource |
 | [`stop`](./fs/stop.md) | Stop a resource |
 | [`unassign`](./fs/unassign.md) | Unassign a resource from a workspace |
+| [`deploy`](./fs/deploy.md) | Deploy Fabric workspace items from local source content into a target Microsoft Fabric workspace. |
 
 #### [Table Management (table)](tables/index.md)
 Commands for working with tables in lakehouses, including operations like loading data, optimizing tables, and managing schemas.
