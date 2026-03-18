@@ -12,7 +12,7 @@ fab find <query> [-P <params>] [-l] [-q <query>]
 
 - `<query>`: Search text. Matches display name, description, and workspace name.
 - `-P, --params`: Filter parameters in `key=value` or `key!=value` format. Use brackets for multiple values: `type=[Lakehouse,Notebook]`. Use `!=` to exclude: `type!=Dashboard`.
-- `-l, --long`: Show detailed output including IDs. Optional.
+- `-l, --long`: Show detailed table with IDs (name, id, type, workspace, workspace_id, description). Optional.
 - `-q, --query`: JMESPath query to filter results client-side. Optional.
 
 **Examples:**
