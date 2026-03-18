@@ -307,17 +307,21 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
 
     display_items = []
     for item in items:
-        entry = {
-            "name": item.get("displayName") or item.get("name"),
-            "type": item.get("type"),
-            "workspace": item.get("workspaceName"),
-        }
         if show_details:
-            entry["id"] = item.get("id")
-            entry["workspace_id"] = item.get("workspaceId")
-            if item.get("description"):
-                entry["description"] = item.get("description")
-        elif has_descriptions:
+            entry = {
+                "name": item.get("displayName") or item.get("name"),
+                "id": item.get("id"),
+                "type": item.get("type"),
+                "workspace": item.get("workspaceName"),
+                "workspace_id": item.get("workspaceId"),
+            }
+        else:
+            entry = {
+                "name": item.get("displayName") or item.get("name"),
+                "type": item.get("type"),
+                "workspace": item.get("workspaceName"),
+            }
+        if has_descriptions:
             entry["description"] = item.get("description") or ""
         display_items.append(entry)
 
@@ -327,7 +331,4 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
     if getattr(args, "query", None):
         display_items = utils_jmespath.search(display_items, args.query)
 
-    if show_details:
-        utils_ui.print_output_format(args, data=display_items, show_key_value_list=True)
-    else:
-        utils_ui.print_output_format(args, data=display_items, show_headers=True)
+    utils_ui.print_output_format(args, data=display_items, show_headers=True)

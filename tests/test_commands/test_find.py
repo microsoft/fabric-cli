@@ -430,8 +430,8 @@ class TestFindE2E:
 
         mock_questionary_print.assert_called()
         output = str(mock_questionary_print.call_args_list)
-        # Long output should contain ID and Workspace ID fields
-        assert "ID:" in output
+        # Long output table should contain id and workspace_id columns
+        assert "id" in output
 
     def test_find_no_results(
         self,
