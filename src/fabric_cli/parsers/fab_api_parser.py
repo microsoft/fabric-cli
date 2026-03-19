@@ -3,9 +3,11 @@
 
 from argparse import _SubParsersAction
 
-from fabric_cli.commands.api import fab_api as api
 from fabric_cli.core import fab_constant
 from fabric_cli.utils import fab_error_parser as utils_error_parser
+from fabric_cli.utils.fab_lazy_load import lazy_command
+
+_api_module_path = "fabric_cli.commands.api.fab_api"
 
 
 def register_parser(subparsers: _SubParsersAction) -> None:
@@ -73,4 +75,4 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     api_parser.usage = f"{utils_error_parser.get_usage_prog(api_parser)}"
-    api_parser.set_defaults(func=api.request_command)
+    api_parser.set_defaults(func=lazy_command(_api_module_path, 'request_command'))
