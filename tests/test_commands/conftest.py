@@ -262,6 +262,7 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.GRAPH_QUERY_SET, ".txt")
 ])
 
+# TODO: Fix capacity teardown issue CannotOverwriteExistingCassetteException & uncomment the item parameter
 cp_virtual_workspace_item_failure_params = pytest.mark.parametrize("virtual_workspace_type", [
     VirtualWorkspaceType.DOMAIN,
     # VirtualWorkspaceType.CAPACITY,
@@ -765,7 +766,6 @@ def virtual_workspace_item_factory(
     vcr_instance,
     cassette_name,
     test_data: StaticTestData,
-    vcr_mode,
 ):
     # Keep track of all workspaces created during this test
     created_virtual_workspace_items = []
