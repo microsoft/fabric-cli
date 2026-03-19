@@ -101,25 +101,12 @@ class TestBuildSearchPayload:
         assert payload["pageSize"] == 1000
         assert "filter" not in payload
 
-    def test_query_with_single_type(self):
-        args = Namespace(search_text="report", params="type=Report", query=None)
-        payload = fab_find._build_search_payload(args, is_interactive=False)
-
-        assert payload["search"] == "report"
-        assert payload["filter"] == "Type eq 'Report'"
-
     def test_query_with_multiple_types(self):
         args = Namespace(search_text="data", params="type=[Lakehouse,Warehouse]", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
 
         assert payload["search"] == "data"
         assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
-
-    def test_query_with_ne_single_type(self):
-        args = Namespace(search_text="data", params="type!=Dashboard", query=None)
-        payload = fab_find._build_search_payload(args, is_interactive=False)
-
-        assert payload["filter"] == "Type ne 'Dashboard'"
 
     def test_query_with_ne_multiple_types(self):
         args = Namespace(search_text="data", params="type!=[Dashboard,Datamart]", query=None)
@@ -163,24 +150,6 @@ class TestParseTypeFromParams:
         args = Namespace(params="type!=Dashboard")
         result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "ne", "values": ["Dashboard"]}
-
-    def test_invalid_format_raises_error(self):
-        args = Namespace(params="notakeyvalue")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "Invalid parameter" in str(exc_info.value)
-
-    def test_unknown_param_raises_error(self):
-        args = Namespace(params="foo=bar")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "isn't a supported parameter" in str(exc_info.value)
-
-    def test_unknown_param_ne_raises_error(self):
-        args = Namespace(params="foo!=bar")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "isn't a supported parameter" in str(exc_info.value)
 
     def test_unsupported_type_eq_raises_error(self):
         args = Namespace(params="type=Dashboard")
@@ -516,3 +485,71 @@ class TestFindE2E:
         )
         assert "Dashboard" in all_output
         assert "not supported" in all_output
+
+    def test_find_invalid_param_format_failure(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        mock_fab_ui_print_error,
+    ):
+        """Search with malformed -P value shows error."""
+        cli_executor.exec_command("find 'data' -P notakeyvalue")
+
+        all_output = (
+            str(mock_questionary_print.call_args_list)
+            + str(mock_print_grey.call_args_list)
+            + str(mock_fab_ui_print_error.call_args_list)
+        )
+        assert "Invalid parameter" in all_output
+
+    def test_find_unsupported_param_failure(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        mock_fab_ui_print_error,
+    ):
+        """Search with unknown param key shows error."""
+        cli_executor.exec_command("find 'data' -P foo=bar")
+
+        all_output = (
+            str(mock_questionary_print.call_args_list)
+            + str(mock_print_grey.call_args_list)
+            + str(mock_fab_ui_print_error.call_args_list)
+        )
+        assert "foo" in all_output
+        assert "supported parameter" in all_output
+
+    def test_find_unsupported_param_ne_failure(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        mock_fab_ui_print_error,
+    ):
+        """Search with unknown param key using != shows error."""
+        cli_executor.exec_command("find 'data' -P foo!=bar")
+
+        all_output = (
+            str(mock_questionary_print.call_args_list)
+            + str(mock_print_grey.call_args_list)
+            + str(mock_fab_ui_print_error.call_args_list)
+        )
+        assert "foo" in all_output
+        assert "supported parameter" in all_output
+
+    def test_find_with_jmespath_query_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with -q JMESPath query filters results locally."""
+        cli_executor.exec_command("""find 'data' -q "[?type=='Report']" """)
+
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["Report"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
