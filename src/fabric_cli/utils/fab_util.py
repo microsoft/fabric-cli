@@ -76,7 +76,7 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     # Result ['key1.key2=hello', 'key2={"hello":"testing","bye":2}', 'key3=[1,2,3]', 'key4={"key5":"value5"}']
     # Example key1.key2=hello
     # Result ['key1.key=hello']
-    pattern = r"((?:[\w\.]+=.+?)(?=(?:,\s*[\w\.]+=)|$))"
+    pattern = r"((?:[\w\.]+!?=.+?)(?=(?:,\s*[\w\.]+!?=)|$))"
 
     if params:
         if isinstance(params, list):
@@ -90,7 +90,7 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
         matches = re.findall(pattern, norm_params)
         if not matches:
             raise FabricCLIError(
-                ErrorMessages.Config.invalid_parameter_format(norm_params),
+                ErrorMessages.Common.invalid_parameter_format(norm_params),
                 fab_constant.ERROR_INVALID_INPUT,
             )
 

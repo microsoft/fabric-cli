@@ -36,9 +36,6 @@ fab find 'sales' -l
 # combine filters
 fab find 'finance' -P type=[Warehouse,Lakehouse] -l
 
-# filter results client-side with JMESPath
-fab find 'sales' -q "[?type=='Report']"
-
 # project specific fields
 fab find 'data' -q "[].{name: name, workspace: workspace}"
 ```
@@ -56,8 +53,3 @@ fab find 'data' -q "[].{name: name, workspace: workspace}"
 |-----------|-------------|
 | `type`    | Filter by item type. Supports `eq` (default) and `ne` (`!=`) operators. |
 
-**Notes:**
-
-- Requires `Catalog.Read.All` scope.
-- Dashboard items are not searchable via the Catalog Search API.
-- Scorecards are returned as type `Report`.

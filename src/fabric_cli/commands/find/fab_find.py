@@ -77,6 +77,14 @@ def _fetch_results(args: Namespace, payload: dict[str, Any]) -> tuple[list[dict]
     return items, continuation_token
 
 
+def _print_search_summary(count: int, has_more: bool = False) -> None:
+    """Print the search result summary line."""
+    count_msg = f"{count} item(s) found" + (" (more available)" if has_more else "")
+    utils_ui.print_grey("")
+    utils_ui.print_grey(count_msg)
+    utils_ui.print_grey("")
+
+
 def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
@@ -84,17 +92,14 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
     while has_more:
         items, continuation_token = _fetch_results(args, payload)
-        has_more = continuation_token is not None
 
         if not items and total_count == 0:
             utils_ui.print_grey("No items found.")
             return
 
         total_count += len(items)
-        count_msg = f"{len(items)} item(s) found" + (" (more available)" if has_more else "")
-        utils_ui.print_grey("")
-        utils_ui.print_grey(count_msg)
-        utils_ui.print_grey("")
+        has_more = continuation_token is not None
+        _print_search_summary(len(items), has_more)
 
         _display_items(args, items)
 
@@ -131,9 +136,7 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
         utils_ui.print_grey("No items found.")
         return
 
-    utils_ui.print_grey("")
-    utils_ui.print_grey(f"{len(all_items)} item(s) found")
-    utils_ui.print_grey("")
+    _print_search_summary(len(all_items))
 
     _display_items(args, all_items)
 
@@ -164,41 +167,6 @@ def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, An
     return request
 
 
-def _split_params(params_str: str) -> list[str]:
-    """Split comma-separated params, respecting bracket groups.
-
-    Handles legacy comma syntax: type=Report,Lakehouse stays as one param
-    because 'Lakehouse' alone has no '=' sign.
-    """
-    parts: list[str] = []
-    current: list[str] = []
-    depth = 0
-    for char in params_str:
-        if char == "[":
-            depth += 1
-        elif char == "]":
-            depth -= 1
-        elif char == "," and depth == 0:
-            parts.append("".join(current).strip())
-            current = []
-            continue
-        current.append(char)
-    if current:
-        parts.append("".join(current).strip())
-
-    # Merge parts without '=' back into the previous part (legacy comma values)
-    merged: list[str] = []
-    for part in parts:
-        if not part:
-            continue
-        if merged and "=" not in part:
-            merged[-1] = merged[-1] + "," + part
-        else:
-            merged.append(part)
-
-    return [p for p in merged if p]
-
-
 def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
     """Extract and validate item types from -P params.
 
@@ -207,7 +175,6 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
         -P type=[Report,Lakehouse]  → eq multiple (or)
         -P type!=Dashboard          → ne single
         -P type!=[Dashboard,Report] → ne multiple (and)
-    Legacy comma syntax also supported: -P type=Report,Lakehouse
 
     Returns dict with 'operator' ('eq' or 'ne') and 'values' list, or None.
     """
@@ -219,46 +186,34 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
     if isinstance(params_str, list):
         params_str = ",".join(params_str)
 
-    params = _split_params(params_str)
+    params_dict = utils.get_dict_from_params(params_str)
 
+    # Check for type key (with or without ! for ne operator)
     type_value = None
     operator = "eq"
-    for param in params:
-        if "!=" in param:
-            key, value = param.split("!=", 1)
-            if key.lower() == "type":
-                type_value = value
-                operator = "ne"
-            else:
-                raise FabricCLIError(
-                    ErrorMessages.Find.unsupported_parameter(key),
-                    fab_constant.ERROR_INVALID_INPUT,
-                )
-        elif "=" in param:
-            key, value = param.split("=", 1)
-            if key.lower() == "type":
-                type_value = value
-                operator = "eq"
-            else:
-                raise FabricCLIError(
-                    ErrorMessages.Find.unsupported_parameter(key),
-                    fab_constant.ERROR_INVALID_INPUT,
-                )
+    for key, value in params_dict.items():
+        # get_dict_from_params splits on first "=", so "type!=X" becomes key="type!", value="X"
+        clean_key = key.rstrip("!")
+        is_ne = key.endswith("!")
+
+        if clean_key.lower() == "type":
+            type_value = value
+            operator = "ne" if is_ne else "eq"
         else:
             raise FabricCLIError(
-                ErrorMessages.Find.invalid_parameter_format(param),
+                ErrorMessages.Common.unsupported_parameter(clean_key),
                 fab_constant.ERROR_INVALID_INPUT,
             )
 
     if not type_value:
         return None
 
-    # Parse bracket syntax: [val1,val2] or plain: val1 or legacy: val1,val2
+    # Parse bracket syntax: [val1,val2] or plain: val1
     if type_value.startswith("[") and type_value.endswith("]"):
         inner = type_value[1:-1]
         types = [t.strip() for t in inner.split(",") if t.strip()]
     else:
-        types = [t.strip() for t in type_value.split(",") if t.strip()]
+        types = [type_value.strip()]
 
     all_types_lower = {t.lower(): t for t in ALL_ITEM_TYPES}
     unsupported_lower = {t.lower() for t in UNSUPPORTED_ITEM_TYPES}
@@ -268,7 +223,7 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
         if t_lower in unsupported_lower and operator == "eq":
             canonical = all_types_lower.get(t_lower, t)
             raise FabricCLIError(
-                ErrorMessages.Find.unsearchable_type(canonical),
+                ErrorMessages.Common.type_not_supported(canonical),
                 fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
             )
         if t_lower not in all_types_lower:
@@ -288,10 +243,10 @@ def _raise_on_error(response) -> None:
     if response.status_code != 200:
         try:
             error_data = json.loads(response.text)
-            error_code = error_data.get("errorCode", "UnknownError")
+            error_code = error_data.get("errorCode", fab_constant.ERROR_UNEXPECTED_ERROR)
             error_message = error_data.get("message", response.text)
         except json.JSONDecodeError:
-            error_code = "UnknownError"
+            error_code = fab_constant.ERROR_UNEXPECTED_ERROR
             error_message = response.text
 
         raise FabricCLIError(

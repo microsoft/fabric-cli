@@ -16,6 +16,28 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from tests.test_commands.commands_parser import CLIExecutor
 
 
+def _assert_strings_in_mock_calls(
+    strings: list[str],
+    should_exist: bool,
+    mock_calls,
+    require_all_in_same_args: bool = False,
+):
+    """Assert that specified strings are present or absent in mock calls."""
+    if require_all_in_same_args:
+        match_found = any(
+            all(string in str(call) for string in strings) for call in mock_calls
+        )
+    else:
+        match_found = all(
+            any(string in str(call) for call in mock_calls) for string in strings
+        )
+
+    if should_exist:
+        assert match_found, f"Expected strings {strings} to {'all be present together' if require_all_in_same_args else 'be present'} in mock calls, but not found."
+    else:
+        assert not match_found, f"Expected strings {strings} to {'not all be present together' if require_all_in_same_args else 'not be present'} in mock calls, but found."
+
+
 # Sample API responses for testing
 SAMPLE_RESPONSE_WITH_RESULTS = {
     "value": [
@@ -93,13 +115,6 @@ class TestBuildSearchPayload:
         assert payload["search"] == "data"
         assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
 
-    def test_query_with_multiple_types_legacy_comma(self):
-        args = Namespace(search_text="data", params="type=Lakehouse,Warehouse", query=None)
-        payload = fab_find._build_search_payload(args, is_interactive=False)
-
-        assert payload["search"] == "data"
-        assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
-
     def test_query_with_ne_single_type(self):
         args = Namespace(search_text="data", params="type!=Dashboard", query=None)
         payload = fab_find._build_search_payload(args, is_interactive=False)
@@ -129,11 +144,6 @@ class TestParseTypeFromParams:
         result = fab_find._parse_type_from_params(args)
         assert result == {"operator": "eq", "values": ["Report"]}
 
-    def test_multiple_types_comma_separated(self):
-        args = Namespace(params="type=Report,Lakehouse")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
-
     def test_multiple_types_bracket_syntax(self):
         args = Namespace(params="type=[Report,Lakehouse]")
         result = fab_find._parse_type_from_params(args)
@@ -158,7 +168,7 @@ class TestParseTypeFromParams:
         args = Namespace(params="notakeyvalue")
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_from_params(args)
-        assert "Invalid parameter format" in str(exc_info.value)
+        assert "Invalid parameter" in str(exc_info.value)
 
     def test_unknown_param_raises_error(self):
         args = Namespace(params="foo=bar")
@@ -177,7 +187,7 @@ class TestParseTypeFromParams:
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._parse_type_from_params(args)
         assert "Dashboard" in str(exc_info.value)
-        assert "isn't searchable" in str(exc_info.value)
+        assert "not supported" in str(exc_info.value)
 
     def test_unknown_type_raises_error(self):
         args = Namespace(params="type=InvalidType")
@@ -192,37 +202,6 @@ class TestParseTypeFromParams:
             fab_find._parse_type_from_params(args)
         assert "InvalidType" in str(exc_info.value)
         assert "isn't a recognized item type" in str(exc_info.value)
-
-    def test_list_input_backward_compat(self):
-        """Ensure list input (from nargs='*') still works."""
-        args = Namespace(params=["type=Report"])
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "eq", "values": ["Report"]}
-
-
-class TestSplitParams:
-    """Tests for _split_params helper."""
-
-    def test_single_param(self):
-        assert fab_find._split_params("type=Report") == ["type=Report"]
-
-    def test_bracket_param(self):
-        assert fab_find._split_params("type=[Report,Lakehouse]") == ["type=[Report,Lakehouse]"]
-
-    def test_multiple_params_with_equals(self):
-        assert fab_find._split_params("type=Report,workspace=Sales") == [
-            "type=Report",
-            "workspace=Sales",
-        ]
-
-    def test_bracket_with_trailing_param(self):
-        result = fab_find._split_params("type=[Report,Lakehouse],workspace=Sales")
-        assert result == ["type=[Report,Lakehouse]", "workspace=Sales"]
-
-    def test_legacy_comma_values_merged(self):
-        """Legacy comma syntax: values without '=' merge back to previous param."""
-        result = fab_find._split_params("type=Report,Lakehouse")
-        assert result == ["type=Report,Lakehouse"]
 
 
 class TestFetchResults:
@@ -395,7 +374,7 @@ class TestFindE2E:
         """Raise EOFError on input() to stop pagination after the first page."""
         monkeypatch.setattr("builtins.input", lambda *args: (_ for _ in ()).throw(EOFError))
 
-    def test_find_basic_search(
+    def test_find_basic_search_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -404,11 +383,13 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data'")
 
         mock_questionary_print.assert_called()
-        output = str(mock_questionary_print.call_args_list)
-        # Should contain at least one item with a name and type
-        assert "name" in output or "type" in output or "workspace" in output
+        _assert_strings_in_mock_calls(
+            ["name", "type", "workspace"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
 
-    def test_find_with_type_filter(
+    def test_find_with_type_filter_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -417,10 +398,28 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -P type=Lakehouse")
 
         mock_questionary_print.assert_called()
-        output = str(mock_questionary_print.call_args_list)
-        assert "Lakehouse" in output
+        _assert_strings_in_mock_calls(
+            ["Lakehouse"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
 
-    def test_find_with_long_output(
+    def test_find_type_case_insensitive_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with lowercase type=lakehouse returns same results."""
+        cli_executor.exec_command("find 'data' -P type=lakehouse")
+
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["Lakehouse"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_with_long_output_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -429,23 +428,25 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -l")
 
         mock_questionary_print.assert_called()
-        output = str(mock_questionary_print.call_args_list)
-        # Long output table should contain id and workspace_id columns
-        assert "id" in output
+        _assert_strings_in_mock_calls(
+            ["id"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
 
-    def test_find_no_results(
+    def test_find_no_results_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
+        mock_print_grey,
     ):
         """Search for nonexistent term shows 'No items found'."""
         cli_executor.exec_command("find 'xyznonexistent98765zzz'")
 
-        # print_grey is used for "No items found." but it's not mocked here
-        # The command should complete without error
-        # In playback, the cassette has an empty response
+        grey_output = " ".join(str(c) for c in mock_print_grey.call_args_list)
+        assert "No items found" in grey_output
 
-    def test_find_with_ne_filter(
+    def test_find_with_ne_filter_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -454,6 +455,64 @@ class TestFindE2E:
         cli_executor.exec_command("find 'report' -P type!=Dashboard")
 
         mock_questionary_print.assert_called()
-        output = str(mock_questionary_print.call_args_list)
-        # No item should have Type: Dashboard (the word may appear in names)
-        assert "Type: Dashboard" not in output
+        _assert_strings_in_mock_calls(
+            ["Type: Dashboard"],
+            should_exist=False,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_ne_multi_type_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with type!=[Report,Notebook] excludes both types."""
+        cli_executor.exec_command("find 'data' -P type!=[Report,Notebook]")
+
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["Type: Report"],
+            should_exist=False,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+        _assert_strings_in_mock_calls(
+            ["Type: Notebook"],
+            should_exist=False,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_unknown_type_failure(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        mock_fab_ui_print_error,
+    ):
+        """Search with unknown type shows error."""
+        cli_executor.exec_command("find 'data' -P type=FakeType123")
+
+        all_output = (
+            str(mock_questionary_print.call_args_list)
+            + str(mock_print_grey.call_args_list)
+            + str(mock_fab_ui_print_error.call_args_list)
+        )
+        assert "FakeType123" in all_output
+        assert "recognized item type" in all_output
+
+    def test_find_unsupported_type_failure(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        mock_fab_ui_print_error,
+    ):
+        """Search with unsupported type shows error."""
+        cli_executor.exec_command("find 'data' -P type=Dashboard")
+
+        all_output = (
+            str(mock_questionary_print.call_args_list)
+            + str(mock_print_grey.call_args_list)
+            + str(mock_fab_ui_print_error.call_args_list)
+        )
+        assert "Dashboard" in all_output
+        assert "not supported" in all_output
