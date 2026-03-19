@@ -15,7 +15,6 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.commands_parser import CLIExecutor
-from tests.test_commands.processors import cassette_resource_counters
 from tests.test_commands.utils import cli_path_join
 from tests.test_commands.conftest import (
     import_update_existing_item_success_params,
@@ -28,11 +27,6 @@ new_name_index = 1
 
 
 class TestImport:
-
-    @pytest.fixture(scope="class", autouse=True)
-    def reset_counter(self):
-        cassette_resource_counters.clear()
-        yield
 
     # region Parametrized Tests
     @import_update_existing_item_success_params
