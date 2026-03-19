@@ -3,10 +3,12 @@
 
 from argparse import Namespace, _SubParsersAction
 
-from fabric_cli.commands.tables import fab_tables as tables
 from fabric_cli.core import fab_constant
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_lazy_load import lazy_command
+
+_tables_module_path = "fabric_cli.commands.tables.fab_tables"
 
 commands = {
     "Commands": {
@@ -42,7 +44,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     schema_parser.add_argument("path", nargs="+", help="Path to the Delta Lake table")
 
     schema_parser.usage = f"{utils_error_parser.get_usage_prog(schema_parser)}"
-    schema_parser.set_defaults(func=tables.schema_command)
+    schema_parser.set_defaults(func=lazy_command(_tables_module_path, 'schema_command'))
 
     # Subcommand for 'load'
     load_examples = [
@@ -81,7 +83,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Format options in key=value format, separated by commas. Optional, default: format=csv,header=true,delimiter=','",
     )
     load_parser.usage = f"{utils_error_parser.get_usage_prog(load_parser)}"
-    load_parser.set_defaults(func=tables.load_command)
+    load_parser.set_defaults(func=lazy_command(_tables_module_path, 'load_command'))
 
     # Subcommand for 'vacuum'
     vacuum_examples = [
@@ -108,7 +110,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     vacuum_parser.usage = f"{utils_error_parser.get_usage_prog(vacuum_parser)}"
-    vacuum_parser.set_defaults(func=tables.vacuum_command)
+    vacuum_parser.set_defaults(func=lazy_command(_tables_module_path, 'vacuum_command'))
 
     # Subcommand for 'optimize'
     optimize_examples = [
@@ -139,7 +141,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     optimize_parser.usage = f"{utils_error_parser.get_usage_prog(optimize_parser)}"
-    optimize_parser.set_defaults(func=tables.optimize_command)
+    optimize_parser.set_defaults(func=lazy_command(_tables_module_path, 'optimize_command'))
 
 
 def show_help(args: Namespace) -> None:
