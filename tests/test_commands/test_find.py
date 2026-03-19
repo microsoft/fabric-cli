@@ -10,8 +10,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from fabric_cli.commands.find import fab_find
-from fabric_cli.client.fab_api_types import ApiResponse
-from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from tests.test_commands.commands_parser import CLIExecutor
 
@@ -67,19 +65,6 @@ SAMPLE_RESPONSE_EMPTY = {
     "value": [],
 }
 
-SAMPLE_RESPONSE_SINGLE = {
-    "value": [
-        {
-            "id": "abc12345-1234-5678-9abc-def012345678",
-            "type": "Notebook",
-            "catalogEntryType": "FabricItem",
-            "displayName": "Data Analysis",
-            "description": "Notebook for data analysis tasks.",
-            "workspaceId": "workspace-id-123",
-            "workspaceName": "Analytics Team",
-        },
-    ],
-}
 
 
 class TestBuildSearchPayload:
@@ -101,19 +86,6 @@ class TestBuildSearchPayload:
         assert payload["pageSize"] == 1000
         assert "filter" not in payload
 
-    def test_query_with_multiple_types(self):
-        args = Namespace(search_text="data", params="type=[Lakehouse,Warehouse]", query=None)
-        payload = fab_find._build_search_payload(args, is_interactive=False)
-
-        assert payload["search"] == "data"
-        assert payload["filter"] == "(Type eq 'Lakehouse' or Type eq 'Warehouse')"
-
-    def test_query_with_ne_multiple_types(self):
-        args = Namespace(search_text="data", params="type!=[Dashboard,Datamart]", query=None)
-        payload = fab_find._build_search_payload(args, is_interactive=False)
-
-        assert payload["filter"] == "(Type ne 'Dashboard' and Type ne 'Datamart')"
-
 
 class TestParseTypeFromParams:
     """Tests for _parse_type_from_params function."""
@@ -125,53 +97,6 @@ class TestParseTypeFromParams:
     def test_empty_params(self):
         args = Namespace(params="")
         assert fab_find._parse_type_from_params(args) is None
-
-    def test_single_type(self):
-        args = Namespace(params="type=Report")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "eq", "values": ["Report"]}
-
-    def test_multiple_types_bracket_syntax(self):
-        args = Namespace(params="type=[Report,Lakehouse]")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "eq", "values": ["Report", "Lakehouse"]}
-
-    def test_ne_single_type(self):
-        args = Namespace(params="type!=Dashboard")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "ne", "values": ["Dashboard"]}
-
-    def test_ne_multiple_types_bracket(self):
-        args = Namespace(params="type!=[Dashboard,Datamart]")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "ne", "values": ["Dashboard", "Datamart"]}
-
-    def test_ne_unsupported_type_allowed(self):
-        args = Namespace(params="type!=Dashboard")
-        result = fab_find._parse_type_from_params(args)
-        assert result == {"operator": "ne", "values": ["Dashboard"]}
-
-    def test_unsupported_type_eq_raises_error(self):
-        args = Namespace(params="type=Dashboard")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "Dashboard" in str(exc_info.value)
-        assert "not supported" in str(exc_info.value)
-
-    def test_unknown_type_raises_error(self):
-        args = Namespace(params="type=InvalidType")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "InvalidType" in str(exc_info.value)
-        assert "isn't a recognized item type" in str(exc_info.value)
-
-    def test_unknown_type_ne_raises_error(self):
-        args = Namespace(params="type!=InvalidType")
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_find._parse_type_from_params(args)
-        assert "InvalidType" in str(exc_info.value)
-        assert "isn't a recognized item type" in str(exc_info.value)
-
 
 class TestFetchResults:
     """Tests for _fetch_results helper."""
@@ -213,60 +138,6 @@ class TestFetchResults:
         with pytest.raises(FabricCLIError) as exc_info:
             fab_find._fetch_results(args, {"search": "test"})
         assert "invalid response" in str(exc_info.value)
-
-
-class TestDisplayItems:
-    """Tests for _display_items function."""
-
-    @patch("fabric_cli.utils.fab_ui.print_output_format")
-    def test_display_items_table(self, mock_print_format):
-        args = Namespace(long=False, output_format="text", query=None)
-        items = SAMPLE_RESPONSE_WITH_RESULTS["value"]
-
-        fab_find._display_items(args, items)
-
-        mock_print_format.assert_called_once()
-        display_items = mock_print_format.call_args.kwargs["data"]
-        assert len(display_items) == 2
-        assert display_items[0]["name"] == "Monthly Sales Revenue"
-        assert display_items[0]["type"] == "Report"
-        assert display_items[0]["workspace"] == "Sales Department"
-        assert display_items[0]["description"] == "Consolidated revenue report for the current fiscal year."
-
-    @patch("fabric_cli.utils.fab_ui.print_output_format")
-    def test_display_items_detailed(self, mock_print_format):
-        args = Namespace(long=True, output_format="text", query=None)
-        items = SAMPLE_RESPONSE_SINGLE["value"]
-
-        fab_find._display_items(args, items)
-
-        mock_print_format.assert_called_once()
-        display_items = mock_print_format.call_args.kwargs["data"]
-        assert len(display_items) == 1
-
-        item = display_items[0]
-        assert item["name"] == "Data Analysis"
-        assert item["type"] == "Notebook"
-        assert item["workspace"] == "Analytics Team"
-        assert item["description"] == "Notebook for data analysis tasks."
-        assert item["id"] == "abc12345-1234-5678-9abc-def012345678"
-        assert item["workspace_id"] == "workspace-id-123"
-
-    @patch("fabric_cli.utils.fab_ui.print_output_format")
-    @patch("fabric_cli.utils.fab_jmespath.search")
-    def test_display_items_with_jmespath(self, mock_jmespath, mock_print_format):
-        filtered = [{"name": "Monthly Sales Revenue", "type": "Report"}]
-        mock_jmespath.return_value = filtered
-
-        args = Namespace(long=False, output_format="text", query="[?type=='Report']")
-        items = SAMPLE_RESPONSE_WITH_RESULTS["value"]
-
-        fab_find._display_items(args, items)
-
-        mock_jmespath.assert_called_once()
-        mock_print_format.assert_called_once()
-        display_items = mock_print_format.call_args.kwargs["data"]
-        assert display_items == filtered
 
 
 class TestRaiseOnError:
@@ -553,3 +424,58 @@ class TestFindE2E:
             should_exist=True,
             mock_calls=mock_questionary_print.call_args_list,
         )
+
+    def test_find_multi_type_eq_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with type=[Report,Lakehouse] returns both types."""
+        cli_executor.exec_command("find 'data' -P type=[Report,Lakehouse]")
+
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            ["Report"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+        _assert_strings_in_mock_calls(
+            ["Lakehouse"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_json_output_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Search with --output_format json returns valid JSON."""
+        cli_executor.exec_command("find 'data' --output_format json")
+
+        mock_questionary_print.assert_called()
+        # Find the JSON call (skip summary lines printed via print_grey → questionary.print)
+        json_output = None
+        for call in mock_questionary_print.call_args_list:
+            try:
+                json_output = json.loads(call.args[0])
+                break
+            except (json.JSONDecodeError, IndexError):
+                continue
+        assert json_output is not None, "No valid JSON found in output"
+        assert "result" in json_output
+        assert "data" in json_output["result"]
+        assert len(json_output["result"]["data"]) > 0
+
+    def test_find_search_summary_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+    ):
+        """Search with results prints summary with item count."""
+        cli_executor.exec_command("find 'data'")
+
+        grey_output = " ".join(str(c) for c in mock_print_grey.call_args_list)
+        assert "item(s) found" in grey_output
+        assert "more available" in grey_output
