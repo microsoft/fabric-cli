@@ -53,6 +53,7 @@ ALL_ITEM_TYPES = [
     ItemType.SPARK_JOB_DEFINITION, ItemType.WAREHOUSE, ItemType.COPYJOB,
     ItemType.GRAPHQLAPI, ItemType.DATAFLOW, ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+    ItemType.MAP,
 ]
 
 item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
@@ -63,6 +64,7 @@ basic_item_parametrize = pytest.mark.parametrize("item_type", [
     ItemType.ML_MODEL, ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION, ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.GRAPH_QUERY_SET,
+    ItemType.MAP,
 ])
 
 rm_item_without_force_cancel_operation_success_params = pytest.mark.parametrize("item_type", [
@@ -89,7 +91,7 @@ mv_item_to_item_success_params = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.MAP
 ])
 
 mv_item_to_item_unsupported_failure_params = pytest.mark.parametrize("unsupported_item_type", [
@@ -108,7 +110,7 @@ mv_item_within_workspace_rename_success_params = pytest.mark.parametrize("item_t
     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.MAP
 ])
 
 get_item_with_properties_success_params = pytest.mark.parametrize("item_type,expected_properties", [
@@ -154,7 +156,7 @@ set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize("i
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER
+    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.MAP
 ])
 
 set_item_metadata_success_params = pytest.mark.parametrize(
@@ -210,7 +212,8 @@ export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.MIRRORED_DATABASE, ".json"),
     (ItemType.COSMOS_DB_DATABASE, ".json"),
     (ItemType.USER_DATA_FUNCTION, ".json"),
-    (ItemType.GRAPH_QUERY_SET, ".json")
+    (ItemType.GRAPH_QUERY_SET, ".json"),
+    (ItemType.MAP, ".json")
 ])
 
 export_item_types_parameters = pytest.mark.parametrize("item_type", [
@@ -223,7 +226,8 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.KQL_DATABASE,
     ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION,
-    ItemType.GRAPH_QUERY_SET
+    ItemType.GRAPH_QUERY_SET,
+    ItemType.MAP
 ])
 
 export_item_format_parameters = pytest.mark.parametrize(

@@ -140,7 +140,8 @@ class VirtualWorkspaceType(Enum):
 class _BaseItemType(Enum):
     @classmethod
     def from_string(cls, item_type_str):
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError(
+            "This method must be implemented in the subclass")
 
 
 ##################################
@@ -199,7 +200,8 @@ class VirtualItemContainerType(Enum):
             if item.value.lower() == vws_type_str.lower():
                 return item
         raise FabricCLIError(
-            ErrorMessages.Common.invalid_virtual_item_container_type(vws_type_str),
+            ErrorMessages.Common.invalid_virtual_item_container_type(
+                vws_type_str),
             fab_constant.ERROR_INVALID_ITEM_TYPE,
         )
 
@@ -268,6 +270,7 @@ class ItemType(_BaseItemType):
     KQL_DATABASE = "KQLDatabase"
     KQL_QUERYSET = "KQLQueryset"
     LAKEHOUSE = "Lakehouse"
+    MAP = "Map"
     MIRRORED_WAREHOUSE = "MirroredWarehouse"
     MIRRORED_DATABASE = "MirroredDatabase"
     ML_EXPERIMENT = "MLExperiment"
@@ -507,6 +510,7 @@ format_mapping = {
     ItemType.KQL_DATABASE: "kqlDatabases",
     ItemType.KQL_QUERYSET: "kqlQuerysets",
     ItemType.LAKEHOUSE: "lakehouses",
+    ItemType.MAP: "maps",
     ItemType.ML_EXPERIMENT: "mlExperiments",
     ItemType.ML_MODEL: "mlModels",
     ItemType.MIRRORED_WAREHOUSE: "mirroredWarehouses",
@@ -554,6 +558,7 @@ uri_mapping = {
     ItemType.KQL_DATABASE: "databases",
     ItemType.KQL_QUERYSET: "queryworkbenches",
     ItemType.LAKEHOUSE: "lakehouses",
+    ItemType.MAP: "maps",
     ItemType.MIRRORED_DATABASE: "mirroreddatabases",
     ItemType.ML_EXPERIMENT: "mlexperiments",
     ItemType.ML_MODEL: "mlmodels",
@@ -595,4 +600,5 @@ definition_format_mapping = {
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
     ItemType.GRAPH_QUERY_SET: {"default": ""},
+    ItemType.MAP: {"default": ""},
 }

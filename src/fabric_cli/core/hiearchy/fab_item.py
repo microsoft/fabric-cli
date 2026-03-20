@@ -141,6 +141,7 @@ class Item(_BaseItem):
                 | ItemType.COSMOS_DB_DATABASE
                 | ItemType.GRAPH_QUERY_SET
                 | ItemType.USER_DATA_FUNCTION
+                | ItemType.MAP
             ):
                 return {
                     "type": str(self.item_type),

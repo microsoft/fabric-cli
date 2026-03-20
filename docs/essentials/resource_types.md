@@ -19,6 +19,7 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.KQLDashboard`        | Kusto dashboards                   |
 | `.KQLQueryset`         | Kusto query collections            |
 | `.Lakehouse`           | Data lakehouse storage             |
+| `.Map`                 | Maps                               |
 | `.Warehouse`           | Data warehouses                    |
 | `.SQLDatabase`         | SQL databases                      |
 | `.MirroredDatabase`    | Mirrored databases                 |
