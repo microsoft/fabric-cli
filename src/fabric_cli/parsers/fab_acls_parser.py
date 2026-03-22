@@ -3,11 +3,13 @@
 
 from argparse import Namespace, _SubParsersAction
 
-from fabric_cli.commands.acls import fab_acls as acls
 from fabric_cli.core import fab_constant
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_lazy_load import lazy_command
 from fabric_cli.utils.fab_util import get_os_specific_command
+
+_acls_module_path = "fabric_cli.commands.acls.fab_acls"
 
 commands = {
     "Commands": {
@@ -60,7 +62,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"
-    ls_parser.set_defaults(func=acls.ls_command)
+    ls_parser.set_defaults(func=lazy_command(_acls_module_path, 'ls_command'))
 
     # Subcommand for 'rm'
     rm_aliases = ["del"]
@@ -88,7 +90,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     rm_parser.add_argument("-f", "--force", action="store_true", help="Force. Optional")
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"
-    rm_parser.set_defaults(func=acls.rm_command)
+    rm_parser.set_defaults(func=lazy_command(_acls_module_path, 'rm_command'))
 
     # Subcommand for 'get'
     get_examples = [
@@ -122,7 +124,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     get_parser.usage = f"{utils_error_parser.get_usage_prog(get_parser)}"
-    get_parser.set_defaults(func=acls.get_command)
+    get_parser.set_defaults(func=lazy_command(_acls_module_path, 'get_command'))
 
     # Subcommand for 'set'
     set_examples = [
@@ -156,7 +158,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     set_parser.usage = f"{utils_error_parser.get_usage_prog(set_parser)}"
-    set_parser.set_defaults(func=acls.set_command)
+    set_parser.set_defaults(func=lazy_command(_acls_module_path, 'set_command'))
 
 
 def show_help(args: Namespace) -> None:

@@ -29,6 +29,23 @@ from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
 
+# Module-level reusable session for connection pooling
+_shared_session = None
+
+
+def _get_session() -> requests.Session:
+    """Return a shared requests session with retry and connection pooling."""
+    global _shared_session
+    if _shared_session is None:
+        _shared_session = requests.Session()
+        retries = Retry(
+            total=3, backoff_factor=1, status_forcelist=[502, 503, 504]
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        _shared_session.mount("https://", adapter)
+        _shared_session.headers.update({"Accept-Encoding": "gzip, deflate"})
+    return _shared_session
+
 
 def do_request(
     args,
@@ -114,13 +131,8 @@ def do_request(
             )
 
     try:
-        session = requests.Session()
+        session = _get_session()
         retries_count = 3
-        retries = Retry(
-            total=retries_count, backoff_factor=1, status_forcelist=[502, 503, 504]
-        )
-        adapter = HTTPAdapter(max_retries=retries)
-        session.mount("https://", adapter)
 
         request_params = {
             "headers": headers,

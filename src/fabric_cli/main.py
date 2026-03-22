@@ -5,11 +5,9 @@ import sys
 
 import argcomplete
 
-from fabric_cli.commands.auth import fab_auth as login
 from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_interactive import start_interactive_mode
 from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 from fabric_cli.parsers import fab_auth_parser as auth_parser
 from fabric_cli.utils import fab_ui
@@ -31,20 +29,28 @@ def main():
             return
 
         if args.command == "auth" and args.auth_command == "login":
-            if login.init(args):
+            from fabric_cli.commands.auth import fab_auth
+
+            if fab_auth.init(args):
                 if (
                     fab_state_config.get_config(fab_constant.FAB_MODE)
                     == fab_constant.FAB_MODE_INTERACTIVE
                 ):
+                    from fabric_cli.core.fab_interactive import start_interactive_mode
+
                     start_interactive_mode()
                     return
 
         if args.command == "auth" and args.auth_command == "logout":
-            login.logout(args)
+            from fabric_cli.commands.auth import fab_auth
+
+            fab_auth.logout(args)
             return
 
         if args.command == "auth" and args.auth_command == "status":
-            login.status(args)
+            from fabric_cli.commands.auth import fab_auth
+
+            fab_auth.status(args)
             return
 
         last_exit_code = fab_constant.EXIT_CODE_SUCCESS
@@ -85,6 +91,8 @@ def main():
             fab_ui.print_version()
         else:
             # AUTO-REPL: When no command is provided, automatically enter interactive mode
+            from fabric_cli.core.fab_interactive import start_interactive_mode
+
             start_interactive_mode()
 
     except KeyboardInterrupt:

@@ -3,10 +3,12 @@
 
 from argparse import Namespace, _SubParsersAction
 
-from fabric_cli.commands.auth import fab_auth as auth
 from fabric_cli.core import fab_constant
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_lazy_load import lazy_command
+
+_auth_module_path = "fabric_cli.commands.auth.fab_auth"
 
 commands = {
     "Commands": {
@@ -84,7 +86,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"
-    login_parser.set_defaults(func=auth.init)
+    login_parser.set_defaults(func=lazy_command(_auth_module_path, 'init'))
 
     # Subcommand for 'logout'
     logout_examples = [
@@ -102,7 +104,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     logout_parser.usage = f"{utils_error_parser.get_usage_prog(logout_parser)}"
-    logout_parser.set_defaults(func=auth.logout)
+    logout_parser.set_defaults(func=lazy_command(_auth_module_path, 'logout'))
 
     # Subcommand for 'status'
     status_examples = [
@@ -119,7 +121,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     status_parser.usage = f"{utils_error_parser.get_usage_prog(status_parser)}"
-    status_parser.set_defaults(func=auth.status)
+    status_parser.set_defaults(func=lazy_command(_auth_module_path, 'status'))
 
 
 def show_help(args: Namespace) -> None:
