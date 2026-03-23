@@ -16,14 +16,23 @@ from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.utils import cli_path_join
+from tests.test_commands.conftest import (
+    import_update_existing_item_success_params,
+    import_create_new_item_success_params,
+    import_create_new_item_fail_params,
+    import_item_wrong_format_fail_params,
+)
 
 new_name_index = 1
 
 
 class TestImport:
-    # Update existing tests
-    def test_import_update_existing_notebook_item_success(
+
+    # region Parametrized Tests
+    @import_update_existing_item_success_params
+    def test_import_update_existing_item_success(
         self,
+        item_type,
         item_factory,
         mock_print_done,
         tmp_path,
@@ -41,239 +50,59 @@ class TestImport:
             spy_update_item_definition,
             mock_print_grey,
             upsert_item_to_cache,
-            ItemType.NOTEBOOK,
+            item_type,
             cli_executor,
         )
 
-    def test_import_update_existing_sjd_item_success(
+    @import_create_new_item_success_params
+    def test_import_create_new_item_success(
         self,
+        item_type,
         item_factory,
         mock_print_done,
         tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
+        spy_create_item,
         mock_print_grey,
         upsert_item_to_cache,
-        cli_executor: CLIExecutor,
+        cli_executor,
     ):
-        _import_update_existing_item_success(
+        _import_create_new_item_success(
             item_factory,
             mock_print_done,
             tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
+            spy_create_item,
             mock_print_grey,
             upsert_item_to_cache,
-            ItemType.SPARK_JOB_DEFINITION,
+            item_type,
             cli_executor,
         )
 
-    def test_import_update_existing_data_pipeline_item_success(
+    @import_create_new_item_fail_params
+    def test_import_create_new_item_fail(
         self,
-        item_factory,
+        item_type,
+        workspace,
         mock_print_done,
         tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
+        spy_create_item,
         mock_print_grey,
         upsert_item_to_cache,
-        cli_executor: CLIExecutor,
+        cli_executor,
+        assert_fabric_cli_error,
     ):
-        _import_update_existing_item_success(
-            item_factory,
+        _import_create_new_item_fail(
+            workspace,
             mock_print_done,
             tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
+            spy_create_item,
             mock_print_grey,
             upsert_item_to_cache,
-            ItemType.DATA_PIPELINE,
+            item_type,
             cli_executor,
+            assert_fabric_cli_error,
         )
 
-    def test_import_update_existing_report_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.REPORT,
-            cli_executor,
-        )
-
-    def test_import_update_existing_semantic_model_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SEMANTIC_MODEL,
-            cli_executor,
-        )
-
-    def test_import_update_existing_kql_db_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_DATABASE,
-            cli_executor,
-        )
-
-    def test_import_update_existing_kql_qs_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_QUERYSET,
-            cli_executor,
-        )
-
-    def test_import_update_existing_eventhouse_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.EVENTHOUSE,
-            cli_executor,
-        )
-
-    def test_import_update_existing_mirrored_db_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.MIRRORED_DATABASE,
-            cli_executor,
-        )
-
-    def test_import_update_existing_reflex_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.REFLEX,
-            cli_executor,
-        )
-
-    def test_import_update_existing_kql_dashboard_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        mock_print_warning,
-        spy_update_item_definition,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor: CLIExecutor,
-    ):
-        _import_update_existing_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            mock_print_warning,
-            spy_update_item_definition,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_DASHBOARD,
-            cli_executor,
-        )
+    # endregion
 
     # Create new tests
     def test_import_home_directory_path_success(
@@ -306,599 +135,6 @@ class TestImport:
             upsert_item_to_cache,
             ItemType.NOTEBOOK,
             cli_executor,
-        )
-
-    def test_import_create_new_sqldb_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SQL_DATABASE,
-            cli_executor,
-        )
-
-    def test_import_create_new_notebook_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.NOTEBOOK,
-            cli_executor,
-        )
-
-    def test_import_create_new_notebook_py_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.NOTEBOOK,
-            ".py",
-            cli_executor,
-        )
-
-    def test_import_create_new_notebook_ipynb_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.NOTEBOOK,
-            ".ipynb",
-            cli_executor,
-        )
-
-    def test_import_create_new_sjd_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SPARK_JOB_DEFINITION,
-            cli_executor,
-        )
-
-    def test_import_create_new_sjd_SparkJobDefinitionV1_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SPARK_JOB_DEFINITION,
-            "SparkJobDefinitionV1",
-            cli_executor,
-        )
-
-    def test_import_create_new_sjd_SparkJobDefinitionV2_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SPARK_JOB_DEFINITION,
-            "SparkJobDefinitionV2",
-            cli_executor,
-        )
-
-    def test_import_create_new_data_pipeline_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.DATA_PIPELINE,
-            cli_executor,
-        )
-
-    def test_import_create_new_report_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.REPORT,
-            cli_executor,
-        )
-
-    def test_import_create_new_semantic_model_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SEMANTIC_MODEL,
-            cli_executor,
-        )
-
-    # Semantic model tests, same as for notebook with format
-    def test_import_create_new_semantic_model_tmdl_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SEMANTIC_MODEL,
-            "TMDL",
-            cli_executor,
-        )
-
-    def test_import_create_new_semantic_model_tmsl_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_with_format_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SEMANTIC_MODEL,
-            "TMSL",
-            cli_executor,
-        )
-
-    def test_import_create_new_kql_db_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_DATABASE,
-            cli_executor,
-        )
-
-    def test_import_create_new_kql_qs_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_QUERYSET,
-            cli_executor,
-        )
-
-    def test_import_create_new_eventhouse_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.EVENTHOUSE,
-            cli_executor,
-        )
-
-    def test_import_create_new_mirrored_db_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.MIRRORED_DATABASE,
-            cli_executor,
-        )
-
-    def test_import_create_new_reflex_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.REFLEX,
-            cli_executor,
-        )
-
-    def test_import_create_new_kql_dashboard_item_success(
-        self,
-        item_factory,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-    ):
-        _import_create_new_item_success(
-            item_factory,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.KQL_DASHBOARD,
-            cli_executor,
-        )
-
-    # Non Supported items tests
-    def test_import_create_new_dashboard_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.DASHBOARD,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_datamart_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.DATAMART,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_lakehouse_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.LAKEHOUSE,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_mirrored_warehouse_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.MIRRORED_WAREHOUSE,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_ml_experiment_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.ML_EXPERIMENT,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_ml_model_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.ML_MODEL,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_paginated_report_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.PAGINATED_REPORT,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_sql_endpoint_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.SQL_ENDPOINT,
-            cli_executor,
-            assert_fabric_cli_error,
-        )
-
-    def test_import_create_new_warehouse_item_fail(
-        self,
-        workspace,
-        mock_print_done,
-        tmp_path,
-        spy_create_item,
-        mock_print_grey,
-        upsert_item_to_cache,
-        cli_executor,
-        assert_fabric_cli_error,
-    ):
-        _import_create_new_item_fail(
-            workspace,
-            mock_print_done,
-            tmp_path,
-            spy_create_item,
-            mock_print_grey,
-            upsert_item_to_cache,
-            ItemType.WAREHOUSE,
-            cli_executor,
-            assert_fabric_cli_error,
         )
 
     # Test with lakehouse path
@@ -937,15 +173,7 @@ class TestImport:
         mock_print_done.assert_not_called()
         upsert_item_to_cache.assert_not_called()
 
-    @pytest.mark.parametrize(
-        "item_type",
-        [
-            (ItemType.NOTEBOOK),
-            (ItemType.SPARK_JOB_DEFINITION),
-            (ItemType.SEMANTIC_MODEL),
-            (ItemType.DATA_PIPELINE),
-        ],
-    )
+    @import_item_wrong_format_fail_params
     def test_import_item_wrong_format_fail(
         self,
         item_type,
@@ -1034,56 +262,6 @@ def _import_create_new_item_success(
     upsert_item_to_cache.assert_called_once()
 
 
-def _import_create_new_item_with_format_success(
-    item_factory,
-    mock_print_done,
-    tmp_path,
-    spy_create_item,
-    mock_print_grey,
-    upsert_item_to_cache,
-    item_type: ItemType,
-    format,
-    cli_executor: CLIExecutor,
-):
-    # Setup
-    item = item_factory(item_type)
-
-    # TODO: delete this line after mirrored db fix the API GAP for Create
-    if item_type == ItemType.MIRRORED_DATABASE:
-        time.sleep(60)
-
-    export_format(item.full_path, output=os.path.expanduser(
-        str(tmp_path)), format=format)
-
-    # Reset mock
-    mock_print_done.reset_mock()
-    mock_print_grey.reset_mock()
-    upsert_item_to_cache.reset_mock()
-    spy_create_item.reset_mock()
-
-    # Execute command
-    item_path = item.full_path
-    global new_name_index
-    new_item_path = item_path.replace(
-        item.display_name, item.display_name + "_new_" + str(new_name_index)
-    )
-    new_name_index += 1
-    new_item_path = item_path.replace(
-        item.display_name, item.display_name + "_new_" + str(new_name_index)
-    )
-    with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
-        cli_executor.exec_command(
-            f"import {new_item_path} --input {str(tmp_path)}/{item.name} --force --format {format}"
-        )
-
-    # Assert
-    mock_print_grey.assert_called_once()
-    assert "Importing " in mock_print_grey.call_args[0][0]
-    spy_create_item.assert_called_once()
-    mock_print_done.assert_called_once()
-    upsert_item_to_cache.assert_called_once()
-
-
 def _import_update_existing_item_success(
     item_factory,
     mock_print_done,
@@ -1115,13 +293,15 @@ def _import_update_existing_item_success(
         f"import {item.full_path} --input {str(tmp_path)}/{item.name} --force"
     )
 
-    # Assert
-    mock_print_warning.assert_called_once()
-    mock_print_grey.assert_called_once()
-    assert "Importing (update) " in mock_print_grey.call_args[0][0]
-    spy_update_item_definition.assert_called_once()
-    mock_print_done.assert_called_once()
-    upsert_item_to_cache.assert_called_once()
+    if item_type == ItemType.ENVIRONMENT:
+        mock_print_done.assert_called_once()
+    else:
+        mock_print_warning.assert_called_once()
+        mock_print_grey.assert_called_once()
+        assert "Importing (update) " in mock_print_grey.call_args[0][0]
+        spy_update_item_definition.assert_called_once()
+        mock_print_done.assert_called_once()
+        upsert_item_to_cache.assert_called_once()
 
 
 def _import_create_new_item_fail(
