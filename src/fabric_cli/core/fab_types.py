@@ -255,7 +255,6 @@ class ItemType(_BaseItemType):
     METRIC_SET = "MetricSet"
     ORG_APP = "OrgApp"
     SUSTAINABILITY_DATA_SOLUTION = "SustainabilityDataSolution"
-    VARIABLE_LIBRARY = "VariableLibrary"
 
     # API
     COSMOS_DB_DATABASE = "CosmosDBDatabase"
@@ -290,6 +289,7 @@ class ItemType(_BaseItemType):
     MOUNTED_DATA_FACTORY = "MountedDataFactory"
     SQL_DATABASE = "SQLDatabase"
     DATAFLOW = "Dataflow"
+    VARIABLE_LIBRARY = "VariableLibrary"
 
     def __str__(self):
         return self.value
@@ -496,7 +496,6 @@ format_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainabilitydatasolutions",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.VARIABLE_LIBRARY: "variablelibraries",
     # API
     ItemType.COSMOS_DB_DATABASE: "cosmosDbDatabases",
     ItemType.DASHBOARD: "dashboards",
@@ -530,6 +529,7 @@ format_mapping = {
     ItemType.USER_DATA_FUNCTION: "userdatafunctions",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows",
+    ItemType.VARIABLE_LIBRARY: "variablelibraries",
 }
 
 # Item URI in the Fabric Portal
@@ -544,7 +544,6 @@ uri_mapping = {
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainability-data-manager",
     ItemType.METRIC_SET: "metricsets",
     ItemType.ORG_APP: "orgapps",
-    ItemType.VARIABLE_LIBRARY: "variable-libraries",
     # API
     ItemType.COSMOS_DB_DATABASE: "cosmosdbdatabases",
     ItemType.DASHBOARD: "dashboards",
@@ -577,6 +576,7 @@ uri_mapping = {
     ItemType.GRAPHQLAPI: "graphql",
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows-gen2",
+    ItemType.VARIABLE_LIBRARY: "variable-libraries",
 }
 
 # Item Payload definition
@@ -600,5 +600,6 @@ definition_format_mapping = {
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
     ItemType.GRAPH_QUERY_SET: {"default": ""},
+    ItemType.VARIABLE_LIBRARY: {"default": ""},
     ItemType.MAP: {"default": ""},
 }
