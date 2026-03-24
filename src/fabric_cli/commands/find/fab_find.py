@@ -186,7 +186,7 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
     if isinstance(params_str, list):
         params_str = ",".join(params_str)
 
-    params_dict = utils.get_dict_from_params(params_str)
+    params_dict = utils.get_dict_from_params(params_str, max_depth=1)
 
     # Check for type key (with or without ! for ne operator)
     type_value = None
