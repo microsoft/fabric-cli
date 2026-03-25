@@ -255,6 +255,16 @@ def _raise_on_error(response) -> None:
         )
 
 
+def _get_workspace_field(item: dict, field: str) -> str | None:
+    """Extract workspace field, supporting both flat and hierarchy formats."""
+    ws = item.get("hierarchy", {}).get("workspace", {})
+    if field == "name":
+        return ws.get("displayName") or item.get("workspaceName")
+    if field == "id":
+        return ws.get("id") or item.get("workspaceId")
+    return None
+
+
 def _display_items(args: Namespace, items: list[dict]) -> None:
     """Format and display search result items."""
     show_details = getattr(args, "long", False)
@@ -267,14 +277,14 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
                 "name": item.get("displayName") or item.get("name"),
                 "id": item.get("id"),
                 "type": item.get("type"),
-                "workspace": item.get("workspaceName"),
-                "workspace_id": item.get("workspaceId"),
+                "workspace": _get_workspace_field(item, "name"),
+                "workspace_id": _get_workspace_field(item, "id"),
             }
         else:
             entry = {
                 "name": item.get("displayName") or item.get("name"),
                 "type": item.get("type"),
-                "workspace": item.get("workspaceName"),
+                "workspace": _get_workspace_field(item, "name"),
             }
         if has_descriptions:
             entry["description"] = item.get("description") or ""
