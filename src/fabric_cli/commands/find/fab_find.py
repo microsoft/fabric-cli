@@ -99,7 +99,7 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         total_count += len(items)
         has_more = continuation_token is not None
-        _print_search_summary(len(items), has_more)
+        _print_search_summary(total_count, has_more)
 
         _display_items(args, items)
 
@@ -290,8 +290,8 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
             entry["description"] = item.get("description") or ""
         display_items.append(entry)
 
-    if has_descriptions and not show_details:
-        utils.truncate_descriptions(display_items)
+    if not show_details:
+        utils.truncate_columns(display_items, ["description", "workspace", "name"])
 
     if getattr(args, "query", None):
         display_items = utils_jmespath.search(display_items, args.query)

@@ -245,24 +245,57 @@ def get_capacity_settings(
     )
 
 
-def truncate_descriptions(items: list[dict], other_fields: list[str] | None = None) -> None:
-    """Truncate description column so a table fits within terminal width.
+def truncate_columns(
+    items: list[dict],
+    columns_to_truncate: list[str],
+    min_width: int = 20,
+    max_col_width: int = 50,
+) -> None:
+    """Truncate columns in priority order so a table fits within terminal width.
+
+    Shrinks columns one at a time in the order given. Each column is reduced
+    just enough to make the total fit. Columns not listed are never truncated.
 
     Args:
-        items: List of dicts with a 'description' key to truncate in place.
-        other_fields: Column names used to estimate non-description width.
-            Defaults to ["name", "type", "workspace"].
+        items: List of dicts to truncate in place.
+        columns_to_truncate: Column names in shrink priority (first = shrink first).
+        min_width: Minimum width for any truncated column.
+        max_col_width: Absolute max width for any truncatable column.
     """
-    if other_fields is None:
-        other_fields = ["name", "type", "workspace"]
+    if not items:
+        return
 
     term_width = shutil.get_terminal_size((120, 24)).columns
-    used = sum(
-        max((len(str(item.get(f, ""))) for item in items), default=0) + 3
-        for f in other_fields
-    )
-    max_desc = max(term_width - used - 3, 20)
-    for item in items:
-        desc = item.get("description", "")
-        if len(desc) > max_desc:
-            item["description"] = desc[: max_desc - 1] + "…"
+    all_fields = list(items[0].keys())
+    padding_per_col = 3
+
+    col_widths = {}
+    for f in all_fields:
+        col_widths[f] = max(
+            (len(str(item.get(f, ""))) for item in items), default=0
+        )
+
+    # Apply absolute max width cap first
+    for col in columns_to_truncate:
+        if col in col_widths and col_widths[col] > max_col_width:
+            col_widths[col] = max_col_width
+            for item in items:
+                val = str(item.get(col, ""))
+                if len(val) > max_col_width:
+                    item[col] = val[: max_col_width - 1].rstrip() + "…"
+
+    # Then shrink further to fit terminal width
+    for col in columns_to_truncate:
+        if col not in col_widths:
+            continue
+        total = sum(col_widths[f] + padding_per_col for f in all_fields)
+        overflow = total - term_width
+        if overflow <= 0:
+            break
+
+        max_col = max(col_widths[col] - overflow, min_width)
+        col_widths[col] = max_col
+        for item in items:
+            val = str(item.get(col, ""))
+            if len(val) > max_col:
+                item[col] = val[: max_col - 1].rstrip() + "…"
