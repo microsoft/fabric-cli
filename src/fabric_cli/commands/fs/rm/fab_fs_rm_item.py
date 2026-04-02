@@ -14,6 +14,11 @@ def exec(item: Item, args: Namespace, force_delete: bool) -> None:
     args.name = item.name
     args.item_type = item.type.value
 
+    if hasattr(args, 'purge') and args.purge:
+        args.request_params = {"hardDelete": "true"}
+    else:
+        args.request_params = {}
+
     if item_api.delete_item(args, force_delete):
         # Remove from mem_store
         utils_mem_store.delete_item_from_cache(item)
