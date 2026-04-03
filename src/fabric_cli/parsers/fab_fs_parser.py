@@ -146,7 +146,7 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "--purge",
         required=False,
         action="store_true",
-        help="Permanently delete the item. Cannot be recovered. Optional"
+        help="Permanently delete items (not workspaces). Cannot be recovered. Applies to item deletions only. Optional"
     )
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"

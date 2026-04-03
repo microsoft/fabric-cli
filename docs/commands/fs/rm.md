@@ -14,7 +14,7 @@ fab rm <path> [-f] [--purge]
 
 - `<path>`: Path to delete.
 - `-f, --force`: Force deletion without confirmation. Optional.
-- `--purge`: Permanently delete the item. Cannot be recovered. When not specified, item is soft-deleted if the item type supports it. Optional.
+- `--purge`: Permanently delete items (when applicable). Cannot be recovered. Ignored for workspace force deletion. Optional.
 
 **Example:**
 
