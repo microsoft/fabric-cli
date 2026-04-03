@@ -14,10 +14,13 @@ def exec(item: Item, args: Namespace, force_delete: bool) -> None:
     args.name = item.name
     args.item_type = item.type.value
 
-    if hasattr(args, 'purge') and args.purge:
-        args.request_params = {"hardDelete": "true"}
+    request_params = getattr(args, "request_params", {})
+    if getattr(args, "purge", False):
+        merged_params = dict(request_params)
+        merged_params["hardDelete"] = "true"
+        args.request_params = merged_params
     else:
-        args.request_params = {}
+        args.request_params = request_params
 
     if item_api.delete_item(args, force_delete):
         # Remove from mem_store

@@ -21,7 +21,8 @@ def delete_resource(
 ) -> bool:
     if not bypass_confirmation:
         if hasattr(args, 'purge') and args.purge:
-            confirm_message = "Your item will be deleted forever. Are you sure you want to proceed?"
+            resource_name = getattr(args, 'name', 'resource')
+            confirm_message = f"'{resource_name}' will be deleted forever. Are you sure you want to proceed?"
         else:
             confirm_message = "Are you sure?"
 

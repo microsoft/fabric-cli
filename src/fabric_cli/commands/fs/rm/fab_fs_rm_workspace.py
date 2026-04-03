@@ -118,10 +118,13 @@ def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
                         args.name = item.name
                         args.item_type = str(item.item_type)
 
-                        if hasattr(args, 'purge') and args.purge:
-                            args.request_params = {"hardDelete": "true"}
+                        request_params = getattr(args, "request_params", {})
+                        if getattr(args, "purge", False):
+                            merged_params = dict(request_params)
+                            merged_params["hardDelete"] = "true"
+                            args.request_params = merged_params
                         else:
-                            args.request_params = {}
+                            args.request_params = request_params
 
                         # Reset args for subsequent calls
                         args.uri = None

@@ -127,7 +127,7 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "# remove a table",
         "$ rm lh1.Lakehouse/Tables/fabtbl",
         "# permanently remove an item (purge)",
-        "$ rm nb1.Notebook --purge --force",
+        "$ rm ws1.Workspace/nb1.Notebook --purge --force",
     ]
 
     rm_parser = subparsers.add_parser(
