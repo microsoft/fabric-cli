@@ -81,7 +81,10 @@ def init(args: Namespace) -> Any:
         try:
             if selected_auth == "Interactive with a web browser":
                 FabAuth().prepare_user_login(args.tenant)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+                FabAuth().get_access_token(
+                    scope=fab_constant.SCOPE_FABRIC_DEFAULT,
+                    force_interactive=True,
+                )
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
                 Context().context = FabAuth().get_tenant()

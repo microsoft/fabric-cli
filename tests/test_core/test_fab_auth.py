@@ -398,6 +398,31 @@ def test_get_access_token_user_interactive_success():
         set_tenant_spy.assert_called_with(expected_tenant)
 
 
+def test_get_access_token_user_force_interactive_skips_silent_token():
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    with (
+        patch.object(auth, "set_tenant", wraps=auth.set_tenant) as set_tenant_spy,
+        patch.object(auth, "app", wraps=auth.app) as mock_app,
+    ):
+        mock_app.get_accounts.return_value = []
+        mock_app.acquire_token_silent.return_value = {"access_token": "silent_token"}
+        mock_app.acquire_token_interactive.return_value = {
+            "access_token": "interactive_token",
+            "id_token_claims": {"tid": "tenant_id"},
+        }
+
+        token = auth.get_access_token(
+            [con.SCOPE_FABRIC_DEFAULT], force_interactive=True
+        )
+
+        assert token == "interactive_token"
+        mock_app.acquire_token_silent.assert_not_called()
+        mock_app.acquire_token_interactive.assert_called_once()
+        set_tenant_spy.assert_called_with("tenant_id")
+
+
 def test_validate_jwt_token_success():
     # Build a valid JWT token
     # This is a mock token for testing purposes

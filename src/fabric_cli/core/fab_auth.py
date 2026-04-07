@@ -887,7 +887,12 @@ class FabAuth:
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
-    def acquire_token(self, scope: list[str], interactive_renew=True) -> dict:
+    def acquire_token(
+        self,
+        scope: list[str],
+        interactive_renew=True,
+        force_interactive: bool = False,
+    ) -> dict:
         """
         Core MSAL token acquisition method that returns the full MSAL result.
 
@@ -898,6 +903,7 @@ class FabAuth:
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
+            force_interactive: Whether to skip silent acquisition and force an interactive user prompt
 
         Returns:
             Full MSAL result dictionary containing access_token, expires_on, etc.
@@ -935,18 +941,23 @@ class FabAuth:
             }
         elif identity_type == "user":
             self._ensure_current_user_session_loaded()
-            # Use the cache to get the token
             account = None
             active_session = self.get_active_user_session()
-            if active_session is not None:
-                account = self._get_matching_account(self._get_app(), active_session)
+            if not force_interactive:
+                # Use the cache to get the token unless login explicitly asked for account selection.
+                if active_session is not None:
+                    account = self._get_matching_account(
+                        self._get_app(), active_session
+                    )
 
-            if account is None:
-                accounts = self._get_app().get_accounts()
-                if accounts:
-                    account = accounts[0]
+                if account is None:
+                    accounts = self._get_app().get_accounts()
+                    if accounts:
+                        account = accounts[0]
 
-            token = self._get_app().acquire_token_silent(scopes=scope, account=account)
+                token = self._get_app().acquire_token_silent(
+                    scopes=scope, account=account
+                )
 
             if token is None and interactive_renew and identity_type == "user":
                 token = self._get_app().acquire_token_interactive(
@@ -963,7 +974,7 @@ class FabAuth:
                     self.set_tenant(token.get("id_token_claims")["tid"])
                     if session is not None:
                         self._persist_user_session(session)
-            elif token and active_session is not None:
+            elif token and active_session is not None and not force_interactive:
                 self._persist_user_session(active_session)
 
         if token and token.get("error"):
@@ -984,7 +995,12 @@ class FabAuth:
 
         return token
 
-    def get_access_token(self, scope: list[str], interactive_renew=True) -> str | None:
+    def get_access_token(
+        self,
+        scope: list[str],
+        interactive_renew=True,
+        force_interactive: bool = False,
+    ) -> str | None:
         """
         Get an access token string for the specified scopes.
 
@@ -994,6 +1010,7 @@ class FabAuth:
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
+            force_interactive: Whether to skip silent acquisition and force an interactive user prompt
 
         Returns:
             Access token string or None if acquisition fails
@@ -1001,7 +1018,11 @@ class FabAuth:
         Raises:
             FabricCLIError: When token acquisition fails
         """
-        token_result = self.acquire_token(scope, interactive_renew)
+        token_result = self.acquire_token(
+            scope,
+            interactive_renew,
+            force_interactive=force_interactive,
+        )
         return token_result.get("access_token", None)
 
     def logout(self):

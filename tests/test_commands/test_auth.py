@@ -45,7 +45,7 @@ class TestAuth:
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
             mock_fab_auth_instance.prepare_user_login.assert_called_with(None)
-            assert_get_access_token(mock_fab_auth_instance)
+            assert_get_access_token(mock_fab_auth_instance, interactive_first=True)
             assert result is True
 
             assert_fab_context(mock_fab_context)
@@ -68,7 +68,7 @@ class TestAuth:
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
             mock_fab_auth_instance.prepare_user_login.assert_called_with("mock_tenant")
-            assert_get_access_token(mock_fab_auth_instance)
+            assert_get_access_token(mock_fab_auth_instance, interactive_first=True)
             assert result is True
 
             assert_fab_context(mock_fab_context)
@@ -1100,10 +1100,16 @@ def assert_fab_auth_not_called(mock_fab_auth):
     mock_fab_auth_instance.get_access_token.assert_not_called()
 
 
-def assert_get_access_token(mock_fab_auth_instance):
-    mock_fab_auth_instance.get_access_token.assert_any_call(
-        scope=fab_constant.SCOPE_FABRIC_DEFAULT
-    )
+def assert_get_access_token(mock_fab_auth_instance, interactive_first: bool = False):
+    if interactive_first:
+        mock_fab_auth_instance.get_access_token.assert_any_call(
+            scope=fab_constant.SCOPE_FABRIC_DEFAULT,
+            force_interactive=True,
+        )
+    else:
+        mock_fab_auth_instance.get_access_token.assert_any_call(
+            scope=fab_constant.SCOPE_FABRIC_DEFAULT
+        )
     mock_fab_auth_instance.get_access_token.assert_any_call(
         scope=fab_constant.SCOPE_ONELAKE_DEFAULT
     )
