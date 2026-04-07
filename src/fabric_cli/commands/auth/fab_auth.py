@@ -356,14 +356,21 @@ def list_accounts(args: Namespace) -> None:
     active_session = auth.get_active_user_session()
     active_session_id = active_session.get("session_id") if active_session else None
 
+    # Cache one MSAL app per tenant to avoid redundant app creation during validation.
+    tenant_apps: dict[str, Any] = {}
     rows = []
     for session in sessions:
+        tid = session.get("tenant_id")
+        if tid not in tenant_apps:
+            tenant_apps[tid] = auth._create_user_app(tid)
         rows.append(
             {
                 "active": str(session.get("session_id") == active_session_id).lower(),
                 "account": session.get("account_name", "Unknown"),
                 "tenant_id": session.get("tenant_id", "Unknown"),
-                "valid": str(auth.is_user_session_valid(session)).lower(),
+                "valid": str(
+                    auth.is_user_session_valid(session, app=tenant_apps[tid])
+                ).lower(),
                 "last_used_at": session.get("last_used_at", ""),
             }
         )
@@ -428,8 +435,9 @@ def _resolve_user_session(
     active_session_id = active_session.get("session_id") if active_session else None
 
     candidates = []
+    username_lower = username.lower() if username else None
     for session in sessions:
-        if username and session.get("account_name") != username:
+        if username_lower and (session.get("account_name") or "").lower() != username_lower:
             continue
         if tenant_id and session.get("tenant_id") != tenant_id:
             continue

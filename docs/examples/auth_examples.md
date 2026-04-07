@@ -131,14 +131,38 @@ fab auth list
 
 ### Switch to another stored user session
 
+When two sessions are stored, `switch` automatically toggles to the other account:
+
 ```
 fab auth switch
+```
+
+With three or more sessions and no flags, an interactive prompt is shown.
+
+### Switch directly to a specific stored account
+
+Account name matching is case-insensitive:
+
+```
+fab auth switch -u alice@example.com
 ```
 
 ### Switch directly to a specific stored account and tenant
 
 ```
 fab auth switch -u <account_name> -t <tenant_id>
+```
+
+### Log out a specific stored session
+
+```
+fab auth logout -u alice@example.com
+```
+
+### Log out all stored sessions
+
+```
+fab auth logout --all
 ```
 
 

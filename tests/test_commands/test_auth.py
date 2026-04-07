@@ -1044,6 +1044,149 @@ class TestAuth:
         mock_fab_context_instance.reset_context.assert_called_once()
         mock_print.assert_called_once()
 
+    def test_auth_list_no_sessions(self, mock_fab_auth):
+        args = argparse.Namespace(command="auth", output_format=None)
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = []
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+        ) as mock_print:
+            fab_auth.list_accounts(args)
+
+        mock_print.assert_called_once()
+        assert "message" in mock_print.call_args.kwargs
+
+    def test_auth_switch_env_vars_blocks(self, mock_fab_auth):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username=None,
+            tenant=None,
+        )
+        with patch.dict(os.environ, {"FAB_TOKEN": "some-token"}):
+            with pytest.raises(FabricCLIError) as exc_info:
+                fab_auth.switch(args)
+            assert exc_info.value.status_code == fab_constant.ERROR_INVALID_OPERATION
+
+    def test_auth_switch_case_insensitive_username(self, mock_fab_auth, mock_fab_context):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username="ALICE@EXAMPLE.COM",
+            tenant=None,
+        )
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            }
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a"
+        }
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+        ):
+            fab_auth.switch(args)
+
+        mock_fab_auth_instance.activate_user_session.assert_called_once_with(
+            "session-a"
+        )
+
+    def test_auth_switch_interactive_prompt_with_three_accounts(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username=None,
+            tenant=None,
+        )
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-06T12:00:00Z",
+            },
+            {
+                "session_id": "session-c",
+                "account_name": "carol@example.com",
+                "tenant_id": "tenant-c",
+                "last_used_at": "2026-04-05T12:00:00Z",
+            },
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a"
+        }
+
+        with (
+            patch(
+                "fabric_cli.commands.auth.fab_auth.fab_ui.prompt_select_item",
+                return_value="bob@example.com (tenant-b)",
+            ),
+            patch(
+                "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+            ),
+        ):
+            fab_auth.switch(args)
+
+        mock_fab_auth_instance.activate_user_session.assert_called_once_with(
+            "session-b"
+        )
+
+    def test_auth_switch_cancelled_prompt(self, mock_fab_auth):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username=None,
+            tenant=None,
+        )
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-06T12:00:00Z",
+            },
+            {
+                "session_id": "session-c",
+                "account_name": "carol@example.com",
+                "tenant_id": "tenant-c",
+                "last_used_at": "2026-04-05T12:00:00Z",
+            },
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a"
+        }
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.prompt_select_item",
+            return_value=None,
+        ):
+            with pytest.raises(FabricCLIError) as exc_info:
+                fab_auth.switch(args)
+            assert exc_info.value.status_code == fab_constant.ERROR_OPERATION_CANCELLED
+
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys
     ):

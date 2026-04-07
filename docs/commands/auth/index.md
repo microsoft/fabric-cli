@@ -40,7 +40,7 @@ fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>]
 
 ### logout
 
-End the current authentication session.
+End the current authentication session. When multiple user sessions are stored you can target a specific session by account name and/or tenant.
 
 **Usage:**
 
@@ -48,11 +48,19 @@ End the current authentication session.
 fab auth logout [-u <account_name>] [-t <tenant_id>] [--all]
 ```
 
+**Parameters:**
+
+- `-u, --username`: Account name of the session to log out. Case-insensitive. Optional.
+- `-t, --tenant`: Tenant ID to disambiguate when the same account exists in multiple tenants. Optional.
+- `--all`: Clear all stored authentication sessions. Optional.
+
+When neither `-u` nor `--all` is provided, the CLI removes the current active session. If other sessions remain, the next most recently used session becomes active.
+
 ---
 
 ### list
 
-List stored user authentication sessions.
+List stored user authentication sessions. Each row shows whether the session is active, the account name, tenant, token validity, and the last used timestamp.
 
 **Usage:**
 
@@ -76,13 +84,24 @@ fab auth status
 
 ### switch
 
-Switch the active stored user authentication session.
+Switch the active stored user authentication session. You can specify the target account directly to avoid interactive selection.
 
 **Usage:**
 
 ```
 fab auth switch [-u <account_name>] [-t <tenant_id>]
 ```
+
+**Parameters:**
+
+- `-u, --username`: Account name to switch to. Case-insensitive. Optional.
+- `-t, --tenant`: Tenant ID to disambiguate when the same account exists in multiple tenants. Optional.
+
+**Behavior:**
+
+- With `-u` (and optionally `-t`): switches directly to the matching session.
+- With two stored sessions and no flags: automatically toggles to the other session.
+- With three or more sessions and no flags: presents an interactive prompt.
 
 ---
 

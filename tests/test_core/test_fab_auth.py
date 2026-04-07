@@ -1109,6 +1109,76 @@ def test_set_tenant_for_user_does_not_logout(monkeypatch):
     assert auth.get_tenant_id() == "tenant-b"
 
 
+def test_set_tenant_preserves_app_when_tenant_unchanged():
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user", con.FAB_TENANT_ID: "tenant-a"}
+    sentinel_app = object()
+    auth.app = sentinel_app
+
+    auth.set_tenant("tenant-a")
+
+    assert auth.app is sentinel_app
+
+
+def test_set_tenant_resets_app_when_tenant_changes():
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user", con.FAB_TENANT_ID: "tenant-a"}
+    auth.app = object()
+
+    auth.set_tenant("tenant-b")
+
+    assert auth.app is None
+    assert auth.get_tenant_id() == "tenant-b"
+
+
+def test_sync_active_user_session_preserves_app_when_tenant_unchanged(tmp_path):
+    auth = FabAuth()
+    auth.auth_file = os.path.join(tmp_path, "auth.json")
+    sentinel_app = object()
+    auth.app = sentinel_app
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: "tenant-a",
+        "active_user_session_id": "session-a",
+        "user_sessions": [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+        ],
+    }
+
+    auth._sync_active_user_session()
+
+    assert auth.app is sentinel_app
+
+
+def test_sync_active_user_session_resets_app_when_tenant_changes(tmp_path):
+    auth = FabAuth()
+    auth.auth_file = os.path.join(tmp_path, "auth.json")
+    auth.app = object()
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: "tenant-a",
+        "active_user_session_id": "session-b",
+        "user_sessions": [
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+        ],
+    }
+
+    auth._sync_active_user_session()
+
+    assert auth.app is None
+    assert auth.get_tenant_id() == "tenant-b"
+
+
 def test_get_user_sessions_returns_active_first():
     auth = FabAuth()
     auth._auth_info = {
@@ -1163,3 +1233,37 @@ def test_activate_user_session_updates_active_auth_state(tmp_path):
     assert auth.get_tenant_id() == "tenant-b"
     assert auth._auth_info["active_user_session_id"] == "session-b"
     assert auth._auth_info["active_user_account_name"] == "bob@example.com"
+
+
+def test_utc_now_returns_z_suffix():
+    result = FabAuth._utc_now()
+    assert result.endswith("Z")
+    assert "+" not in result
+    # Should be parseable as ISO 8601
+    datetime.datetime.fromisoformat(result.replace("Z", "+00:00"))
+
+
+def test_is_user_session_valid_accepts_shared_app():
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    mock_app = patch.object(auth, "_create_user_app").start()
+    mock_app.return_value = mock_app
+
+    mock_external_app = type("FakeApp", (), {
+        "get_accounts": lambda self, *a, **kw: [{"username": "alice@example.com", "home_account_id": "h1"}],
+        "acquire_token_silent": lambda self, *a, **kw: {"access_token": "tok"},
+    })()
+
+    session = {
+        "session_id": "s1",
+        "account_name": "alice@example.com",
+        "home_account_id": "h1",
+        "tenant_id": "t1",
+    }
+
+    result = auth.is_user_session_valid(session, app=mock_external_app)
+    assert result is True
+    # _create_user_app should NOT have been called since we passed an app
+    mock_app.assert_not_called()
+    patch.stopall()

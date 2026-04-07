@@ -5,7 +5,7 @@ import json
 import os
 import uuid
 from binascii import hexlify
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, NamedTuple, Optional
 
 import jwt
@@ -263,7 +263,9 @@ class FabAuth:
             accounts = (
                 app.get_accounts(account_name) if account_name else app.get_accounts()
             )
-        except TypeError:
+        except TypeError as e:
+            # MSAL may not accept a username filter in all broker configurations.
+            fab_logger.log_debug(f"Filtered get_accounts failed, retrying unfiltered: {e}")
             accounts = app.get_accounts()
 
         if not isinstance(accounts, list):
@@ -295,7 +297,8 @@ class FabAuth:
         if tenant_id:
             try:
                 all_accounts = app.get_accounts()
-            except TypeError:
+            except TypeError as e:
+                fab_logger.log_debug(f"get_accounts failed during tenant fallback: {e}")
                 all_accounts = []
 
             if not isinstance(all_accounts, list):
@@ -361,7 +364,12 @@ class FabAuth:
 
     @staticmethod
     def _utc_now() -> str:
-        return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        return (
+            datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
 
     def _build_user_session(
         self,
@@ -465,9 +473,13 @@ class FabAuth:
                 self._save_auth()
             return None
 
-        self.app = None
+        # Only reset the MSAL app when the tenant changes so that the active
+        # WAM broker session is preserved during the login flow.
+        new_tenant = session.get("tenant_id")
+        if self._auth_info.get(con.FAB_TENANT_ID) != new_tenant:
+            self.app = None
         self._auth_info[con.IDENTITY_TYPE] = "user"
-        self._auth_info[con.FAB_TENANT_ID] = session.get("tenant_id")
+        self._auth_info[con.FAB_TENANT_ID] = new_tenant
         self._auth_info[ACTIVE_USER_ACCOUNT_NAME_KEY] = session.get("account_name")
 
         if session.get("home_account_id"):
@@ -619,9 +631,14 @@ class FabAuth:
         self._save_auth()
         return self._find_user_session()
 
-    def is_user_session_valid(self, session: dict[str, Any]) -> bool:
+    def is_user_session_valid(
+        self,
+        session: dict[str, Any],
+        app: Optional[msal.PublicClientApplication] = None,
+    ) -> bool:
         try:
-            app = self._create_user_app(session.get("tenant_id"))
+            if app is None:
+                app = self._create_user_app(session.get("tenant_id"))
             account = self._get_matching_account(app, session)
             if account is None:
                 return False
@@ -782,7 +799,11 @@ class FabAuth:
     def set_tenant(self, tenant_id):
         if tenant_id is not None:
             if self.get_identity_type() == "user":
-                self.app = None
+                # Only reset the MSAL app when the tenant actually changes so
+                # that the active WAM broker session is preserved across scope
+                # requests during login.
+                if self.get_tenant_id() != tenant_id:
+                    self.app = None
                 self._set_auth_properties(
                     {
                         con.FAB_TENANT_ID: tenant_id,
@@ -959,6 +980,8 @@ class FabAuth:
                     scopes=scope, account=account
                 )
 
+            # When force_interactive=True the silent block above is skipped so token
+            # remains None, falling through here to trigger the interactive prompt.
             if token is None and interactive_renew and identity_type == "user":
                 token = self._get_app().acquire_token_interactive(
                     scopes=scope,
@@ -975,6 +998,7 @@ class FabAuth:
                     if session is not None:
                         self._persist_user_session(session)
             elif token and active_session is not None and not force_interactive:
+                # Silent acquisition succeeded — update the session timestamp.
                 self._persist_user_session(active_session)
 
         if token and token.get("error"):
