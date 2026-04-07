@@ -12,7 +12,9 @@ Not resource-specific; applies to CLI authentication context.
 |----------------|---------------------------|-----------------------------------------------------------------------|
 | `auth login`   | Log in to Fabric CLI      | `auth login [parameters]`                                                |
 | `auth logout`  | Log out of current session| `auth logout`                                                         |
+| `auth list`    | List stored user sessions | `auth list`                                                           |
 | `auth status`  | Show authentication status| `auth status`                                                         |
+| `auth switch`  | Switch stored user session| `auth switch [parameters]`                                            |
 
 ---
 
@@ -43,7 +45,19 @@ End the current authentication session.
 **Usage:**
 
 ```
-fab auth logout
+fab auth logout [-u <account_name>] [-t <tenant_id>] [--all]
+```
+
+---
+
+### list
+
+List stored user authentication sessions.
+
+**Usage:**
+
+```
+fab auth list
 ```
 
 ---
@@ -56,6 +70,18 @@ Display current authentication state.
 
 ```
 fab auth status
+```
+
+---
+
+### switch
+
+Switch the active stored user authentication session.
+
+**Usage:**
+
+```
+fab auth switch [-u <account_name>] [-t <tenant_id>]
 ```
 
 ---

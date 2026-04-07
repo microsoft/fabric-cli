@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +15,19 @@ from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_hiearchy import Tenant
 from fabric_cli.errors import ErrorMessages
+
+
+@pytest.fixture(autouse=True)
+def reset_fab_auth_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
+    )
+    auth = FabAuth()
+    auth.auth_file = os.path.join(tmp_path, "auth.json")
+    auth.cache_file = os.path.join(tmp_path, "cache.bin")
+    auth._auth_info = {}
+    auth.app = None
+    auth.aad_public_key = None
 
 
 class TestAuth:
@@ -30,7 +44,7 @@ class TestAuth:
 
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
-            mock_fab_auth_instance.set_access_mode.assert_called_with("user", None)
+            mock_fab_auth_instance.prepare_user_login.assert_called_with(None)
             assert_get_access_token(mock_fab_auth_instance)
             assert result is True
 
@@ -53,9 +67,7 @@ class TestAuth:
 
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
-            mock_fab_auth_instance.set_access_mode.assert_called_with(
-                "user", "mock_tenant"
-            )
+            mock_fab_auth_instance.prepare_user_login.assert_called_with("mock_tenant")
             assert_get_access_token(mock_fab_auth_instance)
             assert result is True
 
@@ -928,10 +940,113 @@ class TestAuth:
             assert "mocked_tenant_id" in captured.out
             assert "mock************************************" in captured.out
 
+    def test_auth_list_accounts(self, mock_fab_auth):
+        args = argparse.Namespace(command="auth", output_format=None)
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-06T12:00:00Z",
+            },
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a"
+        }
+        mock_fab_auth_instance.is_user_session_valid.side_effect = [True, False]
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+        ) as mock_print:
+            fab_auth.list_accounts(args)
+
+        mock_print.assert_called_once()
+        rows = mock_print.call_args.kwargs["data"]
+        assert rows[0]["account"] == "alice@example.com"
+        assert rows[0]["active"] == "true"
+        assert rows[0]["valid"] == "true"
+        assert rows[1]["account"] == "bob@example.com"
+        assert rows[1]["valid"] == "false"
+
+    def test_auth_switch(self, mock_fab_auth, mock_fab_context):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username="bob@example.com",
+            tenant="tenant-b",
+        )
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            }
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a",
+            "account_name": "alice@example.com",
+            "tenant_id": "tenant-a",
+        }
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+        ) as mock_print:
+            fab_auth.switch(args)
+
+        mock_fab_auth_instance.activate_user_session.assert_called_once_with(
+            "session-b"
+        )
+        mock_fab_context_instance = mock_fab_context.get("instance")
+        assert mock_fab_context_instance.context == Tenant(
+            name="Unknown", id="mocked_tenant_id"
+        )
+        mock_print.assert_called_once()
+
+    def test_auth_logout_user_session(self, mock_fab_auth, mock_fab_context):
+        args = argparse.Namespace(
+            command="auth",
+            output_format=None,
+            username="alice@example.com",
+            tenant="tenant-a",
+            all=False,
+        )
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_identity_type = MagicMock(return_value="user")
+        mock_fab_auth_instance.get_user_sessions.return_value = [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            }
+        ]
+        mock_fab_auth_instance.get_active_user_session.return_value = {
+            "session_id": "session-a"
+        }
+        mock_fab_auth_instance.remove_user_session.return_value = None
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
+        ) as mock_print:
+            fab_auth.logout(args)
+
+        mock_fab_auth_instance.remove_user_session.assert_called_once_with("session-a")
+        mock_fab_context_instance = mock_fab_context.get("instance")
+        mock_fab_context_instance.reset_context.assert_called_once()
+        mock_print.assert_called_once()
+
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys
     ):
-
         # Arrange
         with patch(
             "fabric_cli.utils.fab_ui.prompt_select_item",
@@ -979,6 +1094,7 @@ def prepare_auth_args(args=None):
 def assert_fab_auth_not_called(mock_fab_auth):
     mock_fab_auth_instance = mock_fab_auth.get("instance")
     mock_fab_auth_instance.set_access_mode.assert_not_called()
+    mock_fab_auth_instance.prepare_user_login.assert_not_called()
     mock_fab_auth_instance.set_tenant.assert_not_called()
     mock_fab_auth_instance.set_spn.assert_not_called()
     mock_fab_auth_instance.get_access_token.assert_not_called()
@@ -1014,7 +1130,13 @@ def mock_fab_auth():
         fab_auth_instance,
         get_access_token=MagicMock(return_value="mocked_access_token"),
         get_tenant_id=MagicMock(return_value="mocked_tenant_id"),
+        get_user_sessions=MagicMock(return_value=[]),
+        get_active_user_session=MagicMock(return_value=None),
+        remove_user_session=MagicMock(return_value=None),
+        activate_user_session=MagicMock(),
+        is_user_session_valid=MagicMock(return_value=True),
         set_access_mode=MagicMock(),
+        prepare_user_login=MagicMock(),
         set_tenant=MagicMock(),
         set_spn=MagicMock(),
         set_managed_identity=MagicMock(),

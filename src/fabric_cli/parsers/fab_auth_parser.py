@@ -14,7 +14,9 @@ commands = {
     "Commands": {
         "login": "Log in to a Fabric account.",
         "logout": "End the current authentication session.",
+        "list": "List stored user authentication sessions.",
         "status": "Display active account and authentication state.",
+        "switch": "Switch the active stored user session.",
     },
 }
 
@@ -86,7 +88,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"
-    login_parser.set_defaults(func=lazy_command(_auth_module_path, 'init'))
+    login_parser.set_defaults(func=lazy_command(_auth_module_path, "init"))
 
     # Subcommand for 'logout'
     logout_examples = [
@@ -102,9 +104,44 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=logout_examples,
         fab_learnmore=["_"],
     )
+    logout_parser.add_argument(
+        "-u",
+        "--username",
+        metavar="",
+        required=False,
+        help="Stored account name to log out. Optional.",
+    )
+    logout_parser.add_argument(
+        "-t",
+        "--tenant",
+        metavar="",
+        required=False,
+        help="Stored tenant ID to disambiguate the account. Optional.",
+    )
+    logout_parser.add_argument(
+        "--all",
+        action="store_true",
+        required=False,
+        help="Clear all stored authentication sessions.",
+    )
 
     logout_parser.usage = f"{utils_error_parser.get_usage_prog(logout_parser)}"
-    logout_parser.set_defaults(func=lazy_command(_auth_module_path, 'logout'))
+    logout_parser.set_defaults(func=lazy_command(_auth_module_path, "logout"))
+
+    list_examples = [
+        "# interactive mode",
+        "$ auth list\n",
+        "# command_line mode",
+        "$ fab auth list",
+    ]
+    list_parser = auth_subparsers.add_parser(
+        "list",
+        help="List stored authentication sessions.",
+        fab_examples=list_examples,
+        fab_learnmore=["_"],
+    )
+    list_parser.usage = f"{utils_error_parser.get_usage_prog(list_parser)}"
+    list_parser.set_defaults(func=lazy_command(_auth_module_path, "list_accounts"))
 
     # Subcommand for 'status'
     status_examples = [
@@ -121,7 +158,39 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     status_parser.usage = f"{utils_error_parser.get_usage_prog(status_parser)}"
-    status_parser.set_defaults(func=lazy_command(_auth_module_path, 'status'))
+    status_parser.set_defaults(func=lazy_command(_auth_module_path, "status"))
+
+    switch_examples = [
+        "# interactive mode",
+        "$ auth switch\n",
+        "# command_line mode",
+        "$ fab auth switch\n",
+        "# switch with explicit account and tenant",
+        "$ fab auth switch -u <account_name> -t <tenant_id>",
+    ]
+    switch_parser = auth_subparsers.add_parser(
+        "switch",
+        help="Switch the active stored authentication session.",
+        fab_examples=switch_examples,
+        fab_learnmore=["_"],
+    )
+    switch_parser.add_argument(
+        "-u",
+        "--username",
+        metavar="",
+        required=False,
+        help="Stored account name to switch to. Optional.",
+    )
+    switch_parser.add_argument(
+        "-t",
+        "--tenant",
+        metavar="",
+        required=False,
+        help="Stored tenant ID to disambiguate the account. Optional.",
+    )
+
+    switch_parser.usage = f"{utils_error_parser.get_usage_prog(switch_parser)}"
+    switch_parser.set_defaults(func=lazy_command(_auth_module_path, "switch"))
 
 
 def show_help(args: Namespace) -> None:

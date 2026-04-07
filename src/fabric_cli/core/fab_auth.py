@@ -5,6 +5,7 @@ import json
 import os
 import uuid
 from binascii import hexlify
+from datetime import datetime
 from typing import Any, NamedTuple, Optional
 
 import jwt
@@ -26,6 +27,11 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
+
+USER_SESSIONS_KEY = "user_sessions"
+ACTIVE_USER_SESSION_ID_KEY = "active_user_session_id"
+ACTIVE_USER_ACCOUNT_NAME_KEY = "active_user_account_name"
+ACTIVE_USER_ACCOUNT_HOME_ID_KEY = "active_user_account_home_id"
 
 
 def singleton(class_):
@@ -197,6 +203,434 @@ class FabAuth:
                 decoded_dict[key] = value
         return decoded_dict
 
+    def _remove_auth_property(self, key: str) -> None:
+        if key in self._auth_info:
+            del self._auth_info[key]
+
+    def _get_user_sessions(self) -> list[dict[str, Any]]:
+        sessions = self._auth_info.get(USER_SESSIONS_KEY, [])
+        if not isinstance(sessions, list):
+            return []
+        return [session for session in sessions if isinstance(session, dict)]
+
+    def _save_user_sessions(self, sessions: list[dict[str, Any]]) -> None:
+        if sessions:
+            self._auth_info[USER_SESSIONS_KEY] = sessions
+        else:
+            self._remove_auth_property(USER_SESSIONS_KEY)
+
+    def _get_active_user_session_id(self) -> Optional[str]:
+        return self._auth_info.get(ACTIVE_USER_SESSION_ID_KEY)
+
+    def _build_user_session_id(
+        self,
+        account_name: str,
+        tenant_id: Optional[str],
+        home_account_id: Optional[str],
+    ) -> str:
+        if home_account_id:
+            return home_account_id
+        if tenant_id:
+            return f"{account_name}|{tenant_id}"
+        return account_name
+
+    def _create_user_app(
+        self, tenant_id: Optional[str]
+    ) -> msal.PublicClientApplication:
+        persistence = self._get_persistence()
+        cache = PersistedTokenCache(persistence)
+        authority = (
+            con.AUTH_DEFAULT_AUTHORITY
+            if tenant_id is None
+            else f"{con.AUTH_TENANT_AUTHORITY}{tenant_id}"
+        )
+        return msal.PublicClientApplication(
+            client_id=con.AUTH_DEFAULT_CLIENT_ID,
+            authority=authority,
+            token_cache=cache,
+            enable_broker_on_windows=True,
+        )
+
+    def _get_matching_account(
+        self,
+        app: msal.PublicClientApplication,
+        session: dict[str, Any],
+    ) -> Optional[dict[str, Any]]:
+        account_name = session.get("account_name")
+        tenant_id = session.get("tenant_id")
+
+        try:
+            accounts = (
+                app.get_accounts(account_name) if account_name else app.get_accounts()
+            )
+        except TypeError:
+            accounts = app.get_accounts()
+
+        if not isinstance(accounts, list):
+            return None
+
+        for account in accounts:
+            if (
+                session.get("home_account_id")
+                and account.get("home_account_id") == session["home_account_id"]
+            ):
+                return account
+
+        for account in accounts:
+            if (
+                session.get("local_account_id")
+                and account.get("local_account_id") == session["local_account_id"]
+                and (tenant_id is None or account.get("realm") == tenant_id)
+            ):
+                return account
+
+        for account in accounts:
+            if (
+                account_name
+                and account.get("username") == account_name
+                and (tenant_id is None or account.get("realm") == tenant_id)
+            ):
+                return account
+
+        if tenant_id:
+            try:
+                all_accounts = app.get_accounts()
+            except TypeError:
+                all_accounts = []
+
+            if not isinstance(all_accounts, list):
+                all_accounts = []
+
+            for account in all_accounts:
+                if account.get("realm") == tenant_id:
+                    return account
+
+        return accounts[0] if accounts else None
+
+    def _build_current_user_session_from_cache(self) -> Optional[dict[str, Any]]:
+        if self.get_identity_type() != "user":
+            return None
+
+        try:
+            app = self.app if self.app is not None else self._get_app()
+        except Exception:
+            return None
+
+        if not hasattr(app, "get_accounts"):
+            return None
+
+        try:
+            accounts = app.get_accounts()
+        except TypeError:
+            return None
+
+        if not isinstance(accounts, list):
+            return None
+
+        if not accounts:
+            return None
+
+        account = None
+        tenant_id = self.get_tenant_id()
+        if tenant_id:
+            for candidate in accounts:
+                if candidate.get("realm") == tenant_id:
+                    account = candidate
+                    break
+
+        if account is None:
+            account = accounts[0]
+
+        account_name = account.get("username") or "Unknown"
+        home_account_id = account.get("home_account_id")
+        local_account_id = account.get("local_account_id")
+        tenant_id = account.get("realm") or tenant_id
+        timestamp = self._utc_now()
+
+        return {
+            "session_id": self._build_user_session_id(
+                account_name, tenant_id, home_account_id
+            ),
+            "account_name": account_name,
+            "home_account_id": home_account_id,
+            "local_account_id": local_account_id,
+            "tenant_id": tenant_id,
+            "created_at": timestamp,
+            "last_used_at": timestamp,
+        }
+
+    @staticmethod
+    def _utc_now() -> str:
+        return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    def _build_user_session(
+        self,
+        token_result: dict[str, Any],
+        fallback_tenant_id: Optional[str] = None,
+        app: Optional[Any] = None,
+    ) -> Optional[dict[str, Any]]:
+        id_token_claims = token_result.get("id_token_claims", {}) or {}
+        token_claims: dict[str, Any] = {}
+
+        if token_result.get("access_token"):
+            try:
+                token_claims = (
+                    self._get_claims_from_token(
+                        token_result["access_token"],
+                        ["upn", "preferred_username", "oid", "tid"],
+                    )
+                    or {}
+                )
+            except FabricCLIError:
+                token_claims = {}
+
+        tenant_id = (
+            id_token_claims.get("tid")
+            or token_claims.get("tid")
+            or fallback_tenant_id
+            or self.get_tenant_id()
+        )
+        account_name = (
+            id_token_claims.get("preferred_username")
+            or id_token_claims.get("upn")
+            or token_claims.get("preferred_username")
+            or token_claims.get("upn")
+        )
+        local_account_id = id_token_claims.get("oid") or token_claims.get("oid")
+
+        if app is None:
+            try:
+                app = (
+                    self.app
+                    if self.app is not None
+                    else self._create_user_app(tenant_id)
+                )
+            except Exception:
+                return None
+
+        if not hasattr(app, "get_accounts"):
+            return None
+
+        account = self._get_matching_account(
+            app,
+            {
+                "account_name": account_name,
+                "local_account_id": local_account_id,
+                "tenant_id": tenant_id,
+            },
+        )
+        if account is None:
+            return None
+
+        account_name = account.get("username") or account_name or "Unknown"
+        home_account_id = account.get("home_account_id")
+        local_account_id = account.get("local_account_id") or local_account_id
+        tenant_id = account.get("realm") or tenant_id
+        timestamp = self._utc_now()
+
+        return {
+            "session_id": self._build_user_session_id(
+                account_name, tenant_id, home_account_id
+            ),
+            "account_name": account_name,
+            "home_account_id": home_account_id,
+            "local_account_id": local_account_id,
+            "tenant_id": tenant_id,
+            "created_at": timestamp,
+            "last_used_at": timestamp,
+        }
+
+    def _find_user_session(
+        self, session_id: Optional[str] = None
+    ) -> Optional[dict[str, Any]]:
+        if session_id is None:
+            session_id = self._get_active_user_session_id()
+
+        if session_id is None:
+            return None
+
+        for session in self._get_user_sessions():
+            if session.get("session_id") == session_id:
+                return session
+
+        return None
+
+    def _sync_active_user_session(self, save: bool = True) -> Optional[dict[str, Any]]:
+        session = self._find_user_session()
+        if session is None:
+            self._remove_auth_property(ACTIVE_USER_SESSION_ID_KEY)
+            self._remove_auth_property(ACTIVE_USER_ACCOUNT_NAME_KEY)
+            self._remove_auth_property(ACTIVE_USER_ACCOUNT_HOME_ID_KEY)
+            if save:
+                self._save_auth()
+            return None
+
+        self.app = None
+        self._auth_info[con.IDENTITY_TYPE] = "user"
+        self._auth_info[con.FAB_TENANT_ID] = session.get("tenant_id")
+        self._auth_info[ACTIVE_USER_ACCOUNT_NAME_KEY] = session.get("account_name")
+
+        if session.get("home_account_id"):
+            self._auth_info[ACTIVE_USER_ACCOUNT_HOME_ID_KEY] = session.get(
+                "home_account_id"
+            )
+        else:
+            self._remove_auth_property(ACTIVE_USER_ACCOUNT_HOME_ID_KEY)
+
+        self._remove_auth_property(con.FAB_SPN_CLIENT_ID)
+
+        if save:
+            self._save_auth()
+
+        return session
+
+    def _persist_user_session(
+        self, session: dict[str, Any], set_active: bool = True
+    ) -> None:
+        sessions = self._get_user_sessions()
+        existing_session = None
+
+        for stored_session in sessions:
+            if stored_session.get("session_id") == session.get("session_id"):
+                existing_session = stored_session
+                break
+
+        timestamp = self._utc_now()
+        session["created_at"] = (
+            existing_session.get("created_at")
+            if existing_session
+            else session.get("created_at", timestamp)
+        )
+        session["last_used_at"] = timestamp
+
+        if existing_session:
+            sessions = [
+                session if item.get("session_id") == session.get("session_id") else item
+                for item in sessions
+            ]
+        else:
+            sessions.append(session)
+
+        self._save_user_sessions(sessions)
+
+        if set_active:
+            self._auth_info[ACTIVE_USER_SESSION_ID_KEY] = session.get("session_id")
+            self._sync_active_user_session(save=False)
+
+        self._save_auth()
+
+    def _ensure_current_user_session_loaded(self) -> None:
+        if self.get_identity_type() != "user":
+            return
+
+        sessions = self._get_user_sessions()
+        active_session = self._find_user_session()
+
+        if sessions and active_session is not None:
+            return
+
+        if sessions:
+            self._auth_info[ACTIVE_USER_SESSION_ID_KEY] = sessions[0].get("session_id")
+            self._sync_active_user_session()
+            return
+
+        current_session = self._build_current_user_session_from_cache()
+        if current_session is None:
+            return
+
+        self._persist_user_session(current_session)
+
+    def get_user_sessions(self) -> list[dict[str, Any]]:
+        self._ensure_current_user_session_loaded()
+        active_session_id = self._get_active_user_session_id()
+        return sorted(
+            self._get_user_sessions(),
+            key=lambda session: (
+                session.get("session_id") == active_session_id,
+                session.get("last_used_at", ""),
+            ),
+            reverse=True,
+        )
+
+    def get_active_user_session(self) -> Optional[dict[str, Any]]:
+        self._ensure_current_user_session_loaded()
+        return self._find_user_session()
+
+    def activate_user_session(self, session_id: str) -> dict[str, Any]:
+        self._ensure_current_user_session_loaded()
+
+        session = self._find_user_session(session_id)
+        if session is None:
+            raise FabricCLIError(
+                ErrorMessages.Auth.user_session_not_found(session_id),
+                con.ERROR_NOT_FOUND,
+            )
+
+        session["last_used_at"] = self._utc_now()
+        self._save_user_sessions(
+            [
+                session if item.get("session_id") == session_id else item
+                for item in self._get_user_sessions()
+            ]
+        )
+        self._auth_info[ACTIVE_USER_SESSION_ID_KEY] = session_id
+        self._sync_active_user_session(save=False)
+        self._save_auth()
+        return session
+
+    def remove_user_session(self, session_id: str) -> Optional[dict[str, Any]]:
+        self._ensure_current_user_session_loaded()
+
+        sessions = self._get_user_sessions()
+        session = self._find_user_session(session_id)
+        if session is None:
+            raise FabricCLIError(
+                ErrorMessages.Auth.user_session_not_found(session_id),
+                con.ERROR_NOT_FOUND,
+            )
+
+        app = self._create_user_app(session.get("tenant_id"))
+        account = self._get_matching_account(app, session)
+        if account is not None:
+            app.remove_account(account)
+
+        self.app = None
+        sessions = [
+            item
+            for item in sessions
+            if item.get("session_id") != session.get("session_id")
+        ]
+
+        if not sessions:
+            self.logout()
+            return None
+
+        self._save_user_sessions(sessions)
+
+        if self._get_active_user_session_id() == session_id:
+            next_session = sorted(
+                sessions,
+                key=lambda item: item.get("last_used_at", ""),
+                reverse=True,
+            )[0]
+            self._auth_info[ACTIVE_USER_SESSION_ID_KEY] = next_session.get("session_id")
+            self._sync_active_user_session(save=False)
+
+        self._save_auth()
+        return self._find_user_session()
+
+    def is_user_session_valid(self, session: dict[str, Any]) -> bool:
+        try:
+            app = self._create_user_app(session.get("tenant_id"))
+            account = self._get_matching_account(app, session)
+            if account is None:
+                return False
+
+            token = app.acquire_token_silent(con.SCOPE_FABRIC_DEFAULT, account=account)
+            return bool(token and token.get("access_token"))
+        except Exception:
+            return False
+
     def _get_persistence(self):
         persistence = None
         try:
@@ -328,14 +762,34 @@ class FabAuth:
                 ),
                 status_code=con.ERROR_INVALID_ACCESS_MODE,
             )
+
+        if mode == "user":
+            if self.get_identity_type() not in [None, "user"]:
+                self.logout()
+            if tenant_id:
+                self.set_tenant(tenant_id)
+            self.app = None
+            self._set_auth_property(con.IDENTITY_TYPE, mode)
+            return
+
         if mode != self.get_identity_type():
             self.logout()
         if tenant_id and self.get_tenant_id() != tenant_id:
             self.set_tenant(tenant_id)
+        self.app = None
         self._set_auth_property(con.IDENTITY_TYPE, mode)
 
     def set_tenant(self, tenant_id):
         if tenant_id is not None:
+            if self.get_identity_type() == "user":
+                self.app = None
+                self._set_auth_properties(
+                    {
+                        con.FAB_TENANT_ID: tenant_id,
+                    }
+                )
+                return
+
             current_tenant_id = self.get_tenant_id()
             if current_tenant_id is not None and current_tenant_id != tenant_id:
                 fab_logger.log_warning(
@@ -349,6 +803,10 @@ class FabAuth:
                     con.FAB_TENANT_ID: tenant_id,
                 }
             )
+
+    def prepare_user_login(self, tenant_id: Optional[str] = None) -> None:
+        self.set_access_mode("user", tenant_id)
+        self.app = self._create_user_app(tenant_id)
 
     def set_spn(self, client_id, password=None, cert_path=None, client_assertion=None):
         persistence = self._get_persistence()
@@ -432,18 +890,18 @@ class FabAuth:
     def acquire_token(self, scope: list[str], interactive_renew=True) -> dict:
         """
         Core MSAL token acquisition method that returns the full MSAL result.
-        
+
         This method contains the common authentication logic shared between
         get_access_token and msal_bridge.get_token. It performs no validation
         on scopes - callers are responsible for their own validation needs.
-        
+
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
-            
+
         Returns:
             Full MSAL result dictionary containing access_token, expires_on, etc.
-            
+
         Raises:
             FabricCLIError: When token acquisition fails
         """
@@ -476,11 +934,18 @@ class FabAuth:
                 "access_token": env_var_token,
             }
         elif identity_type == "user":
+            self._ensure_current_user_session_loaded()
             # Use the cache to get the token
-            accounts = self._get_app().get_accounts()
             account = None
-            if accounts:
-                account = accounts[0]
+            active_session = self.get_active_user_session()
+            if active_session is not None:
+                account = self._get_matching_account(self._get_app(), active_session)
+
+            if account is None:
+                accounts = self._get_app().get_accounts()
+                if accounts:
+                    account = accounts[0]
+
             token = self._get_app().acquire_token_silent(scopes=scope, account=account)
 
             if token is None and interactive_renew and identity_type == "user":
@@ -490,14 +955,25 @@ class FabAuth:
                     parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
                 )
                 if token is not None and "id_token_claims" in token:
+                    session = self._build_user_session(
+                        token,
+                        fallback_tenant_id=token.get("id_token_claims", {}).get("tid"),
+                        app=self._get_app(),
+                    )
                     self.set_tenant(token.get("id_token_claims")["tid"])
+                    if session is not None:
+                        self._persist_user_session(session)
+            elif token and active_session is not None:
+                self._persist_user_session(active_session)
 
         if token and token.get("error"):
             fab_logger.log_debug(
-                f"Error in get token: {token.get('error_description')}")
+                f"Error in get token: {token.get('error_description')}"
+            )
             raise FabricCLIError(
                 ErrorMessages.Auth.access_token_error(
-                    "Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."),
+                    "Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."
+                ),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         if token is None or not token.get("access_token"):
@@ -511,17 +987,17 @@ class FabAuth:
     def get_access_token(self, scope: list[str], interactive_renew=True) -> str | None:
         """
         Get an access token string for the specified scopes.
-        
+
         This method maintains the existing CLI API - returns just the token string
         for backward compatibility. Uses the shared acquire_token method internally.
-        
+
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
-            
+
         Returns:
             Access token string or None if acquisition fails
-            
+
         Raises:
             FabricCLIError: When token acquisition fails
         """
@@ -731,8 +1207,8 @@ class FabAuth:
         )
         cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
         fingerprint = cert.fingerprint(
-            hashes.SHA1() # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
-        )  
+            hashes.SHA1()  # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+        )
         return self._Cert(certificate_data, private_key, fingerprint)
 
     def _load_pkcs12_certificate(

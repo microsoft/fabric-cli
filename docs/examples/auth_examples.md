@@ -114,6 +114,33 @@ Log out of the current Fabric CLI session and clear authentication tokens
 fab auth logout
 ```
 
+Log out of all stored authentication sessions
+
+```
+fab auth logout --all
+```
+
+
+## Stored Sessions
+
+### List stored user authentication sessions
+
+```
+fab auth list
+```
+
+### Switch to another stored user session
+
+```
+fab auth switch
+```
+
+### Switch directly to a specific stored account and tenant
+
+```
+fab auth switch -u <account_name> -t <tenant_id>
+```
+
 
 ## Authentication Status
 

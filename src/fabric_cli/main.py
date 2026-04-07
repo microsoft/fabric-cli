@@ -16,14 +16,14 @@ from fabric_cli.utils.fab_commands import COMMANDS
 
 def main():
     parser, subparsers = get_global_parser_and_subparsers()
-    
+
     argcomplete.autocomplete(parser, default_completer=None)
 
     args = parser.parse_args()
 
     try:
         fab_state_config.init_defaults()
-        
+
         if args.command == "auth" and args.auth_command == None:
             auth_parser.show_help(args)
             return
@@ -41,16 +41,21 @@ def main():
                     start_interactive_mode()
                     return
 
-        if args.command == "auth" and args.auth_command == "logout":
+        if args.command == "auth" and args.auth_command in [
+            "logout",
+            "status",
+            "list",
+            "switch",
+        ]:
             from fabric_cli.commands.auth import fab_auth
 
-            fab_auth.logout(args)
-            return
-
-        if args.command == "auth" and args.auth_command == "status":
-            from fabric_cli.commands.auth import fab_auth
-
-            fab_auth.status(args)
+            auth_commands = {
+                "logout": fab_auth.logout,
+                "status": fab_auth.status,
+                "list": fab_auth.list_accounts,
+                "switch": fab_auth.switch,
+            }
+            auth_commands[args.auth_command](args)
             return
 
         last_exit_code = fab_constant.EXIT_CODE_SUCCESS
@@ -119,11 +124,11 @@ def _handle_unexpected_error(err, args):
         error_message = str(err.args[0]) if err.args else str(err)
     except:
         error_message = "An unexpected error occurred"
-    
+
     fab_ui.print_output_error(
-        FabricCLIError(error_message, fab_constant.ERROR_UNEXPECTED_ERROR), 
+        FabricCLIError(error_message, fab_constant.ERROR_UNEXPECTED_ERROR),
         output_format_type=args.output_format,
-        )
+    )
     sys.exit(fab_constant.EXIT_CODE_ERROR)
 
 
@@ -145,4 +150,3 @@ def _execute_command(args, subparsers, parser):
 
 if __name__ == "__main__":
     main()
-

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 from argparse import Namespace
+import os
 from typing import Any, Optional
 
 from fabric_cli.core import fab_constant, fab_logger
@@ -11,6 +12,17 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui, fab_version_check
+
+AUTH_ENV_VARS = [
+    "FAB_TOKEN",
+    "FAB_TOKEN_ONELAKE",
+    "FAB_TOKEN_AZURE",
+    "FAB_SPN_CLIENT_ID",
+    "FAB_SPN_CLIENT_SECRET",
+    "FAB_SPN_CERT_PATH",
+    "FAB_SPN_FEDERATED_TOKEN",
+    "FAB_MANAGED_IDENTITY",
+]
 
 
 def init(args: Namespace) -> Any:
@@ -68,7 +80,7 @@ def init(args: Namespace) -> Any:
 
         try:
             if selected_auth == "Interactive with a web browser":
-                FabAuth().set_access_mode("user", args.tenant)
+                FabAuth().prepare_user_login(args.tenant)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
@@ -206,6 +218,47 @@ def init(args: Namespace) -> Any:
 
 
 def logout(args: Namespace) -> None:
+    auth = FabAuth()
+
+    if getattr(args, "all", False):
+        auth.logout()
+
+        # Clear cache and context including current and stale context files
+        utils_mem_store.clear_caches()
+        Context().reset_context()
+
+        fab_ui.print_output_format(args, message="Logged out of Fabric account")
+        return
+
+    if auth.get_identity_type() == "user":
+        sessions = auth.get_user_sessions()
+        if sessions:
+            session = _resolve_user_session(
+                auth,
+                username=getattr(args, "username", None),
+                tenant_id=getattr(args, "tenant", None),
+                action="log out",
+            )
+            next_session = auth.remove_user_session(session["session_id"])
+
+            utils_mem_store.clear_caches()
+            if next_session is None:
+                Context().reset_context()
+                fab_ui.print_output_format(
+                    args,
+                    message=f"Logged out of {session['account_name']}",
+                )
+            else:
+                Context().context = auth.get_tenant()
+                fab_ui.print_output_format(
+                    args,
+                    message=(
+                        f"Logged out of {session['account_name']} and switched to "
+                        f"{next_session['account_name']}"
+                    ),
+                )
+            return
+
     FabAuth().logout()
 
     # Clear cache and context including current and stale context files
@@ -284,6 +337,138 @@ def status(args: Namespace) -> None:
         "token_azure": azure_secret,
     }
     fab_ui.print_output_format(args, data=auth_data, show_key_value_list=True)
+
+
+def list_accounts(args: Namespace) -> None:
+    auth = FabAuth()
+    sessions = auth.get_user_sessions()
+
+    if not sessions:
+        fab_ui.print_output_format(
+            args,
+            message=ErrorMessages.Auth.no_user_sessions_found(),
+        )
+        return
+
+    active_session = auth.get_active_user_session()
+    active_session_id = active_session.get("session_id") if active_session else None
+
+    rows = []
+    for session in sessions:
+        rows.append(
+            {
+                "active": str(session.get("session_id") == active_session_id).lower(),
+                "account": session.get("account_name", "Unknown"),
+                "tenant_id": session.get("tenant_id", "Unknown"),
+                "valid": str(auth.is_user_session_valid(session)).lower(),
+                "last_used_at": session.get("last_used_at", ""),
+            }
+        )
+
+    fab_ui.print_output_format(args, data=rows, show_headers=True)
+
+
+def switch(args: Namespace) -> None:
+    if _is_environment_auth_active():
+        raise FabricCLIError(
+            ErrorMessages.Auth.environment_auth_switch_not_supported(),
+            fab_constant.ERROR_INVALID_OPERATION,
+        )
+
+    auth = FabAuth()
+    session = _resolve_user_session(
+        auth,
+        username=getattr(args, "username", None),
+        tenant_id=getattr(args, "tenant", None),
+        action="switch to",
+        require_valid=True,
+    )
+    current_session = auth.get_active_user_session()
+
+    auth.activate_user_session(session["session_id"])
+    utils_mem_store.clear_caches()
+    Context().context = auth.get_tenant()
+
+    if current_session and current_session.get("session_id") == session.get(
+        "session_id"
+    ):
+        message = (
+            f"Already using {session['account_name']} in tenant {session['tenant_id']}"
+        )
+    else:
+        message = (
+            f"Switched to {session['account_name']} in tenant {session['tenant_id']}"
+        )
+
+    fab_ui.print_output_format(args, message=message)
+
+
+def _is_environment_auth_active() -> bool:
+    return any(os.environ.get(var) for var in AUTH_ENV_VARS)
+
+
+def _resolve_user_session(
+    auth: FabAuth,
+    username: Optional[str],
+    tenant_id: Optional[str],
+    action: str,
+    require_valid: bool = False,
+) -> dict[str, Any]:
+    sessions = auth.get_user_sessions()
+    if not sessions:
+        raise FabricCLIError(
+            ErrorMessages.Auth.no_user_sessions_found(),
+            fab_constant.ERROR_NOT_FOUND,
+        )
+
+    active_session = auth.get_active_user_session()
+    active_session_id = active_session.get("session_id") if active_session else None
+
+    candidates = []
+    for session in sessions:
+        if username and session.get("account_name") != username:
+            continue
+        if tenant_id and session.get("tenant_id") != tenant_id:
+            continue
+        if require_valid and not auth.is_user_session_valid(session):
+            continue
+        candidates.append(session)
+
+    if not candidates:
+        if require_valid:
+            error_message = (
+                "No valid stored user sessions matched the requested selection"
+            )
+        else:
+            error_message = ErrorMessages.Auth.no_user_sessions_found()
+        raise FabricCLIError(error_message, fab_constant.ERROR_NOT_FOUND)
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    if not username and not tenant_id and len(candidates) == 2:
+        for session in candidates:
+            if session.get("session_id") != active_session_id:
+                return session
+
+    prompt_map = {}
+    for session in candidates:
+        label = f"{session.get('account_name', 'Unknown')} ({session.get('tenant_id', 'Unknown')})"
+        if session.get("session_id") == active_session_id:
+            label += " [active]"
+        prompt_map[label] = session
+
+    selected_label = fab_ui.prompt_select_item(
+        f"Which account would you like to {action}?",
+        list(prompt_map.keys()),
+    )
+    if selected_label is None:
+        raise FabricCLIError(
+            "Operation cancelled",
+            fab_constant.ERROR_OPERATION_CANCELLED,
+        )
+
+    return prompt_map[selected_label]
 
 
 # Utils

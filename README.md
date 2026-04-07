@@ -80,6 +80,12 @@ fab --version
 ```bash
 fab auth login
 # Select: "Interactive with a web browser"
+
+# List stored sessions
+fab auth list
+
+# Switch to another stored session
+fab auth switch
 ```
 
 ### Service Principal

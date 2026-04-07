@@ -91,6 +91,12 @@ For local development, sign in with your Microsoft account:
 
 ```bash
 fab auth login
+
+# Review stored user sessions
+fab auth list
+
+# Switch to another stored user session
+fab auth switch
 ```
 
 Select *Interactive with a web browser*. This opens your browser to complete authentication.
@@ -181,6 +187,5 @@ Add Fabric CLI to GitHub Actions, Azure Pipelines, and other DevOps tools. The s
 
 - Contact your Microsoft account manager
 - Open a ticket with the [Fabric Support Team](https://support.fabric.microsoft.com/)
-
 
 

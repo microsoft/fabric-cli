@@ -28,6 +28,12 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
+    auth = FabAuth()
+    auth.auth_file = os.path.join(tmp_path, "auth.json")
+    auth.cache_file = os.path.join(tmp_path, "cache.bin")
+    auth._auth_info = {}
+    auth.app = None
+    auth.aad_public_key = None
     return str(tmp_path)
 
 
@@ -344,7 +350,6 @@ def test_get_access_token_user_silent_success():
         patch.object(auth, "set_tenant", wraps=auth.set_tenant) as set_tenant_spy,
         patch.object(auth, "app", wraps=auth.app) as mock_app,
     ):
-
         mock_app.acquire_token_silent.return_value = {"access_token": expected_token}
         token = auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
         assert token == expected_token
@@ -359,7 +364,6 @@ def test_get_access_token_user_interactive_error_response_failure():
         patch.object(auth, "set_tenant", wraps=auth.set_tenant) as set_tenant_spy,
         patch.object(auth, "app", wraps=auth.app) as mock_app,
     ):
-
         mock_app.acquire_token_silent.return_value = None
         mock_app.acquire_token_interactive.return_value = {
             "error": "token acquisition failed"
@@ -381,7 +385,6 @@ def test_get_access_token_user_interactive_success():
         patch.object(auth, "set_tenant", wraps=auth.set_tenant) as set_tenant_spy,
         patch.object(auth, "app", wraps=auth.app) as mock_app,
     ):
-
         set_tenant_spy.configure_mock(**{"return_value": None})
 
         mock_app.acquire_token_silent.return_value = None
@@ -824,8 +827,12 @@ def test_get_access_token_token_error(monkeypatch):
     with pytest.raises(FabricCLIError) as exc_info:
         auth.get_access_token(["dummy_scope"])
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert exc_info.value.message == "Failed to get access token: Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens"
+    assert (
+        exc_info.value.message
+        == "Failed to get access token: Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens"
+    )
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
 
 def test_set_access_mode_success(monkeypatch):
     """Test setting a valid access mode"""
@@ -1064,3 +1071,70 @@ def test_auth_mode_migration(tmp_path):
     assert (
         auth.get_identity_type() == "user"
     ), "get_identity_type returns wrong value after migration"
+
+
+def test_set_tenant_for_user_does_not_logout(monkeypatch):
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user", con.FAB_TENANT_ID: "tenant-a"}
+
+    with patch.object(auth, "logout") as mock_logout:
+        auth.set_tenant("tenant-b")
+
+    mock_logout.assert_not_called()
+    assert auth.get_tenant_id() == "tenant-b"
+
+
+def test_get_user_sessions_returns_active_first():
+    auth = FabAuth()
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        "active_user_session_id": "session-b",
+        "user_sessions": [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-06T12:00:00Z",
+            },
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-05T12:00:00Z",
+            },
+        ],
+    }
+
+    sessions = auth.get_user_sessions()
+    assert sessions[0]["session_id"] == "session-b"
+    assert sessions[1]["session_id"] == "session-a"
+
+
+def test_activate_user_session_updates_active_auth_state(tmp_path):
+    auth = FabAuth()
+    auth.auth_file = os.path.join(tmp_path, "auth.json")
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: "tenant-a",
+        "active_user_session_id": "session-a",
+        "user_sessions": [
+            {
+                "session_id": "session-a",
+                "account_name": "alice@example.com",
+                "tenant_id": "tenant-a",
+                "last_used_at": "2026-04-06T12:00:00Z",
+            },
+            {
+                "session_id": "session-b",
+                "account_name": "bob@example.com",
+                "tenant_id": "tenant-b",
+                "last_used_at": "2026-04-07T12:00:00Z",
+            },
+        ],
+    }
+
+    auth.activate_user_session("session-b")
+
+    assert auth.get_tenant_id() == "tenant-b"
+    assert auth._auth_info["active_user_session_id"] == "session-b"
+    assert auth._auth_info["active_user_account_name"] == "bob@example.com"

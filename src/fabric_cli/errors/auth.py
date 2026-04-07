@@ -85,6 +85,18 @@ class AuthErrors:
         return "Failed to obtain access token"
 
     @staticmethod
+    def no_user_sessions_found() -> str:
+        return "No stored user sessions found"
+
+    @staticmethod
+    def user_session_not_found(session_identifier: str) -> str:
+        return f"Stored user session '{session_identifier}' not found"
+
+    @staticmethod
+    def environment_auth_switch_not_supported() -> str:
+        return "Stored user sessions cannot be switched while authentication is controlled by environment variables"
+
+    @staticmethod
     def jwt_decode_failed() -> str:
         return "Failed to decode JWT token"
 
