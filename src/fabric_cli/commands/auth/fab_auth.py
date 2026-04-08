@@ -80,14 +80,18 @@ def init(args: Namespace) -> Any:
 
         try:
             if selected_auth == "Interactive with a web browser":
-                FabAuth().prepare_user_login(args.tenant)
-                FabAuth().get_access_token(
-                    scope=fab_constant.SCOPE_FABRIC_DEFAULT,
-                    force_interactive=True,
-                )
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
-                Context().context = FabAuth().get_tenant()
+                auth = FabAuth()
+                auth.prepare_user_login(args.tenant)
+                try:
+                    auth.get_access_token(
+                        scope=fab_constant.SCOPE_FABRIC_DEFAULT,
+                        force_interactive=True,
+                    )
+                    auth.get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+                    auth.get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                finally:
+                    auth.finish_user_login()
+                Context().context = auth.get_tenant()
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
                     "Ensure tenant setting is enabled for Service Principal auth"
@@ -437,7 +441,10 @@ def _resolve_user_session(
     candidates = []
     username_lower = username.lower() if username else None
     for session in sessions:
-        if username_lower and (session.get("account_name") or "").lower() != username_lower:
+        if (
+            username_lower
+            and (session.get("account_name") or "").lower() != username_lower
+        ):
             continue
         if tenant_id and session.get("tenant_id") != tenant_id:
             continue

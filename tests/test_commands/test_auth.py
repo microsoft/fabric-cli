@@ -28,6 +28,7 @@ def reset_fab_auth_state(monkeypatch, tmp_path):
     auth._auth_info = {}
     auth.app = None
     auth.aad_public_key = None
+    auth._preserve_user_app_during_login = False
 
 
 class TestAuth:
@@ -45,6 +46,7 @@ class TestAuth:
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
             mock_fab_auth_instance.prepare_user_login.assert_called_with(None)
+            mock_fab_auth_instance.finish_user_login.assert_called_once()
             assert_get_access_token(mock_fab_auth_instance, interactive_first=True)
             assert result is True
 
@@ -68,6 +70,7 @@ class TestAuth:
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
             mock_fab_auth_instance.prepare_user_login.assert_called_with("mock_tenant")
+            mock_fab_auth_instance.finish_user_login.assert_called_once()
             assert_get_access_token(mock_fab_auth_instance, interactive_first=True)
             assert result is True
 
@@ -1069,7 +1072,9 @@ class TestAuth:
                 fab_auth.switch(args)
             assert exc_info.value.status_code == fab_constant.ERROR_INVALID_OPERATION
 
-    def test_auth_switch_case_insensitive_username(self, mock_fab_auth, mock_fab_context):
+    def test_auth_switch_case_insensitive_username(
+        self, mock_fab_auth, mock_fab_context
+    ):
         args = argparse.Namespace(
             command="auth",
             output_format=None,
@@ -1089,9 +1094,7 @@ class TestAuth:
             "session_id": "session-a"
         }
 
-        with patch(
-            "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
-        ):
+        with patch("fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"):
             fab_auth.switch(args)
 
         mock_fab_auth_instance.activate_user_session.assert_called_once_with(
@@ -1137,9 +1140,7 @@ class TestAuth:
                 "fabric_cli.commands.auth.fab_auth.fab_ui.prompt_select_item",
                 return_value="bob@example.com (tenant-b)",
             ),
-            patch(
-                "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"
-            ),
+            patch("fabric_cli.commands.auth.fab_auth.fab_ui.print_output_format"),
         ):
             fab_auth.switch(args)
 
@@ -1238,6 +1239,7 @@ def assert_fab_auth_not_called(mock_fab_auth):
     mock_fab_auth_instance = mock_fab_auth.get("instance")
     mock_fab_auth_instance.set_access_mode.assert_not_called()
     mock_fab_auth_instance.prepare_user_login.assert_not_called()
+    mock_fab_auth_instance.finish_user_login.assert_not_called()
     mock_fab_auth_instance.set_tenant.assert_not_called()
     mock_fab_auth_instance.set_spn.assert_not_called()
     mock_fab_auth_instance.get_access_token.assert_not_called()
@@ -1284,8 +1286,10 @@ def mock_fab_auth():
         remove_user_session=MagicMock(return_value=None),
         activate_user_session=MagicMock(),
         is_user_session_valid=MagicMock(return_value=True),
+        _create_user_app=MagicMock(side_effect=lambda tenant_id: object()),
         set_access_mode=MagicMock(),
         prepare_user_login=MagicMock(),
+        finish_user_login=MagicMock(),
         set_tenant=MagicMock(),
         set_spn=MagicMock(),
         set_managed_identity=MagicMock(),

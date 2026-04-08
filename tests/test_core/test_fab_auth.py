@@ -34,6 +34,7 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._auth_info = {}
     auth.app = None
     auth.aad_public_key = None
+    auth._preserve_user_app_during_login = False
     return str(tmp_path)
 
 
@@ -1131,6 +1132,63 @@ def test_set_tenant_resets_app_when_tenant_changes():
     assert auth.get_tenant_id() == "tenant-b"
 
 
+def test_prepare_user_login_preserves_app_until_login_finishes():
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user", con.FAB_TENANT_ID: "tenant-a"}
+    sentinel_app = object()
+
+    with patch.object(auth, "_create_user_app", return_value=sentinel_app):
+        auth.prepare_user_login()
+
+    auth.set_tenant("tenant-b")
+
+    assert auth.app is sentinel_app
+
+    auth.finish_user_login()
+    auth.set_tenant("tenant-c")
+
+    assert auth.app is None
+    assert auth.get_tenant_id() == "tenant-c"
+
+
+def test_get_access_token_during_login_uses_legacy_first_account(monkeypatch):
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._preserve_user_app_during_login = True
+
+    chosen_accounts = []
+
+    class FakeUserApp:
+        def get_accounts(self):
+            return [
+                {"username": "legacy@example.com", "home_account_id": "legacy"},
+                {"username": "session@example.com", "home_account_id": "session"},
+            ]
+
+        def acquire_token_silent(self, *, scopes, account):
+            chosen_accounts.append(account)
+            return {"access_token": "silent_token"}
+
+    fake_app = FakeUserApp()
+    monkeypatch.setattr(auth, "_get_app", lambda: fake_app)
+
+    matching_account_called = {"value": False}
+
+    def fail_if_called(*args, **kwargs):
+        matching_account_called["value"] = True
+        return None
+
+    monkeypatch.setattr(auth, "_get_matching_account", fail_if_called)
+
+    token = auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
+
+    assert token == "silent_token"
+    assert matching_account_called["value"] is False
+    assert chosen_accounts == [
+        {"username": "legacy@example.com", "home_account_id": "legacy"}
+    ]
+
+
 def test_sync_active_user_session_preserves_app_when_tenant_unchanged(tmp_path):
     auth = FabAuth()
     auth.auth_file = os.path.join(tmp_path, "auth.json")
@@ -1236,7 +1294,7 @@ def test_activate_user_session_updates_active_auth_state(tmp_path):
 
 
 def test_utc_now_returns_z_suffix():
-    result = FabAuth._utc_now()
+    result = FabAuth()._utc_now()
     assert result.endswith("Z")
     assert "+" not in result
     # Should be parseable as ISO 8601
@@ -1250,10 +1308,16 @@ def test_is_user_session_valid_accepts_shared_app():
     mock_app = patch.object(auth, "_create_user_app").start()
     mock_app.return_value = mock_app
 
-    mock_external_app = type("FakeApp", (), {
-        "get_accounts": lambda self, *a, **kw: [{"username": "alice@example.com", "home_account_id": "h1"}],
-        "acquire_token_silent": lambda self, *a, **kw: {"access_token": "tok"},
-    })()
+    mock_external_app = type(
+        "FakeApp",
+        (),
+        {
+            "get_accounts": lambda self, *a, **kw: [
+                {"username": "alice@example.com", "home_account_id": "h1"}
+            ],
+            "acquire_token_silent": lambda self, *a, **kw: {"access_token": "tok"},
+        },
+    )()
 
     session = {
         "session_id": "s1",

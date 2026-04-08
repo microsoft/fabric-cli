@@ -55,6 +55,7 @@ class FabAuth:
         self.aad_public_key = None
         # Reset the auth info
         self.app: msal.ClientApplication = None
+        self._preserve_user_app_during_login = False
         self._auth_info = {}
 
         # Load the auth info and environment variables
@@ -265,7 +266,9 @@ class FabAuth:
             )
         except TypeError as e:
             # MSAL may not accept a username filter in all broker configurations.
-            fab_logger.log_debug(f"Filtered get_accounts failed, retrying unfiltered: {e}")
+            fab_logger.log_debug(
+                f"Filtered get_accounts failed, retrying unfiltered: {e}"
+            )
             accounts = app.get_accounts()
 
         if not isinstance(accounts, list):
@@ -476,7 +479,10 @@ class FabAuth:
         # Only reset the MSAL app when the tenant changes so that the active
         # WAM broker session is preserved during the login flow.
         new_tenant = session.get("tenant_id")
-        if self._auth_info.get(con.FAB_TENANT_ID) != new_tenant:
+        if (
+            not self._preserve_user_app_during_login
+            and self._auth_info.get(con.FAB_TENANT_ID) != new_tenant
+        ):
             self.app = None
         self._auth_info[con.IDENTITY_TYPE] = "user"
         self._auth_info[con.FAB_TENANT_ID] = new_tenant
@@ -799,10 +805,15 @@ class FabAuth:
     def set_tenant(self, tenant_id):
         if tenant_id is not None:
             if self.get_identity_type() == "user":
+                current_tenant_id = self.get_tenant_id()
                 # Only reset the MSAL app when the tenant actually changes so
                 # that the active WAM broker session is preserved across scope
                 # requests during login.
-                if self.get_tenant_id() != tenant_id:
+                if (
+                    not self._preserve_user_app_during_login
+                    and current_tenant_id is not None
+                    and current_tenant_id != tenant_id
+                ):
                     self.app = None
                 self._set_auth_properties(
                     {
@@ -827,7 +838,11 @@ class FabAuth:
 
     def prepare_user_login(self, tenant_id: Optional[str] = None) -> None:
         self.set_access_mode("user", tenant_id)
+        self._preserve_user_app_during_login = True
         self.app = self._create_user_app(tenant_id)
+
+    def finish_user_login(self) -> None:
+        self._preserve_user_app_during_login = False
 
     def set_spn(self, client_id, password=None, cert_path=None, client_assertion=None):
         persistence = self._get_persistence()
@@ -961,9 +976,14 @@ class FabAuth:
                 "access_token": env_var_token,
             }
         elif identity_type == "user":
-            self._ensure_current_user_session_loaded()
             account = None
-            active_session = self.get_active_user_session()
+            active_session = None
+            use_active_session = not self._preserve_user_app_during_login
+
+            if use_active_session:
+                self._ensure_current_user_session_loaded()
+                active_session = self.get_active_user_session()
+
             if not force_interactive:
                 # Use the cache to get the token unless login explicitly asked for account selection.
                 if active_session is not None:
@@ -997,7 +1017,12 @@ class FabAuth:
                     self.set_tenant(token.get("id_token_claims")["tid"])
                     if session is not None:
                         self._persist_user_session(session)
-            elif token and active_session is not None and not force_interactive:
+            elif (
+                token
+                and active_session is not None
+                and not force_interactive
+                and use_active_session
+            ):
                 # Silent acquisition succeeded — update the session timestamp.
                 self._persist_user_session(active_session)
 
@@ -1053,6 +1078,7 @@ class FabAuth:
         self._auth_info = {}
 
         self.app = None
+        self._preserve_user_app_during_login = False
 
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)
