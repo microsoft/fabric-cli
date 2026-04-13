@@ -60,17 +60,8 @@ def _fetch_results(args: Namespace, payload: dict[str, Any]) -> tuple[list[dict]
     Raises:
         FabricCLIError: On API error or invalid response body.
     """
-    # raw_response=True in catalog_api.search means we must check status ourselves
     response = catalog_api.search(args, payload)
-    _raise_on_error(response)
-
-    try:
-        results = json.loads(response.text)
-    except json.JSONDecodeError:
-        raise FabricCLIError(
-            ErrorMessages.Find.invalid_response(),
-            fab_constant.ERROR_INVALID_JSON,
-        )
+    results = _parse_response(response)
 
     items = results.get("value", [])
     continuation_token = results.get("continuationToken", "") or None
@@ -108,12 +99,12 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         try:
             utils_ui.print_grey("")
-            input("Press any key to continue... (Ctrl+C to stop)")
+            input("Press Enter to continue... (Ctrl+C to stop)")
         except (KeyboardInterrupt, EOFError):
             utils_ui.print_grey("")
             break
 
-        payload = {"continuationToken": continuation_token}
+        payload = {"continuationToken": continuation_token, "pageSize": payload.get("pageSize", 50)}
 
     if total_count > 0:
         utils_ui.print_grey("")
@@ -130,7 +121,7 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
         all_items.extend(items)
         has_more = continuation_token is not None
         if has_more:
-            payload = {"continuationToken": continuation_token}
+            payload = {"continuationToken": continuation_token, "pageSize": payload.get("pageSize", 50)}
 
     if not all_items:
         utils_ui.print_grey("No items found.")
@@ -238,21 +229,30 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
     return {"operator": operator, "values": normalized}
 
 
-def _raise_on_error(response) -> None:
-    """Raise FabricCLIError if the API response indicates failure."""
-    if response.status_code != 200:
+def _parse_response(response) -> dict:
+    """Parse a successful API response or raise FabricCLIError on failure."""
+    if response.status_code == 200:
         try:
-            error_data = json.loads(response.text)
-            error_code = error_data.get("errorCode", fab_constant.ERROR_UNEXPECTED_ERROR)
-            error_message = error_data.get("message", response.text)
+            results = json.loads(response.text)
         except json.JSONDecodeError:
-            error_code = fab_constant.ERROR_UNEXPECTED_ERROR
-            error_message = response.text
+            raise FabricCLIError(
+                ErrorMessages.Find.invalid_response(),
+                fab_constant.ERROR_INVALID_JSON,
+            )
+        return results
 
-        raise FabricCLIError(
-            ErrorMessages.Find.search_failed(error_message),
-            error_code,
-        )
+    try:
+        error_data = json.loads(response.text)
+        error_code = error_data.get("errorCode", fab_constant.ERROR_UNEXPECTED_ERROR)
+        error_message = error_data.get("message", response.text)
+    except json.JSONDecodeError:
+        error_code = fab_constant.ERROR_UNEXPECTED_ERROR
+        error_message = response.text
+
+    raise FabricCLIError(
+        ErrorMessages.Find.search_failed(error_message),
+        error_code,
+    )
 
 
 def _get_workspace_field(item: dict, field: str) -> str | None:
@@ -290,7 +290,8 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
             entry["description"] = item.get("description") or ""
         display_items.append(entry)
 
-    if not show_details:
+    output_format = getattr(args, "output_format", "text") or "text"
+    if not show_details and output_format == "text":
         utils.truncate_columns(display_items, ["description", "workspace", "name"])
 
     if getattr(args, "query", None):

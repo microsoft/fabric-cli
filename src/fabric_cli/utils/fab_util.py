@@ -68,6 +68,9 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     Convert args to dict with a specified max nested level.
     Example:
     args.params = "key1.key2=value2,key1.key3=value3,key4=value4" -> {"key1": {"key2": "value2", "key3": "value3"}, "key4": "value4"}
+
+    Supports != operator for negation. The trailing '!' is kept in the key:
+    args.params = "key!=value" -> {"key!": "value"}
     """
 
     params_dict: dict = {}

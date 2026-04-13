@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: '{"search": "data", "pageSize": 50}'
+    body: null
     headers:
       Accept:
       - '*/*'
@@ -8,120 +8,18 @@ interactions:
       - gzip, deflate
       Connection:
       - keep-alive
-      Content-Length:
-      - '34'
       Content-Type:
       - application/json
       User-Agent:
       - ms-fabric-cli-test/1.3.1
-    method: POST
-    uri: https://api.fabric.microsoft.com/v1/catalog/search
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
     body:
-      string: '{"value": [{"id": "00000000-0000-0000-0000-000000000095", "type": "KQLQueryset",
-        "displayName": "MockItem1", "description": "Mock description 1",
-        "workspaceId": "00000000-0000-0000-0000-000000000021", "workspaceName": "Mock Workspace 1", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000000",
-        "type": "Dataflow", "displayName": "MockItem2", "description": "", "workspaceId":
-        "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 2", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000091",
-        "type": "Dataflow", "displayName": "MockItem3", "description": "", "workspaceId":
-        "00000000-0000-0000-0000-000000000093", "workspaceName": "Mock Workspace 3", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000113", "type": "Dataflow",
-        "displayName": "MockItem3", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000059", "type": "Dataflow",
-        "displayName": "MockItem4", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000003", "type": "Report", "displayName": "MockItem5", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000086",
-        "workspaceName": "Mock Workspace 6", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000090", "type": "Dataflow", "displayName": "MockItem6", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000125", "type": "ApacheAirflowJob",
-        "displayName": "MockItem7", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000105", "type": "ApacheAirflowJob",
-        "displayName": "MockItem8", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000036", "type": "Dataflow", "displayName": "MockItem3", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000020", "type": "Dataflow", "displayName": "MockItem9", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000093",
-        "workspaceName": "Mock Workspace 3", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000030", "type": "SQLDatabase", "displayName": "MockItem10", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000103",
-        "workspaceName": "Mock Workspace 7", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000002", "type": "Dataflow",
-        "displayName": "MockItem11", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000080", "type": "SQLEndpoint", "displayName": "MockItem12", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000042",
-        "workspaceName": "Mock Workspace 8", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000120", "type": "SQLDatabase",
-        "displayName": "MockItem13", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000117", "type": "SQLEndpoint",
-        "displayName": "MockItem14", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000114", "type": "SQLEndpoint",
-        "displayName": "MockItem15", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000093",
-        "workspaceName": "Mock Workspace 3", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000049", "type": "SQLDatabase", "displayName": "MockItem14", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000131", "type": "SQLDatabase",
-        "displayName": "MockItem16", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000042",
-        "workspaceName": "Mock Workspace 8", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000057", "type": "SQLEndpoint",
-        "displayName": "MockItem16", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000042",
-        "workspaceName": "Mock Workspace 8", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000062", "type": "OperationsAgent",
-        "displayName": "MockItem17", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000055", "type": "SQLEndpoint", "displayName": "MockItem13", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000016", "type": "MirroredDatabase",
-        "displayName": "MockItem15", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000093",
-        "workspaceName": "Mock Workspace 3", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000075", "type": "SQLEndpoint", "displayName": "MockItem10", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000103",
-        "workspaceName": "Mock Workspace 7", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000026", "type": "SQLEndpoint",
-        "displayName": "MockItem18", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000103",
-        "workspaceName": "Mock Workspace 7", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000116", "type": "SQLDatabase",
-        "displayName": "MockItem12", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000042",
-        "workspaceName": "Mock Workspace 8", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000004", "type": "SQLDatabase",
-        "displayName": "MockItem18", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000103",
-        "workspaceName": "Mock Workspace 7", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000019", "type": "MirroredDatabase",
-        "displayName": "MockItem19", "description": "", "workspaceId":
-        "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 2", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000044",
-        "type": "SQLEndpoint", "displayName": "MockItem20", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000045", "workspaceName": "Mock Workspace 9", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000068",
-        "type": "SemanticModel", "displayName": "MockItem21", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000021", "workspaceName": "Mock Workspace 10", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000012",
-        "type": "DataAgent", "displayName": "MockItem22", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000093", "workspaceName": "Mock Workspace 3", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000079",
-        "type": "SemanticModel", "displayName": "MockItem20", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000118",
-        "type": "SemanticModel", "displayName": "MockItem23", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000097",
-        "type": "SemanticModel", "displayName": "MockItem24", "workspaceId": "00000000-0000-0000-0000-000000000021",
-        "workspaceName": "Mock Workspace 10", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000123", "type": "DataAgent", "displayName": "MockItem25", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000056", "type": "SemanticModel", "displayName": "MockItem26", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000022",
-        "workspaceName": "Mock Workspace 11", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000094", "type": "SQLEndpoint", "displayName": "MockItem20", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000040",
-        "workspaceName": "Mock Workspace 12", "catalogEntryType": "FabricItem"}, {"id":
-        "00000000-0000-0000-0000-000000000108", "type": "SQLEndpoint", "displayName": "MockItem20", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132",
-        "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"},
-        {"id": "00000000-0000-0000-0000-000000000048", "type": "DataAgent", "displayName": "MockItem27", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000031",
-        "workspaceName": "Mock Workspace 4", "catalogEntryType":
-        "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000078", "type": "Eventhouse",
-        "displayName": "MockItem28", "description": "Mock description 2", "workspaceId":
-        "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 2", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000025",
-        "type": "Warehouse", "displayName": "MockItem29", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000022", "workspaceName": "Mock Workspace 11", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000015",
-        "type": "Lakehouse", "displayName": "MockItem20", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000045", "workspaceName": "Mock Workspace 9", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000052",
-        "type": "Lakehouse", "displayName": "MockItem26", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000022", "workspaceName": "Mock Workspace 11", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000005",
-        "type": "SQLEndpoint", "displayName": "MockItem30", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000021", "workspaceName": "Mock Workspace 10", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000115",
-        "type": "PaginatedReport", "displayName": "MockItem31", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000093", "workspaceName": "Mock Workspace 3", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000001",
-        "type": "Warehouse", "displayName": "MockItem23", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000021", "workspaceName": "Mock Workspace 10", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000017",
-        "type": "SQLEndpoint", "displayName": "MockItem19", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000006",
-        "type": "DataPipeline", "displayName": "MockItem32", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000132", "workspaceName": "Mock Workspace 5", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000098",
-        "type": "Warehouse", "displayName": "MockItem23", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000029", "workspaceName": "Mock Workspace 13", "catalogEntryType": "FabricItem"}, {"id": "00000000-0000-0000-0000-000000000013",
-        "type": "Warehouse", "displayName": "MockItem23", "description": "", "workspaceId": "00000000-0000-0000-0000-000000000040", "workspaceName": "Mock Workspace 12", "catalogEntryType": "FabricItem"}], "continuationToken":
-        "eyJTa2lwIjo1MCwiRmlsdGVyIjpudWxsLCJTZWFyY2giOiJkYXRhIn0="}'
+      string: '{"value": [{"id": "29490b32-2d1c-4f65-aa77-711b366ca219", "displayName":
+        "My workspace", "description": "", "type": "Personal", "capacityId": "00000000-0000-0000-0000-000000000004"},
+        {"id": "23c33f24-bb96-48b2-8bf8-a3a9cd995ffd", "displayName": "fabriccli_WorkspacePerTestclass_000001",
+        "description": "Created by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -130,15 +28,446 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2392'
+      - '1288'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 16 Mar 2026 14:56:53 GMT
+      - Mon, 13 Apr 2026 14:16:20 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 00000000-0000-0000-0000-000000000035
+      - a7fc9bec-5766-4c20-9711-2e24c6f2c78c
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/23c33f24-bb96-48b2-8bf8-a3a9cd995ffd/items
+  response:
+    body:
+      string: '{"value": []}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '32'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:16:23 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 76ce5293-6788-4ce0-84fb-24e2eaaf90d1
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/23c33f24-bb96-48b2-8bf8-a3a9cd995ffd/items
+  response:
+    body:
+      string: '{"value": []}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '32'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:16:24 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - b2ccf4c1-30f6-49ad-8714-faefdd68574f
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"description": "Created by fab", "displayName": "fabcli000001", "type":
+      "Notebook", "folderId": null, "definition": {"parts": [{"path": "notebook-content.py",
+      "payload": "IyBGYWJyaWMgbm90ZWJvb2sgc291cmNlCgojIE1FVEFEQVRBICoqKioqKioqKioqKioqKioqKioqCgojIE1FVEEgewojIE1FVEEgICAia2VybmVsX2luZm8iOiB7CiMgTUVUQSAgICAgIm5hbWUiOiAic3luYXBzZV9weXNwYXJrIgojIE1FVEEgICB9LAojIE1FVEEgICAiZGVwZW5kZW5jaWVzIjoge30KIyBNRVRBIH0KCiMgQ0VMTCAqKioqKioqKioqKioqKioqKioqKgoKIyBXZWxjb21lIHRvIHlvdXIgbmV3IG5vdGVib29rCiMgVHlwZSBoZXJlIGluIHRoZSBjZWxsIGVkaXRvciB0byBhZGQgY29kZSEKCgojIE1FVEFEQVRBICoqKioqKioqKioqKioqKioqKioqCgojIE1FVEEgewojIE1FVEEgICAibGFuZ3VhZ2UiOiAicHl0aG9uIiwKIyBNRVRBICAgImxhbmd1YWdlX2dyb3VwIjogInN5bmFwc2VfcHlzcGFyayIKIyBNRVRBIH0K",
+      "payloadType": "InlineBase64"}]}}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '764'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/workspaces/23c33f24-bb96-48b2-8bf8-a3a9cd995ffd/notebooks
+  response:
+    body:
+      string: 'null'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId,Location,Retry-After,ETag,x-ms-operation-id
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '24'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:16:29 GMT
+      ETag:
+      - '""'
+      Location:
+      - https://dailyapi.fabric.microsoft.com/v1/operations/1665b42e-b215-4558-8242-86ef7d620298
+      Pragma:
+      - no-cache
+      RequestId:
+      - 54f6fde2-13e1-4f26-b6a8-49d62e124544
+      Retry-After:
+      - '20'
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      x-ms-operation-id:
+      - 1665b42e-b215-4558-8242-86ef7d620298
+    status:
+      code: 202
+      message: Accepted
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/operations/1665b42e-b215-4558-8242-86ef7d620298
+  response:
+    body:
+      string: '{"status": "Succeeded", "createdTimeUtc": "2026-04-13T14:16:28.4868803",
+        "lastUpdatedTimeUtc": "2026-04-13T14:16:30.8042917", "percentComplete": 100,
+        "error": null}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId,Location,x-ms-operation-id
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '132'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:16:51 GMT
+      Location:
+      - https://dailyapi.fabric.microsoft.com/v1/operations/1665b42e-b215-4558-8242-86ef7d620298/result
+      Pragma:
+      - no-cache
+      RequestId:
+      - 593c6674-e4eb-4bc8-9394-de73b9a9e4ce
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      x-ms-operation-id:
+      - 1665b42e-b215-4558-8242-86ef7d620298
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/operations/1665b42e-b215-4558-8242-86ef7d620298/result
+  response:
+    body:
+      string: '{"id": "eee5041d-fd64-48c6-851f-c9e328be99b8", "type": "Notebook",
+        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
+        "23c33f24-bb96-48b2-8bf8-a3a9cd995ffd"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 13 Apr 2026 14:16:53 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - c4329b00-d41e-48cb-963c-e93006c13c0e
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"search": "fabcli000001", "pageSize": 50, "filter": "Type eq ''Notebook''"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '78'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: POST
+    uri: https://api.fabric.microsoft.com/v1/catalog/search
+  response:
+    body:
+      string: '{"value": [{"id": "eee5041d-fd64-48c6-851f-c9e328be99b8", "type": "Notebook",
+        "displayName": "fabcli000001", "description": "Created by fab", "catalogEntryType":
+        "FabricItem", "hierarchy": {"workspace": {"id": "23c33f24-bb96-48b2-8bf8-a3a9cd995ffd",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001"}}}], "continuationToken":
+        ""}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '263'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:17:25 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 19bac8e1-1471-49a2-a475-bf24edd39992
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces
+  response:
+    body:
+      string: '{"value": [{"id": "29490b32-2d1c-4f65-aa77-711b366ca219", "displayName":
+        "My workspace", "description": "", "type": "Personal", "capacityId": "00000000-0000-0000-0000-000000000004"},
+        {"id": "23c33f24-bb96-48b2-8bf8-a3a9cd995ffd", "displayName": "fabriccli_WorkspacePerTestclass_000001",
+        "description": "Created by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '1288'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:17:29 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - fb219d42-589e-46c9-ad51-0007a777e7b7
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/workspaces/23c33f24-bb96-48b2-8bf8-a3a9cd995ffd/items
+  response:
+    body:
+      string: '{"value": [{"id": "eee5041d-fd64-48c6-851f-c9e328be99b8", "type": "Notebook",
+        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
+        "23c33f24-bb96-48b2-8bf8-a3a9cd995ffd", "sensitivityLabel": {"sensitivityLabelId":
+        "9fbde396-1a24-4c79-8edf-9254a0f35055"}}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '221'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 13 Apr 2026 14:17:30 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - d385164e-be37-4f80-bd7b-72fd7e9e90db
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: DELETE
+    uri: https://api.fabric.microsoft.com/v1/workspaces/23c33f24-bb96-48b2-8bf8-a3a9cd995ffd/items/eee5041d-fd64-48c6-851f-c9e328be99b8
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/octet-stream
+      Date:
+      - Mon, 13 Apr 2026 14:17:32 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - f1da1fe0-ff8f-4950-bb8c-74c13994e9b4
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
