@@ -42,7 +42,7 @@ fab find 'data' -q "[].{name: name, workspace: workspace}"
 
 **Behavior:**
 
-- In interactive mode (`fab` shell), results are paged 50 at a time with "Press any key to continue..." prompts.
+- In interactive mode (`fab` shell), results are paged 50 at a time with "Press Enter to continue..." prompts.
 - In command-line mode (`fab find ...`), all results are fetched in a single pass (up to 1000 per API call).
 - Type names are case-insensitive. `type=lakehouse` matches `Lakehouse`.
 - The `-q` JMESPath filter is applied client-side after results are returned from the API.

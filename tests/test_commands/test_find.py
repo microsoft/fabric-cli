@@ -79,9 +79,7 @@ class TestFindE2E:
         mock_questionary_print.reset_mock()
         time.sleep(30)
 
-        cli_executor.exec_command(
-            f"find '{lakehouse.display_name}' -P type=Lakehouse"
-        )
+        cli_executor.exec_command(f"find '{lakehouse.display_name}' -P type=Lakehouse")
 
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -102,9 +100,7 @@ class TestFindE2E:
         mock_questionary_print.reset_mock()
         time.sleep(30)
 
-        cli_executor.exec_command(
-            f"find '{notebook.display_name}' -P type=Notebook"
-        )
+        cli_executor.exec_command(f"find '{notebook.display_name}' -P type=Notebook")
 
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -127,9 +123,7 @@ class TestFindE2E:
         mock_questionary_print.reset_mock()
         time.sleep(30)
 
-        cli_executor.exec_command(
-            f"find '{lakehouse.display_name}' -P type=lakehouse"
-        )
+        cli_executor.exec_command(f"find '{lakehouse.display_name}' -P type=lakehouse")
 
         mock_questionary_print.assert_called()
         _assert_strings_in_mock_calls(
@@ -185,13 +179,9 @@ class TestFindE2E:
         mock_print_grey.reset_mock()
         time.sleep(30)
 
-        cli_executor.exec_command(
-            f"find '{notebook.display_name}' -P type!=Notebook"
-        )
+        cli_executor.exec_command(f"find '{notebook.display_name}' -P type!=Notebook")
 
-        all_output = " ".join(
-            str(c) for c in mock_questionary_print.call_args_list
-        )
+        all_output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
         assert "Notebook" not in all_output or "No items found" in " ".join(
             str(c) for c in mock_print_grey.call_args_list
         )
@@ -214,9 +204,7 @@ class TestFindE2E:
             f"find '{notebook.display_name}' -P type!=[Notebook,Report]"
         )
 
-        all_output = " ".join(
-            str(c) for c in mock_questionary_print.call_args_list
-        )
+        all_output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
         assert "Notebook" not in all_output or "No items found" in " ".join(
             str(c) for c in mock_print_grey.call_args_list
         )
@@ -231,10 +219,7 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -P type=FakeType123")
 
         error_output = str(mock_fab_ui_print_error.call_args_list)
-        assert (
-            ErrorMessages.Find.unrecognized_type("FakeType123", "")
-            in error_output
-        )
+        assert ErrorMessages.Find.unrecognized_type("FakeType123", "") in error_output
 
     def test_find_unsupported_type_failure(
         self,
@@ -246,9 +231,7 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -P type=Dashboard")
 
         error_output = str(mock_fab_ui_print_error.call_args_list)
-        assert (
-            ErrorMessages.Common.type_not_supported("Dashboard") in error_output
-        )
+        assert ErrorMessages.Common.type_not_supported("Dashboard") in error_output
 
     def test_find_invalid_param_format_failure(
         self,
@@ -275,9 +258,7 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -P foo=bar")
 
         error_output = str(mock_fab_ui_print_error.call_args_list)
-        assert (
-            ErrorMessages.Common.unsupported_parameter("foo") in error_output
-        )
+        assert ErrorMessages.Common.unsupported_parameter("foo") in error_output
 
     def test_find_unsupported_param_ne_failure(
         self,
@@ -289,9 +270,7 @@ class TestFindE2E:
         cli_executor.exec_command("find 'data' -P foo!=bar")
 
         error_output = str(mock_fab_ui_print_error.call_args_list)
-        assert (
-            ErrorMessages.Common.unsupported_parameter("foo") in error_output
-        )
+        assert ErrorMessages.Common.unsupported_parameter("foo") in error_output
 
     def test_find_with_jmespath_query_success(
         self,

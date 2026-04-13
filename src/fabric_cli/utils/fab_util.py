@@ -275,7 +275,8 @@ def truncate_columns(
     col_widths = {}
     for f in all_fields:
         col_widths[f] = max(
-            (len(str(item.get(f, ""))) for item in items), default=0
+            len(f),
+            max((len(str(item.get(f, ""))) for item in items), default=0),
         )
 
     # Apply absolute max width cap first

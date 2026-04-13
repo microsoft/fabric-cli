@@ -90,7 +90,14 @@ class CLIExecutor:
 
             _interactive_mod.PromptSession = _safe_prompt_session
 
-        self._interactiveCLI = InteractiveCLI(customArgumentParser, self._parser)
+            try:
+                self._interactiveCLI = InteractiveCLI(
+                    customArgumentParser, self._parser
+                )
+            finally:
+                _interactive_mod.PromptSession = _orig_ps
+        else:
+            self._interactiveCLI = InteractiveCLI(customArgumentParser, self._parser)
 
     def exec_command(self, command: str) -> None:
         self._interactiveCLI.handle_command(command)

@@ -14,6 +14,9 @@ from tests.test_commands.api_processors.workspace_api_processor import (
     WorkspaceAPIProcessor,
 )
 from tests.test_commands.api_processors.domains_api_processor import DomainsAPIProcessor
+from tests.test_commands.api_processors.catalog_search_api_processor import (
+    CatalogSearchAPIProcessor,
+)
 from tests.test_commands.api_processors.connection_api_processor import (
     ConnectionAPIProcessor,
 )
@@ -28,6 +31,7 @@ class APIProcessorHandler:
             ConnectionAPIProcessor(generated_name_mapping),
             DomainsAPIProcessor(generated_name_mapping),
             SubscriptionsAPIProcessor(generated_name_mapping),
+            CatalogSearchAPIProcessor(generated_name_mapping),
         ]
 
     def handle_request(self, request):

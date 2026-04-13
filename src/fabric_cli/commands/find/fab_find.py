@@ -22,7 +22,9 @@ from fabric_cli.utils import fab_util as utils
 
 def _load_type_config() -> dict[str, list[str]]:
     """Load item type definitions from type_supported.yaml."""
-    yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "type_supported.yaml")
+    yaml_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "type_supported.yaml"
+    )
     with open(yaml_path, "r") as f:
         return yaml.safe_load(f)
 
@@ -40,7 +42,9 @@ def find_command(args: Namespace) -> None:
     if args.query:
         args.query = utils.process_nargs(args.query)
 
-    is_interactive = getattr(args, "fab_mode", None) == fab_constant.FAB_MODE_INTERACTIVE
+    is_interactive = (
+        getattr(args, "fab_mode", None) == fab_constant.FAB_MODE_INTERACTIVE
+    )
     payload = _build_search_payload(args, is_interactive)
 
     utils_ui.print_grey(f"Searching catalog for '{args.search_text}'...")
@@ -51,7 +55,9 @@ def find_command(args: Namespace) -> None:
         _find_commandline(args, payload)
 
 
-def _fetch_results(args: Namespace, payload: dict[str, Any]) -> tuple[list[dict], str | None]:
+def _fetch_results(
+    args: Namespace, payload: dict[str, Any]
+) -> tuple[list[dict], str | None]:
     """Execute a catalog search request and return parsed results.
 
     Returns:
@@ -106,7 +112,10 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
             utils_ui.print_grey("")
             break
 
-        payload = {"continuationToken": continuation_token, "pageSize": payload.get("pageSize", 50)}
+        payload = {
+            "continuationToken": continuation_token,
+            "pageSize": payload.get("pageSize", 50),
+        }
 
     if total_count == 0:
         utils_ui.print_grey("No items found.")
@@ -122,7 +131,10 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
         all_items.extend(items)
         has_more = continuation_token is not None
         if has_more:
-            payload = {"continuationToken": continuation_token, "pageSize": payload.get("pageSize", 50)}
+            payload = {
+                "continuationToken": continuation_token,
+                "pageSize": payload.get("pageSize", 50),
+            }
 
     if not all_items:
         utils_ui.print_grey("No items found.")
@@ -204,6 +216,13 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
     if type_value.startswith("[") and type_value.endswith("]"):
         inner = type_value[1:-1]
         types = [t.strip() for t in inner.split(",") if t.strip()]
+        if not types:
+            raise FabricCLIError(
+                ErrorMessages.Find.unrecognized_type(
+                    "[]", " Specify at least one item type."
+                ),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
     else:
         types = [type_value.strip()]
 
@@ -219,8 +238,14 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
                 fab_constant.ERROR_UNSUPPORTED_ITEM_TYPE,
             )
         if t_lower not in all_types_lower:
-            close = [v for k, v in all_types_lower.items() if t_lower in k or k in t_lower]
-            hint = f" Did you mean {', '.join(close)}?" if close else " Run 'find --help' to see examples."
+            close = [
+                v for k, v in all_types_lower.items() if t_lower in k or k in t_lower
+            ]
+            hint = (
+                f" Did you mean {', '.join(close)}?"
+                if close
+                else " Run 'find --help' to see examples."
+            )
             raise FabricCLIError(
                 ErrorMessages.Find.unrecognized_type(t, hint),
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
@@ -291,14 +316,16 @@ def _prepare_display_items(args: Namespace, items: list[dict]) -> list[dict]:
             entry["description"] = item.get("description") or ""
         display_items.append(entry)
 
+    if getattr(args, "query", None):
+        display_items = utils_jmespath.search(display_items, args.query)
+        if not isinstance(display_items, list):
+            return []
+
     output_format = getattr(args, "output_format", "text") or "text"
     if not show_details and output_format == "text":
         utils.truncate_columns(display_items, ["description", "workspace", "name"])
 
-    if getattr(args, "query", None):
-        display_items = utils_jmespath.search(display_items, args.query)
-
-    return display_items if isinstance(display_items, list) else []
+    return display_items
 
 
 def _display_items(args: Namespace, display_items: list[dict]) -> None:
