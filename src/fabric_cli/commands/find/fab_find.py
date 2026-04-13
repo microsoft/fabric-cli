@@ -70,7 +70,8 @@ def _fetch_results(args: Namespace, payload: dict[str, Any]) -> tuple[list[dict]
 
 def _print_search_summary(count: int, has_more: bool = False) -> None:
     """Print the search result summary line."""
-    count_msg = f"{count} item(s) found" + (" (more available)" if has_more else "")
+    label = "item" if count == 1 else "items"
+    count_msg = f"{count} {label} found" + (" (more available)" if has_more else "")
     utils_ui.print_grey("")
     utils_ui.print_grey(count_msg)
     utils_ui.print_grey("")
@@ -84,15 +85,16 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     while has_more:
         items, continuation_token = _fetch_results(args, payload)
 
-        if not items and total_count == 0:
-            utils_ui.print_grey("No items found.")
-            return
+        if not items:
+            if total_count > 0:
+                _print_search_summary(total_count, has_more=False)
+            break
 
-        total_count += len(items)
         has_more = continuation_token is not None
+        display_items = _prepare_display_items(args, items)
+        total_count += len(display_items)
         _print_search_summary(total_count, has_more)
-
-        _display_items(args, items)
+        _display_items(args, display_items)
 
         if not has_more:
             break
@@ -106,9 +108,8 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         payload = {"continuationToken": continuation_token, "pageSize": payload.get("pageSize", 50)}
 
-    if total_count > 0:
-        utils_ui.print_grey("")
-        utils_ui.print_grey(f"{total_count} item(s) shown")
+    if total_count == 0:
+        utils_ui.print_grey("No items found.")
 
 
 def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
@@ -127,9 +128,9 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
         utils_ui.print_grey("No items found.")
         return
 
-    _print_search_summary(len(all_items))
-
-    _display_items(args, all_items)
+    display_items = _prepare_display_items(args, all_items)
+    _print_search_summary(len(display_items))
+    _display_items(args, display_items)
 
 
 def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
@@ -219,7 +220,7 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
             )
         if t_lower not in all_types_lower:
             close = [v for k, v in all_types_lower.items() if t_lower in k or k in t_lower]
-            hint = f" Did you mean {', '.join(close)}?" if close else " Use tab completion to see valid types."
+            hint = f" Did you mean {', '.join(close)}?" if close else " Run 'find --help' to see examples."
             raise FabricCLIError(
                 ErrorMessages.Find.unrecognized_type(t, hint),
                 fab_constant.ERROR_INVALID_ITEM_TYPE,
@@ -265,8 +266,8 @@ def _get_workspace_field(item: dict, field: str) -> str | None:
     return None
 
 
-def _display_items(args: Namespace, items: list[dict]) -> None:
-    """Format and display search result items."""
+def _prepare_display_items(args: Namespace, items: list[dict]) -> list[dict]:
+    """Transform API items into display-ready dicts with optional filtering."""
     show_details = getattr(args, "long", False)
     has_descriptions = any(item.get("description") for item in items)
 
@@ -297,4 +298,10 @@ def _display_items(args: Namespace, items: list[dict]) -> None:
     if getattr(args, "query", None):
         display_items = utils_jmespath.search(display_items, args.query)
 
+    return display_items if isinstance(display_items, list) else []
+
+
+def _display_items(args: Namespace, display_items: list[dict]) -> None:
+    """Render prepared display items."""
     utils_ui.print_output_format(args, data=display_items, show_headers=True)
+    utils_ui.print_grey("")

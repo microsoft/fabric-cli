@@ -113,7 +113,7 @@ class TestFindE2E:
             mock_calls=mock_questionary_print.call_args_list,
         )
         output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
-        assert "item(s) found" in output
+        assert "found" in output
 
     def test_find_type_case_insensitive_success(
         self,
