@@ -160,7 +160,7 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,ex
     (ItemType.MIRRORED_DATABASE, True),
     (ItemType.NOTEBOOK, True),
     (ItemType.DATA_PIPELINE, True),
-    (ItemType.LAKEHOUSE, False),
+    (ItemType.LAKEHOUSE, True),
     (ItemType.ENVIRONMENT, False),
     (ItemType.WAREHOUSE, False),
     (ItemType.COSMOS_DB_DATABASE, True),
