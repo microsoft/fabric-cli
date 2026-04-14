@@ -47,7 +47,7 @@ def find_command(args: Namespace) -> None:
     )
     payload = _build_search_payload(args, is_interactive)
 
-    utils_ui.print_grey(f"Searching catalog for '{args.search_text}'...")
+    utils_ui.print_grey("Searching...")
 
     if is_interactive:
         _find_interactive(args, payload)
