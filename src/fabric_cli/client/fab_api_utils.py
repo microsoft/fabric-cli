@@ -19,7 +19,8 @@ def delete_resource(
     verbose: bool = True,
     operation: Optional[str] = "delete",
 ) -> bool:
-    hard = bool(getattr(args, 'hard', False))
+    request_params = getattr(args, "request_params", {}) or {}
+    hard = request_params.get("hardDelete") == "true"
 
     if not bypass_confirmation:
         if hard:
@@ -34,14 +35,18 @@ def delete_resource(
             return _do_delete_resource(args, verbose=verbose, operation=operation)
         else:
             if verbose:
-                utils_ui.print_warning(f"Resource {operation} cancelled")
+                utils_ui.print_warning(
+                    f"Resource {operation or 'operation'} cancelled"
+                )
             return False
     else:
         if verbose:
             if hard:
                 utils_ui.print_warning("! Executing force hard delete")
-            else:
+            elif operation:
                 utils_ui.print_warning(f"Executing force {operation}...")
+            else:
+                utils_ui.print_warning("Executing force operation...")
         return _do_delete_resource(args, verbose=verbose, operation=operation)
 
 

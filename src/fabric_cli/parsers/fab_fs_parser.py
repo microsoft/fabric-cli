@@ -172,8 +172,9 @@ def register_mv_parser(subparsers: _SubParsersAction) -> None:
         fab_aliases=mv_aliases,
         fab_learnmore=["_"],
     )
-    mv_parser.add_argument("from_path", nargs="+",
-                           type=str, help="Source path")
+    mv_parser.add_argument(
+        "from_path", nargs="+", type=str, help="Source path"
+)
     mv_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     mv_parser.add_argument(
         "-f",
@@ -214,8 +215,9 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         fab_learnmore=["_"],
     )
 
-    cp_parser.add_argument("from_path", nargs="+",
-                           type=str, help="Source path")
+    cp_parser.add_argument(
+        "from_path", nargs="+", type=str, help="Source path"
+    )
     cp_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     cp_parser.add_argument(
         "-f",

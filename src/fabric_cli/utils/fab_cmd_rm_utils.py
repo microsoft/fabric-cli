@@ -12,5 +12,6 @@ def setup_delete_request_params(args) -> None:
     avoiding duplication across delete operation handlers.
     """
     params = args.__dict__.setdefault("request_params", {})
+    params.pop("hardDelete", None)
     if getattr(args, "hard", False):
         params["hardDelete"] = "true"

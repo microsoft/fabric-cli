@@ -195,16 +195,19 @@ def get_capacity_settings(
     az_subscription_id = params.get(
         "subscriptionid",
         fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID),
+            fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID
+        ),
     )
     az_resource_group = params.get(
         "resourcegroup",
         fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP),
+            fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP
+        ),
     )
     az_default_location = params.get(
         "location", fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_LOCATION)
+            fab_constant.FAB_DEFAULT_AZ_LOCATION
+        ),
     )
     az_default_admin = params.get(
         "admin", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_ADMIN)
