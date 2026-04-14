@@ -166,7 +166,7 @@ class TestRM:
         assert_fabric_cli_error(constant.ERROR_NOT_FOUND)
 
     @item_type_paramerter
-    def test_rm_item_with_purge_delete_success(
+    def test_rm_item_with_hard_delete_success(
         self,
         workspace,
         item_type,
@@ -185,19 +185,19 @@ class TestRM:
         mock_print_done.reset_mock()
         mock_print_warning.reset_mock()
 
-        # Execute command with purge delete
-        cli_executor.exec_command(f"rm {item.full_path} --force --purge")
+        # Execute command with hard delete
+        cli_executor.exec_command(f"rm {item.full_path} --force --hard")
 
         # Assert
         mock_print_warning.assert_called()
         mock_questionary_print.assert_called()
         mock_print_done.assert_called_once()
 
-        # Check for purge delete warnings
+        # Check for hard delete warnings
         warning_calls = [str(call)
                          for call in mock_print_warning.call_args_list]
-        assert any("purge delete" in call.lower() for call in warning_calls), \
-            f"Expected purge delete warning in: {warning_calls}"
+        assert any("hard delete" in call.lower() for call in warning_calls), \
+            f"Expected hard delete warning in: {warning_calls}"
 
         _assert_strings_in_mock_calls(
             [item.display_name], True, mock_questionary_print.mock_calls
@@ -209,7 +209,7 @@ class TestRM:
         _assert_not_found(item.full_path)
 
     @item_type_paramerter
-    def test_rm_item_with_purge_delete_without_force_success(
+    def test_rm_item_with_hard_delete_without_force_success(
         self,
         workspace,
         item_type,
@@ -231,8 +231,8 @@ class TestRM:
         with patch("questionary.confirm") as mock_confirm:
             mock_confirm.return_value.ask.return_value = True
 
-            # Execute command with purge delete but without force
-            cli_executor.exec_command(f"rm {item.full_path} --purge")
+            # Execute command with hard delete but without force
+            cli_executor.exec_command(f"rm {item.full_path} --hard")
 
         # Assert
         mock_confirm.assert_called_once()

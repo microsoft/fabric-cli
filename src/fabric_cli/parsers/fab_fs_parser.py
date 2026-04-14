@@ -126,8 +126,8 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "$ rm ws1.Workspace\n",
         "# remove a table",
         "$ rm lh1.Lakehouse/Tables/fabtbl",
-        "# permanently remove an item (purge)",
-        "$ rm ws1.Workspace/nb1.Notebook --purge --force",
+        "# permanently remove an item (hard)",
+        "$ rm ws1.Workspace/nb1.Notebook --hard --force",
     ]
 
     rm_parser = subparsers.add_parser(
@@ -143,10 +143,10 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
     )
     rm_parser.add_argument(
-        "--purge",
+        "--hard",
         required=False,
         action="store_true",
-        help="Permanently delete items (not workspaces). Cannot be recovered. Applies to item deletions only. Optional"
+        help="Permanently deletes the resource. Cannot be recovered. Applies only on items deletions. Optional"
     )
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"

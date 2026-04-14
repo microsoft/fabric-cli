@@ -239,21 +239,3 @@ def get_capacity_settings(
         az_resource_group,
         sku,
     )
-
-
-def setup_delete_request_params(args) -> None:
-    """Set up request parameters for delete operations with purge support.
-
-    Args:
-        args: Namespace object to modify with request_params
-
-    This helper centralizes the logic for merging purge flags into request parameters,
-    avoiding duplication across delete operation handlers.
-    """
-    request_params = getattr(args, "request_params", {})
-    if getattr(args, "purge", False):
-        merged_params = dict(request_params)
-        merged_params["hardDelete"] = "true"
-        args.request_params = merged_params
-    else:
-        args.request_params = request_params

@@ -19,18 +19,18 @@ def delete_resource(
     verbose: bool = True,
     operation: Optional[str] = "delete",
 ) -> bool:
-    purge = bool(getattr(args, 'purge', False))
+    hard = bool(getattr(args, 'hard', False))
 
     if not bypass_confirmation:
-        if purge:
+        if hard:
             resource_name = getattr(args, 'name', 'resource')
             confirm_message = f"'{resource_name}' will be deleted forever. Are you sure you want to proceed?"
         else:
             confirm_message = "Are you sure?"
 
         if utils_ui.prompt_confirm(confirm_message):
-            if purge and verbose:
-                utils_ui.print_warning("! Executing purge delete")
+            if hard and verbose:
+                utils_ui.print_warning("! Executing hard delete")
             return _do_delete_resource(args, verbose=verbose, operation=operation)
         else:
             if verbose:
@@ -38,8 +38,8 @@ def delete_resource(
             return False
     else:
         if verbose:
-            if purge:
-                utils_ui.print_warning("! Executing force purge delete")
+            if hard:
+                utils_ui.print_warning("! Executing force hard delete")
             else:
                 utils_ui.print_warning(f"Executing force {operation}...")
         return _do_delete_resource(args, verbose=verbose, operation=operation)
