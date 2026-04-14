@@ -25,6 +25,12 @@ def import_single_item(item: Item, args: Namespace) -> None:
     args.ws_id = item.workspace.id
     input_path = utils_storage.get_import_path(args.input)
 
+    if input_path["type"] != "local":
+        raise FabricCLIError(
+            "Import only supports local paths. OneLake paths are not supported as import input.",
+            fab_constant.ERROR_NOT_SUPPORTED,
+        )
+
     if args.force or utils_ui.prompt_confirm():
 
         # Check first if an item exists
