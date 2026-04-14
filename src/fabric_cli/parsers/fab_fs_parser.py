@@ -146,7 +146,7 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "--hard",
         required=False,
         action="store_true",
-        help="Permanently deletes the resource. Cannot be recovered. Applies only on items deletions. Optional"
+        help="Permanently deletes the resource. Cannot be recovered. Applies only to item deletions. Optional"
     )
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"
