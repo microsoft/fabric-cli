@@ -32,7 +32,6 @@ def _load_type_config() -> dict[str, list[str]]:
 _TYPE_CONFIG = _load_type_config()
 ALL_ITEM_TYPES = _TYPE_CONFIG["supported"] + _TYPE_CONFIG["unsupported"]
 UNSUPPORTED_ITEM_TYPES = _TYPE_CONFIG["unsupported"]
-SEARCHABLE_ITEM_TYPES = _TYPE_CONFIG["supported"]
 
 
 @handle_exceptions()
@@ -74,6 +73,11 @@ def _fetch_results(
     return items, continuation_token
 
 
+def _next_page_payload(token: str, current: dict[str, Any]) -> dict[str, Any]:
+    """Build a continuation payload for the next page."""
+    return {"continuationToken": token, "pageSize": current.get("pageSize", 50)}
+
+
 def _print_search_summary(count: int, has_more: bool = False) -> None:
     """Print the search result summary line."""
     label = "item" if count == 1 else "items"
@@ -86,14 +90,13 @@ def _print_search_summary(count: int, has_more: bool = False) -> None:
 def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
-    has_more = True
 
-    while has_more:
+    while True:
         items, continuation_token = _fetch_results(args, payload)
 
         if not items:
             if total_count > 0:
-                _print_search_summary(total_count, has_more=False)
+                _print_search_summary(total_count)
             break
 
         has_more = continuation_token is not None
@@ -112,10 +115,7 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
             utils_ui.print_grey("")
             break
 
-        payload = {
-            "continuationToken": continuation_token,
-            "pageSize": payload.get("pageSize", 50),
-        }
+        payload = _next_page_payload(continuation_token, payload)
 
     if total_count == 0:
         utils_ui.print_grey("No items found.")
@@ -124,17 +124,13 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch all results across pages and display."""
     all_items: list[dict] = []
-    has_more = True
 
-    while has_more:
+    while True:
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
-        has_more = continuation_token is not None
-        if has_more:
-            payload = {
-                "continuationToken": continuation_token,
-                "pageSize": payload.get("pageSize", 50),
-            }
+        if not continuation_token:
+            break
+        payload = _next_page_payload(continuation_token, payload)
 
     if not all_items:
         utils_ui.print_grey("No items found.")
@@ -154,19 +150,11 @@ def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, An
     if type_filter:
         op = type_filter["operator"]
         types = type_filter["values"]
-
-        if op == "eq":
-            if len(types) == 1:
-                request["filter"] = f"Type eq '{types[0]}'"
-            else:
-                or_clause = " or ".join(f"Type eq '{t}'" for t in types)
-                request["filter"] = f"({or_clause})"
-        elif op == "ne":
-            if len(types) == 1:
-                request["filter"] = f"Type ne '{types[0]}'"
-            else:
-                ne_clause = " and ".join(f"Type ne '{t}'" for t in types)
-                request["filter"] = f"({ne_clause})"
+        joiner = " or " if op == "eq" else " and "
+        clauses = [f"Type {op} '{t}'" for t in types]
+        request["filter"] = (
+            f"({joiner.join(clauses)})" if len(clauses) > 1 else clauses[0]
+        )
 
     return request
 
