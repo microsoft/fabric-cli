@@ -27,7 +27,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
     if input_path["type"] != "local":
         raise FabricCLIError(
-            "Import only supports local paths. OneLake paths are not supported as import input.",
+            f"Import only supports local paths. Unsupported input path type: '{input_path['type']}'.",
             fab_constant.ERROR_NOT_SUPPORTED,
         )
 
