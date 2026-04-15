@@ -1,47 +1,40 @@
 # CLI Modes
 
-The Fabric CLI supports two primary modes to accommodate a variety of workflows: **command line** and **interactive**. The selected mode is preserved between sessions. If you exit and login to the CLI later, it will resume in the same mode you last used.
+The Fabric CLI supports two modes: **command-line** and **REPL** (interactive). The active mode is determined automatically at runtime — no configuration is required.
 
-Use the following command to see the current stored mode setting:
+## Command-Line Mode
 
-```
-fab config get mode
-```
+Command-line mode is best suited for scripted tasks, automation, or when you prefer running single commands without a persistent prompt.
 
-## Command Line Mode
-
-Command line mode is best suited for scripted tasks, automation, or when you prefer running single commands without a prompt.
-
-Typing commands directly in the terminal replicates typical UNIX-style usage.
-
-Use the following command to switch the CLI into command line mode:
+Invoke any command directly from your terminal with the `fab` prefix:
 
 ```
-fab config set mode command_line
+fab ls /
+fab get /myworkspace.Workspace/mynotebook.Notebook
 ```
 
-You will be required to log in again after switching modes.
+## REPL Mode
 
-## Interactive Mode
-
-Interactive mode provides a shell-like environment in which you can run Fabric CLI commands directly without the `fab` prefix.
-
-Upon entering interactive mode, you see a `fab:/$` prompt. Commands are executed one by one without needing to type `fab` before each command, giving you a more guided experience.
-
-Use the following command to switch the CLI into interactive mode:
+REPL mode provides a shell-like interactive environment. Run `fab` without any arguments to enter REPL mode:
 
 ```
-fab config set mode interactive
+fab
 ```
 
-You will be required to log in again after switching modes.
+Upon entering REPL mode, you see a `fab:/$` prompt. Commands are executed one by one without needing to type `fab` before each command:
+
+```
+fab:/$ ls
+fab:/$ cd myworkspace.Workspace
+fab:/myworkspace.Workspace$ get mynotebook.Notebook
+fab:/myworkspace.Workspace$ quit
+```
+
+Type `help` for a list of available commands, and `quit` or `exit` to leave REPL mode.
 
 ## Switching Between Modes
 
-To switch from one mode to the other, enter:
+There is no explicit mode switch command. The mode is determined by how you invoke the CLI:
 
-```
-fab config set mode <desired_mode>
-```
-
-where `<desired_mode>` is either `command_line` or `interactive`. Because the Fabric CLI needs to establish new authentication for each mode, you must re-authenticate after switching. The mode choice then remains in effect until you change it again.
+- **Command-line mode** — run `fab <command>` with one or more arguments.
+- **REPL mode** — run `fab` with no arguments.

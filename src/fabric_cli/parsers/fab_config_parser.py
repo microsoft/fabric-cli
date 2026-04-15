@@ -31,8 +31,8 @@ def register_parser(subparsers: _SubParsersAction) -> None:
 
     # Subcommand for 'set'
     set_examples = [
-        "# switch to command line mode",
-        "$ config set mode command_line\n",
+        "# enable debug mode",
+        "$ config set debug_enabled true\n",
         "# set default capacity",
         "$ config set default_capacity Trial-0000",
     ]
@@ -59,8 +59,8 @@ def register_parser(subparsers: _SubParsersAction) -> None:
 
     # Subcommand for 'get'
     get_examples = [
-        "# get current CLI mode",
-        "$ config get mode\n",
+        "# get current debug setting",
+        "$ config get debug_enabled\n",
         "# get default capacity",
         "$ config get default_capacity",
     ]

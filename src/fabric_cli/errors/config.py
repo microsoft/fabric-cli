@@ -18,6 +18,18 @@ class ConfigErrors:
         return f"'{configurationKey}' is not a recognized configuration key. Please check the available configuration keys"
 
     @staticmethod
+    def mode_deprecated(runtime_mode: str, interactive_mode: str) -> str:
+        msg = "The 'mode' setting is deprecated. "
+        if runtime_mode == interactive_mode:
+            msg += "Run 'exit' to leave the REPL, then use 'fab <command>' for command-line mode."
+        else:
+            msg += (
+                "Run 'fab' without arguments to enter REPL mode, "
+                "or use 'fab <command>' for command-line mode."
+            )
+        return msg
+
+    @staticmethod
     def invalid_parameter_format(params: str) -> str:
         return f"Invalid parameter format: {params}"
 

@@ -109,7 +109,6 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_ENCRYPTION_FALLBACK_ENABLED: ["false", "true"],
     FAB_JOB_CANCEL_ONTIMEOUT: ["false", "true"],
     FAB_LOCAL_DEFINITION_LABELS: [],
-    FAB_MODE: [FAB_MODE_INTERACTIVE, FAB_MODE_COMMANDLINE],
     FAB_OUTPUT_ITEM_SORT_CRITERIA: ["byname", "bytype"],
     FAB_SHOW_HIDDEN: ["false", "true"],
     FAB_DEFAULT_AZ_SUBSCRIPTION_ID: [],
@@ -126,7 +125,6 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
 }
 
 CONFIG_DEFAULT_VALUES = {
-    FAB_MODE: FAB_MODE_COMMANDLINE,
     FAB_CACHE_ENABLED: "true",
     FAB_CONTEXT_PERSISTENCE_ENABLED: "false",
     FAB_JOB_CANCEL_ONTIMEOUT: "true",
@@ -353,3 +351,4 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
 
 # Invalid query parameters for set command across all fabric resources
 SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
+

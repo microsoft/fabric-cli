@@ -23,8 +23,8 @@ def test_complete_config_keys_returns_all_keys_when_no_prefix_should_return_all_
 
 
 def test_complete_config_keys_filters_by_prefix_should_return_matching_keys():
-    result = fab_config_completers.complete_config_keys("mode")
-    assert "mode" in result
+    result = fab_config_completers.complete_config_keys("debug")
+    assert "debug_enabled" in result
 
     result = fab_config_completers.complete_config_keys("default")
     assert len(result) > 0
@@ -33,21 +33,21 @@ def test_complete_config_keys_filters_by_prefix_should_return_matching_keys():
 
 
 def test_complete_config_keys_case_insensitive_should_return_same_results():
-    result_lower = fab_config_completers.complete_config_keys("mode")
-    result_upper = fab_config_completers.complete_config_keys("MODE")
+    result_lower = fab_config_completers.complete_config_keys("debug")
+    result_upper = fab_config_completers.complete_config_keys("DEBUG")
 
     assert result_lower == result_upper
 
 
 def test_complete_config_values_enum_keys_should_return_expected_values():
     args = Namespace()
-    args.key = "mode"
+    args.key = "cache_enabled"
 
     result = fab_config_completers.complete_config_values("", args)
-    assert result == ["command_line", "interactive"]
+    assert result == ["false", "true"]
 
-    result = fab_config_completers.complete_config_values("inter", args)
-    assert result == ["interactive"]
+    result = fab_config_completers.complete_config_values("tr", args)
+    assert result == ["true"]
 
 
 def test_complete_config_values_invalid_key_should_return_empty():
