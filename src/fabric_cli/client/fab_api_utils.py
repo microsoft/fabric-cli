@@ -19,16 +19,34 @@ def delete_resource(
     verbose: bool = True,
     operation: Optional[str] = "delete",
 ) -> bool:
+    request_params = getattr(args, "request_params", {}) or {}
+    hard = request_params.get("hardDelete") == "true"
+
     if not bypass_confirmation:
-        if utils_ui.prompt_confirm():
-            return _do_delete_resource(args, operation=operation)
+        if hard:
+            resource_name = getattr(args, 'name', 'resource')
+            confirm_message = f"'{resource_name}' will be deleted forever. Are you sure you want to proceed?"
+        else:
+            confirm_message = "Are you sure?"
+
+        if utils_ui.prompt_confirm(confirm_message):
+            if hard and verbose:
+                utils_ui.print_warning("! Executing hard delete")
+            return _do_delete_resource(args, verbose=verbose, operation=operation)
         else:
             if verbose:
-                utils_ui.print_warning(f"Resource {operation} cancelled")
+                utils_ui.print_warning(
+                    f"Resource {operation or 'operation'} cancelled"
+                )
             return False
     else:
         if verbose:
-            utils_ui.print_warning(f"Executing force {operation}...")
+            if hard:
+                utils_ui.print_warning("! Executing force hard delete")
+            elif operation:
+                utils_ui.print_warning(f"Executing force {operation}...")
+            else:
+                utils_ui.print_warning("Executing force operation...")
         return _do_delete_resource(args, verbose=verbose, operation=operation)
 
 
@@ -125,7 +143,8 @@ def get_api_version(resource_uri: str) -> Any:
                 return rt["apiVersions"][0]
 
     raise FabricCLIError(
-        ErrorMessages.Client.resource_type_not_found_in_provider(args.resource_type, args.provider_namespace),
+        ErrorMessages.Client.resource_type_not_found_in_provider(
+            args.resource_type, args.provider_namespace),
         status_code=constant.ERROR_NOT_SUPPORTED,
     )
 
@@ -136,7 +155,8 @@ def _do_delete_resource(
 ) -> bool:
     if verbose:
         if operation is not None:
-            utils_ui.print_grey(f"{_to_gerund_capitalized(operation)} '{args.name}'...")
+            utils_ui.print_grey(
+                f"{_to_gerund_capitalized(operation)} '{args.name}'...")
     response = fabric_api.do_request(args)
 
     return _validate_success_and_print_on_verbose(
@@ -187,6 +207,7 @@ def _do_unassign_resource(
         args, "unassigned", response.status_code, verbose
     )
 
+
 def _to_gerund_capitalized(operation: str) -> str:
     if operation.endswith("e") and not operation.endswith("ee"):
         result = f"{operation[:-1]}ing"
@@ -200,7 +221,8 @@ def _validate_success_and_print_on_verbose(
 ) -> bool:
     if status_code in [200, 201]:
         if verbose:
-            utils_ui.print_output_format(args, message=f"'{args.name}' {action}")
+            utils_ui.print_output_format(
+                args, message=f"'{args.name}' {action}")
         return True
     if status_code == 202:
         if verbose:

@@ -26,6 +26,7 @@ class InteractiveCLI:
 
         self.parser = parser
         self.parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
         self.subparsers = subparsers
         self.history = InMemoryHistory()
         self.session = self.init_session(self.history)
@@ -147,6 +148,7 @@ class InteractiveCLI:
             utils_ui.print(fab_constant.INTERACTIVE_EXIT_MESSAGE)
         finally:
             self._is_running = False
+            Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
 
 
 def start_interactive_mode():

@@ -11,12 +11,11 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 from fabric_cli.parsers import fab_auth_parser as auth_parser
 from fabric_cli.utils import fab_ui
-from fabric_cli.utils.fab_commands import COMMANDS
 
 
 def main():
     parser, subparsers = get_global_parser_and_subparsers()
-    
+
     argcomplete.autocomplete(parser, default_completer=None)
 
     args = parser.parse_args()
@@ -31,15 +30,8 @@ def main():
         if args.command == "auth" and args.auth_command == "login":
             from fabric_cli.commands.auth import fab_auth
 
-            if fab_auth.init(args):
-                if (
-                    fab_state_config.get_config(fab_constant.FAB_MODE)
-                    == fab_constant.FAB_MODE_INTERACTIVE
-                ):
-                    from fabric_cli.core.fab_interactive import start_interactive_mode
-
-                    start_interactive_mode()
-                    return
+            fab_auth.init(args)
+            return
 
         if args.command == "auth" and args.auth_command == "logout":
             from fabric_cli.commands.auth import fab_auth
@@ -119,11 +111,11 @@ def _handle_unexpected_error(err, args):
         error_message = str(err.args[0]) if err.args else str(err)
     except:
         error_message = "An unexpected error occurred"
-    
+
     fab_ui.print_output_error(
-        FabricCLIError(error_message, fab_constant.ERROR_UNEXPECTED_ERROR), 
+        FabricCLIError(error_message, fab_constant.ERROR_UNEXPECTED_ERROR),
         output_format_type=args.output_format,
-        )
+    )
     sys.exit(fab_constant.EXIT_CODE_ERROR)
 
 
@@ -145,4 +137,3 @@ def _execute_command(args, subparsers, parser):
 
 if __name__ == "__main__":
     main()
-

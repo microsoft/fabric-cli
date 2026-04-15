@@ -63,7 +63,7 @@ def mock_api_response_failure():
 @patch("fabric_cli.utils.fab_ui.print_output_format")
 @patch("fabric_cli.utils.fab_mem_store.upsert_folder_to_cache")
 @patch("fabric_cli.client.fab_api_folders.move_folder")
-def test_change_folder_parent__folder_target_success(
+def test_change_folder_parent_folder_target_success(
     mock_move_folder_api,
     mock_upsert_folder_cache,
     mock_print_output,

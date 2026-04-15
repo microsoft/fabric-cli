@@ -3,7 +3,7 @@
 
 import json
 from argparse import Namespace
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, cast
 
@@ -96,7 +96,7 @@ class FabricCLIOutput:
             The data parameter is always converted to a list format internally.
             Error codes are only included in the output when status is Failed.
         """
-        self._timestamp = datetime.utcnow().isoformat() + "Z"
+        self._timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         self._status = status
         self._command = command
         self._subcommand = subcommand

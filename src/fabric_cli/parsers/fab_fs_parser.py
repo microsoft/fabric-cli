@@ -81,7 +81,8 @@ def register_mkdir_parser(subparsers: _SubParsersAction) -> None:
         fab_aliases=mkdir_aliases,
         fab_learnmore=mkdir_learnmore,
     )
-    mkdir_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    mkdir_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     mkdir_parser.add_argument(
         "-P",
         "--params",
@@ -93,7 +94,8 @@ def register_mkdir_parser(subparsers: _SubParsersAction) -> None:
     )
 
     mkdir_parser.usage = f"{utils_error_parser.get_usage_prog(mkdir_parser)}"
-    mkdir_parser.set_defaults(func=lazy_command(_fs_module_path, 'mkdir_command'))
+    mkdir_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'mkdir_command'))
 
 
 # Command for 'cd'
@@ -124,6 +126,8 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "$ rm ws1.Workspace\n",
         "# remove a table",
         "$ rm lh1.Lakehouse/Tables/fabtbl",
+        "# permanently remove an item (hard)",
+        "$ rm ws1.Workspace/nb1.Notebook --hard --force",
     ]
 
     rm_parser = subparsers.add_parser(
@@ -137,6 +141,12 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
     rm_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     rm_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
+    )
+    rm_parser.add_argument(
+        "--hard",
+        required=False,
+        action="store_true",
+        help="Permanently deletes the resource. Cannot be recovered. Applies only to item deletions. Optional"
     )
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"
@@ -162,7 +172,9 @@ def register_mv_parser(subparsers: _SubParsersAction) -> None:
         fab_aliases=mv_aliases,
         fab_learnmore=["_"],
     )
-    mv_parser.add_argument("from_path", nargs="+", type=str, help="Source path")
+    mv_parser.add_argument(
+        "from_path", nargs="+", type=str, help="Source path"
+)
     mv_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     mv_parser.add_argument(
         "-f",
@@ -203,7 +215,9 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         fab_learnmore=["_"],
     )
 
-    cp_parser.add_argument("from_path", nargs="+", type=str, help="Source path")
+    cp_parser.add_argument(
+        "from_path", nargs="+", type=str, help="Source path"
+    )
     cp_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     cp_parser.add_argument(
         "-f",
@@ -246,10 +260,12 @@ def register_exists_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=exists_examples,
         fab_learnmore=["_"],
     )
-    exists_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    exists_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
 
     exists_parser.usage = f"{utils_error_parser.get_usage_prog(exists_parser)}"
-    exists_parser.set_defaults(func=lazy_command(_fs_module_path, 'exists_command'))
+    exists_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'exists_command'))
 
 
 # Command for 'pwd'
@@ -281,10 +297,12 @@ def register_open_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=open_examples,
         fab_learnmore=["_"],
     )
-    open_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    open_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
 
     open_parser.usage = f"{utils_error_parser.get_usage_prog(open_parser)}"
-    open_parser.set_defaults(func=lazy_command(_fs_module_path, 'open_command'))
+    open_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'open_command'))
 
 
 # Command for 'export'
@@ -302,7 +320,8 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=export_examples,
         fab_learnmore=["_"],
     )
-    export_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    export_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     export_parser.add_argument(
         "-o",
         "--output",
@@ -332,7 +351,8 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
     )
 
     export_parser.usage = f"{utils_error_parser.get_usage_prog(export_parser)}"
-    export_parser.set_defaults(func=lazy_command(_fs_module_path, 'export_command'))
+    export_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'export_command'))
 
 
 # Command for 'get'
@@ -424,9 +444,12 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
     )
 
     import_parser.usage = f"{utils_error_parser.get_usage_prog(import_parser)}"
-    import_parser.set_defaults(func=lazy_command(_fs_module_path, 'import_command'))
+    import_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'import_command'))
 
 # Command for 'deploy'
+
+
 def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_examples = [
         "# deploy fabric items to a workspace using a configuration file and target environment",
@@ -469,10 +492,13 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
     )
 
-    deploy_parser.set_defaults(func=lazy_command(_fs_module_path, 'deploy_command'))
+    deploy_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'deploy_command'))
     deploy_parser.usage = f"{utils_error_parser.get_usage_prog(deploy_parser)}"
 
 # Command for 'set'
+
+
 def register_set_parser(subparsers: _SubParsersAction) -> None:
     set_examples = [
         "# rename a workspace",
@@ -581,13 +607,15 @@ def register_start_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=start_examples,
         fab_learnmore=["_"],
     )
-    start_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    start_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     start_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
     )
 
     start_parser.usage = f"{utils_error_parser.get_usage_prog(start_parser)}"
-    start_parser.set_defaults(func=lazy_command(_fs_module_path, 'start_command'))
+    start_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'start_command'))
 
 
 # Command for 'stop'
@@ -605,13 +633,15 @@ def register_stop_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=stop_examples,
         fab_learnmore=["_"],
     )
-    stop_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    stop_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     stop_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
     )
 
     stop_parser.usage = f"{utils_error_parser.get_usage_prog(stop_parser)}"
-    stop_parser.set_defaults(func=lazy_command(_fs_module_path, 'stop_command'))
+    stop_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'stop_command'))
 
 
 # Command for 'assign'
@@ -629,7 +659,8 @@ def register_assign_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=assign_examples,
         fab_learnmore=["_"],
     )
-    assign_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    assign_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     assign_parser.add_argument(
         "-W",
         "--workspace",
@@ -642,7 +673,8 @@ def register_assign_parser(subparsers: _SubParsersAction) -> None:
     )
 
     assign_parser.usage = f"{utils_error_parser.get_usage_prog(assign_parser)}"
-    assign_parser.set_defaults(func=lazy_command(_fs_module_path, 'assign_command'))
+    assign_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'assign_command'))
 
 
 # Command for 'unassign'
@@ -660,7 +692,8 @@ def register_unassign_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=unassign_examples,
         fab_learnmore=["_"],
     )
-    unassign_parser.add_argument("path", nargs="+", type=str, help="Directory path")
+    unassign_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
     unassign_parser.add_argument(
         "-W",
         "--workspace",
@@ -673,7 +706,8 @@ def register_unassign_parser(subparsers: _SubParsersAction) -> None:
     )
 
     unassign_parser.usage = f"{utils_error_parser.get_usage_prog(unassign_parser)}"
-    unassign_parser.set_defaults(func=lazy_command(_fs_module_path, 'unassign_command'))
+    unassign_parser.set_defaults(func=lazy_command(
+        _fs_module_path, 'unassign_command'))
 
 
 # Command for 'clear'

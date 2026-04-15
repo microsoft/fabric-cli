@@ -23,11 +23,20 @@ class Context:
     def __init__(self):
         self._context: FabricElement = None
         self._command: str = None
+        self._runtime_mode: str = fab_constant.FAB_MODE_COMMANDLINE
         session_id = self._get_context_session_id()
         self._context_file = os.path.join(
             fab_state_config.config_location(), f"context-{session_id}.json"
         )
         self._loading_context = False
+
+    def set_runtime_mode(self, mode: str) -> None:
+        """Set the current runtime mode. Called when entering or leaving the REPL."""
+        self._runtime_mode = mode
+
+    def get_runtime_mode(self) -> str:
+        """Return the current runtime mode (FAB_MODE_INTERACTIVE or FAB_MODE_COMMANDLINE)."""
+        return self._runtime_mode
 
     @property
     def context(self) -> FabricElement:
@@ -126,12 +135,11 @@ class Context:
 
     def _should_use_context_file(self) -> bool:
         """Determine if the context file should be used based on the current mode and persistence settings."""
-        mode = fab_state_config.get_config(fab_constant.FAB_MODE)
         persistence_enabled = fab_state_config.get_config(
             fab_constant.FAB_CONTEXT_PERSISTENCE_ENABLED
         )
         return (
-            mode == fab_constant.FAB_MODE_COMMANDLINE
+            self.get_runtime_mode() == fab_constant.FAB_MODE_COMMANDLINE
             and persistence_enabled == "true"
             and not self._loading_context
         )
