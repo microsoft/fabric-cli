@@ -25,7 +25,7 @@ def _load_type_config() -> dict[str, list[str]]:
     yaml_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "type_supported.yaml"
     )
-    with open(yaml_path, "r") as f:
+    with open(yaml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -101,10 +101,10 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
             break
 
         has_more = continuation_token is not None
-        display_items = _prepare_display_items(args, items)
+        display_items, truncate_cols = _prepare_display_items(args, items)
         total_count += len(display_items)
         _print_search_summary(total_count, has_more)
-        _display_items(args, display_items)
+        _display_items(args, display_items, truncate_cols)
 
         if not has_more:
             break
@@ -138,9 +138,9 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
         utils_ui.print_grey("No items found.")
         return
 
-    display_items = _prepare_display_items(args, all_items)
+    display_items, truncate_cols = _prepare_display_items(args, all_items)
     _print_search_summary(len(display_items))
-    _display_items(args, display_items)
+    _display_items(args, display_items, truncate_cols)
 
 
 def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
@@ -280,8 +280,14 @@ def _get_workspace_field(item: dict, field: str) -> str | None:
     return None
 
 
-def _prepare_display_items(args: Namespace, items: list[dict]) -> list[dict]:
-    """Transform API items into display-ready dicts with optional filtering."""
+def _prepare_display_items(
+    args: Namespace, items: list[dict]
+) -> tuple[list[dict], list[str] | None]:
+    """Transform API items into display-ready dicts with optional filtering.
+
+    Returns:
+        Tuple of (display items, columns_to_truncate or None).
+    """
     show_details = getattr(args, "long", False)
     has_descriptions = any(item.get("description") for item in items)
 
@@ -308,15 +314,22 @@ def _prepare_display_items(args: Namespace, items: list[dict]) -> list[dict]:
     if getattr(args, "query", None):
         display_items = utils_jmespath.search(display_items, args.query)
         if not isinstance(display_items, list):
-            return []
+            return [], None
 
-    if not show_details:
-        utils.truncate_columns(display_items, ["description", "workspace", "name"])
-
-    return display_items
+    truncate_cols = ["description", "workspace", "name"] if not show_details else None
+    return display_items, truncate_cols
 
 
-def _display_items(args: Namespace, display_items: list[dict]) -> None:
+def _display_items(
+    args: Namespace,
+    display_items: list[dict],
+    columns_to_truncate: list[str] | None = None,
+) -> None:
     """Render prepared display items."""
-    utils_ui.print_output_format(args, data=display_items, show_headers=True)
+    utils_ui.print_output_format(
+        args,
+        data=display_items,
+        show_headers=True,
+        columns_to_truncate=columns_to_truncate,
+    )
     utils_ui.print_grey("")

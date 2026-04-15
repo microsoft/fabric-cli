@@ -270,7 +270,9 @@ def truncate_columns(
 
     term_width = shutil.get_terminal_size((120, 24)).columns
     all_fields = list(items[0].keys())
+    # Table renderer adds +2 width per column and 1 space between columns
     padding_per_col = 3
+    total_padding = padding_per_col * len(all_fields) - 1
 
     col_widths = {}
     for f in all_fields:
@@ -292,7 +294,7 @@ def truncate_columns(
     for col in columns_to_truncate:
         if col not in col_widths:
             continue
-        total = sum(col_widths[f] + padding_per_col for f in all_fields)
+        total = sum(col_widths[f] for f in all_fields) + total_padding
         overflow = total - term_width
         if overflow <= 0:
             break

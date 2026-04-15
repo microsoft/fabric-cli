@@ -95,6 +95,7 @@ def print_output_format(
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
     show_key_value_list: bool = False,
+    columns_to_truncate: Optional[list[str]] = None,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -105,6 +106,7 @@ def print_output_format(
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
         show_key_value_list: Whether to show output in key-value list format (default: False)
+        columns_to_truncate: Optional list of column names to truncate for text output (shrink priority order)
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -132,6 +134,10 @@ def print_output_format(
         case "json":
             _print_output_format_json(output.to_json())
         case "text":
+            if columns_to_truncate and output.result.data:
+                from fabric_cli.utils import fab_util
+
+                fab_util.truncate_columns(output.result.data, columns_to_truncate)
             _print_output_format_result_text(output)
         case _:
             raise FabricCLIError(
