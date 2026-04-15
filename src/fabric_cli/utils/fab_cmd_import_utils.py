@@ -28,7 +28,6 @@ def get_payload_for_item_type(
         definition = _build_definition(path, input_format)
         return {
             "type": str(item.item_type),
-            "description": "Imported from fab",
             "folderId": item.folder_id,
             "displayName": item.short_name,
             "definition": definition,

@@ -408,7 +408,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Notebook",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"format": "ipynb", "parts": _base_payload["parts"]},
@@ -429,7 +428,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "SparkJobDefinition",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {
@@ -445,7 +443,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "SparkJobDefinition",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {
@@ -469,7 +466,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Eventhouse",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -490,7 +486,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Report",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -506,7 +501,6 @@ def test_get_item_payloads_success():
 
     _expected_payload_without_format = {
         "type": "SemanticModel",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -518,7 +512,6 @@ def test_get_item_payloads_success():
 
     _expected_payload_with_format = {
         "type": "SemanticModel",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {

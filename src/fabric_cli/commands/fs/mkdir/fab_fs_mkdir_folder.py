@@ -26,7 +26,6 @@ def exec(folder: Folder, args: Namespace) -> str | None:
     utils_ui.print_grey(f"Creating a new Folder...")
 
     payload = {
-        "description": "Created by fab",
         "displayName": foldername,
     }
     if parent_folder_id:

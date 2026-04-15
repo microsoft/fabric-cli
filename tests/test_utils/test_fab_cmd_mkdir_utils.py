@@ -19,7 +19,6 @@ def test_fabric_data_pipelines_workspace_identity_no_params_success():
     """Test FabricDataPipelines with WorkspaceIdentity credential type when no parameters are required."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }
@@ -63,7 +62,6 @@ def test_connection_with_required_params_missing_failure():
     """Test that connection creation fails when required parameters are missing."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }
@@ -107,7 +105,6 @@ def test_workspace_identity_with_unsupported_params_ignored_success():
     """Test that WorkspaceIdentity ignores unsupported credential parameters with warning."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }

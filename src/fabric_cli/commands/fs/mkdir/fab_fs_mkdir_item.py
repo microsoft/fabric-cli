@@ -78,7 +78,6 @@ def exec(item: Item, args: Namespace) -> str | None:
     utils.remove_keys_from_dict(params, ["displayname", "type"])
 
     payload = {
-        "description": "Created by fab",
         "displayName": item_name,
         "type": str(item_type),
         "folderId": item.folder_id,
