@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 from fabric_cli.client import fab_api_catalog as catalog_api
-from fabric_cli.core import fab_constant
+from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_decorators import handle_exceptions, set_command_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
@@ -90,8 +90,9 @@ def _print_search_summary(count: int, has_more: bool = False) -> None:
 def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
+    has_more = True
 
-    while True:
+    while has_more:
         items, continuation_token = _fetch_results(args, payload)
 
         if not items:
@@ -124,13 +125,14 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch all results across pages and display."""
     all_items: list[dict] = []
+    has_more = True
 
-    while True:
+    while has_more:
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
-        if not continuation_token:
-            break
-        payload = _next_page_payload(continuation_token, payload)
+        has_more = continuation_token is not None
+        if has_more:
+            payload = _next_page_payload(continuation_token, payload)
 
     if not all_items:
         utils_ui.print_grey("No items found.")
@@ -245,27 +247,26 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
 
 def _parse_response(response) -> dict:
     """Parse a successful API response or raise FabricCLIError on failure."""
-    if response.status_code == 200:
-        try:
-            results = json.loads(response.text)
-        except json.JSONDecodeError:
+    try:
+        data = json.loads(response.text)
+    except json.JSONDecodeError:
+        if response.status_code == 200:
             raise FabricCLIError(
-                ErrorMessages.Find.invalid_response(),
+                ErrorMessages.Common.invalid_json_format(),
                 fab_constant.ERROR_INVALID_JSON,
             )
-        return results
+        raise FabricCLIError(
+            ErrorMessages.Find.search_failed(response.text),
+            fab_constant.ERROR_INVALID_JSON,
+        )
 
-    try:
-        error_data = json.loads(response.text)
-        error_code = error_data.get("errorCode", fab_constant.ERROR_UNEXPECTED_ERROR)
-        error_message = error_data.get("message", response.text)
-    except json.JSONDecodeError:
-        error_code = fab_constant.ERROR_UNEXPECTED_ERROR
-        error_message = response.text
+    if response.status_code == 200:
+        return data
 
+    fab_logger.log_debug(f"Catalog search error: {data}")
     raise FabricCLIError(
-        ErrorMessages.Find.search_failed(error_message),
-        error_code,
+        ErrorMessages.Find.search_failed(data.get("message", response.text)),
+        data.get("errorCode", fab_constant.ERROR_UNEXPECTED_ERROR),
     )
 
 
@@ -309,8 +310,7 @@ def _prepare_display_items(args: Namespace, items: list[dict]) -> list[dict]:
         if not isinstance(display_items, list):
             return []
 
-    output_format = getattr(args, "output_format", "text") or "text"
-    if not show_details and output_format == "text":
+    if not show_details:
         utils.truncate_columns(display_items, ["description", "workspace", "name"])
 
     return display_items

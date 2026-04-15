@@ -10,7 +10,3 @@ class FindErrors:
     @staticmethod
     def search_failed(message: str) -> str:
         return f"Catalog search failed: {message}"
-
-    @staticmethod
-    def invalid_response() -> str:
-        return "Catalog search returned an invalid response."
