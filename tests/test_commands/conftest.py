@@ -80,7 +80,7 @@ import_create_new_item_success_params = pytest.mark.parametrize("item_type", [
     ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
     ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
     ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.ENVIRONMENT
 ])
 
 import_create_new_item_fail_params = pytest.mark.parametrize("item_type", [
@@ -250,6 +250,7 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.NOTEBOOK,
     ItemType.SPARK_JOB_DEFINITION,
     ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT,
     ItemType.MIRRORED_DATABASE,
     ItemType.REPORT,
     ItemType.SEMANTIC_MODEL,
