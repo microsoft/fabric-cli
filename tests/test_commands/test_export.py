@@ -46,7 +46,9 @@ class TestExport:
         export_path = tmp_path / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
-        assert len(files) == 2
+        # Lakehouse exports contain more files than other item types
+        expected_file_count = 4 if item_type == ItemType.LAKEHOUSE else 2
+        assert len(files) == expected_file_count
         assert any(file.suffix == expected_file_extension for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
@@ -86,7 +88,9 @@ class TestExport:
         export_path = output_dir / f"{item.display_name}.{item_type.value}"
         assert export_path.is_dir()
         files = list(export_path.iterdir())
-        assert len(files) == 2
+        # Lakehouse exports contain more files than other item types
+        expected_file_count = 4 if item_type == ItemType.LAKEHOUSE else 2
+        assert len(files) == expected_file_count
         assert any(file.suffix == expected_file_extension for file in files)
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
@@ -285,7 +289,8 @@ class TestExport:
             ItemType.MIRRORED_DATABASE: "Invalid format. No formats are supported",
             ItemType.COSMOS_DB_DATABASE: "Invalid format. No formats are supported",
             ItemType.USER_DATA_FUNCTION: "Invalid format. No formats are supported",
-            ItemType.GRAPH_QUERY_SET: "Invalid format. No formats are supported"
+            ItemType.GRAPH_QUERY_SET: "Invalid format. No formats are supported",
+            ItemType.LAKEHOUSE: "Invalid format. No formats are supported"
         }
 
         # Assert

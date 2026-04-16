@@ -91,10 +91,10 @@ def test_get_item_with_definition(monkeypatch):
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
     )
     non_export_item = Item(
-        name="lh_name",
-        id="lh_id",
+        name="dashboard_name",
+        id="dashboard_id",
         parent=workspace,
-        item_type="Lakehouse",
+        item_type="Dashboard",
     )
 
     export_item = Item(
