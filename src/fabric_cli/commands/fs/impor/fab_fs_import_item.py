@@ -60,12 +60,10 @@ def import_single_item(item: Item, args: Namespace) -> None:
                 else:
                     _import_update_item(args, payload)
 
-                utils_ui.print_output_format(
-                    args, message=f"'{item.name}' imported")
+                utils_ui.print_output_format(args, message=f"'{item.name}' imported")
         else:
             # Create
-            utils_ui.print_grey(
-                f"Importing '{_input_path}' → '{item.path}'...")
+            utils_ui.print_grey(f"Importing '{_input_path}' → '{item.path}'...")
 
             # Environment item type, not supporting definition yet
             if item.item_type == ItemType.ENVIRONMENT:
@@ -74,8 +72,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
                 response = _import_create_item(args, payload)
 
             if response.status_code in (200, 201):
-                utils_ui.print_output_format(
-                    args, message=f"'{item.name}' imported")
+                utils_ui.print_output_format(args, message=f"'{item.name}' imported")
                 data = json.loads(response.text)
                 item._id = data["id"]
 
@@ -106,6 +103,9 @@ def _import_create_environment_item(
         "displayName": item.short_name,
         "folderId": item.folder_id,
     }
+    description = getattr(args, "description", None)
+    if description is not None:
+        item_payload["description"] = description
     item_payload_str = json.dumps(item_payload)
 
     # Create the item
