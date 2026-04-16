@@ -65,7 +65,7 @@ def exec(workspace: Workspace, args: Namespace) -> None:
     utils_ui.print_grey("Creating a new Workspace...")
 
     # Remove all unwanted keys from the params
-    utils.remove_keys_from_dict(args.params, ["displayName"])
+    utils.remove_keys_from_dict(args.params, ["displayname"])
 
     payload = {
         "displayName": workspace.short_name,
@@ -80,5 +80,6 @@ def exec(workspace: Workspace, args: Namespace) -> None:
         # Add to mem_store
         utils_mem_store.upsert_workspace_to_cache(workspace)
 
-        utils_ui.print_output_format(args, message=f"'{workspace.name}' created", data=data, show_headers=True)
-
+        utils_ui.print_output_format(
+            args, message=f"'{workspace.name}' created", data=data, show_headers=True
+        )

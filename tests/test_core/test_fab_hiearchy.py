@@ -739,7 +739,7 @@ class TestMkdirWorkspacePayload:
         mock_response.text = json.dumps({"id": "new-ws-id", "displayName": "test_ws"})
         mock_ws_api.create_workspace.return_value = mock_response
 
-        args = Namespace(params={"capacityId": "capacity-id-123"}, output="text")
+        args = Namespace(params={"capacityid": "capacity-id-123"}, output="text")
         exec(workspace, args)
 
         # Verify the payload sent to create_workspace
@@ -769,7 +769,7 @@ class TestMkdirWorkspacePayload:
 
         args = Namespace(
             params={
-                "capacityId": "capacity-id-123",
+                "capacityid": "capacity-id-123",
                 "description": "My custom workspace",
             },
             output="text",

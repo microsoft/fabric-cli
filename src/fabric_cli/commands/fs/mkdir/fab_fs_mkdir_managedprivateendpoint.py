@@ -49,6 +49,12 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
     response = managed_private_endpoint_api.create_managed_private_endpoint(
         args, payload=json.dumps(payload)
     )
+    if response.status_code not in (200, 201):
+        raise FabricCLIError(
+            "Failed to create Managed Private Endpoint",
+            fab_constant.ERROR_OPERATION_FAILED,
+        )
+
     if response.status_code in (200, 201):
         data = json.loads(response.text)
         managed_private_endpoint._id = data["id"]
