@@ -87,28 +87,28 @@ def _print_search_summary(count: int, has_more: bool = False) -> None:
     utils_ui.print_grey("")
 
 
+def _display_page(
+    args: Namespace,
+    items: list[dict],
+    has_more: bool,
+    total_count: int,
+) -> int:
+    """Prepare and display a page of results, returning the updated total count."""
+    display_items, truncate_cols = _prepare_display_items(args, items)
+    total_count += len(display_items)
+    _print_search_summary(total_count, has_more)
+    _display_items(args, display_items, truncate_cols)
+    return total_count
+
+
 def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
-    has_more = True
+    items, continuation_token = _fetch_results(args, payload)
+    has_more = continuation_token is not None
+    total_count = _display_page(args, items, has_more, total_count)
 
     while has_more:
-        items, continuation_token = _fetch_results(args, payload)
-
-        if not items:
-            if total_count > 0:
-                _print_search_summary(total_count)
-            break
-
-        has_more = continuation_token is not None
-        display_items, truncate_cols = _prepare_display_items(args, items)
-        total_count += len(display_items)
-        _print_search_summary(total_count, has_more)
-        _display_items(args, display_items, truncate_cols)
-
-        if not has_more:
-            break
-
         try:
             utils_ui.print_grey("")
             input("Press Enter to continue... (Ctrl+C to stop)")
@@ -117,6 +117,9 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
             break
 
         payload = _next_page_payload(continuation_token, payload)
+        items, continuation_token = _fetch_results(args, payload)
+        has_more = continuation_token is not None
+        total_count = _display_page(args, items, has_more, total_count)
 
     if total_count == 0:
         utils_ui.print_grey("No items found.")
@@ -125,20 +128,24 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch all results across pages and display."""
     all_items: list[dict] = []
-    has_more = True
+    items, continuation_token = _fetch_results(args, payload)
+    all_items.extend(items)
+    has_more = continuation_token is not None
 
     while has_more:
+        payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
         has_more = continuation_token is not None
-        if has_more:
-            payload = _next_page_payload(continuation_token, payload)
 
     if not all_items:
         utils_ui.print_grey("No items found.")
         return
 
     display_items, truncate_cols = _prepare_display_items(args, all_items)
+    if not display_items:
+        utils_ui.print_grey("No items found.")
+        return
     _print_search_summary(len(display_items))
     _display_items(args, display_items, truncate_cols)
 
