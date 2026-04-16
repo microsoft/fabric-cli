@@ -359,6 +359,12 @@ class TestFindE2E:
 class TestFindPagination:
     """E2E tests for multi-page, single-page, and JMESPath edge cases."""
 
+    @pytest.fixture(autouse=True)
+    def _skip_on_record(self, vcr_mode):
+        """These tests use handcrafted cassettes that cannot be re-recorded."""
+        if vcr_mode == "all":
+            pytest.skip("Synthetic cassettes — not recordable")
+
     def test_find_single_page_no_prompt(
         self,
         cli_executor: CLIExecutor,
