@@ -3,6 +3,7 @@
 
 import json
 from argparse import Namespace
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -713,7 +714,9 @@ def test_create_subfolder_success():
 class TestMkdirWorkspacePayload:
     """Validate that workspace creation payloads do not include description by default."""
 
-    def _make_workspace(self, name: str = "test_ws", ws_id: str = None) -> Workspace:
+    def _make_workspace(
+        self, name: str = "test_ws", ws_id: Optional[str] = None
+    ) -> Workspace:
         tenant = Tenant(name="tenant_name", id="0000")
         return Workspace(name=name, id=ws_id, parent=tenant, type="Workspace")
 
