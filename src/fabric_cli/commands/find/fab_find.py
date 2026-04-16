@@ -89,15 +89,16 @@ def _print_search_summary(count: int, has_more: bool = False) -> None:
 
 def _display_page(
     args: Namespace,
-    items: list[dict],
+    display_items: list[dict],
+    truncate_cols: list[str] | None,
     has_more: bool,
     total_count: int,
 ) -> int:
-    """Prepare and display a page of results, returning the updated total count."""
-    display_items, truncate_cols = _prepare_display_items(args, items)
-    total_count += len(display_items)
-    _print_search_summary(total_count, has_more)
-    _display_items(args, display_items, truncate_cols)
+    """Display a page of results, returning the updated total count."""
+    if display_items:
+        total_count += len(display_items)
+        _print_search_summary(total_count, has_more)
+        _display_items(args, display_items, truncate_cols)
     return total_count
 
 
@@ -105,21 +106,27 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
     items, continuation_token = _fetch_results(args, payload)
-    has_more = continuation_token is not None
-    total_count = _display_page(args, items, has_more, total_count)
+    display_items, truncate_cols = _prepare_display_items(args, items)
+    total_count = _display_page(
+        args, display_items, truncate_cols, continuation_token is not None, total_count
+    )
 
-    while has_more:
-        try:
-            utils_ui.print_grey("")
-            input("Press Enter to continue... (Ctrl+C to stop)")
-        except (KeyboardInterrupt, EOFError):
-            utils_ui.print_grey("")
-            break
+    while continuation_token is not None:
+        if display_items:
+            try:
+                utils_ui.print_grey("")
+                input("Press Enter to continue... (Ctrl+C to stop)")
+            except (KeyboardInterrupt, EOFError):
+                utils_ui.print_grey("")
+                break
 
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
-        has_more = continuation_token is not None
-        total_count = _display_page(args, items, has_more, total_count)
+        display_items, truncate_cols = _prepare_display_items(args, items)
+        total_count = _display_page(
+            args, display_items, truncate_cols,
+            continuation_token is not None, total_count
+        )
 
     if total_count == 0:
         utils_ui.print_grey("No items found.")

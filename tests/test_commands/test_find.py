@@ -346,3 +346,98 @@ class TestFindE2E:
         assert "result" in json_output
         assert "data" in json_output["result"]
         assert len(json_output["result"]["data"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# E2E tests for pagination, JMESPath filtering, and edge cases.
+#
+# These tests use handcrafted VCR cassettes (no live API needed) to exercise
+# the full CLI pipeline through cli_executor → find → _find_interactive.
+# ---------------------------------------------------------------------------
+
+
+class TestFindPagination:
+    """E2E tests for multi-page, single-page, and JMESPath edge cases."""
+
+    def test_find_single_page_no_prompt(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        monkeypatch,
+    ):
+        """Single page of results — items displayed, no pagination prompt."""
+        prompt_called = False
+
+        def _fail_on_prompt(*args):
+            nonlocal prompt_called
+            prompt_called = True
+
+        monkeypatch.setattr("builtins.input", _fail_on_prompt)
+
+        cli_executor.exec_command("find 'singlepage'")
+
+        assert not prompt_called, "Prompt should not appear for single page"
+        output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
+        assert "NB-0" in output
+        assert "3 items found" in output
+
+    def test_find_multi_page_interactive(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        monkeypatch,
+    ):
+        """Two pages — user presses Enter to continue, sees all items."""
+        monkeypatch.setattr("builtins.input", lambda *a: "")
+
+        cli_executor.exec_command("find 'multipage'")
+
+        output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
+        assert "NB-P1-0" in output
+        assert "NB-P2-0" in output
+        assert "5 items found" in output
+
+    def test_find_jmespath_filters_all(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        mock_print_grey,
+        monkeypatch,
+    ):
+        """JMESPath filter empties all results → 'No items found.'"""
+        monkeypatch.setattr(
+            "builtins.input", lambda *a: (_ for _ in ()).throw(EOFError)
+        )
+
+        cli_executor.exec_command(
+            """find 'jmespathempty' -q "[?type=='Lakehouse']" """
+        )
+
+        grey_output = " ".join(str(c) for c in mock_print_grey.call_args_list)
+        assert "No items found" in grey_output
+
+    def test_find_jmespath_skips_empty_page(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+        monkeypatch,
+    ):
+        """Three pages — middle page emptied by JMESPath, prompt skipped for it."""
+        prompt_count = 0
+
+        def _count_prompt(*a):
+            nonlocal prompt_count
+            prompt_count += 1
+            return ""
+
+        monkeypatch.setattr("builtins.input", _count_prompt)
+
+        cli_executor.exec_command(
+            """find 'jmespathskip' -q "[?type=='Notebook']" """
+        )
+
+        # Prompt shown once (after page 1 with items), NOT after page 2 (empty)
+        assert prompt_count == 1, f"Expected 1 prompt, got {prompt_count}"
+        output = " ".join(str(c) for c in mock_questionary_print.call_args_list)
+        assert "NB-" in output
+        assert "LH-" not in output
