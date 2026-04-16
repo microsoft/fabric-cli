@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from unittest.mock import patch
+import json
+from argparse import Namespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -137,8 +139,7 @@ def test_create_virtual_item_success():
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
     )
-    container = VirtualItemContainer(
-        name=".sparkpools", id=None, parent=workspace)
+    container = VirtualItemContainer(name=".sparkpools", id=None, parent=workspace)
     item = VirtualItem(
         name="mySparkPool",
         id="virtual_item_id",
@@ -362,8 +363,7 @@ def test_create_virtual_item_container_success():
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
     )
-    container = VirtualItemContainer(
-        name=".sparkpools", id=None, parent=workspace)
+    container = VirtualItemContainer(name=".sparkpools", id=None, parent=workspace)
     assert container.parent == workspace
     assert container.tenant.id == "0000"
     assert container.tenant.name == "tenant_name.Tenant"
@@ -414,9 +414,13 @@ def test_get_item_payloads_success():
     }
 
     # Check that the payload is correct
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
-        assert get_payload_for_item_type(
-            "dummy", notebook, "ipynb") == _expected_payload
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
+        assert (
+            get_payload_for_item_type("dummy", notebook, "ipynb") == _expected_payload
+        )
 
     # Test Spark Job Definition
     spark_job_def = Item(
@@ -437,9 +441,14 @@ def test_get_item_payloads_success():
     }
 
     # Check that the payload is correct
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
-        assert get_payload_for_item_type("dummy",
-                                         spark_job_def, "SparkJobDefinitionV2") == _expected_payload
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
+        assert (
+            get_payload_for_item_type("dummy", spark_job_def, "SparkJobDefinitionV2")
+            == _expected_payload
+        )
 
     _expected_payload = {
         "type": "SparkJobDefinition",
@@ -452,9 +461,14 @@ def test_get_item_payloads_success():
     }
 
     # Check that the payload is correct
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
-        assert get_payload_for_item_type(
-            "dummy", spark_job_def, "SparkJobDefinitionV1") == _expected_payload
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
+        assert (
+            get_payload_for_item_type("dummy", spark_job_def, "SparkJobDefinitionV1")
+            == _expected_payload
+        )
 
     # Test EventHouse
     event_house = Item(
@@ -472,9 +486,11 @@ def test_get_item_payloads_success():
     }
 
     # Check that the payload is correct
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
-        assert get_payload_for_item_type(
-            "dummy", event_house) == _expected_payload
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
+        assert get_payload_for_item_type("dummy", event_house) == _expected_payload
 
     # Test Report
     report = Item(
@@ -506,9 +522,14 @@ def test_get_item_payloads_success():
         "definition": {"parts": _base_payload["parts"]},
     }
 
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
-        assert get_payload_for_item_type("dummy",
-                                         smenticModel) == _expected_payload_without_format
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
+        assert (
+            get_payload_for_item_type("dummy", smenticModel)
+            == _expected_payload_without_format
+        )
 
     _expected_payload_with_format = {
         "type": "SemanticModel",
@@ -520,14 +541,20 @@ def test_get_item_payloads_success():
         },
     }
 
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
         assert (
             get_payload_for_item_type("dummy", smenticModel, "TMDL")
             == _expected_payload_with_format
         )
 
     # Check that the payload is correct
-    with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
+    with patch(
+        "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+        side_effect=_mock_build,
+    ):
         assert get_payload_for_item_type("dummy", report) == _expected_payload
 
 
@@ -540,8 +567,7 @@ def _make_item(item_type: str, parent=None) -> Item:
     """Helper to create an Item with minimal boilerplate."""
     if parent is None:
         tenant = Tenant(name="t", id="tid")
-        parent = Workspace(name="ws", id="wsid",
-                           parent=tenant, type="Workspace")
+        parent = Workspace(name="ws", id="wsid", parent=tenant, type="Workspace")
     return Item(name="item", id="iid", parent=parent, item_type=item_type)
 
 
@@ -575,7 +601,10 @@ class TestBuildPayload:
         def _mock_build(path, resolved_format=""):
             return {"parts": {"key": "value"}}
 
-        with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
+        with patch(
+            "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+            side_effect=_mock_build,
+        ):
             payload = get_payload_for_item_type("dummy", item)
         assert payload["type"] == "Lakehouse"
         assert payload["displayName"] == "item"
@@ -588,7 +617,10 @@ class TestBuildPayload:
         def _mock_build(path, resolved_format=""):
             return {"parts": {"key": "value"}}
 
-        with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
+        with patch(
+            "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+            side_effect=_mock_build,
+        ):
             payload = get_payload_for_item_type("dummy", item)
         assert payload["definition"] == {"parts": {"key": "value"}}
 
@@ -607,7 +639,10 @@ class TestBuildPayload:
                 result["format"] = resolved_format
             return result
 
-        with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
+        with patch(
+            "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+            side_effect=_mock_build,
+        ):
             payload = get_payload_for_item_type("dummy", item, "ipynb")
         assert payload["folderId"] == "folder123"
         assert payload["definition"]["format"] == "ipynb"
@@ -668,3 +703,119 @@ def test_create_subfolder_success():
         == "/workspace_name.Workspace/folder_name.Folder/subfolder_name.Folder"
     )
     assert subfolder.check_command_support(Command.FS_LS)
+
+
+# -------------------------------------------------------------------
+# Tests for workspace mkdir payload — no hardcoded description
+# -------------------------------------------------------------------
+
+
+class TestMkdirWorkspacePayload:
+    """Validate that workspace creation payloads do not include description by default."""
+
+    def _make_workspace(self, name: str = "test_ws", ws_id: str = None) -> Workspace:
+        tenant = Tenant(name="tenant_name", id="0000")
+        return Workspace(name=name, id=ws_id, parent=tenant, type="Workspace")
+
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.workspace_api")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils_mem_store")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils_ui")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.fab_state_config")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils")
+    def test_workspace_payload_no_description_by_default_success(
+        self, mock_utils, mock_config, mock_ui, mock_mem_store, mock_ws_api
+    ):
+        """Workspace creation payload should not include 'description' unless user provides one."""
+        from fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace import exec
+
+        workspace = self._make_workspace()
+        mock_config.get_config.return_value = "capacity-id-123"
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.text = json.dumps({"id": "new-ws-id", "displayName": "test_ws"})
+        mock_ws_api.create_workspace.return_value = mock_response
+
+        args = Namespace(params={"capacityId": "capacity-id-123"}, output="text")
+        exec(workspace, args)
+
+        # Verify the payload sent to create_workspace
+        call_args = mock_ws_api.create_workspace.call_args
+        sent_payload = json.loads(call_args[0][1])
+        assert "description" not in sent_payload
+        assert sent_payload["displayName"] == "test_ws"
+
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.workspace_api")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils_mem_store")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils_ui")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.fab_state_config")
+    @patch("fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace.utils")
+    def test_workspace_payload_includes_user_description_success(
+        self, mock_utils, mock_config, mock_ui, mock_mem_store, mock_ws_api
+    ):
+        """When user provides description via params, it should be included in the payload."""
+        from fabric_cli.commands.fs.mkdir.fab_fs_mkdir_workspace import exec
+
+        workspace = self._make_workspace()
+        mock_config.get_config.return_value = "capacity-id-123"
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.text = json.dumps({"id": "new-ws-id", "displayName": "test_ws"})
+        mock_ws_api.create_workspace.return_value = mock_response
+
+        args = Namespace(
+            params={
+                "capacityId": "capacity-id-123",
+                "description": "My custom workspace",
+            },
+            output="text",
+        )
+        exec(workspace, args)
+
+        # Verify user-provided description is included
+        call_args = mock_ws_api.create_workspace.call_args
+        sent_payload = json.loads(call_args[0][1])
+        assert sent_payload["description"] == "My custom workspace"
+        assert sent_payload["displayName"] == "test_ws"
+
+
+# -------------------------------------------------------------------
+# Tests for import create environment item — no hardcoded description
+# -------------------------------------------------------------------
+
+
+class TestImportCreateEnvironmentItemPayload:
+    """Validate that _import_create_environment_item payload has no hardcoded description."""
+
+    @patch("fabric_cli.commands.fs.impor.fab_fs_import_item.utils_import")
+    @patch("fabric_cli.commands.fs.impor.fab_fs_import_item.item_api")
+    def test_environment_import_payload_no_description_success(
+        self, mock_item_api, mock_utils_import
+    ):
+        """Environment import create payload should not include 'description'."""
+        from fabric_cli.commands.fs.impor.fab_fs_import_item import (
+            _import_create_environment_item,
+        )
+
+        tenant = Tenant(name="t", id="tid")
+        ws = Workspace(name="ws", id="wsid", parent=tenant, type="Workspace")
+        item = Item(name="myenv", id=None, parent=ws, item_type="Environment")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 201
+        mock_response.text = json.dumps({"id": "env-id-123"})
+        mock_item_api.create_item.return_value = mock_response
+
+        args = Namespace(ws_id="wsid")
+        payload = {"parts": {}}
+
+        _import_create_environment_item(item, args, payload)
+
+        # Verify the payload sent to create_item
+        call_args = mock_item_api.create_item.call_args
+        sent_payload = json.loads(call_args[1]["payload"])
+        assert "description" not in sent_payload
+        assert sent_payload["type"] == "Environment"
+        assert sent_payload["displayName"] == "myenv"
+        assert sent_payload["folderId"] is None

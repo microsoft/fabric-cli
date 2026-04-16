@@ -42,13 +42,12 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
         "name": managed_private_endpoint_name,
         "targetPrivateLinkResourceId": params.get("targetprivatelinkresourceid"),
         "targetSubresourceType": params.get("targetsubresourcetype"),
-        "requestMessage": "Created by fab",
     }
 
     args.ws_id = managed_private_endpoint.workspace.id
 
     response = managed_private_endpoint_api.create_managed_private_endpoint(
-        args, payload= json.dumps(payload)
+        args, payload=json.dumps(payload)
     )
     if response.status_code in (200, 201):
         data = json.loads(response.text)
@@ -126,7 +125,7 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                         _args
                     )
                     if response.status_code == 200:
-                        result_message=f"'{managed_private_endpoint.name}' approved"
+                        result_message = f"'{managed_private_endpoint.name}' approved"
                     else:
                         raise Exception("Approval failed")
             except Exception:
@@ -135,4 +134,6 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
                     fab_constant.ERROR_OPERATION_FAILED,
                 )
 
-    utils_ui.print_output_format(args, message=result_message, data=data, show_headers=True)
+    utils_ui.print_output_format(
+        args, message=result_message, data=data, show_headers=True
+    )
