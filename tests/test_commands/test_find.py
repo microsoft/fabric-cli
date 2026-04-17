@@ -8,8 +8,6 @@ import time
 
 import pytest
 
-from fabric_cli.commands.find import fab_find
-from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
