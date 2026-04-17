@@ -3,6 +3,7 @@
 
 import builtins
 import html
+import shutil
 import sys
 import unicodedata
 from argparse import Namespace
@@ -135,7 +136,9 @@ def print_output_format(
             _print_output_format_result_text(output)
         case _:
             raise FabricCLIError(
-                ErrorMessages.Common.output_format_not_supported(str(format_type)),
+                ErrorMessages.Common.output_format_not_supported(
+                    str(format_type)
+                ),
                 fab_constant.ERROR_NOT_SUPPORTED,
             )
 
@@ -196,7 +199,9 @@ def print_output_error(
             return
         case _:
             raise FabricCLIError(
-                ErrorMessages.Common.output_format_not_supported(str(format_type)),
+                ErrorMessages.Common.output_format_not_supported(
+                    str(format_type)
+                ),
                 fab_constant.ERROR_NOT_SUPPORTED,
             )
 
@@ -276,7 +281,13 @@ def print_entries_unix_style(
 
     if header:
         widths = [
-            max(len(field), max(get_visual_length(entry, field) for entry in _entries))
+            max(
+                len(field),
+                max(
+                    get_visual_length(entry, field)
+                    for entry in _entries
+                ),
+            )
             for field in fields
         ]
 
@@ -288,13 +299,35 @@ def print_entries_unix_style(
     # Add extra space for better alignment
     # Adjust this value for more space if needed
     widths = [w + 2 for w in widths]
+
+    # Cap column widths so the total table width fits within the terminal width.
+    # Total visible chars = sum(widths) + (len(widths) - 1) separator spaces.
+    terminal_width = shutil.get_terminal_size((80, 24)).columns
+    total_width = sum(widths) + len(widths) - 1
+    if total_width > terminal_width and widths:
+        min_col_width = 8  # minimum width to fit wrapped text comfortably
+        available = terminal_width - (len(widths) - 1)
+        if available > 0:
+            scale = available / sum(widths)
+            new_widths = [max(min_col_width, int(w * scale)) for w in widths]
+            # Fine-tune: trim the largest column until we fit
+            while sum(new_widths) + len(new_widths) - 1 > terminal_width:
+                max_idx = max(range(len(new_widths)),
+                              key=lambda k: new_widths[k])
+                if new_widths[max_idx] <= min_col_width:
+                    break
+                new_widths[max_idx] -= 1
+            widths = new_widths
+
     if header:
-        print_grey(_format_unix_style_field(fields, widths), to_stderr=False)
+        for line in _format_unix_style_field(fields, widths):
+            print_grey(line, to_stderr=False)
         # Print a separator line, offset of 1 for each field
         print_grey("-" * (sum(widths) + len(widths)), to_stderr=False)
 
     for entry in _entries:
-        print_grey(_format_unix_style_entry(entry, fields, widths), to_stderr=False)
+        for line in _format_unix_style_entry(entry, fields, widths):
+            print_grey(line, to_stderr=False)
 
 
 # Others
@@ -356,7 +389,11 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         ):
             data_keys = output.result.get_data_keys() if output_result.data else []
             if len(data_keys) > 0:
-                print_entries_unix_style(output_result.data, data_keys, header=(len(data_keys) > 1 or show_headers))
+                print_entries_unix_style(
+                    output_result.data, data_keys, header=(
+                        len(data_keys) > 1 or show_headers
+                    )
+                )
             else:
                 _print_raw_data(output_result.data)
         elif output.show_key_value_list:
@@ -368,23 +405,23 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
         print_grey("------------------------------")
         _print_raw_data(output_result.hidden_data)
 
-        
     if output_result.message:
         print_done(f"{output_result.message}\n")
+
 
 def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
     """
     Print raw data without headers/formatting using appropriate display strategy.
-    
+
     This function intelligently chooses the output format based on data structure:
     - Complex dictionaries (multiple keys or list values) → JSON formatting
     - Simple dictionaries (single key-value pairs) → Extract and display values only
     - Other data types → Direct string conversion
-    
+
     Args:
         data: List of data items to print
         to_stderr: Whether to output to stderr (True) or stdout (False)
-    
+
     Returns:
         None
     """
@@ -402,7 +439,7 @@ def _print_raw_data(data: list[Any], to_stderr: bool = False) -> None:
 def _print_dict(data: list[Any], to_stderr: bool) -> None:
     """
     Format and print data as pretty-printed JSON.
-    
+
     Args:
         data: Data to format as JSON
         to_stderr: Output stream selection
@@ -440,7 +477,9 @@ def _print_error_format_json(output: str) -> None:
 
 def _print_error_format_text(message: str, command: Optional[str] = None) -> None:
     command_text = f"{command}: " if command else ""
-    _safe_print_formatted_text(f"<ansired>x</ansired> {command_text}{message}", message)
+    _safe_print_formatted_text(
+        f"<ansired>x</ansired> {command_text}{message}", message
+    )
 
 
 def _print_fallback(text: str, e: Exception, to_stderr: bool = False) -> None:
@@ -452,32 +491,65 @@ def _print_fallback(text: str, e: Exception, to_stderr: bool = False) -> None:
         raise
 
 
-def _format_unix_style_field(fields: list[str], widths: list[int]) -> str:
-    formatted = ""
-    # Dynamically format based on the fields provided
-    for i, field in enumerate(fields):
-        # Adjust spacing for better alignment
-        formatted += f"{field:<{widths[i]}} "
+def _wrap_text(text: str, width: int) -> list[str]:
+    """Wrap text to fit within width visual characters, returning a list of lines."""
+    if width <= 0:
+        return [text]
+    lines: list[str] = []
+    current_line = ""
+    current_width = 0
+    for char in text:
+        char_width = 2 if unicodedata.east_asian_width(char) in [
+            "F", "W"] else 1
+        if current_width + char_width > width:
+            lines.append(current_line)
+            current_line = char
+            current_width = char_width
+        else:
+            current_line += char
+            current_width += char_width
+    if current_line or not lines:
+        lines.append(current_line)
+    return lines
 
-    return formatted.strip()
+
+def _format_unix_style_field(fields: list[str], widths: list[int]) -> list[str]:
+    # Wrap each header field to fit within its column width
+    cells = [_wrap_text(field, widths[i]) for i, field in enumerate(fields)]
+    num_rows = max(len(cell) for cell in cells) if cells else 1
+    rows = []
+    for row_idx in range(num_rows):
+        formatted = ""
+        for i, cell in enumerate(cells):
+            value = cell[row_idx] if row_idx < len(cell) else ""
+            formatted += f"{value:<{widths[i]}} "
+        rows.append(formatted.rstrip())
+    return rows
 
 
 def _format_unix_style_entry(
     entry: dict[str, str], fields: list[str], widths: list[int]
-) -> str:
-    formatted = ""
-    # Dynamically format based on the fields provided
-    for i, field in enumerate(fields):
-        value = str(entry.get(field, ""))
-        # Adjust spacing for better alignment
-        length = len(value)
-        visual_length = _get_visual_length(value)
-        if visual_length > length:
-            formatted += f"{value:<{widths[i] - (visual_length - length) + 2 }} "
-        else:
-            formatted += f"{value:<{widths[i]}} "
-
-    return formatted.strip()
+) -> list[str]:
+    # Wrap each cell value to fit within its column width
+    cells = [
+        _wrap_text(str(entry.get(field, "")), widths[i])
+        for i, field in enumerate(fields)
+    ]
+    num_rows = max(len(cell) for cell in cells) if cells else 1
+    rows = []
+    for row_idx in range(num_rows):
+        formatted = ""
+        for i, cell in enumerate(cells):
+            value = cell[row_idx] if row_idx < len(cell) else ""
+            visual_length = _get_visual_length(value)
+            length = len(value)
+            # Wide characters require adjusted padding
+            if visual_length > length:
+                formatted += f"{value:<{widths[i] - (visual_length - length)}} "
+            else:
+                formatted += f"{value:<{widths[i]}} "
+        rows.append(formatted.rstrip())
+    return rows
 
 
 def _get_visual_length(string: str) -> int:
@@ -496,10 +568,10 @@ def _get_visual_length(string: str) -> int:
 
 def _print_entries_key_value_list_style(entries: Any) -> None:
     """Print entries in a key-value list format with formatted keys.
-    
+
     Args:
         entries: Dictionary or list of dictionaries to print
-        
+
     Example output:
         Logged In: true
         Account: johndoe@example.com
@@ -526,28 +598,31 @@ def _print_entries_key_value_list_style(entries: Any) -> None:
 
 def _format_key_to_convert_to_title_case(key: str) -> str:
     """Convert a snake_case key to a Title Case name.
-    
+
     Args:
         key: The key to format in snake_case format (e.g. 'user_id', 'account_name')
-        
+
     Returns:
         str: Formatted to title case name (e.g. 'User ID', 'Account Name')
-        
+
     Raises:
         ValueError: If the key is not in the expected underscore-separated format
     """
     # Allow letters, numbers, and underscores only
     if not key.replace('_', '').replace(' ', '').isalnum():
-        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
-    
+        raise ValueError(
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+
     # Check for invalid patterns (camelCase, spaces mixed with underscores, etc.)
     if ' ' in key and '_' in key:
-        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
-    
+        raise ValueError(
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+
     # Check for camelCase pattern (uppercase letters not at the start)
     if any(char.isupper() for char in key[1:]) and '_' not in key:
-        raise ValueError(f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
-    
+        raise ValueError(
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+
     pretty = key.replace('_', ' ').title().strip()
 
     return _check_special_cases(pretty)
