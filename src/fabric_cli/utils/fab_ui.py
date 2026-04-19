@@ -14,6 +14,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_lazy_load
+from fabric_cli.utils import fab_util
 
 
 def get_common_style():
@@ -95,6 +96,7 @@ def print_output_format(
     hidden_data: Optional[Any] = None,
     show_headers: bool = False,
     show_key_value_list: bool = False,
+    truncate_columns: Optional[list[str]] = None,
 ) -> None:
     """Create a FabricCLIOutput instance and print it depends on the format.
 
@@ -105,6 +107,9 @@ def print_output_format(
         hidden_data: Optional hidden data to include in output
         show_headers: Whether to show headers in the output (default: False)
         show_key_value_list: Whether to show output in key-value list format (default: False)
+        truncate_columns: Column names (in shrink priority) to truncate so a table
+            fits within terminal width. Only applied for text output; JSON output
+            is not modified. (default: None)
 
     Returns:
         FabricCLIOutput: Configured output instance ready for printing
@@ -132,6 +137,12 @@ def print_output_format(
         case "json":
             _print_output_format_json(output.to_json())
         case "text":
+            if (
+                truncate_columns
+                and isinstance(output.result.data, list)
+                and output.result.data
+            ):
+                fab_util.truncate_columns(output.result.data, truncate_columns)
             _print_output_format_result_text(output)
         case _:
             raise FabricCLIError(

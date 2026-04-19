@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 from fabric_cli.client import fab_api_catalog as catalog_api
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_decorators import handle_exceptions, set_command_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
@@ -341,14 +341,10 @@ def _display_items(
     columns_to_truncate: list[str] | None = None,
 ) -> None:
     """Render prepared display items, truncating columns for text format."""
-    format_type = getattr(args, "output_format", None) or fab_state_config.get_config(
-        fab_constant.FAB_OUTPUT_FORMAT
-    )
-    if columns_to_truncate and display_items and format_type == "text":
-        utils.truncate_columns(display_items, columns_to_truncate)
     utils_ui.print_output_format(
         args,
         data=display_items,
         show_headers=True,
+        truncate_columns=columns_to_truncate,
     )
     utils_ui.print_grey("")
