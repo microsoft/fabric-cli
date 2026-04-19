@@ -346,6 +346,84 @@ class TestFindE2E:
         assert len(json_output["result"]["data"]) > 0
 
 
+class TestFindTruncation:
+    """Tests for column truncation with long display names.
+
+    Uses handcrafted VCR cassettes (not recordable) because the test harness
+    normalizes display names to short monikers during recording, which would
+    defeat the purpose of testing truncation on long names.
+    """
+
+    LONG_NAME = "A" * 256
+
+    @pytest.fixture(autouse=True)
+    def _skip_on_record(self, vcr_mode):
+        if vcr_mode == "all":
+            pytest.skip("Synthetic cassettes — not recordable")
+
+    @pytest.fixture(autouse=True)
+    def _mock_input(self, monkeypatch):
+        """Raise EOFError on input() to stop pagination after the first page."""
+        monkeypatch.setattr(
+            "builtins.input", lambda *args: (_ for _ in ()).throw(EOFError)
+        )
+
+    def test_find_long_name_truncated_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Text output truncates a 256-char display name."""
+        cli_executor.exec_command(f"find 'longname'")
+
+        mock_questionary_print.assert_called()
+        full_name_found = any(
+            self.LONG_NAME in str(call)
+            for call in mock_questionary_print.call_args_list
+        )
+        assert not full_name_found, "Full 256-char name should be truncated in text output"
+        _assert_strings_in_mock_calls(
+            ["…"],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_long_name_details_not_truncated_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """Detail mode (-l) shows the full 256-char name without truncation."""
+        cli_executor.exec_command(f"find 'longname' -l")
+
+        mock_questionary_print.assert_called()
+        _assert_strings_in_mock_calls(
+            [self.LONG_NAME],
+            should_exist=True,
+            mock_calls=mock_questionary_print.call_args_list,
+        )
+
+    def test_find_long_name_json_not_truncated_success(
+        self,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        """JSON output preserves the full 256-char name without truncation."""
+        cli_executor.exec_command(f"find 'longname' --output_format json")
+
+        mock_questionary_print.assert_called()
+        json_output = None
+        for call in mock_questionary_print.call_args_list:
+            try:
+                json_output = json.loads(call.args[0])
+                break
+            except (json.JSONDecodeError, IndexError):
+                continue
+        assert json_output is not None, "No valid JSON found in output"
+        names = [item.get("name", "") for item in json_output["result"]["data"]]
+        assert self.LONG_NAME in names, "Full 256-char name not found in JSON output"
+
+
 class TestFindPagination:
     """E2E tests for pagination, JMESPath filtering, and edge cases.
 
