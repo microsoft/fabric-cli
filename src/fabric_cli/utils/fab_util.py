@@ -269,7 +269,9 @@ def truncate_columns(
         return
 
     term_width = shutil.get_terminal_size((120, 24)).columns
-    all_fields = list(items[0].keys())
+    # Union of keys across all items — JMESPath projections may produce
+    # uneven dicts, so item[0] alone is not a reliable schema source.
+    all_fields = list({k: None for item in items for k in item.keys()})
     # Table renderer adds +2 width per column and 1 space between columns
     padding_per_col = 3
     total_padding = padding_per_col * len(all_fields) - 1

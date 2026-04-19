@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 from fabric_cli.client import fab_api_catalog as catalog_api
-from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 from fabric_cli.core.fab_decorators import handle_exceptions, set_command_context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
@@ -78,10 +78,10 @@ def _next_page_payload(token: str, current: dict[str, Any]) -> dict[str, Any]:
     return {"continuationToken": token, "pageSize": current.get("pageSize", 50)}
 
 
-def _print_search_summary(count: int, has_more: bool = False) -> None:
+def _print_search_summary(count: int, has_more_pages: bool = False) -> None:
     """Print the search result summary line."""
     label = "item" if count == 1 else "items"
-    count_msg = f"{count} {label} found" + (" (more available)" if has_more else "")
+    count_msg = f"{count} {label} found" + (" (more available)" if has_more_pages else "")
     utils_ui.print_grey("")
     utils_ui.print_grey(count_msg)
     utils_ui.print_grey("")
@@ -91,13 +91,13 @@ def _display_page(
     args: Namespace,
     display_items: list[dict],
     truncate_cols: list[str] | None,
-    has_more: bool,
+    has_more_pages: bool,
     total_count: int,
 ) -> int:
     """Display a page of results, returning the updated total count."""
     if display_items:
         total_count += len(display_items)
-        _print_search_summary(total_count, has_more)
+        _print_search_summary(total_count, has_more_pages)
         _display_items(args, display_items, truncate_cols)
     return total_count
 
@@ -106,12 +106,13 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
     items, continuation_token = _fetch_results(args, payload)
+    has_more_pages = continuation_token is not None
     display_items, truncate_cols = _prepare_display_items(args, items)
     total_count = _display_page(
-        args, display_items, truncate_cols, continuation_token is not None, total_count
+        args, display_items, truncate_cols, has_more_pages, total_count
     )
 
-    while continuation_token is not None:
+    while has_more_pages:
         if display_items:
             try:
                 utils_ui.print_grey("")
@@ -122,10 +123,10 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
+        has_more_pages = continuation_token is not None
         display_items, truncate_cols = _prepare_display_items(args, items)
         total_count = _display_page(
-            args, display_items, truncate_cols,
-            continuation_token is not None, total_count
+            args, display_items, truncate_cols, has_more_pages, total_count
         )
 
     if total_count == 0:
@@ -137,13 +138,13 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     all_items: list[dict] = []
     items, continuation_token = _fetch_results(args, payload)
     all_items.extend(items)
-    has_more = continuation_token is not None
+    has_more_pages = continuation_token is not None
 
-    while has_more:
+    while has_more_pages:
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
-        has_more = continuation_token is not None
+        has_more_pages = continuation_token is not None
 
     if not all_items:
         utils_ui.print_grey("No items found.")
@@ -339,11 +340,15 @@ def _display_items(
     display_items: list[dict],
     columns_to_truncate: list[str] | None = None,
 ) -> None:
-    """Render prepared display items."""
+    """Render prepared display items, truncating columns for text format."""
+    format_type = getattr(args, "output_format", None) or fab_state_config.get_config(
+        fab_constant.FAB_OUTPUT_FORMAT
+    )
+    if columns_to_truncate and display_items and format_type == "text":
+        utils.truncate_columns(display_items, columns_to_truncate)
     utils_ui.print_output_format(
         args,
         data=display_items,
         show_headers=True,
-        columns_to_truncate=columns_to_truncate,
     )
     utils_ui.print_grey("")

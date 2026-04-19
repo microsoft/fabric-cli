@@ -346,24 +346,19 @@ class TestFindE2E:
         assert len(json_output["result"]["data"]) > 0
 
 
-# ---------------------------------------------------------------------------
-# E2E tests for pagination, JMESPath filtering, and edge cases.
-#
-# These tests use handcrafted VCR cassettes (no live API needed) to exercise
-# the full CLI pipeline through cli_executor → find → _find_interactive.
-# ---------------------------------------------------------------------------
-
-
 class TestFindPagination:
-    """E2E tests for multi-page, single-page, and JMESPath edge cases."""
+    """E2E tests for pagination, JMESPath filtering, and edge cases.
+
+    Uses handcrafted VCR cassettes (not recordable) to exercise
+    the full CLI pipeline through cli_executor → find → _find_interactive.
+    """
 
     @pytest.fixture(autouse=True)
     def _skip_on_record(self, vcr_mode):
-        """These tests use handcrafted cassettes that cannot be re-recorded."""
         if vcr_mode == "all":
             pytest.skip("Synthetic cassettes — not recordable")
 
-    def test_find_single_page_no_prompt(
+    def test_find_single_page_no_prompt_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -385,7 +380,7 @@ class TestFindPagination:
         assert "NB-0" in output
         assert "3 items found" in output
 
-    def test_find_multi_page_interactive(
+    def test_find_multi_page_interactive_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -401,7 +396,7 @@ class TestFindPagination:
         assert "NB-P2-0" in output
         assert "5 items found" in output
 
-    def test_find_jmespath_filters_all(
+    def test_find_no_items_display_after_jmespath_filters_all_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
@@ -420,7 +415,7 @@ class TestFindPagination:
         grey_output = " ".join(str(c) for c in mock_print_grey.call_args_list)
         assert "No items found" in grey_output
 
-    def test_find_jmespath_skips_empty_page(
+    def test_find_jmespath_skips_empty_page_success(
         self,
         cli_executor: CLIExecutor,
         mock_questionary_print,
