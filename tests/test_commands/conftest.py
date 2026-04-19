@@ -128,7 +128,6 @@ mv_item_to_item_unsupported_failure_params = pytest.mark.parametrize("unsupporte
     ItemType.EVENTHOUSE,
     ItemType.KQL_DATABASE,
     ItemType.EVENTSTREAM,
-    ItemType.DIGITAL_TWIN_BUILDER,
 ])
 
 mv_item_to_item_type_mismatch_failure_params = pytest.mark.parametrize("source_type,target_type", [
@@ -312,7 +311,7 @@ cp_item_types_success_params = pytest.mark.parametrize("item_type", [
     ItemType.DATA_PIPELINE, ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER,
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
 ])
 
 assign_entity_item_not_supported_failure_parameters = pytest.mark.parametrize("entity_type,factory_key,path_template", [
