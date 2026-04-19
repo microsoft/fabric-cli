@@ -143,6 +143,7 @@ def print_output_format(
                 truncate_columns
                 and isinstance(output.result.data, list)
                 and output.result.data
+                and isinstance(output.result.data[0], dict)
             ):
                 fab_util.truncate_columns(output.result.data, truncate_columns)
             _print_output_format_result_text(output)
