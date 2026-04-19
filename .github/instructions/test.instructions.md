@@ -38,7 +38,7 @@ This guide defines how **every test** in Fabric CLI should be designed, implemen
 ## 2) Structure & naming
 
 - **File names**: `test_<area>_<verb>.py` (e.g., `test_items_ls.py`, `test_gateways_get.py`)
-- **Test names**: `test_<behavior>__<condition>` (double underscore between behavior and condition)
+- **Test names**: `test_<behavior>_<condition>` (single underscore between behavior and condition)
 - **Parametrization**: prefer `@pytest.mark.parametrize` for path variations (absolute, relative, nested, hidden)
 
 ---
@@ -88,7 +88,7 @@ from fabric_cli.__main__ import main  # or an entrypoint that dispatches argv
 from fabric_cli import constants as fab_const
 
 @responses.activate
-def test_ls_semantic_models_under_workspace__json_output(capsys, tmp_home, auth_stub):
+def test_ls_semantic_models_under_workspace_json_output(capsys, tmp_home, auth_stub):
     # Mock list items under workspace
     responses.add(
         responses.GET,
@@ -123,7 +123,7 @@ vcr_recorder = vcr.VCR(
 )
 
 @pytest.mark.playback
-def test_ls_capacities_hidden_collection__table_output(capsys, tmp_home, auth_stub):
+def test_ls_capacities_hidden_collection_table_output(capsys, tmp_home, auth_stub):
     with vcr_recorder.use_cassette("ls_capacities_hidden.yaml"):
         argv = ["ls", "-a", ".capacities", "-o", "table"]
         rc = main(argv) or 0
@@ -179,7 +179,7 @@ pytest -q tests/test_core tests/test_utils
 pytest -q tests/test_commands --playback
 
 # Optional: run a single test
-pytest -q tests/test_commands/test_items_ls.py::test_ls_semantic_models_under_workspace__json_output
+pytest -q tests/test_commands/test_items_ls.py::test_ls_semantic_models_under_workspace_json_output
 
 ```
 
@@ -193,7 +193,7 @@ import pytest
 from fabric_cli.commands.items.list import attach_items_parsers
 from argparse import ArgumentParser
 
-def test_items_ls_parser__has_all_flag_and_output_modes():
+def test_items_ls_parser_has_all_flag_and_output_modes():
     parser = ArgumentParser()
     subs = parser.add_subparsers()
     attach_items_parsers(subs)
@@ -210,7 +210,7 @@ import pytest, responses
 from fabric_cli.__main__ import main
 
 @responses.activate
-def test_get_item__404_maps_to_fabric_api_error(capsys):
+def test_get_item_404_maps_to_fabric_api_error(capsys):
     responses.add(
         responses.GET,
         "https://api.fabric.microsoft.com/v1/items/does-not-exist",

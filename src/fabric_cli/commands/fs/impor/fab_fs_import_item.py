@@ -25,10 +25,9 @@ def import_single_item(item: Item, args: Namespace) -> None:
     args.ws_id = item.workspace.id
     input_path = utils_storage.get_import_path(args.input)
 
-    # Input path only support from local directories
-    if input_path["type"] == "lakehouse":
+    if input_path["type"] != "local":
         raise FabricCLIError(
-            "Import from Lakehouse/Files not supported",
+            f"Import only supports local paths. Unsupported input path type: '{input_path['type']}'.",
             fab_constant.ERROR_NOT_SUPPORTED,
         )
 

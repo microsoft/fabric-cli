@@ -16,7 +16,7 @@ from fabric_cli.utils.fab_cmd_import_utils import (
 )
 
 
-def test_create_tenant():
+def test_create_tenant_success():
     tenant = Tenant(name="tenant_name", id="0000")
     assert tenant.id == "0000"
     assert tenant.name == "tenant_name.Tenant"
@@ -26,7 +26,7 @@ def test_create_tenant():
     assert tenant.check_command_support(Command.FS_LS)
 
 
-def test_create_workspace():
+def test_create_workspace_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -43,7 +43,7 @@ def test_create_workspace():
     assert str(workspace) == "[Workspace] (workspace_name, workspace_id)"
 
 
-def test_create_invalid_workspace():
+def test_create_invalid_workspace_failure():
     tenant = Tenant(name="tenant_name", id="0000")
 
     with pytest.raises(FabricCLIError) as e:
@@ -53,7 +53,7 @@ def test_create_invalid_workspace():
     assert e.value.status_code == fab_constant.ERROR_INVALID_WORKSPACE_TYPE
 
 
-def test_create_virtual_workspace():
+def test_create_virtual_workspace_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = VirtualWorkspace(
         name=".capacities", id="virtual_workspace_id", parent=tenant
@@ -69,7 +69,7 @@ def test_create_virtual_workspace():
     assert workspace.check_command_support(Command.FS_LS)
 
 
-def test_create_invalid_virtual_workspace():
+def test_create_invalid_virtual_workspace_failure():
     tenant = Tenant(name="tenant_name", id="0000")
 
     with pytest.raises(FabricCLIError) as e:
@@ -77,7 +77,7 @@ def test_create_invalid_virtual_workspace():
     assert e.value.status_code == fab_constant.ERROR_INVALID_WORKSPACE_TYPE
 
 
-def test_create_item():
+def test_create_item_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -107,7 +107,7 @@ def test_create_item():
     assert e.value.status_code == fab_constant.ERROR_UNSUPPORTED_COMMAND
 
 
-def test_create_invalid_item():
+def test_create_invalid_item_failure():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -132,7 +132,7 @@ def test_create_invalid_item():
     assert e.value.status_code == fab_constant.WARNING_INVALID_ITEM_NAME
 
 
-def test_create_virtual_item():
+def test_create_virtual_item_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
@@ -159,7 +159,7 @@ def test_create_virtual_item():
     assert item.check_command_support(Command.FS_EXISTS)
 
 
-def test_create_virtual_workspace_item():
+def test_create_virtual_workspace_item_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = VirtualWorkspace(
         name=".capacities", id="virtual_workspace_id", parent=tenant
@@ -183,7 +183,7 @@ def test_create_virtual_workspace_item():
     assert item.check_command_support(Command.FS_EXISTS)
 
 
-def test_create_onelakeelement():
+def test_create_onelakeelement_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -270,7 +270,7 @@ def test_create_onelakeelement():
     assert onelake_file != onelake_copy
 
 
-def test_create_invalid_virtualworkspace_item_type():
+def test_create_invalid_virtualworkspace_item_type_failure():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = VirtualWorkspace(
         name=".capacities", id="virtual_workspace_id", parent=tenant
@@ -286,7 +286,7 @@ def test_create_invalid_virtualworkspace_item_type():
     assert e.value.status_code == fab_constant.ERROR_INVALID_ITEM_TYPE
 
 
-def test_create_invalid_virtualworkspace():
+def test_create_invalid_virtualworkspace_failure():
     tenant = Tenant(name="tenant_name", id="0000")
 
     with pytest.raises(FabricCLIError) as e:
@@ -294,7 +294,7 @@ def test_create_invalid_virtualworkspace():
     assert e.value.status_code == fab_constant.ERROR_INVALID_WORKSPACE_TYPE
 
 
-def test_create_invalid_virtual_item_container():
+def test_create_invalid_virtual_item_container_failure():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Personal"
@@ -305,7 +305,7 @@ def test_create_invalid_virtual_item_container():
     assert e.value.status_code == fab_constant.ERROR_INVALID_ITEM_TYPE
 
 
-def test_create_invalid_virtual_item():
+def test_create_invalid_virtual_item_failure():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -324,7 +324,7 @@ def test_create_invalid_virtual_item():
     assert e.value.status_code == fab_constant.ERROR_INVALID_ITEM_TYPE
 
 
-def test_command_support():
+def test_command_support_success():
     # TODO: Improve using custom config and not rely on the default one
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
@@ -357,7 +357,7 @@ def test_command_support():
     assert e.value.status_code == fab_constant.ERROR_UNSUPPORTED_COMMAND
 
 
-def test_create_virtual_item_container():
+def test_create_virtual_item_container_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="My workspace", id="workspace_id", parent=tenant, type="Personal"
@@ -380,7 +380,7 @@ def test_create_virtual_item_container():
     assert container.check_command_support(Command.FS_CD)
 
 
-def test_get_item_payloads():
+def test_get_item_payloads_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -555,27 +555,27 @@ def _make_item(item_type: str, parent=None) -> Item:
 class TestBuildPayload:
     """Validate _build_definition includes format when provided."""
 
-    def test_with_format__includes_format_key(self, tmp_path):
+    def test_with_format_includes_format_key_success(self, tmp_path):
         (tmp_path / "notebook.ipynb").write_text("{}")
         result = _build_definition(str(tmp_path), "ipynb")
         assert result["format"] == "ipynb"
         assert len(result["parts"]) == 1
         assert result["parts"][0]["path"] == "notebook.ipynb"
 
-    def test_without_format__no_format_key(self, tmp_path):
+    def test_without_format_no_format_key_success(self, tmp_path):
         (tmp_path / "notebook.ipynb").write_text("{}")
         result = _build_definition(str(tmp_path))
         assert "format" not in result
         assert len(result["parts"]) == 1
 
-    def test_empty_format__no_format_key(self, tmp_path):
+    def test_empty_format_no_format_key_success(self, tmp_path):
         (tmp_path / "file.json").write_text("{}")
         result = _build_definition(str(tmp_path), "")
         assert "format" not in result
 
     # -- Payload construction tests -------------------------------------------
 
-    def test_payload__lakehouse(self):
+    def test_payload_lakehouse_success(self):
         """Any item type can have a payload constructed."""
         item = _make_item("Lakehouse")
 
@@ -588,7 +588,7 @@ class TestBuildPayload:
         assert payload["displayName"] == "item"
         assert payload["definition"] == {"parts": {"key": "value"}}
 
-    def test_payload__kql_dashboard(self):
+    def test_payload_kql_dashboard_success(self):
         """KQLDashboard (was in ImportDefinitionTypes) still works."""
         item = _make_item("KQLDashboard")
 
@@ -601,7 +601,7 @@ class TestBuildPayload:
 
     # -- Folder-based items include folderId ----------------------------------
 
-    def test_payload__item_in_folder__includes_folder_id(self):
+    def test_payload_item_in_folder_includes_folder_id_success(self):
         """Items inside a folder should have folderId set."""
         tenant = Tenant(name="t", id="tid")
         ws = Workspace(name="ws", id="wsid", parent=tenant, type="Workspace")
@@ -619,14 +619,14 @@ class TestBuildPayload:
         assert payload["folderId"] == "folder123"
         assert payload["definition"]["format"] == "ipynb"
 
-    def test_payload__item_in_workspace__folder_id_none(self):
+    def test_payload_item_in_workspace_folder_id_none_success(self):
         """Items directly under workspace should have folderId=None."""
         item = _make_item("Notebook")
         assert item.folder_id is None
 
     # -- Unknown format is now validated upstream by resolve_definition_format --
 
-    def test_unknown_format__raises_error(self):
+    def test_unknown_format_raises_error_failure(self):
         """Unknown format raises FabricCLIError during resolution."""
         from fabric_cli.utils.fab_item_util import resolve_definition_format
 
@@ -635,7 +635,7 @@ class TestBuildPayload:
             resolve_definition_format(item.item_type, "UnknownFormat")
 
 
-def test_create_folder():
+def test_create_folder_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
@@ -653,7 +653,7 @@ def test_create_folder():
     assert folder.check_command_support(Command.FS_LS)
 
 
-def test_create_subfolder():
+def test_create_subfolder_success():
     tenant = Tenant(name="tenant_name", id="0000")
     workspace = Workspace(
         name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"

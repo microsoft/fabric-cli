@@ -13,16 +13,18 @@ from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Tenant, Workspace
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils import fab_util as utils
+from fabric_cli.utils import fab_cmd_rm_utils as rm_utils
 from fabric_cli.utils import fab_item_util as item_utils
 
 
 def bulk(tenant: Tenant, args: Namespace, force_delete: bool) -> None:
     workspaces: list[Workspace] = utils_mem_store.get_workspaces(tenant)
-    sorted_workspaces: list[Workspace] = sorted(workspaces, key=lambda ws: ws.name)
+    sorted_workspaces: list[Workspace] = sorted(
+        workspaces, key=lambda ws: ws.name)
 
     names = [workspace.name for workspace in sorted_workspaces]
-    selected_workspaces = utils_ui.prompt_select_items("Select workspaces:", names)
+    selected_workspaces = utils_ui.prompt_select_items(
+        "Select workspaces:", names)
     if selected_workspaces:
         for workspace_str in selected_workspaces:
             utils_ui.print_grey(workspace_str)
@@ -51,7 +53,8 @@ def bulk(tenant: Tenant, args: Namespace, force_delete: bool) -> None:
                     utils_mem_store.delete_workspace_from_cache(workspace)
 
             utils_ui.print("")
-            utils_ui.print_output_format(args, message=f"{deleted_workspaces} workspaces deleted successfully")
+            utils_ui.print_output_format(
+                args, message=f"{deleted_workspaces} workspaces deleted successfully")
 
 
 def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
@@ -77,7 +80,8 @@ def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
             pass
 
     if force_delete:
-        utils_ui.print_grey(f"This will delete {len(ws_items)} underlying items")
+        utils_ui.print_grey(
+            f"This will delete {len(ws_items)} underlying items")
 
         if workspace_api.delete_workspace(args, force_delete):
             # Remove from mem_store
@@ -94,7 +98,8 @@ def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
             sorted_items = item_utils.sort_ws_elems_by_config(supported_items)
 
             names = [item.name for item in sorted_items]
-            selected_items = utils_ui.prompt_select_items("Select items:", names)
+            selected_items = utils_ui.prompt_select_items(
+                "Select items:", names)
             if selected_items:
                 for item_str in selected_items:
                     utils_ui.print_grey(item_str)
@@ -113,6 +118,8 @@ def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
                         args.name = item.name
                         args.item_type = str(item.item_type)
 
+                        rm_utils.setup_delete_request_params(args)
+
                         # Reset args for subsequent calls
                         args.uri = None
                         args.method = None
@@ -120,11 +127,13 @@ def single(workspace: Workspace, args: Namespace, force_delete: bool) -> None:
                         if item_api.delete_item(
                             args, bypass_confirmation=True, verbose=False
                         ):
-                            utils_ui.print_output_format(args, message=f"'{args.name}' deleted")
+                            utils_ui.print_output_format(
+                                args, message=f"'{args.name}' deleted")
                             deleted_items = deleted_items + 1
 
                             # Remove from mem_store
                             utils_mem_store.delete_item_from_cache(item)
 
                     utils_ui.print("")
-                    utils_ui.print_output_format(args, message=f"{deleted_items} items deleted successfully")
+                    utils_ui.print_output_format(
+                        args, message=f"{deleted_items} items deleted successfully")

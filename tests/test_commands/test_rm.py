@@ -165,6 +165,88 @@ class TestRM:
         # Assert
         assert_fabric_cli_error(constant.ERROR_NOT_FOUND)
 
+    @item_type_paramerter
+    def test_rm_item_with_hard_delete_success(
+        self,
+        workspace,
+        item_type,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_warning,
+        mock_print_done,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item = set_entity_metadata(
+            vcr_instance, cassette_name, item_type, workspace.full_path
+        )
+        mkdir(item.full_path)
+        mock_print_done.reset_mock()
+        mock_print_warning.reset_mock()
+
+        # Execute command with hard delete
+        cli_executor.exec_command(f"rm {item.full_path} --force --hard")
+
+        # Assert
+        mock_print_warning.assert_called()
+        mock_questionary_print.assert_called()
+        mock_print_done.assert_called_once()
+
+        # Check for hard delete warnings
+        warning_calls = [str(call)
+                         for call in mock_print_warning.call_args_list]
+        assert any("hard delete" in call.lower() for call in warning_calls), \
+            f"Expected hard delete warning in: {warning_calls}"
+
+        _assert_strings_in_mock_calls(
+            [item.display_name], True, mock_questionary_print.mock_calls
+        )
+        _assert_strings_in_mock_calls(
+            [item.display_name], True, mock_print_done.mock_calls
+        )
+
+        _assert_not_found(item.full_path)
+
+    @item_type_paramerter
+    def test_rm_item_with_hard_delete_without_force_success(
+        self,
+        workspace,
+        item_type,
+        cli_executor,
+        mock_questionary_print,
+        mock_print_done,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item = set_entity_metadata(
+            vcr_instance, cassette_name, item_type, workspace.full_path
+        )
+        mkdir(item.full_path)
+        # Reset mocks
+        mock_print_done.reset_mock()
+        mock_questionary_print.reset_mock()
+
+        with patch("questionary.confirm") as mock_confirm:
+            mock_confirm.return_value.ask.return_value = True
+
+            # Execute command with hard delete but without force
+            cli_executor.exec_command(f"rm {item.full_path} --hard")
+
+        # Assert
+        mock_confirm.assert_called_once()
+        mock_questionary_print.assert_called_once()
+        mock_print_done.assert_called_once()
+        _assert_strings_in_mock_calls(
+            [item.display_name], True, mock_questionary_print.mock_calls
+        )
+        _assert_strings_in_mock_calls(
+            [item.display_name], True, mock_print_done.mock_calls
+        )
+
+        _assert_not_found(item.full_path)
+
     # endregion
 
     # region WORKSPACE

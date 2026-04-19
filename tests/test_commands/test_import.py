@@ -200,6 +200,7 @@ class TestImport:
             ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
             ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
             ItemType.DATA_PIPELINE: "Invalid format. No formats are supported",
+            ItemType.LAKEHOUSE: "Invalid format. No formats are supported",
         }
 
         # Assert

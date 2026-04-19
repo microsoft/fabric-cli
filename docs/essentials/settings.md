@@ -1,6 +1,6 @@
 # Settings
 
-The Fabric CLI provides a comprehensive set of configuration settings that allow you to customize its behavior, performance, and default values. All settings persist across CLI sessions, except for `mode` and `encryption_fallback_enabled`.
+The Fabric CLI provides a comprehensive set of configuration settings that allow you to customize its behavior, performance, and default values. All settings persist across CLI sessions, except for `encryption_fallback_enabled`.
 
 ## Available Settings
 
@@ -9,11 +9,10 @@ The Fabric CLI provides a comprehensive set of configuration settings that allow
 | `cache_enabled`                | Toggles caching of CLI HTTP responses                           | `BOOLEAN`  | `true`  |
 | `check_cli_version_updates`                | Enables automatic update notifications on login                                            | `BOOLEAN`  | `true`  |
 | `debug_enabled`                | Toggles additional diagnostic logs for troubleshooting                                   | `BOOLEAN`  | `false` |
-| `context_persistence_enabled`  | Persists CLI navigation context in command line mode across sessions | `BOOLEAN` | `false` |
+| `context_persistence_enabled`  | Persists CLI navigation context in command-line mode across sessions | `BOOLEAN` | `false` |
 | `encryption_fallback_enabled`  | Permits storing tokens in plain text if secure encryption is unavailable                  | `BOOLEAN`  | `false` |
 | `job_cancel_ontimeout`         | Cancels job runs that exceed the timeout period                                  | `BOOLEAN`  | `true`  |
 | `local_definition_labels`      | Indicates the local JSON file path for label definitions mapping                 | `VARCHAR`  |         |
-| `mode`                         | Determines the CLI mode (`interactive` or `command_line`)              | `VARCHAR`  | `command_line` |
 | `output_item_sort_criteria`    | Defines items output order (`byname` or `bytype`)               | `VARCHAR`  | `byname`|
 | `show_hidden`                  | Displays all Fabric elements                                                               | `BOOLEAN`  | `false` |
 | `default_az_admin`             | Defines the default Fabric administrator email for capacities  | `VARCHAR`  |         |

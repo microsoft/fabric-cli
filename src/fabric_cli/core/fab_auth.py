@@ -731,8 +731,8 @@ class FabAuth:
         )
         cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
         fingerprint = cert.fingerprint(
-            hashes.SHA1()
-        )  # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+            hashes.SHA1() # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+        )  
         return self._Cert(certificate_data, private_key, fingerprint)
 
     def _load_pkcs12_certificate(

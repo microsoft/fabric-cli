@@ -30,14 +30,14 @@ from fabric_cli.errors import ErrorMessages
 # JSON utilities
 def dumps(obj: Any, **kw) -> str:
     """JSON dumps with custom handling for bytes/bytearray objects.
-    
+
     Args:
         obj: Object to serialize to JSON
         **kw: Additional keyword arguments passed to json.dumps
-        
+
     Returns:
         JSON string representation of the object
-        
+
     Raises:
         TypeError: If object contains non-serializable types other than bytes/bytearray
     """
@@ -123,13 +123,14 @@ def get_dict_from_parameter(
         clean_value = try_get_json_value_from_string(value)
         return {param: clean_value}
 
+
 def try_get_json_value_from_string(value: str) -> Any:
     """
     Try to parse a string as JSON, with special handling for array parameters.
-    
+
     Args:
         value: String that may contain JSON data
-        
+
     Returns:
         Parsed JSON if valid, otherwise original string
     """
@@ -137,8 +138,9 @@ def try_get_json_value_from_string(value: str) -> Any:
         try:
             return json.loads(value)
         except json.JSONDecodeError:
-            pass        
+            pass
     return value.replace("'", "").replace('"', "")
+
 
 def merge_dicts(dict1: dict, dict2: dict) -> dict:
     """
@@ -180,26 +182,32 @@ def get_capacity_settings(
     params: dict = {},
 ) -> tuple:
     """Get Azure capacity settings from parameters and configuration.
-    
+
     Args:
         params: Dictionary containing capacity parameters
-        
+
     Returns:
         Tuple containing (admin, location, subscription_id, resource_group, sku)
-        
+
     Raises:
         FabricCLIError: If required configuration values are missing
     """
     az_subscription_id = params.get(
         "subscriptionid",
-        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID),
+        fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID
+        ),
     )
     az_resource_group = params.get(
         "resourcegroup",
-        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP),
+        fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP
+        ),
     )
     az_default_location = params.get(
-        "location", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_LOCATION)
+        "location", fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_LOCATION
+        ),
     )
     az_default_admin = params.get(
         "admin", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_ADMIN)
