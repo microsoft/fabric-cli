@@ -72,7 +72,7 @@ import_update_existing_item_success_params = pytest.mark.parametrize("item_type"
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET,
     ItemType.MIRRORED_DATABASE, ItemType.NOTEBOOK,
     ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.LAKEHOUSE
 ])
 
 import_create_new_item_success_params = pytest.mark.parametrize("item_type", [
@@ -80,11 +80,11 @@ import_create_new_item_success_params = pytest.mark.parametrize("item_type", [
     ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
     ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
     ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.LAKEHOUSE
 ])
 
 import_create_new_item_fail_params = pytest.mark.parametrize("item_type", [
-    ItemType.DASHBOARD, ItemType.DATAMART, ItemType.LAKEHOUSE,
+    ItemType.DASHBOARD, ItemType.DATAMART,
     ItemType.MIRRORED_WAREHOUSE, ItemType.ML_EXPERIMENT, ItemType.ML_MODEL,
     ItemType.PAGINATED_REPORT, ItemType.SQL_ENDPOINT, ItemType.WAREHOUSE,
 ])
@@ -94,6 +94,7 @@ import_item_wrong_format_fail_params = pytest.mark.parametrize("item_type", [
     (ItemType.SPARK_JOB_DEFINITION),
     (ItemType.SEMANTIC_MODEL),
     (ItemType.DATA_PIPELINE),
+    (ItemType.LAKEHOUSE),
 ],
 )
 
@@ -159,7 +160,7 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,ex
     (ItemType.MIRRORED_DATABASE, True),
     (ItemType.NOTEBOOK, True),
     (ItemType.DATA_PIPELINE, True),
-    (ItemType.LAKEHOUSE, False),
+    (ItemType.LAKEHOUSE, True),
     (ItemType.ENVIRONMENT, False),
     (ItemType.WAREHOUSE, False),
     (ItemType.COSMOS_DB_DATABASE, True),
@@ -186,7 +187,7 @@ set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize("i
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.MAP
+    ItemType.USER_DATA_FUNCTION, ItemType.MAP, ItemType.DIGITAL_TWIN_BUILDER
 ])
 
 set_item_metadata_success_params = pytest.mark.parametrize(
@@ -243,7 +244,9 @@ export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.COSMOS_DB_DATABASE, ".json"),
     (ItemType.USER_DATA_FUNCTION, ".json"),
     (ItemType.GRAPH_QUERY_SET, ".json"),
-    (ItemType.MAP, ".json")
+    (ItemType.DIGITAL_TWIN_BUILDER, ".json"),
+    (ItemType.MAP, ".json"),
+    (ItemType.LAKEHOUSE, ".json")
 ])
 
 export_item_types_parameters = pytest.mark.parametrize("item_type", [
@@ -257,7 +260,9 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION,
     ItemType.GRAPH_QUERY_SET,
-    ItemType.MAP
+    ItemType.DIGITAL_TWIN_BUILDER,
+    ItemType.MAP,
+    ItemType.LAKEHOUSE
 ])
 
 export_item_format_parameters = pytest.mark.parametrize(
@@ -282,7 +287,9 @@ export_item_default_format_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.KQL_DATABASE, 3),
     (ItemType.COSMOS_DB_DATABASE, 2),
     (ItemType.USER_DATA_FUNCTION, 2),
-    (ItemType.GRAPH_QUERY_SET, 2)
+    (ItemType.GRAPH_QUERY_SET, 2),
+    (ItemType.DIGITAL_TWIN_BUILDER, 2),
+    (ItemType.LAKEHOUSE, 4)
 ])
 
 export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,invalid_format", [
@@ -293,7 +300,9 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.MIRRORED_DATABASE, ".txt"),
     (ItemType.COSMOS_DB_DATABASE, ".txt"),
     (ItemType.USER_DATA_FUNCTION, ".txt"),
-    (ItemType.GRAPH_QUERY_SET, ".txt")
+    (ItemType.GRAPH_QUERY_SET, ".txt"),
+    (ItemType.DIGITAL_TWIN_BUILDER, ".txt"),
+    (ItemType.LAKEHOUSE, ".txt")
 ])
 
 # TODO: Fix capacity teardown issue CannotOverwriteExistingCassetteException & uncomment the item parameter

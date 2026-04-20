@@ -598,6 +598,7 @@ definition_format_mapping = {
         "TMSL": "TMSL",
     },
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
+    ItemType.DIGITAL_TWIN_BUILDER: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
     ItemType.GRAPH_QUERY_SET: {"default": ""},
     ItemType.VARIABLE_LIBRARY: {"default": ""},
