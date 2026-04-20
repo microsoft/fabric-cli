@@ -121,7 +121,8 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
                 utils_ui.print_grey("")
                 break
 
-        assert continuation_token is not None  # guaranteed by has_more_pages
+        if continuation_token is None:
+            break
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         has_more_pages = continuation_token is not None
@@ -142,7 +143,8 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     has_more_pages = continuation_token is not None
 
     while has_more_pages:
-        assert continuation_token is not None  # guaranteed by has_more_pages
+        if continuation_token is None:
+            break
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
