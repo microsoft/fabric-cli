@@ -73,9 +73,7 @@ def _fetch_results(
     return items, continuation_token
 
 
-def _next_page_payload(
-    token: str | None, current: dict[str, Any]
-) -> dict[str, Any]:
+def _next_page_payload(token: str, current: dict[str, Any]) -> dict[str, Any]:
     """Build a continuation payload for the next page."""
     return {"continuationToken": token, "pageSize": current.get("pageSize", 50)}
 
@@ -108,13 +106,12 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
     """Fetch and display results page by page, prompting between pages."""
     total_count = 0
     items, continuation_token = _fetch_results(args, payload)
-    has_more_pages = continuation_token is not None
     display_items, truncate_cols = _prepare_display_items(args, items)
     total_count = _display_page(
-        args, display_items, truncate_cols, has_more_pages, total_count
+        args, display_items, truncate_cols, continuation_token is not None, total_count
     )
 
-    while has_more_pages:
+    while continuation_token is not None:
         if display_items:
             try:
                 utils_ui.print_grey("")
@@ -125,10 +122,9 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
 
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
-        has_more_pages = continuation_token is not None
         display_items, truncate_cols = _prepare_display_items(args, items)
         total_count = _display_page(
-            args, display_items, truncate_cols, has_more_pages, total_count
+            args, display_items, truncate_cols, continuation_token is not None, total_count
         )
 
     if total_count == 0:
@@ -140,13 +136,11 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     all_items: list[dict] = []
     items, continuation_token = _fetch_results(args, payload)
     all_items.extend(items)
-    has_more_pages = continuation_token is not None
 
-    while has_more_pages:
+    while continuation_token is not None:
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
-        has_more_pages = continuation_token is not None
 
     if not all_items:
         utils_ui.print_grey("No items found.")
