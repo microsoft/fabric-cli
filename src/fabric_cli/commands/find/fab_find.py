@@ -121,6 +121,7 @@ def _find_interactive(args: Namespace, payload: dict[str, Any]) -> None:
                 utils_ui.print_grey("")
                 break
 
+        assert continuation_token is not None  # guaranteed by has_more_pages
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         has_more_pages = continuation_token is not None
@@ -141,6 +142,7 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
     has_more_pages = continuation_token is not None
 
     while has_more_pages:
+        assert continuation_token is not None  # guaranteed by has_more_pages
         payload = _next_page_payload(continuation_token, payload)
         items, continuation_token = _fetch_results(args, payload)
         all_items.extend(items)
@@ -327,9 +329,10 @@ def _prepare_display_items(
         display_items.append(entry)
 
     if getattr(args, "query", None):
-        display_items = utils_jmespath.search(display_items, args.query)
-        if not isinstance(display_items, list):
+        query_result = utils_jmespath.search(display_items, args.query)
+        if not isinstance(query_result, list):
             return [], None
+        display_items = query_result
 
     truncate_cols = ["description", "workspace", "name"] if not show_details else None
     return display_items, truncate_cols
