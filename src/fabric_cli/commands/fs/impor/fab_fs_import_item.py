@@ -42,12 +42,6 @@ def import_single_item(item: Item, args: Namespace) -> None:
             _input_path, item, input_format=_input_format
         )
 
-        if item.item_type == ItemType.ENVIRONMENT:
-            _import_create_environment_item(
-                item, args, payload, _input_path, item_exists
-            )
-            return
-
         if item_exists:
             fab_logger.log_warning("An item with the same name exists")
 
@@ -59,7 +53,11 @@ def import_single_item(item: Item, args: Namespace) -> None:
                     f"Importing (update) '{_input_path}' → '{item.path}'..."
                 )
 
-                _import_update_item(args, payload)
+                # Environment item type, not supporting definition yet
+                if item.item_type == ItemType.ENVIRONMENT:
+                    _import_update_environment_item(args, payload)
+                else:
+                    _import_update_item(args, payload)
 
                 utils_ui.print_output_format(
                     args, message=f"'{item.name}' imported")
@@ -68,7 +66,11 @@ def import_single_item(item: Item, args: Namespace) -> None:
             utils_ui.print_grey(
                 f"Importing '{_input_path}' → '{item.path}'...")
 
-            response = _import_create_item(args, payload)
+            # Environment item type, not supporting definition yet
+            if item.item_type == ItemType.ENVIRONMENT:
+                response = _import_create_environment_item(item, args, payload)
+            else:
+                response = _import_create_item(args, payload)
 
             if response.status_code in (200, 201):
                 utils_ui.print_output_format(
@@ -81,46 +83,8 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
 
 # Utils
-def _import_create_environment_item(
-    item: Item, args: Namespace, payload: dict, input_path: str, item_exists: bool
-) -> None:
-    if item_exists:
-        fab_logger.log_warning("An item with the same name exists")
-
-        if args.force or utils_ui.prompt_confirm("Overwrite?"):
-            args.id = item.id
-            utils_ui.print_grey(
-                f"Importing (update) '{input_path}' → '{item.path}'..."
-            )
-        else:
-            return
-    else:
-        utils_ui.print_grey(f"Importing '{input_path}' → '{item.path}'...")
-
-        # Create a bare environment first
-        create_payload = json.dumps(
-            {
-                "type": str(item.item_type),
-                "description": "Imported from fab",
-                "folderId": item.folder_id,
-                "displayName": item.short_name,
-            }
-        )
-        response = item_api.create_item(args, payload=create_payload)
-
-        if response.status_code not in (200, 201):
-            return
-
-        data = json.loads(response.text)
-        item._id = data["id"]
-        args.id = data["id"]
-
-    # Publish environment via staging APIs
+def _import_update_environment_item(args: Namespace, payload: dict) -> None:
     utils_import.publish_environment_item(args, payload)
-
-    utils_ui.print_output_format(args, message=f"'{item.name}' imported")
-
-    utils_mem_store.upsert_item_to_cache(item)
 
 
 def _import_update_item(args: Namespace, payload: dict) -> None:
@@ -130,6 +94,27 @@ def _import_update_item(args: Namespace, payload: dict) -> None:
         }
     )
     item_api.update_item_definition(args, payload=definition_payload)
+
+
+def _import_create_environment_item(
+    item: Item, args: Namespace, payload: dict
+) -> ApiResponse:
+
+    item_payload: dict = {
+        "type": str(item.item_type),
+        "description": "Imported from fab",
+        "displayName": item.short_name,
+        "folderId": item.folder_id,
+    }
+    item_payload_str = json.dumps(item_payload)
+
+    # Create the item
+    response = item_api.create_item(args, payload=item_payload_str)
+    data = json.loads(response.text)
+    args.id = data["id"]
+
+    utils_import.publish_environment_item(args, payload)
+    return response
 
 
 def _import_create_item(args: Namespace, payload: dict) -> ApiResponse:
