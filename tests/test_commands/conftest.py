@@ -80,7 +80,8 @@ import_create_new_item_success_params = pytest.mark.parametrize("item_type", [
     ItemType.REPORT, ItemType.SEMANTIC_MODEL, ItemType.KQL_DATABASE,
     ItemType.KQL_QUERYSET, ItemType.EVENTHOUSE, ItemType.MIRRORED_DATABASE,
     ItemType.REFLEX, ItemType.KQL_DASHBOARD, ItemType.SQL_DATABASE,
-    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION, ItemType.LAKEHOUSE
+    ItemType.COSMOS_DB_DATABASE, ItemType.USER_DATA_FUNCTION,
+    ItemType.ENVIRONMENT, ItemType.LAKEHOUSE,
 ])
 
 import_create_new_item_fail_params = pytest.mark.parametrize("item_type", [
@@ -161,7 +162,7 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize("item_type,ex
     (ItemType.NOTEBOOK, True),
     (ItemType.DATA_PIPELINE, True),
     (ItemType.LAKEHOUSE, True),
-    (ItemType.ENVIRONMENT, False),
+    (ItemType.ENVIRONMENT, True),
     (ItemType.WAREHOUSE, False),
     (ItemType.COSMOS_DB_DATABASE, True),
     (ItemType.USER_DATA_FUNCTION, True),
@@ -253,6 +254,7 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.NOTEBOOK,
     ItemType.SPARK_JOB_DEFINITION,
     ItemType.DATA_PIPELINE,
+    ItemType.ENVIRONMENT,
     ItemType.MIRRORED_DATABASE,
     ItemType.REPORT,
     ItemType.SEMANTIC_MODEL,

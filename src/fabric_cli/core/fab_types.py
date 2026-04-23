@@ -582,6 +582,7 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
+    ItemType.ENVIRONMENT: {"default": ""},
     ItemType.SPARK_JOB_DEFINITION: {
         "default": "SparkJobDefinitionV1",
         "SparkJobDefinitionV1": "SparkJobDefinitionV1",
