@@ -1,11 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
 from unittest.mock import patch
 
 import pytest
 
 import fabric_cli.core.fab_state_config as state_config
+
+
+@pytest.fixture(autouse=True)
+def _wide_terminal():
+    """Prevent column-width capping from truncating output in tests."""
+    with patch.dict(os.environ, {"COLUMNS": "500", "LINES": "24"}):
+        yield
 
 
 @pytest.fixture
