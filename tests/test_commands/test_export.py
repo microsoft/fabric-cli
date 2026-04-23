@@ -290,6 +290,7 @@ class TestExport:
             ItemType.COSMOS_DB_DATABASE: "Invalid format. No formats are supported",
             ItemType.USER_DATA_FUNCTION: "Invalid format. No formats are supported",
             ItemType.GRAPH_QUERY_SET: "Invalid format. No formats are supported",
+            ItemType.DIGITAL_TWIN_BUILDER: "Invalid format. No formats are supported",
             ItemType.LAKEHOUSE: "Invalid format. No formats are supported"
         }
 

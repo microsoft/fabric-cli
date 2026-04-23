@@ -188,7 +188,7 @@ set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize("i
     ItemType.DATA_PIPELINE, ItemType.ENVIRONMENT, ItemType.EVENTSTREAM,
     ItemType.KQL_DASHBOARD, ItemType.KQL_QUERYSET, ItemType.ML_EXPERIMENT,
     ItemType.NOTEBOOK, ItemType.REFLEX, ItemType.SPARK_JOB_DEFINITION,
-    ItemType.USER_DATA_FUNCTION, ItemType.DIGITAL_TWIN_BUILDER, ItemType.MAP
+    ItemType.USER_DATA_FUNCTION, ItemType.MAP, ItemType.DIGITAL_TWIN_BUILDER
 ])
 
 set_item_metadata_success_params = pytest.mark.parametrize(
@@ -245,6 +245,7 @@ export_item_with_extension_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.COSMOS_DB_DATABASE, ".json"),
     (ItemType.USER_DATA_FUNCTION, ".json"),
     (ItemType.GRAPH_QUERY_SET, ".json"),
+    (ItemType.DIGITAL_TWIN_BUILDER, ".json"),
     (ItemType.MAP, ".json"),
     (ItemType.LAKEHOUSE, ".json")
 ])
@@ -261,6 +262,7 @@ export_item_types_parameters = pytest.mark.parametrize("item_type", [
     ItemType.COSMOS_DB_DATABASE,
     ItemType.USER_DATA_FUNCTION,
     ItemType.GRAPH_QUERY_SET,
+    ItemType.DIGITAL_TWIN_BUILDER,
     ItemType.MAP,
     ItemType.LAKEHOUSE
 ])
@@ -288,6 +290,7 @@ export_item_default_format_parameters = pytest.mark.parametrize("item_type,expec
     (ItemType.COSMOS_DB_DATABASE, 2),
     (ItemType.USER_DATA_FUNCTION, 2),
     (ItemType.GRAPH_QUERY_SET, 2),
+    (ItemType.DIGITAL_TWIN_BUILDER, 2),
     (ItemType.LAKEHOUSE, 4)
 ])
 
@@ -300,6 +303,7 @@ export_item_invalid_format_parameters = pytest.mark.parametrize("item_type,inval
     (ItemType.COSMOS_DB_DATABASE, ".txt"),
     (ItemType.USER_DATA_FUNCTION, ".txt"),
     (ItemType.GRAPH_QUERY_SET, ".txt"),
+    (ItemType.DIGITAL_TWIN_BUILDER, ".txt"),
     (ItemType.LAKEHOUSE, ".txt")
 ])
 
