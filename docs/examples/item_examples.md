@@ -249,7 +249,7 @@ fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReferenc
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`
 - `.MirroredDatabase`, `.Reflex`
-- `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.DigitalTwinBuilder`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Copy Item to Workspace
@@ -324,7 +324,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.Report`, `.SemanticModel`
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`, `.MirroredDatabase`
-- `.Reflex`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.Reflex`, `.DigitalTwinBuilder`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Export to Lakehouse
