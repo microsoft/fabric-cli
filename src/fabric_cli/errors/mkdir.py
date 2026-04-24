@@ -19,3 +19,7 @@ class MkdirErrors:
     @staticmethod
     def folder_name_exists() -> str:
         return "A folder with the same name already exists"
+    
+    @staticmethod
+    def invalid_parameter_format(invalidParam: str, expectedFormat: str) -> str:
+        return f"Invalid parameter format: '{invalidParam}'. Expected format: {expectedFormat}"
