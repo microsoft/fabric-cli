@@ -10,7 +10,7 @@ from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
 
 
-COMMAND_FIND_DESCRIPTION = "Search the Fabric catalog for items."
+COMMAND_FIND_DESCRIPTION = "Search the OneLake catalog for items."
 
 commands = {
     "Description": {
