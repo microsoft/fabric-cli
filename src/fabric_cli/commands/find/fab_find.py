@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Find command for searching the Fabric catalog."""
+"""Find command for searching the OneLake catalog."""
 
 import json
 import os
@@ -37,7 +37,7 @@ UNSUPPORTED_ITEM_TYPES = _TYPE_CONFIG["unsupported"]
 @handle_exceptions()
 @set_command_context()
 def find_command(args: Namespace) -> None:
-    """Search the Fabric catalog for items."""
+    """Search the OneLake catalog for items."""
     if args.query:
         args.query = utils.process_nargs(args.query)
 
