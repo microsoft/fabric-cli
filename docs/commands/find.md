@@ -19,7 +19,7 @@ fab find <query> [-P <params>] [-l] [-q <query>]
 
 | Parameter | Description |
 |-----------|-------------|
-| `type`    | Filter by item type. Supports `eq` (default) and `ne` (`!=`) operators. |
+| `type`    | Filter by item type. Supports `eq` (`=`, default) and `ne` (`!=`) operators. |
 
 ??? note "Supported type names"
 
