@@ -21,6 +21,12 @@ fab find <query> [-P <params>] [-l] [-q <query>]
 |-----------|-------------|
 | `type`    | Filter by item type. Supports `eq` (default) and `ne` (`!=`) operators. |
 
+??? note "Supported type names"
+
+    `AnomalyDetector`, `ApacheAirflowJob`, `CopyJob`, `CosmosDBDatabase`, `Dataflow`, `Datamart`, `DataPipeline`, `DigitalTwinBuilder`, `DigitalTwinBuilderFlow`, `Environment`, `Eventhouse`, `EventSchemaSet`, `Eventstream`, `GraphModel`, `GraphQLApi`, `GraphQuerySet`, `KQLDashboard`, `KQLDatabase`, `KQLQueryset`, `Lakehouse`, `Map`, `MirroredAzureDatabricksCatalog`, `MirroredDatabase`, `MirroredWarehouse`, `MLExperiment`, `MLModel`, `MountedDataFactory`, `Notebook`, `Ontology`, `OperationsAgent`, `PaginatedReport`, `Reflex`, `Report`, `SemanticModel`, `SnowflakeDatabase`, `SparkJobDefinition`, `SQLDatabase`, `SQLEndpoint`, `UserDataFunction`, `VariableLibrary`, `Warehouse`, `WarehouseSnapshot`
+
+    Type names are case-insensitive. `Dashboard` is not supported by the Catalog Search API.
+
 **Examples:**
 
 ```
@@ -50,6 +56,5 @@ fab find 'data' -q "[].{name: name, workspace: workspace}"
 
 - In interactive mode (`fab` shell), results are paged 50 at a time with "Press Enter to continue..." prompts.
 - In command-line mode (`fab find ...`), all results are fetched by paginating through the full result set.
-- Type names are case-insensitive. `type=lakehouse` matches `Lakehouse`.
 - The `-q` JMESPath filter is applied client-side after results are returned from the API.
 
