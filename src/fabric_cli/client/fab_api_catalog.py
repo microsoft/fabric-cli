@@ -14,7 +14,7 @@ from fabric_cli.client.fab_api_types import ApiResponse
 
 
 def search(args: Namespace, payload: dict) -> ApiResponse:
-    """Search the Fabric catalog for items.
+    """Search the OneLake catalog for items.
 
     https://learn.microsoft.com/en-us/rest/api/fabric/core/catalog/search
 
