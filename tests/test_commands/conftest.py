@@ -609,9 +609,18 @@ def item_factory(vcr_instance, cassette_name, workspace):
         content_path=None,
         should_clean=True,
         custom_name=None,
+        description=None,
     ):
         """
         Actually creates the item resource and returns an EntityMetadata object.
+
+        Args:
+            type: The Fabric item type to create.
+            path: Parent workspace/folder path (defaults to the test workspace).
+            content_path: Optional local path to import content from instead of mkdir.
+            should_clean: Whether to delete the item during fixture teardown.
+            custom_name: Optional fixed display name; a random name is generated when omitted.
+            description: Optional description string passed as a ``description`` param to mkdir.
         """
         # Use custom name if provided, otherwise generate random name
         if custom_name:
@@ -627,7 +636,8 @@ def item_factory(vcr_instance, cassette_name, workspace):
         if content_path:
             import_cmd(item_path, content_path)
         else:
-            mkdir(item_path)
+            params = [f"description={description}"] if description else None
+            mkdir(item_path, params=params)
 
         # Build the metadata for the created resource
         metadata = EntityMetadata(generated_name, item_name, item_path)
@@ -1139,7 +1149,7 @@ def deploy_setup_factory(tmp_path, cli_executor, item_factory, workspace):
         repository_dir.mkdir(parents=True, exist_ok=True)
 
         for item_type in item_types:
-            item = item_factory(item_type)
+            item = item_factory(item_type, description="Created by fab-test")
             cli_executor.exec_command(
                 f"export {item.full_path} --output {str(repository_dir)} {('--format .py' if item_type == ItemType.NOTEBOOK else '')} --force"
             )

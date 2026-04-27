@@ -17,9 +17,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -173,8 +172,7 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '{"description": "Created by fab", "displayName": "fabcli000001", "type":
-      "GraphQuerySet", "folderId": null}'
+    body: '{"displayName": "fabcli000001", "type": "GraphQuerySet", "folderId": null}'
     headers:
       Accept:
       - '*/*'
@@ -183,7 +181,8 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '111'
+      - '78'
+
       Content-Type:
       - application/json
       User-Agent:
@@ -192,9 +191,9 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/GraphQuerySets
   response:
     body:
-      string: '{"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet",
-        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}'
+      string: '{"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet",
+        "displayName": "fabcli000001", "workspaceId":
+        "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId,ETag
@@ -245,9 +244,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -304,13 +302,25 @@ interactions:
         "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
         "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
         "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "52ad477f-c60f-47c5-ab07-daa8e1afdbcd",
+        "type": "SQLEndpoint", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "21ba9137-da9e-4275-add7-463bb8d5a0c4",
+        "type": "SQLEndpoint", "displayName": "fabcli000003dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "b127c547-c419-4c69-8ab1-6863c64c6f3f",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "e7d29f13-3952-426c-b1d8-a06ca0a8728d",
+        "type": "Lakehouse", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448", "folderId": "7f1398f8-ce3e-458d-8d7d-64cc12323360"},
+        {"id": "b20ff5d8-0b8e-42be-94f0-678ab162c845", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "af233451-72a2-4b11-8941-12dc062f81ae", "type": "Lakehouse", "displayName":
+        "fabcli000002dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "a259893c-e442-48c7-b2fb-489bf8248d3b", "type": "Lakehouse", "displayName":
+        "fabcli000003dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "331f91cd-963f-49c9-aeb6-67f8d7ab4df1", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet", "displayName":
+        "fabcli000001", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -407,9 +417,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -466,13 +475,25 @@ interactions:
         "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
         "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
         "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "52ad477f-c60f-47c5-ab07-daa8e1afdbcd",
+        "type": "SQLEndpoint", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "21ba9137-da9e-4275-add7-463bb8d5a0c4",
+        "type": "SQLEndpoint", "displayName": "fabcli000003dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "b127c547-c419-4c69-8ab1-6863c64c6f3f",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "e7d29f13-3952-426c-b1d8-a06ca0a8728d",
+        "type": "Lakehouse", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448", "folderId": "7f1398f8-ce3e-458d-8d7d-64cc12323360"},
+        {"id": "b20ff5d8-0b8e-42be-94f0-678ab162c845", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "af233451-72a2-4b11-8941-12dc062f81ae", "type": "Lakehouse", "displayName":
+        "fabcli000002dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "a259893c-e442-48c7-b2fb-489bf8248d3b", "type": "Lakehouse", "displayName":
+        "fabcli000003dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "331f91cd-963f-49c9-aeb6-67f8d7ab4df1", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet", "displayName":
+        "fabcli000001", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -569,9 +590,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -628,13 +648,25 @@ interactions:
         "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
         "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
         "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "52ad477f-c60f-47c5-ab07-daa8e1afdbcd",
+        "type": "SQLEndpoint", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "21ba9137-da9e-4275-add7-463bb8d5a0c4",
+        "type": "SQLEndpoint", "displayName": "fabcli000003dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "b127c547-c419-4c69-8ab1-6863c64c6f3f",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "e7d29f13-3952-426c-b1d8-a06ca0a8728d",
+        "type": "Lakehouse", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448", "folderId": "7f1398f8-ce3e-458d-8d7d-64cc12323360"},
+        {"id": "b20ff5d8-0b8e-42be-94f0-678ab162c845", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "af233451-72a2-4b11-8941-12dc062f81ae", "type": "Lakehouse", "displayName":
+        "fabcli000002dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "a259893c-e442-48c7-b2fb-489bf8248d3b", "type": "Lakehouse", "displayName":
+        "fabcli000003dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "331f91cd-963f-49c9-aeb6-67f8d7ab4df1", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet", "displayName":
+        "fabcli000001", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -731,9 +763,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -790,13 +821,25 @@ interactions:
         "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
         "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
         "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "52ad477f-c60f-47c5-ab07-daa8e1afdbcd",
+        "type": "SQLEndpoint", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "21ba9137-da9e-4275-add7-463bb8d5a0c4",
+        "type": "SQLEndpoint", "displayName": "fabcli000003dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "b127c547-c419-4c69-8ab1-6863c64c6f3f",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "e7d29f13-3952-426c-b1d8-a06ca0a8728d",
+        "type": "Lakehouse", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448", "folderId": "7f1398f8-ce3e-458d-8d7d-64cc12323360"},
+        {"id": "b20ff5d8-0b8e-42be-94f0-678ab162c845", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "af233451-72a2-4b11-8941-12dc062f81ae", "type": "Lakehouse", "displayName":
+        "fabcli000002dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "a259893c-e442-48c7-b2fb-489bf8248d3b", "type": "Lakehouse", "displayName":
+        "fabcli000003dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "331f91cd-963f-49c9-aeb6-67f8d7ab4df1", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet", "displayName":
+        "fabcli000001", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -893,9 +936,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -952,13 +994,25 @@ interactions:
         "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
         "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
         "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "999cb4e9-7264-4062-b217-6b711a902e7f", "type": "GraphQuerySet", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "52ad477f-c60f-47c5-ab07-daa8e1afdbcd",
+        "type": "SQLEndpoint", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "21ba9137-da9e-4275-add7-463bb8d5a0c4",
+        "type": "SQLEndpoint", "displayName": "fabcli000003dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "b127c547-c419-4c69-8ab1-6863c64c6f3f",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}, {"id": "e7d29f13-3952-426c-b1d8-a06ca0a8728d",
+        "type": "Lakehouse", "displayName": "fabcli000002dtdm", "description": "",
+        "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448", "folderId": "7f1398f8-ce3e-458d-8d7d-64cc12323360"},
+        {"id": "b20ff5d8-0b8e-42be-94f0-678ab162c845", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "af233451-72a2-4b11-8941-12dc062f81ae", "type": "Lakehouse", "displayName":
+        "fabcli000002dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "a259893c-e442-48c7-b2fb-489bf8248d3b", "type": "Lakehouse", "displayName":
+        "fabcli000003dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "331f91cd-963f-49c9-aeb6-67f8d7ab4df1", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"},
+        {"id": "bf731eb7-a92b-43cf-b9b0-a1fb46c57e91", "type": "GraphQuerySet", "displayName":
+        "fabcli000001", "workspaceId": "d4491e7b-5a69-4ba5-bedf-3d0b9560a448"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId

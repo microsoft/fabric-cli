@@ -46,7 +46,6 @@ class TestGet:
         assert "id" in mock_questionary_print.call_args[0][0]
         assert "displayName" in mock_questionary_print.call_args[0][0]
         assert workspace.display_name in mock_questionary_print.call_args[0][0]
-        assert "description" in mock_questionary_print.call_args[0][0]
         assert "oneLakeEndpoints" in mock_questionary_print.call_args[0][0]
         assert "managedPrivateEndpoints" in mock_questionary_print.call_args[0][0]
         assert "sparkSettings" in mock_questionary_print.call_args[0][0]

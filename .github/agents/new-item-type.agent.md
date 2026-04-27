@@ -296,7 +296,6 @@ case (
 ):
     return {
         "type": str(self.item_type),
-        "description": "Imported from fab",
         "folderId": self.folder_id,
         "displayName": self.short_name,
         "definition": definition,
@@ -308,7 +307,6 @@ case (
 case ItemType.NEW_ITEM:
     return {
         "type": str(self.item_type),
-        "description": "Imported from fab",
         "folderId": self.folder_id,
         "displayName": self.short_name,
         "definition": {

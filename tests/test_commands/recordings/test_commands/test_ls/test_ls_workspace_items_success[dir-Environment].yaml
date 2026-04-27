@@ -17,9 +17,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -173,8 +172,7 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '{"description": "Created by fab", "displayName": "fabcli000001", "type":
-      "Environment", "folderId": null}'
+    body: '{"displayName": "fabcli000001", "type": "Environment", "folderId": null}'
     headers:
       Accept:
       - '*/*'
@@ -183,7 +181,8 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '109'
+      - '76'
+
       Content-Type:
       - application/json
       User-Agent:
@@ -192,9 +191,9 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/environments
   response:
     body:
-      string: '{"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment",
-        "displayName": "fabcli000001", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}'
+      string: '{"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab", "type": "Environment",
+        "displayName": "fabcli000001", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId,ETag
@@ -245,9 +244,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -295,22 +293,17 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/items
   response:
     body:
-      string: '{"value": [{"id": "b83b7bc9-7ecd-449c-9711-5a01cb3f1474", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "b63974c8-6987-489c-9007-536f524e4a60",
-        "type": "SQLEndpoint", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "cf139473-5c57-4ee2-abc2-295043848fca", "type": "Warehouse", "displayName":
-        "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
-        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+      string: '{"value": [{"id": "c0655a25-e6f8-4858-b332-e84f704df3c0", "type": "SemanticModel",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "19c63aee-97f0-479d-8d5f-b90a4de61ccd", "type": "SQLEndpoint", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "8339a561-3c03-407d-bf76-a117b084783a",
+        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129064311",
+        "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "e8521ae4-1482-4b12-b037-6d82d2c8a277", "type": "Lakehouse", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab",
+        "type": "Environment", "displayName": "fabcli000001", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -407,9 +400,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -457,22 +449,17 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/items
   response:
     body:
-      string: '{"value": [{"id": "b83b7bc9-7ecd-449c-9711-5a01cb3f1474", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "b63974c8-6987-489c-9007-536f524e4a60",
-        "type": "SQLEndpoint", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "cf139473-5c57-4ee2-abc2-295043848fca", "type": "Warehouse", "displayName":
-        "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
-        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+      string: '{"value": [{"id": "c0655a25-e6f8-4858-b332-e84f704df3c0", "type": "SemanticModel",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "19c63aee-97f0-479d-8d5f-b90a4de61ccd", "type": "SQLEndpoint", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "8339a561-3c03-407d-bf76-a117b084783a",
+        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129064311",
+        "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "e8521ae4-1482-4b12-b037-6d82d2c8a277", "type": "Lakehouse", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab",
+        "type": "Environment", "displayName": "fabcli000001", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -569,9 +556,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -619,22 +605,17 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/items
   response:
     body:
-      string: '{"value": [{"id": "b83b7bc9-7ecd-449c-9711-5a01cb3f1474", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "b63974c8-6987-489c-9007-536f524e4a60",
-        "type": "SQLEndpoint", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "cf139473-5c57-4ee2-abc2-295043848fca", "type": "Warehouse", "displayName":
-        "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
-        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+      string: '{"value": [{"id": "c0655a25-e6f8-4858-b332-e84f704df3c0", "type": "SemanticModel",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "19c63aee-97f0-479d-8d5f-b90a4de61ccd", "type": "SQLEndpoint", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "8339a561-3c03-407d-bf76-a117b084783a",
+        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129064311",
+        "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "e8521ae4-1482-4b12-b037-6d82d2c8a277", "type": "Lakehouse", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab",
+        "type": "Environment", "displayName": "fabcli000001", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -731,9 +712,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -781,22 +761,17 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/items
   response:
     body:
-      string: '{"value": [{"id": "b83b7bc9-7ecd-449c-9711-5a01cb3f1474", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "b63974c8-6987-489c-9007-536f524e4a60",
-        "type": "SQLEndpoint", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "cf139473-5c57-4ee2-abc2-295043848fca", "type": "Warehouse", "displayName":
-        "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
-        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+      string: '{"value": [{"id": "c0655a25-e6f8-4858-b332-e84f704df3c0", "type": "SemanticModel",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "19c63aee-97f0-479d-8d5f-b90a4de61ccd", "type": "SQLEndpoint", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "8339a561-3c03-407d-bf76-a117b084783a",
+        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129064311",
+        "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "e8521ae4-1482-4b12-b037-6d82d2c8a277", "type": "Lakehouse", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab",
+        "type": "Environment", "displayName": "fabcli000001", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -893,9 +868,8 @@ interactions:
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "9783996b-f720-4ed2-8b66-47ff761edc33",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "Created
-        by fab", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "368f354f-9d92-4982-b04b-9c397928cdf0",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -943,22 +917,17 @@ interactions:
     uri: https://api.fabric.microsoft.com/v1/workspaces/9783996b-f720-4ed2-8b66-47ff761edc33/items
   response:
     body:
-      string: '{"value": [{"id": "b83b7bc9-7ecd-449c-9711-5a01cb3f1474", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "Created by fab", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "b63974c8-6987-489c-9007-536f524e4a60",
-        "type": "SQLEndpoint", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "cf139473-5c57-4ee2-abc2-295043848fca", "type": "Warehouse", "displayName":
-        "StagingWarehouseForDataflows_20260422150415", "description": "", "workspaceId":
-        "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "bbb9ae8f-5d2b-457d-a47b-cd63c1621207",
-        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}, {"id": "a96893ec-bed6-4ead-928b-014d76e95d4d",
-        "type": "Lakehouse", "displayName": "StagingLakehouseForDataflows_20260422150351",
-        "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "b3e8d9ae-6502-4de0-8c3b-9735502c3fae", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"},
-        {"id": "70cf9489-e10c-4c56-bd72-92ddb4b553a6", "type": "Environment", "displayName":
-        "fabcli000001", "description": "Created by fab", "workspaceId": "9783996b-f720-4ed2-8b66-47ff761edc33"}]}'
+      string: '{"value": [{"id": "c0655a25-e6f8-4858-b332-e84f704df3c0", "type": "SemanticModel",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "19c63aee-97f0-479d-8d5f-b90a4de61ccd", "type": "SQLEndpoint", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "8339a561-3c03-407d-bf76-a117b084783a",
+        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260129064311",
+        "description": "", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"},
+        {"id": "e8521ae4-1482-4b12-b037-6d82d2c8a277", "type": "Lakehouse", "displayName":
+        "StagingLakehouseForDataflows_20260129064248", "description": "", "workspaceId":
+        "368f354f-9d92-4982-b04b-9c397928cdf0"}, {"id": "2b6263fa-cfed-4202-8f24-b32b8a7b85ab",
+        "type": "Environment", "displayName": "fabcli000001", "workspaceId": "368f354f-9d92-4982-b04b-9c397928cdf0"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId

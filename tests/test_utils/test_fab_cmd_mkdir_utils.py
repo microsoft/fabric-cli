@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from argparse import Namespace
 from unittest.mock import Mock, patch
 
 import pytest
@@ -19,7 +18,6 @@ def test_fabric_data_pipelines_workspace_identity_no_params_success():
     """Test FabricDataPipelines with WorkspaceIdentity credential type when no parameters are required."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }
@@ -63,7 +61,6 @@ def test_connection_with_required_params_missing_failure():
     """Test that connection creation fails when required parameters are missing."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }
@@ -107,7 +104,6 @@ def test_workspace_identity_with_unsupported_params_ignored_success():
     """Test that WorkspaceIdentity ignores unsupported credential parameters with warning."""
     # Arrange
     payload = {
-        "description": "Created by fab",
         "displayName": "test-connection",
         "connectivityType": "ShareableCloud"
     }
@@ -209,4 +205,3 @@ class TestFindMpeConnection:
             called_url = call_args.args[1] if len(call_args.args) > 1 else call_args.kwargs['url']
             assert "privateEndpointConnections" in called_url
             assert "api-version=2023-11-01" in called_url
-            
