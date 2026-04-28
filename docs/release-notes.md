@@ -6,7 +6,7 @@ hide:
 # Release Notes
 
 
-## [v1.6.0](https://pypi.org/project/ms-fabric-cli/v1.6.0) - April 26, 2026
+## [v1.6.1](https://pypi.org/project/ms-fabric-cli/v1.6.1) - April 29, 2026
 
 ### 🆕 New Items Support
 
