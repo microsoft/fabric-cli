@@ -301,9 +301,11 @@ def print_entries_unix_style(
     # Adjust this value for more space if needed
     widths = [w + 2 for w in widths]
     if header:
-        print_grey(_format_unix_style_field(fields, widths), to_stderr=False)
-        # Print a separator line, offset of 1 for each field
-        print_grey("-" * (sum(widths) + len(widths)), to_stderr=False)
+        header_line = _format_unix_style_field(fields, widths)
+        print_grey(header_line, to_stderr=False)
+        # Each column uses widths[i] chars + 1 space separator between columns
+        table_width = sum(widths) + len(widths) - 1
+        print_grey("-" * table_width, to_stderr=False)
 
     for entry in _entries:
         print_grey(_format_unix_style_entry(entry, fields, widths), to_stderr=False)
