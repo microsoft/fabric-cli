@@ -243,7 +243,7 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
                 v for k, v in all_types_lower.items() if t_lower in k or k in t_lower
             ]
             hint = (
-                f" Did you mean {', '.join(close)}?"
+                f" Did you mean [{','.join(close)}]?"
                 if close
                 else " Run 'find --help' to see examples."
             )
