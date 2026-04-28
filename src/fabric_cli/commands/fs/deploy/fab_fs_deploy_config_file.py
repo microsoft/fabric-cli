@@ -4,8 +4,6 @@
 import json
 from argparse import Namespace
 
-from fabric_cicd import append_feature_flag, configure_external_file_logging, deploy_with_config, disable_file_logging  # type: ignore
-
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -16,6 +14,7 @@ from fabric_cli.utils.fab_util import get_dict_from_params
 
 def deploy_with_config_file(args: Namespace) -> None:
     """deploy fabric items to a workspace using a configuration file and target environment - delegates to CICD library."""
+    from fabric_cicd import append_feature_flag, configure_external_file_logging, deploy_with_config, disable_file_logging  # type: ignore
 
     try:
         if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) == "true":
