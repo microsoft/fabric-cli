@@ -14,7 +14,7 @@ You can deploy:
 
 **Usage:**
 
-```
+```bash
 fab deploy --config <config_file> [--target_env <environment>] [--params <parameters>] [--force]
 ```
 
@@ -27,7 +27,7 @@ fab deploy --config <config_file> [--target_env <environment>] [--params <parame
 
 **Example:**
 
-```
+```bash
 fab deploy --config config.yml --target_env dev
 ```
 
@@ -201,12 +201,12 @@ fab export  ws.Workspace/MyDataPipeline.DataPipeline -o C:\Users\myuser
 
 ### Additional Notes
 
-- The deploy command can be applied to Fabric item files created via Git integration or using the `export` command (utilizes Get Item Definition API).
+- The `deploy` command can be applied to Fabric item files created via Git integration or using the `export` command (utilizes Get Item Definition API).
 - `fab deploy` does not require items to be created via Git integration prior to deployment; however, using Git integration is strongly recommended for dependency resolution with minimal parameterization.
 - Parameterization is optional and can be applied in any deployment scenario.
 
 ---
 
-### Usfull links
+### Useful Links
 
-- [Fabric cicd lib](https://microsoft.github.io/fabric-cicd/latest/)
+- [Fabric CI/CD Library](https://microsoft.github.io/fabric-cicd/latest/)
