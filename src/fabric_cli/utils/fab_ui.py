@@ -294,7 +294,7 @@ def print_entries_unix_style(
     if header:
         widths = [
             max(
-                len(field),
+                _get_visual_length(field),
                 max(
                     get_visual_length(entry, field)
                     for entry in _entries
@@ -317,25 +317,39 @@ def print_entries_unix_style(
     terminal_width = shutil.get_terminal_size((80, 24)).columns
     total_width = sum(widths) + len(widths) - 1
     if total_width > terminal_width and widths:
-        min_col_width = 8  # minimum width to fit wrapped text comfortably
-        available = terminal_width - (len(widths) - 1)
+        n = len(widths)
+        separator_space = n - 1
+        available = terminal_width - separator_space
+        # Compute the effective minimum per column
+        min_col_width = max(1, min(8, available // n)) if available > 0 else 1
         if available > 0:
             scale = available / sum(widths)
             new_widths = [max(min_col_width, int(w * scale)) for w in widths]
             # Fine-tune: trim the largest column until we fit
-            while sum(new_widths) + len(new_widths) - 1 > terminal_width:
+            while sum(new_widths) + separator_space > terminal_width:
                 max_idx = max(range(len(new_widths)),
                               key=lambda k: new_widths[k])
                 if new_widths[max_idx] <= min_col_width:
                     break
                 new_widths[max_idx] -= 1
+            # If still overflowing, hard-cap by distributing the available space as evenly as possible
+            if sum(new_widths) + separator_space > terminal_width:
+                base = available // n
+                remainder = available % n
+                new_widths = [
+                    max(1, base + (1 if i < remainder else 0))
+                    for i in range(n)
+                ]
             widths = new_widths
 
     if header:
-        for line in _format_unix_style_field(fields, widths):
+        header_lines = _format_unix_style_field(fields, widths)
+        for line in header_lines:
             print_grey(line, to_stderr=False)
-        # Print a separator line, offset of 1 for each field
-        print_grey("-" * (sum(widths) + len(widths)), to_stderr=False)
+        # Print a separator line matching the width of the first header line
+        separator_width = _get_visual_length(
+            header_lines[0]) if header_lines else (sum(widths) + len(widths) - 1)
+        print_grey("-" * separator_width, to_stderr=False)
 
     for entry in _entries:
         for line in _format_unix_style_entry(entry, fields, widths):
@@ -503,6 +517,11 @@ def _print_fallback(text: str, e: Exception, to_stderr: bool = False) -> None:
         raise
 
 
+def _char_visual_width(char: str) -> int:
+    """Return the visual width of a single character (2 for fullwidth/wide, 1 otherwise)."""
+    return 2 if unicodedata.east_asian_width(char) in ("F", "W") else 1
+
+
 def _wrap_text(text: str, width: int) -> list[str]:
     """Wrap text to fit within width visual characters, returning a list of lines."""
     if width <= 0:
@@ -511,8 +530,7 @@ def _wrap_text(text: str, width: int) -> list[str]:
     current_line = ""
     current_width = 0
     for char in text:
-        char_width = 2 if unicodedata.east_asian_width(char) in [
-            "F", "W"] else 1
+        char_width = _char_visual_width(char)
         if current_width + char_width > width:
             lines.append(current_line)
             current_line = char
@@ -565,17 +583,7 @@ def _format_unix_style_entry(
 
 
 def _get_visual_length(string: str) -> int:
-    length = 0
-    for char in string:
-        # Check if the character is wide or normal
-        if unicodedata.east_asian_width(char) in [
-            "F",
-            "W",
-        ]:  # Fullwidth or Wide characters
-            length += 2
-        else:
-            length += 1
-    return length
+    return sum(_char_visual_width(char) for char in string)
 
 
 def _print_entries_key_value_list_style(entries: Any) -> None:
