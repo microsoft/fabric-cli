@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import json
 from argparse import Namespace
 
 from deltalake import DeltaTable
