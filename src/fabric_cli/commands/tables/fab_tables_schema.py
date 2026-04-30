@@ -43,5 +43,5 @@ def _get_table_schema(args: Namespace) -> list[dict]:
     except TableNotFoundError:
         raise FabricCLIError(
             "Failed to extract the table schema. Please ensure the path points to a valid Delta table",
-            fab_constant.ERROR_INVALID_DETLA_TABLE,
+            fab_constant.ERROR_INVALID_DELTA_TABLE,
         )
