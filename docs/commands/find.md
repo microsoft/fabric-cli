@@ -54,7 +54,7 @@ fab find 'data' -q "[].{name: name, workspace: workspace}"
 
 **Behavior:**
 
-- In interactive mode (`fab` shell), results are paged 50 at a time with "Press Enter to continue..." prompts.
+- In interactive mode (`fab` shell), results are paged 30 at a time with "Press Enter to continue..." prompts.
 - In command-line mode (`fab find ...`), all results are fetched by paginating through the full result set.
 - The `-q` JMESPath filter is applied client-side after results are returned from the API.
 

@@ -157,7 +157,7 @@ def _find_commandline(args: Namespace, payload: dict[str, Any]) -> None:
 def _build_search_payload(args: Namespace, is_interactive: bool) -> dict[str, Any]:
     """Build the search request payload from command arguments."""
     request: dict[str, Any] = {"search": args.search_text}
-    request["pageSize"] = 50 if is_interactive else 1000
+    request["pageSize"] = 30 if is_interactive else 1000
 
     type_filter = _parse_type_from_params(args)
     if type_filter:
@@ -243,7 +243,7 @@ def _parse_type_from_params(args: Namespace) -> dict[str, Any] | None:
                 v for k, v in all_types_lower.items() if t_lower in k or k in t_lower
             ]
             hint = (
-                f" Did you mean {', '.join(close)}?"
+                f" Did you mean [{','.join(close)}]?"
                 if close
                 else " Run 'find --help' to see examples."
             )
