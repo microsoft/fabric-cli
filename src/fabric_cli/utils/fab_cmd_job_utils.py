@@ -11,7 +11,7 @@ from requests.structures import CaseInsensitiveDict
 
 from fabric_cli.client import fab_api_jobs as jobs_api
 from fabric_cli.client.fab_api_types import ApiResponse
-from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import FabricJobType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
@@ -94,8 +94,11 @@ def wait_for_job_completion(
             if status in ["Completed", "Cancelled", "Deduped"]:
                 fab_ui.print_progress(f"Job instance status: {status}")
                 if status == "Completed":
+                    # Determine data based on output format
+                    resolved_format = getattr(args, "output_format", None) or fab_state_config.get_config(fab_constant.FAB_OUTPUT_FORMAT)
+                    job_id_data = {"id": job_ins_id} if resolved_format == "json" else None
                     fab_ui.print_output_format(
-                        args, message=f"Job instance '{job_ins_id}' completed", data={"id": job_ins_id}
+                        args, message=f"Job instance '{job_ins_id}' completed", data=job_id_data
                     )
                 else:
                     fab_logger.log_warning(

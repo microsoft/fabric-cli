@@ -51,15 +51,19 @@ def exec_command(args: Namespace, item: Item) -> None:
                     args.instance_id = job_instance_id
                     response = jobs_api.cancel_item_job_instance(args)
                     if response.status_code == 202:
+                        resolved_format = getattr(args, "output_format", None) or config.get_config(con.FAB_OUTPUT_FORMAT)
+                        job_id_data = {"id": args.instance_id} if resolved_format == "json" else None
                         fab_ui.print_output_format(
                             args,
                             message=f"Job instance '{args.instance_id}' cancelled (async)",
-                            data={"id": args.instance_id},
+                            data=job_id_data,
                         )
 
         else:
+            resolved_format = getattr(args, "output_format", None) or config.get_config(con.FAB_OUTPUT_FORMAT)
+            job_id_data = {"id": job_instance_id} if resolved_format == "json" else None
             fab_ui.print_output_format(
-                args, message=f"Job instance '{job_instance_id}' created", data={"id": job_instance_id}
+                args, message=f"Job instance '{job_instance_id}' created", data=job_id_data
             )
             fab_ui.print_grey(
                 f"→ To see status run 'job run-status {item.path} --id {job_instance_id}'"
