@@ -93,10 +93,11 @@ def wait_for_job_completion(
             # Available statuses are: NotStarted, InProgress, Completed, Deduped, Failed, Cancelled
             if status in ["Completed", "Cancelled", "Deduped"]:
                 fab_ui.print_progress(f"Job instance status: {status}")
+                fab_ui.print_grey("")
                 if status == "Completed":
                     fab_ui.print_output_format(
-                        args, 
-                        message=f"Job instance '{job_ins_id}' completed", 
+                        args,
+                        message=f"Job instance '{job_ins_id}' completed",
                         data={"id": job_ins_id},
                         show_key_value_list=True,
                     )
