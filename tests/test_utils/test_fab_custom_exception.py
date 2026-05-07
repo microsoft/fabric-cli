@@ -58,7 +58,7 @@ def test_fabric_api_error__non_json_body_falls_back_to_raw_text():
     error = FabricAPIError(raw)
 
     assert error.message == raw.rstrip(".")
-    assert error.status_code is None
+    assert error.status_code == "UnknownError"
     assert error.request_id is None
     assert error.more_details == []
 
@@ -68,7 +68,7 @@ def test_fabric_api_error__non_dict_json_falls_back_to_raw_text():
     for raw in ('"just a string"', "[1, 2, 3]", "42", "true"):
         error = FabricAPIError(raw)
         assert error.message == raw.rstrip(".")
-        assert error.status_code is None
+        assert error.status_code == "UnknownError"
         assert error.request_id is None
         assert error.more_details == []
 
