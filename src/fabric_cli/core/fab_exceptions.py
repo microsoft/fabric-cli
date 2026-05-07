@@ -80,6 +80,8 @@ class FabricAPIError(FabricCLIError):
         """
         try:
             response = json.loads(response_text)
+            if not isinstance(response, dict):
+                raise ValueError("Unexpected JSON shape")
             message = (
                 response.get("message")
                 if response.get("message") is not None
@@ -88,7 +90,7 @@ class FabricAPIError(FabricCLIError):
             error_code = response.get("errorCode")
             self.more_details: list[dict] = response.get("moreDetails", [])
             self.request_id = response.get("requestId")
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, ValueError):
             message = response_text
             error_code = None
             self.more_details = []
