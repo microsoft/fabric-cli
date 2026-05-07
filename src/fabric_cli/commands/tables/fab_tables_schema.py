@@ -5,7 +5,7 @@ import json
 from argparse import Namespace
 
 from deltalake import DeltaTable
-from deltalake.exceptions import TableNotFoundError
+from deltalake.exceptions import DeltaError
 
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_auth import FabAuth
@@ -40,7 +40,7 @@ def _get_table_schema(args: Namespace) -> list[dict]:
             },
         )
         return table.schema().json()["fields"]
-    except TableNotFoundError:
+    except DeltaError:
         raise FabricCLIError(
             "Failed to extract the table schema. Please ensure the path points to a valid Delta table",
             fab_constant.ERROR_INVALID_DELTA_TABLE,
