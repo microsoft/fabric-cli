@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 from argparse import Namespace
 
 from deltalake import DeltaTable
@@ -38,7 +39,8 @@ def _get_table_schema(args: Namespace) -> list[dict]:
                 "use_fabric_endpoint": "true",
             },
         )
-        return table.schema().json()["fields"]
+        schema_dict = json.loads(table.schema().to_json())
+        return schema_dict["fields"]
     except DeltaError:
         raise FabricCLIError(
             "Failed to extract the table schema. Please ensure the path points to a valid Delta table",
