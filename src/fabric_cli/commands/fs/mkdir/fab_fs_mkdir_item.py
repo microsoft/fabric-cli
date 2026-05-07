@@ -78,11 +78,12 @@ def exec(item: Item, args: Namespace) -> str | None:
     utils.remove_keys_from_dict(params, ["displayname", "type"])
 
     payload = {
-        "description": "Created by fab",
         "displayName": item_name,
         "type": str(item_type),
         "folderId": item.folder_id,
     }
+    if params.get("description"):
+        payload["description"] = params["description"]
     payload = mkdir_utils.add_type_specific_payload(item, args, payload)
     json_payload = json.dumps(payload)
     args.item_uri = format_mapping.get(item.item_type, "items")

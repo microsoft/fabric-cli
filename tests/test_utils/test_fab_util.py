@@ -138,6 +138,40 @@ def test_get_dict_from_params():
         "desc3": "hi",
     }
 
+    # Test space after comma - this tests the regex pattern fix that allows spaces after commas
+    params = "key1=value1, key2=value2, key3=value3"
+    result = utils.get_dict_from_params(params)
+    assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
+    
+    # Test multiple spaces after comma
+    params = "key1=value1,  key2=value2,   key3=value3"
+    result = utils.get_dict_from_params(params)
+    assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
+    
+    # Test mixed spacing (some with spaces, some without)
+    params = "key1=value1,key2=value2, key3=value3,  key4=value4"
+    result = utils.get_dict_from_params(params)
+    assert result == {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4"}
+    
+    # Test with nested keys and spaces
+    params = "key1.sub1=value1, key1.sub2=value2, key2=value3"
+    result = utils.get_dict_from_params(params)
+    assert result == {"key1": {"sub1": "value1", "sub2": "value2"}, "key2": "value3"}
+    
+    # Test with complex values and spaces
+    params = 'key1={"nested": "value"}, key2=[1,2,3], key3=simple'
+    result = utils.get_dict_from_params(params)
+    assert result == {
+        "key1": '{nested: value}',
+        "key2": "[1,2,3]",
+        "key3": "simple"
+    }
+    
+    # Test tabs and mixed whitespace after comma
+    params = "key1=value1,\tkey2=value2,\n key3=value3"
+    result = utils.get_dict_from_params(params)
+    assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
+
 
 def test_merge_dicts():
     dict1 = {"key1": "value1", "key2": {"key1": "value2"}}

@@ -26,9 +26,14 @@ from fabric_cli.commands.fs.export import fab_fs_export_item as export_item
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType, format_mapping
+from fabric_cli.core.fab_types import (
+    ItemType,
+    definition_format_mapping,
+    format_mapping,
+)
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import FabricElement, Item, OneLakeItem
+from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui
 
 
@@ -126,3 +131,26 @@ def get_confirm_copy_move_message(is_move_command: bool) -> str:
         f"Item definition is {action} without its sensitivity label. Are you sure?"
     )
     return confirm_message
+
+
+def resolve_definition_format(item_type: ItemType, format_param: Optional[str]) -> str:
+    """Validate and resolve a user-supplied format against definition_format_mapping.
+
+    Returns the resolved API format value (may be empty string for no-format items).
+    Raises FabricCLIError if the format is invalid.
+    """
+    valid_formats = definition_format_mapping.get(item_type, {})
+
+    if format_param and format_param in valid_formats:
+        return valid_formats[format_param]
+
+    if format_param:
+        # Non-empty format param but not in the mapping
+        available = [k for k in valid_formats if k != "default"]
+        raise FabricCLIError(
+            ErrorMessages.Common.invalid_definition_format(available),
+            fab_constant.ERROR_INVALID_INPUT,
+        )
+
+    # No format supplied — use the default
+    return valid_formats.get("default", "")

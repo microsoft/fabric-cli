@@ -124,7 +124,7 @@ def test_get_context_session_id(monkeypatch):
     def mock_process():
         return current_process
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
 
     context = Context()
     session_id = context._get_context_session_id()
@@ -141,7 +141,7 @@ def test_get_context_session_id_in_venv(monkeypatch):
     def mock_process():
         return current_process
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     context = Context()
     monkeypatch.setattr(context, "_is_in_venv", lambda: True)
     session_id = context._get_context_session_id()
@@ -157,7 +157,7 @@ def test_get_context_session_id_in_venv_no_great_grandparent(monkeypatch):
     def mock_process():
         return current_process
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     context = Context()
     monkeypatch.setattr(context, "_is_in_venv", lambda: True)
     session_id = context._get_context_session_id()
@@ -175,7 +175,7 @@ def test_get_context_session_id_not_in_venv(monkeypatch):
     def mock_process():
         return current_process
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
 
     context = Context()
     monkeypatch.setattr(context, "_is_in_venv", lambda: False)
@@ -199,7 +199,7 @@ def test_get_context_session_id_no_parent_process(monkeypatch):
     def mock_log_debug(message):
         log_calls.append(message)
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     monkeypatch.setattr("fabric_cli.core.fab_context.os.getpid", mock_getpid)
     monkeypatch.setattr(
         "fabric_cli.core.fab_context.fab_logger.log_debug", mock_log_debug
@@ -228,7 +228,7 @@ def test_get_context_session_id_parent_process_exception(monkeypatch):
     def mock_log_debug(message):
         log_calls.append(message)
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     monkeypatch.setattr("fabric_cli.core.fab_context.os.getpid", mock_getpid)
     monkeypatch.setattr(
         "fabric_cli.core.fab_context.fab_logger.log_debug", mock_log_debug
@@ -255,7 +255,7 @@ def test_get_context_session_id_grandparent_process_exception(monkeypatch):
     def mock_log_debug(message):
         log_calls.append(message)
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     monkeypatch.setattr(
         "fabric_cli.core.fab_context.fab_logger.log_debug", mock_log_debug
     )
@@ -281,7 +281,7 @@ def test_get_context_session_id_no_grandparent_process(monkeypatch):
     def mock_log_debug(message):
         log_calls.append(message)
 
-    monkeypatch.setattr("fabric_cli.core.fab_context.psutil.Process", mock_process)
+    monkeypatch.setattr("psutil.Process", mock_process)
     monkeypatch.setattr(
         "fabric_cli.core.fab_context.fab_logger.log_debug", mock_log_debug
     )
@@ -424,7 +424,7 @@ def mock_config_location():
 
 @pytest.fixture
 def mock_psutil_process():
-    with patch("fabric_cli.core.fab_context.psutil.Process") as mock:
+    with patch("psutil.Process") as mock:
         mock_process = Mock()
         mock_process.parent.return_value = Mock(pid=1234)
         mock_process.parent.return_value.parent.return_value = Mock(pid=5678)
@@ -436,3 +436,43 @@ def mock_psutil_process():
 def mock_get_command_context():
     with patch("fabric_cli.core.fab_handle_context.get_command_context") as mock:
         yield mock
+
+
+# region Runtime Mode
+
+class TestRuntimeMode:
+    """Verify Context.set_runtime_mode / get_runtime_mode behaviour after mode-setting removal."""
+
+    def teardown_method(self, method):
+        Context()._runtime_mode = fab_constant.FAB_MODE_COMMANDLINE
+
+    def test_default_runtime_mode_is_command_line_success(self):
+        """Default runtime mode must be COMMANDLINE when no REPL is active."""
+        assert Context().get_runtime_mode() == fab_constant.FAB_MODE_COMMANDLINE
+
+    def test_set_runtime_mode_to_interactive_success(self):
+        """set_runtime_mode(INTERACTIVE) should switch the mode."""
+        Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        assert Context().get_runtime_mode() == fab_constant.FAB_MODE_INTERACTIVE
+
+    def test_set_runtime_mode_back_to_command_line_success(self):
+        """Switching to INTERACTIVE then back to COMMANDLINE must work."""
+        Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
+        assert Context().get_runtime_mode() == fab_constant.FAB_MODE_COMMANDLINE
+
+    def test_runtime_mode_not_in_config_keys_success(self):
+        """'mode' must no longer appear in FAB_CONFIG_KEYS_TO_VALID_VALUES."""
+        assert fab_constant.FAB_MODE not in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES
+
+    def test_runtime_mode_not_in_config_defaults_success(self):
+        """'mode' must no longer appear in CONFIG_DEFAULT_VALUES."""
+        assert fab_constant.FAB_MODE not in fab_constant.CONFIG_DEFAULT_VALUES
+
+    def test_runtime_mode_not_module_level_success(self):
+        """Runtime mode must live on Context, not as module-level functions."""
+        from fabric_cli.core import fab_context as ctx_module
+        assert not hasattr(ctx_module, "set_runtime_mode")
+        assert not hasattr(ctx_module, "get_runtime_mode")
+
+# endregion

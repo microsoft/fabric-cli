@@ -23,6 +23,7 @@ import fabric_cli.core.fab_state_config as state_config
 import fabric_cli.utils.fab_cmd_job_utils as utils_job
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType, VirtualItemContainerType
 from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
@@ -956,6 +957,42 @@ class TestJobs:
         mock_questionary_print.reset_mock()
         job_run_list(fabric_item.full_path, schedule=True)
         assert len(mock_questionary_print.call_args_list) != 0
+
+    def test_job_run_exits_with_code_1_success(self, item_factory, cli_executor, assert_fabric_cli_error):
+        """Integration test to verify that job run command exits with code 1 when job fails."""
+        # Setup - use the example_failed notebook which contains failing code
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_failed.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        
+        # Execute command - this should fail with ERROR_JOB_FAILED due to the exception in the notebook
+        cli_executor.exec_command(f"job run {notebook.full_path}")
+        
+        # Assert that the correct FabricCLIError was raised with exit code 1
+        assert_fabric_cli_error(
+            constant.ERROR_JOB_FAILED,
+            "Failed"
+        )
+
+    def test_job_run_failure_with_timeout_exits_with_code_1_success(self, item_factory, cli_executor, mock_print_warning):
+        """Integration test to verify that timeout prints cancellation message and doesn't raise error."""
+        # Setup - use a notebook that will run longer than the timeout
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        
+        # Execute command with short timeout - this should timeout and print cancellation message
+        cli_executor.exec_command(f"job run {notebook.full_path} --timeout 1")
+        
+        # Verify that timeout warning was printed (not an error)
+        mock_print_warning.assert_called()
+        warning_message = mock_print_warning.call_args[0][0]
+        assert "timed out" in warning_message
+
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):

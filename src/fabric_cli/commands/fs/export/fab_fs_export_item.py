@@ -10,10 +10,9 @@ from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType, definition_format_mapping
+from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
-from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_cmd_export_utils as utils_export
 from fabric_cli.utils import fab_item_util, fab_mem_store, fab_storage, fab_ui
 
@@ -103,27 +102,8 @@ def export_single_item(
         args.from_path = item.path.strip("/")
         args.ws_id, args.id, args.item_type = workspace_id, item_id, str(item_type)
 
-        # Get definition_format_mapping for item without default fallback
-        valid_export_formats = definition_format_mapping.get(item_type, {})
-        # Get export_format_param from args without default
         export_format_param = getattr(args, "format", None)
-        
-        if export_format_param not in valid_export_formats:
-             # Export format not in definition_format_mapping
-            if not export_format_param:
-                # Empty format param - use default formats if exists
-                args.format = valid_export_formats.get("default", "")
-            else:
-                # Non-empty format param but not supported
-                available_formats = [k for k in valid_export_formats.keys() if k != "default"]
-                raise FabricCLIError(
-                    ErrorMessages.Export.invalid_export_format(available_formats),
-                    fab_constant.ERROR_INVALID_INPUT,
-                )
-        else:
-            # Export format is explicitly supported
-            args.format = valid_export_formats[export_format_param]
-           
+        args.format = fab_item_util.resolve_definition_format(item_type, export_format_param)
 
         item_def = item_api.get_item_withdefinition(args, item_uri)
 

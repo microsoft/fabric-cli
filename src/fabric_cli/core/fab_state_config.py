@@ -54,6 +54,12 @@ def init_defaults():
     Ensures that all known config keys have default values if they are not already set.
     """
     current_config = read_config(config_file)
+    changed = False
+
+    # Migration: remove the deprecated 'mode' key (mode is now detected at runtime)
+    if fab_constant.FAB_MODE in current_config:
+        del current_config[fab_constant.FAB_MODE]
+        changed = True
 
     for key in fab_constant.FAB_CONFIG_KEYS_TO_VALID_VALUES:
         old_key = f"fab_{key}"
@@ -62,7 +68,10 @@ def init_defaults():
             if key not in current_config:
                 current_config[key] = current_config[old_key]
             del current_config[old_key]
+            changed = True
         if key not in current_config and key in fab_constant.CONFIG_DEFAULT_VALUES:
             current_config[key] = fab_constant.CONFIG_DEFAULT_VALUES[key]
+            changed = True
 
-    write_config(current_config)
+    if changed:
+        write_config(current_config)

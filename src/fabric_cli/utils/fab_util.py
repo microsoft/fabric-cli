@@ -20,6 +20,7 @@ The module includes functions for:
 import json
 import platform
 import re
+import shutil
 from typing import Any
 
 from fabric_cli.core import fab_constant, fab_state_config
@@ -30,14 +31,14 @@ from fabric_cli.errors import ErrorMessages
 # JSON utilities
 def dumps(obj: Any, **kw) -> str:
     """JSON dumps with custom handling for bytes/bytearray objects.
-    
+
     Args:
         obj: Object to serialize to JSON
         **kw: Additional keyword arguments passed to json.dumps
-        
+
     Returns:
         JSON string representation of the object
-        
+
     Raises:
         TypeError: If object contains non-serializable types other than bytes/bytearray
     """
@@ -62,12 +63,14 @@ def remove_dot_suffix(path: str, dot_string_to_rm: str = ".Shortcut") -> str:
     return path.replace(dot_string_to_rm, "").replace(dot_string_to_rm.lower(), "")
 
 
-
 def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     """
     Convert args to dict with a specified max nested level.
     Example:
     args.params = "key1.key2=value2,key1.key3=value3,key4=value4" -> {"key1": {"key2": "value2", "key3": "value3"}, "key4": "value4"}
+
+    Supports != operator for negation. The trailing '!' is kept in the key:
+    args.params = "key!=value" -> {"key!": "value"}
     """
 
     params_dict: dict = {}
@@ -76,7 +79,7 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
     # Result ['key1.key2=hello', 'key2={"hello":"testing","bye":2}', 'key3=[1,2,3]', 'key4={"key5":"value5"}']
     # Example key1.key2=hello
     # Result ['key1.key=hello']
-    pattern = r"((?:[\w\.]+=.+?)(?=(?:,[\w\.]+=)|$))"
+    pattern = r"((?:[\w\.]+!?=.+?)(?=(?:,\s*[\w\.]+!?=)|$))"
 
     if params:
         if isinstance(params, list):
@@ -90,7 +93,7 @@ def get_dict_from_params(params: str | list[str], max_depth: int = 2) -> dict:
         matches = re.findall(pattern, norm_params)
         if not matches:
             raise FabricCLIError(
-                ErrorMessages.Config.invalid_parameter_format(norm_params),
+                ErrorMessages.Common.invalid_parameter_format(norm_params),
                 fab_constant.ERROR_INVALID_INPUT,
             )
 
@@ -124,13 +127,14 @@ def get_dict_from_parameter(
         clean_value = try_get_json_value_from_string(value)
         return {param: clean_value}
 
+
 def try_get_json_value_from_string(value: str) -> Any:
     """
     Try to parse a string as JSON, with special handling for array parameters.
-    
+
     Args:
         value: String that may contain JSON data
-        
+
     Returns:
         Parsed JSON if valid, otherwise original string
     """
@@ -138,8 +142,9 @@ def try_get_json_value_from_string(value: str) -> Any:
         try:
             return json.loads(value)
         except json.JSONDecodeError:
-            pass        
+            pass
     return value.replace("'", "").replace('"', "")
+
 
 def merge_dicts(dict1: dict, dict2: dict) -> dict:
     """
@@ -166,8 +171,6 @@ def remove_keys_from_dict(_dict: dict, keys: list) -> dict:
     return _dict
 
 
-
-
 def get_os_specific_command(command: str) -> str:
     if platform.system() == "Windows":
         return fab_constant.OS_COMMANDS.get(command, {}).get("windows", command)
@@ -183,26 +186,32 @@ def get_capacity_settings(
     params: dict = {},
 ) -> tuple:
     """Get Azure capacity settings from parameters and configuration.
-    
+
     Args:
         params: Dictionary containing capacity parameters
-        
+
     Returns:
         Tuple containing (admin, location, subscription_id, resource_group, sku)
-        
+
     Raises:
         FabricCLIError: If required configuration values are missing
     """
     az_subscription_id = params.get(
         "subscriptionid",
-        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID),
+        fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID
+        ),
     )
     az_resource_group = params.get(
         "resourcegroup",
-        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP),
+        fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP
+        ),
     )
     az_default_location = params.get(
-        "location", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_LOCATION)
+        "location", fab_state_config.get_config(
+            fab_constant.FAB_DEFAULT_AZ_LOCATION
+        ),
     )
     az_default_admin = params.get(
         "admin", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_ADMIN)
@@ -239,3 +248,62 @@ def get_capacity_settings(
     )
 
 
+def truncate_columns(
+    items: list[dict],
+    columns_to_truncate: list[str],
+    min_width: int = 20,
+    max_col_width: int = 50,
+) -> None:
+    """Truncate columns in priority order so a table fits within terminal width.
+
+    Shrinks columns one at a time in the order given. Each column is reduced
+    just enough to make the total fit. Columns not listed are never truncated.
+
+    Args:
+        items: List of dicts to truncate in place.
+        columns_to_truncate: Column names in shrink priority (first = shrink first).
+        min_width: Minimum width for any truncated column.
+        max_col_width: Absolute max width for any truncatable column.
+    """
+    if not items:
+        return
+
+    term_width = shutil.get_terminal_size((120, 24)).columns
+    # Use first item's keys — matches the text table renderer (get_data_keys),
+    # which prints columns based on the first item's keys and order.
+    all_fields = list(items[0].keys())
+    # Table renderer adds +2 width per column and 1 space between columns
+    padding_per_col = 3
+    total_padding = padding_per_col * len(all_fields) - 1
+
+    col_widths = {}
+    for f in all_fields:
+        col_widths[f] = max(
+            len(f),
+            max((len(str(item.get(f, ""))) for item in items), default=0),
+        )
+
+    # Apply absolute max width cap first
+    for col in columns_to_truncate:
+        if col in col_widths and col_widths[col] > max_col_width:
+            col_widths[col] = max_col_width
+            for item in items:
+                val = str(item.get(col, ""))
+                if len(val) > max_col_width:
+                    item[col] = val[: max_col_width - 1].rstrip() + "…"
+
+    # Then shrink further to fit terminal width
+    for col in columns_to_truncate:
+        if col not in col_widths:
+            continue
+        total = sum(col_widths[f] for f in all_fields) + total_padding
+        overflow = total - term_width
+        if overflow <= 0:
+            break
+
+        max_col = max(col_widths[col] - overflow, min_width)
+        col_widths[col] = max_col
+        for item in items:
+            val = str(item.get(col, ""))
+            if len(val) > max_col:
+                item[col] = val[: max_col - 1].rstrip() + "…"

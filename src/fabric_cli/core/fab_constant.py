@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from fabric_cli import __version__
 from fabric_cli.utils.fab_hostname_validator import validate_and_get_env_variable
 
 # Initialize API endpoints with validation
@@ -18,7 +19,8 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -27,10 +29,10 @@ API_USER_AGENT_TEST = "ms-fabric-cli-test"
 WEB_URI = "https://app.powerbi.com/groups"
 
 # Versioning
-FAB_VERSION = "1.3.1"  # change pyproject.toml version too, this must be aligned
+FAB_VERSION = __version__
 
 # Scopes
-SCOPE_FABRIC_DEFAULT = ["https://analysis.windows.net/powerbi/api/.default"]
+SCOPE_FABRIC_DEFAULT = ["https://api.fabric.microsoft.com/.default"]
 SCOPE_ONELAKE_DEFAULT = ["https://storage.azure.com/.default"]
 SCOPE_AZURE_DEFAULT = ["https://management.azure.com/.default"]
 
@@ -63,6 +65,9 @@ AUTH_KEYS = {
     FAB_TENANT_ID: [],
     IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
 }
+
+FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
+FAB_HOST_APP_VERSION_ENV_VAR = "FAB_HOST_APP_VERSION"
 
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"
@@ -104,7 +109,6 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_ENCRYPTION_FALLBACK_ENABLED: ["false", "true"],
     FAB_JOB_CANCEL_ONTIMEOUT: ["false", "true"],
     FAB_LOCAL_DEFINITION_LABELS: [],
-    FAB_MODE: [FAB_MODE_INTERACTIVE, FAB_MODE_COMMANDLINE],
     FAB_OUTPUT_ITEM_SORT_CRITERIA: ["byname", "bytype"],
     FAB_SHOW_HIDDEN: ["false", "true"],
     FAB_DEFAULT_AZ_SUBSCRIPTION_ID: [],
@@ -121,7 +125,6 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
 }
 
 CONFIG_DEFAULT_VALUES = {
-    FAB_MODE: FAB_MODE_COMMANDLINE,
     FAB_CACHE_ENABLED: "true",
     FAB_CONTEXT_PERSISTENCE_ENABLED: "false",
     FAB_JOB_CANCEL_ONTIMEOUT: "true",
@@ -137,23 +140,23 @@ CONFIG_DEFAULT_VALUES = {
 }
 
 # Command descriptions
-COMMAND_AUTH_DESCRIPTION = "Authenticate fab with Fabric."
+COMMAND_AUTH_DESCRIPTION = "Authenticate with Fabric."
 COMMAND_AUTH_STATUS_DESCRIPTION = "Display active account and authentication state."
 COMMAND_FS_DESCRIPTION = "Workspace, item and file system operations."
-COMMAND_JOBS_DESCRIPTION = "Manage tasks and jobs."
-COMMAND_TABLES_DESCRIPTION = "Manage tables."
+COMMAND_JOBS_DESCRIPTION = "Manage and schedule jobs."
+COMMAND_TABLES_DESCRIPTION = "Manage Delta tables."
 COMMAND_SHORTCUTS_DESCRIPTION = "Manage shorcuts."
-COMMAND_ACLS_DESCRIPTION = "Manage permissions [admin]."
+COMMAND_ACLS_DESCRIPTION = "Manage access control lists [admin]."
 COMMAND_ACLS_LS_DESCRIPTION = (
-    "List ACLs for a workspace, item, gateway, connection or OneLake."
+    "List ACLs for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway or connection."
+COMMAND_ACLS_RM_DESCRIPTION = "Remove an ACL from a workspace, gateway, or connection."
 COMMAND_ACLS_GET_DESCRIPTION = (
-    "Get ACL details for a workspace, item, gateway, connection or OneLake."
+    "Get ACL details for a workspace, item, gateway, connection, or OneLake resource."
 )
-COMMAND_ACLS_SET_DESCRIPTION = "Set ACL on workspace, gateway or connection."
-COMMAND_CONFIG_DESCRIPTION = "Manage configuration settings."
-COMMAND_API_DESCRIPTION = "Make an authenticated API request."
+COMMAND_ACLS_SET_DESCRIPTION = "Set ACLs on a workspace, gateway, or connection."
+COMMAND_CONFIG_DESCRIPTION = "Manage CLI configuration."
+COMMAND_API_DESCRIPTION = "Make authenticated API requests."
 COMMAND_EXTENSIONS_DESCRIPTION = "Manage extensions."
 COMMAND_LABELS_DESCRIPTION = "Manage sensitivity labels [admin]."
 COMMAND_CAPACITIES_DESCRIPTION = "(tenant) Manage capacities [admin]."
@@ -179,23 +182,22 @@ COMMAND_FS_EXISTS_DESCRIPTION = "Check if a workspace, item, or file exists."
 COMMAND_FS_PWD_DESCRIPTION = "Print the current working directory."
 COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
-COMMAND_FS_GET_DESCRIPTION = "Get a workspace or item property."
-COMMAND_FS_IMPORT_DESCRIPTION = "Import an item (create/modify)."
-COMMAND_FS_SET_DESCRIPTION = "Set a workspace or item property."
+COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
+COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
+COMMAND_FS_DEPLOY_DESCRIPTION = "Deploy items using a configuration file."
+COMMAND_FS_SET_DESCRIPTION = "Set workspace or item properties."
 COMMAND_FS_CLEAR_DESCRIPTION = "Clear the terminal screen."
 COMMAND_FS_LN_DESCRIPTION = "Create a shortcut."
 COMMAND_FS_START_DESCRIPTION = "Start a resource."
 COMMAND_FS_STOP_DESCRIPTION = "Stop a resource."
-COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a resource to a workspace."
+COMMAND_FS_ASSIGN_DESCRIPTION = "Assign a capacity or resource to a workspace."
 COMMAND_FS_UNASSIGN_DESCRIPTION = "Unassign a resource from a workspace."
 COMMAND_FS_LS_DESCRIPTION = "List workspaces, items, and files."
-COMMAND_FS_MKDIR_DESCRIPTION = "Create a new workspace, item, or directory."
+COMMAND_FS_MKDIR_DESCRIPTION = "Create a workspace, item, or directory."
 COMMAND_FS_RM_DESCRIPTION = "Delete a workspace, item, or file."
 
 # Label command descriptions
-COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = (
-    "List labels from `local_definition_labels` setting."
-)
+COMMAND_LABELS_LIST_LOCAL_DESCRIPTION = "List configured sensitivity labels."
 COMMAND_LABELS_SET_DESCRIPTION = "Set a sensitivity label on an item."
 COMMAND_LABELS_RM_DESCRIPTION = "Remove a sensitivity label from an item."
 
@@ -217,7 +219,7 @@ WARNING_INVALID_PATHS = (
 )
 WARNING_NOT_SUPPORTED_PATHS = "mv is not supported for the specified source and destination items types. Check your paths"
 WARNING_INVALID_SPECIAL_CHARACTERS = (
-    "Special caracters not supported for this item type"
+    "Special characters not supported for this item type"
 )
 WARNING_INVALID_LS_ONELAKE = "No more subdirectories supported for this item"
 WARNING_INVALID_JSON_FORMAT = "Invalid JSON format"
@@ -282,6 +284,7 @@ ERROR_UNAUTHORIZED = "Unauthorized"
 ERROR_UNIVERSAL_SECURITY_DISABLED = "UniversalSecurityDisabled"
 ERROR_SPN_AUTH_MISSING = "ServicePrincipalAuthMissing"
 ERROR_JOB_FAILED = "JobFailed"
+ERROR_IN_DEPLOYMENT = "DeploymentFailed"
 
 # Exit codes
 EXIT_CODE_SUCCESS = 0
@@ -324,7 +327,14 @@ ITEM_METADATA_PROPERTIES = {
     "description",
     "workspaceId",
     "folderId",
+    "properties",
 }
+
+################################################
+### Only allowed for modification by CLI team ##
+
+ALLOWED_FAB_HOST_APP_VALUES = ("Fabric-AzureDevops-Extension",)
+################################################
 
 # Item set constants
 ITEM_QUERY_DEFINITION = "definition"
@@ -338,3 +348,7 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
     ITEM_QUERY_DESCRIPTION,
     ITEM_QUERY_PROPERTIES,
 ]
+
+# Invalid query parameters for set command across all fabric resources
+SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
+

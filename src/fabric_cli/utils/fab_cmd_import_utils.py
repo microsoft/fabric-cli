@@ -25,11 +25,16 @@ def get_payload_for_item_type(
     if item.item_type == ItemType.ENVIRONMENT:
         return _build_environment_payload(path)
     else:
-        base64_definition = _build_payload(path)
-        return item.get_payload(base64_definition, input_format)
+        definition = _build_definition(path, input_format)
+        return {
+            "type": str(item.item_type),
+            "folderId": item.folder_id,
+            "displayName": item.short_name,
+            "definition": definition,
+        }
 
 
-def _build_payload(input_path: Any) -> dict:
+def _build_definition(input_path: Any, input_format: Optional[str] = None) -> dict:
     directory = input_path
     parts = []
 
@@ -67,9 +72,10 @@ def _build_payload(input_path: Any) -> dict:
                 }
             )
 
-    # Create the final JSON structure
-    payload_structure = {"parts": parts}
-    return payload_structure
+    definition: dict = {"parts": parts}
+    if input_format:
+        definition["format"] = input_format
+    return definition
 
 
 def _encode_file_to_base64(file_path: str) -> str:

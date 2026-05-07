@@ -89,6 +89,11 @@ def process_request(request):
     global generated_name_mapping
     global current_request
 
+    # Normalize API endpoint so cassettes always use the production URI
+    request.uri = request.uri.replace(
+        "dailyapi.fabric.microsoft.com", "api.fabric.microsoft.com"
+    )
+
     current_request = request
     if is_record_mode():
         api_processor_handler.handle_request(request)

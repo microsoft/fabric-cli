@@ -100,7 +100,9 @@ def get_item(
 
 def get_item_definition(args: Namespace) -> ApiResponse:
     """https://learn.microsoft.com/en-us/rest/api/fabric/core/items/get-item-definition"""
-    args.uri = f"workspaces/{args.ws_id}/items/{args.id}/getDefinition{args.format}"
+    args.uri = f"workspaces/{args.ws_id}/items/{args.id}/getDefinition"
+    if args.format:
+        args.uri += f"?format={args.format}"
     args.method = "post"
     args.wait = True
 

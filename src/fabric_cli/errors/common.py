@@ -244,3 +244,23 @@ class CommonErrors:
         property_name: str, gateway_type: str
     ) -> str:
         return f"Setting '{property_name}' is not supported for Gateway type '{gateway_type}'"
+
+    @staticmethod
+    def query_not_supported_for_set(query: str) -> str:
+        return f"Query '{query}' is not supported for set command"
+
+    @staticmethod
+    def invalid_definition_format(valid_formats: list[str]) -> str:
+        if valid_formats:
+            message = f"Only the following formats are supported: {', '.join(valid_formats)}"
+        else:
+            message = "No formats are supported"
+        return f"Invalid format. {message}"
+
+    @staticmethod
+    def unsupported_parameter(key: str) -> str:
+        return f"'{key}' isn't a supported parameter"
+
+    @staticmethod
+    def invalid_parameter_format(param: str) -> str:
+        return f"Invalid parameter format: '{param}'. Use key=value or key!=value."

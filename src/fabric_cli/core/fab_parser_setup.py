@@ -14,6 +14,7 @@ from fabric_cli.parsers import fab_auth_parser as auth_parser
 from fabric_cli.parsers import fab_config_parser as config_parser
 from fabric_cli.parsers import fab_describe_parser as describe_parser
 from fabric_cli.parsers import fab_extension_parser as extension_parser
+from fabric_cli.parsers import fab_find_parser as find_parser
 from fabric_cli.parsers import fab_fs_parser as fs_parser
 from fabric_cli.parsers import fab_global_params
 from fabric_cli.parsers import fab_jobs_parser as jobs_parser
@@ -201,6 +202,7 @@ def create_parser_and_subparsers():
     fs_parser.register_open_parser(subparsers)  # open
     fs_parser.register_export_parser(subparsers)  # export
     fs_parser.register_import_parser(subparsers)  # import
+    fs_parser.register_deploy_parser(subparsers)  # deploy
     fs_parser.register_set_parser(subparsers)  # set
     fs_parser.register_get_parser(subparsers)  # get
     fs_parser.register_clear_parser(subparsers)  # clear
@@ -218,6 +220,7 @@ def create_parser_and_subparsers():
     api_parser.register_parser(subparsers)  # api
     auth_parser.register_parser(subparsers)  # auth
     describe_parser.register_parser(subparsers)  # desc
+    find_parser.register_parser(subparsers)  # find
     extension_parser.register_parser(subparsers)  # extension
 
     # version

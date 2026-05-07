@@ -12,7 +12,7 @@ class TestMainModule:
 
     def test_main_no_args_starts_interactive_mode_success(self):
         """Test that running 'fab' without arguments automatically enters interactive mode."""
-        with patch("fabric_cli.main.start_interactive_mode") as mock_start_interactive:
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
             from fabric_cli.main import main
 
             with patch.object(sys, 'argv', ['fab']):

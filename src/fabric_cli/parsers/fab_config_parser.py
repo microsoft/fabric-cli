@@ -3,17 +3,19 @@
 
 from argparse import Namespace, _SubParsersAction
 
-from fabric_cli.commands.config import fab_config as config
 from fabric_cli.core import fab_constant
 from fabric_cli.core.completers import fab_config_completers
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils.fab_lazy_load import lazy_command
 from fabric_cli.utils.fab_util import get_os_specific_command
+
+_config_module_path = "fabric_cli.commands.config.fab_config"
 
 commands = {
     "Commands": {
         "clear-cache": "Clear the CLI cache.",
-        "get": "Print the value of a given configuration key.",
+        "get": "Get the value of a configuration key.",
         get_os_specific_command("ls"): "List all configuration keys and their values.",
         "set": "Set a configuration key to a specified value.",
     }
@@ -29,8 +31,8 @@ def register_parser(subparsers: _SubParsersAction) -> None:
 
     # Subcommand for 'set'
     set_examples = [
-        "# switch to command line mode",
-        "$ config set mode command_line\n",
+        "# enable debug mode",
+        "$ config set debug_enabled true\n",
         "# set default capacity",
         "$ config set default_capacity Trial-0000",
     ]
@@ -53,12 +55,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     set_value_arg.completer = fab_config_completers.complete_config_values
 
     parser_set.usage = f"{utils_error_parser.get_usage_prog(parser_set)}"
-    parser_set.set_defaults(func=config.set_config)
+    parser_set.set_defaults(func=lazy_command(_config_module_path, 'set_config'))
 
     # Subcommand for 'get'
     get_examples = [
-        "# get current CLI mode",
-        "$ config get mode\n",
+        "# get current debug setting",
+        "$ config get debug_enabled\n",
         "# get default capacity",
         "$ config get default_capacity",
     ]
@@ -77,7 +79,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     get_key_arg.completer = fab_config_completers.complete_config_keys
 
     parser_get.usage = f"{utils_error_parser.get_usage_prog(parser_get)}"
-    parser_get.set_defaults(func=config.get_config)
+    parser_get.set_defaults(func=lazy_command(_config_module_path, 'get_config'))
 
     # Subcommand for 'ls'
     ls_examples = ["# print configuration values", "$ config ls"]
@@ -91,7 +93,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     parser_ls.usage = f"{utils_error_parser.get_usage_prog(parser_ls)}"
-    parser_ls.set_defaults(func=config.list_configs)
+    parser_ls.set_defaults(func=lazy_command(_config_module_path, 'list_configs'))
 
     clearcache_examples = ["# clear CLI cache", "$ config clear-cache"]
 
@@ -105,7 +107,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     parser_clear_cache.usage = (
         f"{utils_error_parser.get_usage_prog(parser_clear_cache)}"
     )
-    parser_clear_cache.set_defaults(func=config.clear_cache)
+    parser_clear_cache.set_defaults(func=lazy_command(_config_module_path, 'clear_cache'))
 
 
 def show_help(args: Namespace) -> None:

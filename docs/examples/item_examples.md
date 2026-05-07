@@ -249,7 +249,7 @@ fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReferenc
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`
 - `.MirroredDatabase`, `.Reflex`
-- `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.DigitalTwinBuilder`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Copy Item to Workspace
@@ -324,7 +324,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.Report`, `.SemanticModel`
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`, `.MirroredDatabase`
-- `.Reflex`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.Reflex`, `.DigitalTwinBuilder`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Export to Lakehouse
@@ -345,8 +345,40 @@ Import an item definition from a local directory into the workspace.
 fab import ws1.Workspace/nb1_imported.Notebook -i /tmp/exports/nb1.Notebook
 ```
 
-**Supported Import Formats:** `.ipynb` (default) and `.py`.
+#### Deploy Items from Configuration
 
+Deploy items from local workspace content to a target workspace using a configuration file.
+
+```
+fab deploy --config config.yml -tenv dev
+```
+
+#### Deploy Specific Item Types
+
+Deploy only specific types of items using item_types_in_scope.
+
+```
+fab deploy --config config.yml -tenv dev -P config_override='{"core": {"item_types_in_scope": ["Notebook", "DataPipeline"]}}'
+```
+
+#### Deploy Specific Items
+
+Deploy only specified items using items_to_include.
+
+```
+fab deploy --config config.yml -tenv prod -P config_override='{"publish": {"items_to_include": ["MainNotebook.Notebook", "ProductionPipeline.DataPipeline"]}, "features": ["enable_items_to_include", "enable_experimental_features"]}'
+```
+
+#### Deploy with Item Exclusions
+
+Deploy items while excluding specific items or patterns.
+
+```
+fab deploy --config config.yml -tenv dev -P config_override='{"publish": {"exclude_regex": "^(TEMP|DEBUG|TEST).*"}}'
+```
+
+!!! note "Configuration Options"
+    All the configuration options shown above with `config_override` can also be defined directly in the configuration file instead of passing them as command-line overrides. The `config_override` examples are provided for demonstration and dynamic configuration purposes.
 
 ### Start/Stop Mirrored Databases
 
@@ -380,8 +412,12 @@ fab stop ws1.Workspace/mir1.MirroredDatabase
 Stop mirrored database without confirmation.
 
 ```
-fab stop ws1.Workspacemir1.MirroredDatabase -f
+fab stop ws1.Workspace/mir1.MirroredDatabase -f
 ```
+
+### Semantic Model Refresh
+
+For detailed examples on triggering and monitoring semantic model refresh using the API command, see the [Semantic Model Refresh Example](refresh_semantic_model_example.md).
 
 ### Open in Browser
 

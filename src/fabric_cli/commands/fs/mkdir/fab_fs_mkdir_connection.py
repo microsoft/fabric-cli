@@ -110,7 +110,6 @@ def exec(connection: VirtualWorkspaceItem, args: Namespace) -> None:
 
     # Base payload
     payload = {
-        "description": "Created by fab",
         "displayName": connection.short_name,
         "connectivityType": connectivityType,
     }

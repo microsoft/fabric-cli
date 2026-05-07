@@ -19,6 +19,7 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.KQLDashboard`        | Kusto dashboards                   |
 | `.KQLQueryset`         | Kusto query collections            |
 | `.Lakehouse`           | Data lakehouse storage             |
+| `.Map`                 | Maps                               |
 | `.Warehouse`           | Data warehouses                    |
 | `.SQLDatabase`         | SQL databases                      |
 | `.MirroredDatabase`    | Mirrored databases                 |
@@ -38,6 +39,11 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.VariableLibrary`     | Variable libraries                 |
 | `.GraphQLApi`          | GraphQL API endpoints              |
 | `.Dataflow`            | Dataflow API endpoints             |
+| `.ApacheAirflowJob`    | Apache Airflow job definitions     |
+| `.CosmosDBDatabase`    | Cosmos DB databases                |
+| `.DigitalTwinBuilder`  | Digital twin builder resources     |
+| `.GraphQuerySet`       | Graph query collections            |
+| `.UserDataFunction`    | User data functions                |
 
 ---
 

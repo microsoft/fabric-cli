@@ -33,19 +33,24 @@ def exec(item: Item, args: Namespace) -> None:
         args.item_uri = format_mapping.get(item.item_type, "items")
 
         if query_value.startswith(fab_constant.ITEM_QUERY_DEFINITION):
-            formats = definition_format_mapping.get(item.item_type, {"default": ""})
+            formats = definition_format_mapping.get(
+                item.item_type, {"default": ""})
+            # plain value; query param built in get_item_definition()
             args.format = formats["default"]
             def_response = item_api.get_item_definition(args)
             definition = json.loads(def_response.text)
 
-            updated_def = _update_item_definition(definition, query_value, args.input)
+            updated_def = _update_item_definition(
+                definition, query_value, args.input)
 
             update_item_definition_payload = json.dumps(updated_def)
 
             utils_ui.print_grey(f"Setting new property for '{item.name}'...")
-            item_api.update_item_definition(args, update_item_definition_payload)
+            item_api.update_item_definition(
+                args, update_item_definition_payload)
         else:
-            item_metadata = json.loads(item_api.get_item(args, item_uri=True).text)
+            item_metadata = json.loads(
+                item_api.get_item(args, item_uri=True).text)
 
             update_payload_dict = _update_item_metadata(
                 item_metadata, query_value, args.input

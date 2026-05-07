@@ -7,7 +7,7 @@ from .common import CommonErrors
 from .config import ConfigErrors
 from .context import ContextErrors
 from .cp import CpErrors
-from .export import ExportErrors
+from .find import FindErrors
 from .hierarchy import HierarchyErrors
 from .labels import LabelsErrors
 from .mkdir import MkdirErrors
@@ -23,7 +23,7 @@ class ErrorMessages:
     Config = ConfigErrors
     Context = ContextErrors
     Cp = CpErrors
-    Export = ExportErrors
+    Find = FindErrors
     Hierarchy = HierarchyErrors
     Labels = LabelsErrors
     Mkdir = MkdirErrors
