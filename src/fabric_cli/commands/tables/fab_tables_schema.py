@@ -39,9 +39,13 @@ def _get_table_schema(args: Namespace) -> list[dict]:
                 "use_fabric_endpoint": "true",
             },
         )
-        schema_dict = json.loads(table.schema().to_json())
-        return schema_dict["fields"]
-    except DeltaError:
+        schema_json = table.schema().to_json()
+        schema_dict = json.loads(schema_json)
+        schema_fields = schema_dict.get("fields")
+        if not isinstance(schema_fields, list):
+            raise ValueError("Delta table schema JSON does not contain a valid 'fields' list.")
+        return schema_fields
+    except (DeltaError, json.JSONDecodeError, TypeError, KeyError, ValueError):
         raise FabricCLIError(
             "Failed to extract the table schema. Please ensure the path points to a valid Delta table",
             fab_constant.ERROR_INVALID_DELTA_TABLE,
