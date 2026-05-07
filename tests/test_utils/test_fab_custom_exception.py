@@ -21,7 +21,7 @@ def test_custom_error_formatted_message_with_status_code():
     assert error.formatted_message() == "[404] An error occurred"
 
 
-def test_fabric_api_error__valid_json_with_request_id():
+def test_fabric_api_error_valid_json_with_request_id():
     payload = json.dumps(
         {
             "errorCode": "ItemNotFound",
@@ -38,7 +38,7 @@ def test_fabric_api_error__valid_json_with_request_id():
     assert error.more_details == []
 
 
-def test_fabric_api_error__valid_json_without_request_id():
+def test_fabric_api_error_valid_json_without_request_id():
     payload = json.dumps(
         {
             "errorCode": "Unauthorized",
@@ -53,27 +53,27 @@ def test_fabric_api_error__valid_json_without_request_id():
     assert "Request Id" not in error.formatted_message(verbose=True)
 
 
-def test_fabric_api_error__non_json_body_falls_back_to_raw_text():
+def test_fabric_api_error_non_json_body_falls_back_to_raw_text():
     raw = "Internal Server Error"
     error = FabricAPIError(raw)
 
     assert error.message == raw.rstrip(".")
-    assert error.status_code == "UnknownError"
+    assert error.status_code is None
     assert error.request_id is None
     assert error.more_details == []
 
 
-def test_fabric_api_error__non_dict_json_falls_back_to_raw_text():
+def test_fabric_api_error_non_dict_json_falls_back_to_raw_text():
     # Valid JSON but not an object — should be treated like a non-JSON body.
     for raw in ('"just a string"', "[1, 2, 3]", "42", "true"):
         error = FabricAPIError(raw)
         assert error.message == raw.rstrip(".")
-        assert error.status_code == "UnknownError"
+        assert error.status_code is None
         assert error.request_id is None
         assert error.more_details == []
 
 
-def test_fabric_api_error__formatted_message_non_json__no_request_id_line():
+def test_fabric_api_error_formatted_message_non_json__no_request_id_line():
     error = FabricAPIError("Gateway Timeout")
     formatted = error.formatted_message(verbose=True)
     assert "Request Id" not in formatted

@@ -8,13 +8,16 @@ import re
 # Default error constants - avoids circular imports
 DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
 DEFAULT_ERROR_CODE = "UnknownError"
+NOT_SET = object()
 
 
 class FabricCLIError(Exception):
-    def __init__(self, message=None, status_code=None):
-        # Use default values if not provided
+    def __init__(self, message=None, status_code=NOT_SET):
+        # Apply defaults only when the caller omitted the argument entirely.
+        # An explicit None is preserved (e.g. fallback paths that have no code).
         message = message or DEFAULT_ERROR_MESSAGE
-        status_code = status_code or DEFAULT_ERROR_CODE
+        if status_code is NOT_SET:
+            status_code = DEFAULT_ERROR_CODE
 
         super().__init__(message)
         self.message = message.rstrip(".")
