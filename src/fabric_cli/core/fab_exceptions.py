@@ -13,8 +13,9 @@ NOT_SET = object()
 
 class FabricCLIError(Exception):
     def __init__(self, message=None, status_code=NOT_SET):
-        # Apply defaults only when the caller omitted the argument entirely.
-        # An explicit None is preserved (e.g. fallback paths that have no code).
+        # message: values like (None, "") fall back to the default.
+        # status_code: default is applied only when omitted entirely;
+        # an explicit None is preserved (e.g. fallback paths that have no code).
         message = message or DEFAULT_ERROR_MESSAGE
         if status_code is NOT_SET:
             status_code = DEFAULT_ERROR_CODE
