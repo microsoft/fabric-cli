@@ -94,11 +94,11 @@ def wait_for_job_completion(
             if status in ["Completed", "Cancelled", "Deduped"]:
                 fab_ui.print_progress(f"Job instance status: {status}")
                 if status == "Completed":
-                    # Determine data based on output format
-                    resolved_format = getattr(args, "output_format", None) or fab_state_config.get_config(fab_constant.FAB_OUTPUT_FORMAT)
-                    job_id_data = {"id": job_ins_id} if resolved_format == "json" else None
                     fab_ui.print_output_format(
-                        args, message=f"Job instance '{job_ins_id}' completed", data=job_id_data
+                        args, 
+                        message=f"Job instance '{job_ins_id}' completed", 
+                        data={"id": job_ins_id},
+                        show_key_value_list=True,
                     )
                 else:
                     fab_logger.log_warning(
