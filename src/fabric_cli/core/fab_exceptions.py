@@ -94,7 +94,7 @@ class FabricAPIError(FabricCLIError):
             error_code = response.get("errorCode")
             self.more_details: list[dict] = response.get("moreDetails", [])
             self.request_id = response.get("requestId")
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, TypeError, ValueError):
             message = response_text
             error_code = None
             self.more_details = []

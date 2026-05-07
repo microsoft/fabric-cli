@@ -64,7 +64,6 @@ def test_fabric_api_error_non_json_body_falls_back_to_raw_text():
 
 
 def test_fabric_api_error_non_dict_json_falls_back_to_raw_text():
-    # Valid JSON but not an object — should be treated like a non-JSON body.
     for raw in ('"just a string"', "[1, 2, 3]", "42", "true"):
         error = FabricAPIError(raw)
         assert error.message == raw.rstrip(".")
@@ -78,3 +77,10 @@ def test_fabric_api_error_formatted_message_non_json_no_request_id_line():
     formatted = error.formatted_message(verbose=True)
     assert "Request Id" not in formatted
     assert "Gateway Timeout" in formatted
+
+
+def test_fabric_api_error_none_input_falls_back_to_default_message():
+    error = FabricAPIError(None)
+    assert error.status_code is None
+    assert error.request_id is None
+    assert error.more_details == []
