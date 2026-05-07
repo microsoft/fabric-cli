@@ -73,7 +73,7 @@ def test_fabric_api_error_non_dict_json_falls_back_to_raw_text():
         assert error.more_details == []
 
 
-def test_fabric_api_error_formatted_message_non_json__no_request_id_line():
+def test_fabric_api_error_formatted_message_non_json_no_request_id_line():
     error = FabricAPIError("Gateway Timeout")
     formatted = error.formatted_message(verbose=True)
     assert "Request Id" not in formatted
