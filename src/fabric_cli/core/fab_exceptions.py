@@ -63,12 +63,21 @@ class FabricAPIError(FabricCLIError):
             related_resource (dict): Details about the main related resource, if available.
             request_id (str): The ID of the request associated with the error.
         """
-        response = json.loads(response_text)
-        message = response.get("message")
-        error_code = response.get("errorCode")
-
-        self.more_details: list[dict] = response.get("moreDetails", [])
-        self.request_id = response.get("requestId")
+        try:
+            response = json.loads(response_text)
+            message = (
+                response.get("message")
+                if response.get("message") is not None
+                else response_text
+            )
+            error_code = response.get("errorCode")
+            self.more_details: list[dict] = response.get("moreDetails", [])
+            self.request_id = response.get("requestId")
+        except json.JSONDecodeError:
+            message = response_text
+            error_code = None
+            self.more_details = []
+            self.request_id = None
 
         super().__init__(message, error_code)
 
@@ -90,7 +99,10 @@ class FabricAPIError(FabricCLIError):
             else f"{base_message}\n<grey>{detailed_message}</grey>"
         )
 
-        return f"{final_message}\n<grey>∟ Request Id: {self.request_id}</grey>"
+        if self.request_id:
+            final_message += f"\n<grey>∟ Request Id: {self.request_id}</grey>"
+
+        return final_message
 
 
 class OnelakeAPIError(FabricCLIError):
