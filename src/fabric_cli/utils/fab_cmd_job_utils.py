@@ -11,7 +11,7 @@ from requests.structures import CaseInsensitiveDict
 
 from fabric_cli.client import fab_api_jobs as jobs_api
 from fabric_cli.client.fab_api_types import ApiResponse
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import FabricJobType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item

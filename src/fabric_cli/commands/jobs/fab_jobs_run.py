@@ -62,7 +62,10 @@ def exec_command(args: Namespace, item: Item) -> None:
         else:
             fab_ui.print_grey("")
             fab_ui.print_output_format(
-                args, message=f"Job instance '{job_instance_id}' created", data={"id": job_instance_id}, show_key_value_list=True
+                args, 
+                message=f"Job instance '{job_instance_id}' created", 
+                data={"id": job_instance_id}, 
+                show_key_value_list=True,
             )
             fab_ui.print_grey(
                 f"→ To see status run 'job run-status {item.path} --id {job_instance_id}'"
