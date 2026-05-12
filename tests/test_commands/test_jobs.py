@@ -993,6 +993,149 @@ class TestJobs:
         warning_message = mock_print_warning.call_args[0][0]
         assert "timed out" in warning_message
 
+    # region JSON output contract tests
+
+    def test_job_run_json_output_contains_instance_id(
+        self, item_factory, mock_questionary_print, mock_fab_set_state_config
+    ):
+        """Validate that job run in JSON mode outputs result.data with the job instance id."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        job_run(notebook.full_path)
+
+        # Extract the instance id from the creation message
+        calls = mock_questionary_print.call_args_list
+        created_instance_id = None
+        for call in calls:
+            match = re.match(r"\u221f Job instance '(.*)' created", call.args[0])
+            if match:
+                created_instance_id = match.group(1)
+                break
+        assert created_instance_id is not None, "Expected job instance creation message"
+
+        # Find the JSON output call (print_output_format in json mode outputs a JSON string)
+        json_output = None
+        for call in calls:
+            try:
+                parsed = json.loads(call.args[0])
+                if parsed.get("status") == "Success" and "result" in parsed:
+                    json_output = parsed
+                    break
+            except (json.JSONDecodeError, TypeError, IndexError):
+                continue
+
+        assert json_output is not None, "Expected JSON output from job run"
+        assert json_output["status"] == "Success"
+        assert json_output["command"] == "job run"
+        assert "data" in json_output["result"]
+        assert len(json_output["result"]["data"]) == 1
+        assert "id" in json_output["result"]["data"][0]
+        instance_id = json_output["result"]["data"][0]["id"]
+        assert instance_id == created_instance_id
+        assert json_output["result"]["message"] is not None
+        assert "completed" in json_output["result"]["message"]
+
+    def test_job_start_json_output_contains_instance_id(
+        self, item_factory, mock_questionary_print, mock_fab_set_state_config
+    ):
+        """Validate that job start in JSON mode outputs result.data with the job instance id."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        job_start(notebook.full_path)
+
+        # Find the JSON output call
+        calls = mock_questionary_print.call_args_list
+        json_output = None
+        for call in calls:
+            try:
+                parsed = json.loads(call.args[0])
+                if parsed.get("status") == "Success" and "result" in parsed:
+                    json_output = parsed
+                    break
+            except (json.JSONDecodeError, TypeError, IndexError):
+                continue
+
+        assert json_output is not None, "Expected JSON output from job start"
+        assert json_output["status"] == "Success"
+        assert json_output["command"] == "job"
+        assert "data" in json_output["result"]
+        assert len(json_output["result"]["data"]) == 1
+        assert "id" in json_output["result"]["data"][0]
+        instance_id = json_output["result"]["data"][0]["id"]
+        assert isinstance(instance_id, str) and len(instance_id) > 0
+        assert json_output["result"]["message"] is not None
+        assert "created" in json_output["result"]["message"]
+
+        # Cross-reference: the status hint message should reference the same instance id
+        status_hint = None
+        for call in calls:
+            match = re.match(r"\u2192 To see status run 'job run-status (.+) --id (.+)'", call.args[0])
+            if match:
+                status_hint = match.group(2)
+                break
+        assert status_hint == instance_id
+
+    def test_job_run_timeout_cancelled_json_output_contains_instance_id(
+        self, item_factory, mock_questionary_print, mock_fab_set_state_config, mock_print_warning
+    ):
+        """Validate that job run timeout-cancelled path in JSON mode outputs result.data with the job instance id."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
+        mock_fab_set_state_config(constant.FAB_JOB_CANCEL_ONTIMEOUT, "true")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command with short timeout to trigger cancellation
+        job_run(notebook.full_path, timeout=1)
+
+        # Verify timeout warning was printed
+        mock_print_warning.assert_called()
+        assert "timed out" in mock_print_warning.call_args[0][0]
+
+        # Find the JSON output call for the cancellation
+        calls = mock_questionary_print.call_args_list
+        json_output = None
+        for call in calls:
+            try:
+                parsed = json.loads(call.args[0])
+                if parsed.get("status") == "Success" and "result" in parsed:
+                    json_output = parsed
+                    break
+            except (json.JSONDecodeError, TypeError, IndexError):
+                continue
+
+        assert json_output is not None, "Expected JSON output from timeout-cancelled job run"
+        assert json_output["status"] == "Success"
+        assert "data" in json_output["result"]
+        assert len(json_output["result"]["data"]) == 1
+        assert "id" in json_output["result"]["data"][0]
+        instance_id = json_output["result"]["data"][0]["id"]
+        assert isinstance(instance_id, str) and len(instance_id) > 0
+        assert json_output["result"]["message"] is not None
+        assert "cancelled" in json_output["result"]["message"]
+
+    # endregion
+
 
 # region Helper Methods
 def job_run(path, params=None, config=None, input=None, timeout=None):

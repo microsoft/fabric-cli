@@ -2,17 +2,18 @@
 # Licensed under the MIT License.
 
 import json
-import pytest
-from unittest.mock import Mock, patch
 from argparse import Namespace
+from unittest.mock import Mock, patch
 
+import pytest
+
+from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils.fab_cmd_job_utils import (
-    wait_for_job_completion,
     validate_timeout_polling_interval,
+    wait_for_job_completion,
 )
 from fabric_cli.utils.fab_http_polling_utils import DEFAULT_POLLING_INTERVAL
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core import fab_constant
 
 
 @pytest.fixture
@@ -56,6 +57,37 @@ def test_wait_for_job_completion_immediate_success(mock_sleep, mock_api, mock_ge
     
     assert mock_sleep.call_count == 1
     mock_get_polling_interval.assert_called_once_with({}, None)
+
+
+@patch('questionary.print')
+@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
+@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
+@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
+def test_wait_for_job_completion_json_output_contains_instance_id(mock_sleep, mock_api, mock_get_polling_interval, mock_print, default_job_args, mock_job_response):
+    """Verify that when status is Completed, JSON output includes result.data[0].id equal to the job instance id."""
+    mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
+    mock_api.return_value = create_mock_response(status="Completed")
+
+    job_instance_id = "abc12345-def6-7890-abcd-ef1234567890"
+    wait_for_job_completion(default_job_args, job_instance_id, mock_job_response, custom_polling_interval=None)
+
+    # Find the JSON output call
+    json_output = None
+    for call in mock_print.call_args_list:
+        try:
+            parsed = json.loads(call.args[0])
+            if parsed.get("status") == "Success" and "result" in parsed:
+                json_output = parsed
+                break
+        except (json.JSONDecodeError, TypeError, IndexError):
+            continue
+
+    assert json_output is not None, "Expected JSON output from wait_for_job_completion"
+    assert json_output["status"] == "Success"
+    assert "data" in json_output["result"]
+    assert len(json_output["result"]["data"]) == 1
+    assert json_output["result"]["data"][0]["id"] == job_instance_id
+    assert "completed" in json_output["result"]["message"]
 
 
 @patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
