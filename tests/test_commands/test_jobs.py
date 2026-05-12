@@ -60,7 +60,7 @@ class TestJobs:
         # All the calls in between are NotStarted or InProgress status
 
         # Assert that the last call to the mock was the completition message
-        assert calls[-1].args[0].split()[4] == "Completed"
+        assert calls[-3].args[0].split()[4] == "Completed"
 
         job_run_status(notebook.full_path, job_instance_id)
 
@@ -193,7 +193,7 @@ class TestJobs:
 
         # Assert that the second call to the mock was to run the Notebook
         regex = r"→ To see status run 'job run-status (.+) --id (.+)'"
-        matches = re.match(regex, calls[1].args[0])
+        matches = re.match(regex, calls[3].args[0])
         assert matches
         job_instance_id = matches.group(2)
 
@@ -216,7 +216,7 @@ class TestJobs:
 
         # Assert that the last call to the mock was the completition message
         calls = mock_questionary_print.call_args_list
-        assert calls[-1].args[0].split()[4] == "Cancelled"
+        assert calls[-2].args[0].split()[4] == "Cancelled"
 
         # Sleep to avoid rely => No notebook execution state found in database for the runId ...
         time.sleep(2)
@@ -507,7 +507,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-1].args[0] == "∟ Job instance status: Completed"
+        assert calls[-3].args[0] == "∟ Job instance status: Completed"
 
     def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
@@ -564,7 +564,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-1].args[0] == "∟ Job instance status: Completed"
+        assert calls[-3].args[0] == "∟ Job instance status: Completed"
 
     def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
@@ -607,7 +607,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-1].args[0] == "∟ Job instance status: Completed"
+        assert calls[-3].args[0] == "∟ Job instance status: Completed"
 
         # Configure and run the pipeline
 
@@ -653,7 +653,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-1].args[0] == "∟ Job instance status: Completed"
+        assert calls[-3].args[0] == "∟ Job instance status: Completed"
 
     def test_run_invalid_param_types_failure(
         self,
@@ -809,7 +809,7 @@ class TestJobs:
         calls = mock_questionary_print.call_args_list
 
         # Assert that the last call to the mock was the completition message
-        assert calls[-1].args[0].split()[4] == "Completed"
+        assert calls[-3].args[0].split()[4] == "Completed"
         # Reset the mock to avoid the previous calls
         mock_questionary_print.reset_mock()
         maintenance_job_input = {
@@ -825,7 +825,7 @@ class TestJobs:
         )
 
         calls = mock_questionary_print.call_args_list
-        assert calls[-1].args[0] == "∟ Job instance status: Completed"
+        assert calls[-3].args[0] == "∟ Job instance status: Completed"
 
     def test_run_schedule_rm_invalid_param_types_failure(
         self,
