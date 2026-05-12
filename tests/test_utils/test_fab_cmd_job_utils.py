@@ -215,5 +215,116 @@ def test_validate_timeout_polling_interval_none_values_success():
     
     validate_timeout_polling_interval(args)
 
+
+# region JSON output contract tests
+
+
+@patch('questionary.print')
+@patch('fabric_cli.commands.jobs.fab_jobs_run.jobs_api.run_on_demand_item_job')
+def test_job_start_json_output_contains_instance_id(mock_run_job, mock_print):
+    """Verify that job start (no wait) in JSON mode outputs result.data[0].id with the job instance id."""
+    from fabric_cli.commands.jobs.fab_jobs_run import exec_command
+
+    job_instance_id = "abc12345-def6-7890-abcd-ef1234567890"
+    mock_response = Mock()
+    mock_response.status_code = 202
+    mock_response.headers = {"Location": f"https://api.fabric.microsoft.com/v1/workspaces/ws1/items/item1/jobs/instances/{job_instance_id}"}
+    mock_run_job.return_value = (mock_response, job_instance_id)
+
+    args = Namespace(
+        command="job",
+        command_path="job start",
+        wait=False,
+        configuration=None,
+        output_format="json",
+    )
+    item = Mock()
+    item.path = "/ws.Workspace/nb.Notebook"
+
+    exec_command(args, item)
+
+    # Find the JSON output call
+    json_output = None
+    for call in mock_print.call_args_list:
+        try:
+            parsed = json.loads(call.args[0])
+            if parsed.get("status") == "Success" and "result" in parsed:
+                json_output = parsed
+                break
+        except (json.JSONDecodeError, TypeError, IndexError):
+            continue
+
+    assert json_output is not None, "Expected JSON output from job start"
+    assert json_output["status"] == "Success"
+    assert "data" in json_output["result"]
+    assert len(json_output["result"]["data"]) == 1
+    assert json_output["result"]["data"][0]["id"] == job_instance_id
+    assert "created" in json_output["result"]["message"]
+
+
+@patch('questionary.print')
+@patch('fabric_cli.commands.jobs.fab_jobs_run.jobs_api.cancel_item_job_instance')
+@patch('fabric_cli.commands.jobs.fab_jobs_run.config.get_config')
+@patch('fabric_cli.commands.jobs.fab_jobs_run.utils_job.wait_for_job_completion')
+@patch('fabric_cli.commands.jobs.fab_jobs_run.jobs_api.run_on_demand_item_job')
+def test_job_run_timeout_cancelled_json_output_contains_instance_id(
+    mock_run_job, mock_wait, mock_get_config, mock_cancel, mock_print
+):
+    """Verify that timeout-cancelled path in JSON mode outputs result.data[0].id with the job instance id."""
+    from fabric_cli.commands.jobs.fab_jobs_run import exec_command
+
+    job_instance_id = "abc12345-def6-7890-abcd-ef1234567890"
+    mock_response = Mock()
+    mock_response.status_code = 202
+    mock_response.headers = {}
+    mock_run_job.return_value = (mock_response, job_instance_id)
+
+    # Simulate timeout
+    mock_wait.side_effect = TimeoutError(f"Job instance '{job_instance_id}' timed out after 1 seconds")
+
+    # Configure cancel-on-timeout to true
+    mock_get_config.return_value = "true"
+
+    # Cancel returns 202
+    mock_cancel_response = Mock()
+    mock_cancel_response.status_code = 202
+    mock_cancel.return_value = mock_cancel_response
+
+    args = Namespace(
+        command="job",
+        command_path="job run",
+        wait=True,
+        timeout=1,
+        configuration=None,
+        output_format="json",
+        polling_interval=None,
+    )
+    item = Mock()
+    item.path = "/ws.Workspace/nb.Notebook"
+
+    exec_command(args, item)
+
+    # Find the JSON output call for cancellation
+    json_output = None
+    for call in mock_print.call_args_list:
+        try:
+            parsed = json.loads(call.args[0])
+            if parsed.get("status") == "Success" and "result" in parsed:
+                json_output = parsed
+                break
+        except (json.JSONDecodeError, TypeError, IndexError):
+            continue
+
+    assert json_output is not None, "Expected JSON output from timeout-cancelled job run"
+    assert json_output["status"] == "Success"
+    assert "data" in json_output["result"]
+    assert len(json_output["result"]["data"]) == 1
+    assert json_output["result"]["data"][0]["id"] == job_instance_id
+    assert "cancelled" in json_output["result"]["message"]
+
+
+# endregion
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
