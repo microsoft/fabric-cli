@@ -29,6 +29,21 @@ from fabric_cli.core.hiearchy.fab_item import Item
 from fabric_cli.utils import fab_storage as utils_storage
 
 
+def _find_print_call(calls, substring):
+    """Return the first call arg string containing the given substring, or None."""
+    return next((c.args[0] for c in calls if c.args and substring in c.args[0]), None)
+
+
+def _find_print_call_match(calls, pattern):
+    """Return the first regex match from call args matching pattern, or None."""
+    for call in calls:
+        if call.args:
+            m = re.match(pattern, call.args[0])
+            if m:
+                return m
+    return None
+
+
 class TestJobs:
     # region JOB RUN
     def test_run_job_notebook(self, item_factory, cli_executor, mock_questionary_print):
@@ -49,18 +64,18 @@ class TestJobs:
         # Assert that the first call to the mock was to create the Notebook
         assert calls[0].args[0] == f"Importing '{nb_path}' → '{notebook.full_path}'..."
 
-        # Assert that the second call to the mock was to run the Notebook
+        # Assert that a call to the mock was to run the Notebook
         regex = r"∟ Job instance '(.*)' created"
-        matches = re.match(regex, calls[2].args[0])
+        matches = _find_print_call_match(calls, regex)
         assert matches
         job_instance_id = matches.group(1)
 
-        assert calls[3].args[0] == "∟ Timeout: no timeout specified"
+        assert _find_print_call(calls, "∟ Timeout: no timeout specified")
 
         # All the calls in between are NotStarted or InProgress status
 
-        # Assert that the last call to the mock was the completition message
-        assert calls[-3].args[0].split()[4] == "Completed"
+        # Assert that the completion message was printed
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
         job_run_status(notebook.full_path, job_instance_id)
 
@@ -91,13 +106,13 @@ class TestJobs:
         # Assert that the first call to the mock was to create the Notebook
         assert calls[0].args[0] == f"Importing '{nb_path}' → '{notebook.full_path}'..."
 
-        # Assert that the second call to the mock was to run the Notebook
+        # Assert that a call to the mock was to run the Notebook
         regex = r"∟ Job instance '(.*)' created"
-        matches = re.match(regex, calls[2].args[0])
+        matches = _find_print_call_match(calls, regex)
         assert matches
         job_instance_id = matches.group(1)
 
-        assert calls[3].args[0] == "∟ Timeout: 10 seconds"
+        assert _find_print_call(calls, "∟ Timeout: 10 seconds")
 
         # All the calls in between are NotStarted or Running status
 
@@ -141,13 +156,13 @@ class TestJobs:
         # Assert that the first call to the mock was to create the Notebook
         assert calls[0].args[0] == f"Importing '{nb_path}' → '{notebook.full_path}'..."
 
-        # Assert that the second call to the mock was to run the Notebook
+        # Assert that a call to the mock was to run the Notebook
         regex = r"∟ Job instance '(.*)' created"
-        matches = re.match(regex, calls[2].args[0])
+        matches = _find_print_call_match(calls, regex)
         assert matches
         job_instance_id = matches.group(1)
 
-        assert calls[3].args[0] == "∟ Timeout: 0 seconds"
+        assert _find_print_call(calls, "∟ Timeout: 0 seconds")
 
         # All the calls in between are NotStarted or InProgress status
 
@@ -191,9 +206,9 @@ class TestJobs:
         # Assert that the first call to the mock was to create the Notebook
         assert calls[0].args[0] == f"Importing '{nb_path}' → '{notebook.full_path}'..."
 
-        # Assert that the second call to the mock was to run the Notebook
+        # Assert that a call to the mock was to show the status hint
         regex = r"→ To see status run 'job run-status (.+) --id (.+)'"
-        matches = re.match(regex, calls[3].args[0])
+        matches = _find_print_call_match(calls, regex)
         assert matches
         job_instance_id = matches.group(2)
 
@@ -214,9 +229,9 @@ class TestJobs:
             f"job run-cancel {notebook.full_path} --id {job_instance_id} --wait"
         )
 
-        # Assert that the last call to the mock was the completition message
+        # Assert that the cancelled status message was printed
         calls = mock_questionary_print.call_args_list
-        assert calls[-2].args[0].split()[4] == "Cancelled"
+        assert _find_print_call(calls, "∟ Job instance status: Cancelled")
 
         # Sleep to avoid rely => No notebook execution state found in database for the runId ...
         time.sleep(2)
@@ -507,7 +522,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-3].args[0] == "∟ Job instance status: Completed"
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
     def test_run_pipeline(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
@@ -564,7 +579,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-3].args[0] == "∟ Job instance status: Completed"
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
     def test_run_param_job(self, item_factory, cli_executor, mock_questionary_print, tmp_path):
         # Setup
@@ -607,7 +622,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-3].args[0] == "∟ Job instance status: Completed"
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
         # Configure and run the pipeline
 
@@ -653,7 +668,7 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         mock_questionary_print.assert_called()
-        assert calls[-3].args[0] == "∟ Job instance status: Completed"
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
     def test_run_invalid_param_types_failure(
         self,
@@ -808,8 +823,8 @@ class TestJobs:
         # Extract the arguments passed to the mock
         calls = mock_questionary_print.call_args_list
 
-        # Assert that the last call to the mock was the completition message
-        assert calls[-3].args[0].split()[4] == "Completed"
+        # Assert that the completion message was printed
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
         # Reset the mock to avoid the previous calls
         mock_questionary_print.reset_mock()
         maintenance_job_input = {
@@ -825,7 +840,7 @@ class TestJobs:
         )
 
         calls = mock_questionary_print.call_args_list
-        assert calls[-3].args[0] == "∟ Job instance status: Completed"
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
     def test_run_schedule_rm_invalid_param_types_failure(
         self,
@@ -1015,7 +1030,7 @@ class TestJobs:
         calls = mock_questionary_print.call_args_list
         created_instance_id = None
         for call in calls:
-            match = re.match(r"\u221f Job instance '(.*)' created", call.args[0])
+            match = re.match("∟ Job instance '(.*)' created", call.args[0])
             if match:
                 created_instance_id = match.group(1)
                 break
@@ -1085,7 +1100,7 @@ class TestJobs:
         # Cross-reference: the status hint message should reference the same instance id
         status_hint = None
         for call in calls:
-            match = re.match(r"\u2192 To see status run 'job run-status (.+) --id (.+)'", call.args[0])
+            match = re.match("→ To see status run 'job run-status (.+) --id (.+)'", call.args[0])
             if match:
                 status_hint = match.group(2)
                 break

@@ -63,7 +63,12 @@ def test_wait_for_job_completion_immediate_success(mock_sleep, mock_api, mock_ge
 @patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
 @patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
 @patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_json_output_contains_instance_id(mock_sleep, mock_api, mock_get_polling_interval, mock_print, default_job_args, mock_job_response):
+def test_wait_for_job_completion_json_output_contains_instance_id(
+    mock_sleep,
+    mock_api,
+    mock_get_polling_interval,
+    mock_print, default_job_args,
+    mock_job_response):
     """Verify that when status is Completed, JSON output includes result.data[0].id equal to the job instance id."""
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response(status="Completed")
