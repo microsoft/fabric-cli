@@ -93,7 +93,7 @@ Scripts are located in the `scripts/` folder of this skill.
 ## 9 - Platform and troubleshooting reference
 - **Supported platforms**: Windows, Linux, macOS.
 - **Supported shells**: zsh, bash, PowerShell, cmd (Windows command prompt).
-- **Python versions**: 3.10, 3.11, 3.12, 3.13.
+- **Python versions**: 3.10, 3.11, 3.12, 3.13, 3.14.
 - **CLI file storage** (useful for troubleshooting):
   - Config files are stored in `~/.config/fab/`:
     - `cache.bin` — encrypted auth token cache
