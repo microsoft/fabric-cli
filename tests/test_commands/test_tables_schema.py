@@ -11,6 +11,9 @@ from deltalake.exceptions import DeltaError, TableNotFoundError
 from fabric_cli.commands.tables import fab_tables_schema
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_types import ItemType
+from tests.conftest import mock_questionary_print  # noqa: F401
+from tests.test_commands.commands_parser import CLIExecutor
 
 
 class TestTablesSchemaUnit:
@@ -194,3 +197,36 @@ class TestTablesSchemaUnit:
 
         assert isinstance(result, list)
         assert len(result) == 1
+
+
+class TestTablesSchemaIntegration:
+    """Integration tests for table schema command - validates full dispatch stack."""
+
+    def test_table_schema_success(
+        self,
+        item_factory,
+        cli_executor: CLIExecutor,
+        mock_questionary_print,
+    ):
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
+
+        mock_questionary_print.reset_mock()
+
+        with patch(
+            "fabric_cli.commands.tables.fab_tables_schema.DeltaTable"
+        ) as mock_dt, patch(
+            "fabric_cli.commands.tables.fab_tables_schema.FabAuth"
+        ) as mock_auth:
+            mock_auth.return_value.get_access_token.return_value = "mock_token"
+            mock_table = MagicMock()
+            mock_table.schema.return_value.to_json.return_value = json.dumps({
+                "fields": [{"name": "id", "type": "integer", "nullable": False, "metadata": {}}]
+            })
+            mock_dt.return_value = mock_table
+
+            cli_executor.exec_command(
+                f"table schema {lakehouse.full_path}/Tables/my_table"
+            )
+
+        calls = mock_questionary_print.call_args_list
+        assert any("Schema extracted successfully" in str(c) for c in calls)
