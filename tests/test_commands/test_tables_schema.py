@@ -94,25 +94,9 @@ class TestTablesSchemaUnit:
         assert len(result) == 1
         assert result[0]["name"] == "col1"
 
-    def test_get_table_schema_table_not_found_error(self, mock_auth, mock_delta_table):
-        """Test TableNotFoundError is mapped to FabricCLIError."""
-        args = Namespace(
-            ws_id="test-ws-id",
-            lakehouse_id="test-lakehouse-id",
-            table_name="nonexistent",
-            schema=None,
-        )
-
-        mock_delta_table.side_effect = TableNotFoundError("Table not found")
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            fab_tables_schema._get_table_schema(args)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_DELTA_TABLE
-        assert "Failed to extract the table schema" in exc_info.value.message
-
-    def test_get_table_schema_delta_error(self, mock_auth, mock_delta_table):
-        """Test generic DeltaError is mapped to FabricCLIError."""
+    @pytest.mark.parametrize("error_cls", [TableNotFoundError, DeltaError])
+    def test_get_table_schema_delta_exceptions(self, mock_auth, mock_delta_table, error_cls):
+        """Test that DeltaTable errors are mapped to FabricCLIError."""
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
@@ -120,7 +104,7 @@ class TestTablesSchemaUnit:
             schema=None,
         )
 
-        mock_delta_table.side_effect = DeltaError("Generic delta error")
+        mock_delta_table.side_effect = error_cls("error")
 
         with pytest.raises(FabricCLIError) as exc_info:
             fab_tables_schema._get_table_schema(args)
