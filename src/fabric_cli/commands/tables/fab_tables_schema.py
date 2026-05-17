@@ -21,6 +21,11 @@ def exec_command(args: Namespace) -> None:
 
 def _get_table_schema(args: Namespace) -> list[dict]:
     token = FabAuth().get_access_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
+    if token is None:
+        raise FabricCLIError(
+            "Failed to obtain access token.",
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
     if args.schema:
         local_path = f"Tables/{args.schema}/{args.table_name}"
     else:
