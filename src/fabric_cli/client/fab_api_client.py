@@ -103,7 +103,7 @@ def do_request(
         request_params["continuationToken"] = continuation_token
 
     # Build url
-    url = f"https://{url}/{uri}"
+    url = f"https://{url}/{uri.lstrip('/')}"
     if request_params:
         url += f"?{requests.compat.urlencode(request_params)}"
 
@@ -397,7 +397,7 @@ def _handle_azure_async_op(response: ApiResponse) -> ApiResponse:
     uri = uri[
         uri.find(fab_constant.API_ENDPOINT_AZURE)
         + len(fab_constant.API_ENDPOINT_AZURE) :
-    ].lstrip("/")
+    ]
     return _poll_operation(
         "azure",
         uri,
