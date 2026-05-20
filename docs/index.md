@@ -7,6 +7,9 @@ hide:
 
 The Fabric CLI (`fab`) gives you command-line access to Microsoft Fabric. Manage workspaces, run pipelines, and automate data workflows - all from your terminal.
 
+!!! note "Preview APIs and items"
+    The Fabric CLI is generally available (GA), but it may support Fabric items that are still in preview, and some commands may rely on Fabric public APIs that are still in [preview](https://learn.microsoft.com/rest/api/fabric/articles/api-structure#api-endpoints). Preview items and APIs aren't covered by the standard Fabric SLA.
+
 ---
 
 ## Why use the CLI?
