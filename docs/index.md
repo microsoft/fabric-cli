@@ -7,9 +7,6 @@ hide:
 
 The Fabric CLI (`fab`) gives you command-line access to Microsoft Fabric. Manage workspaces, run pipelines, and automate data workflows - all from your terminal.
 
-!!! note "Preview APIs and items"
-    The Fabric CLI is generally available (GA), but it may support Fabric items that are still in preview, and some commands may rely on Fabric public APIs that are still in [preview](https://learn.microsoft.com/rest/api/fabric/articles/api-structure#api-endpoints). Preview items and APIs aren't covered by the standard Fabric SLA.
-
 ---
 
 ## Why use the CLI?
@@ -28,6 +25,13 @@ Get powerful control over your Fabric resources:
 - **Autocompletion** - Enable [tab completion](./essentials/autocompletion.md) for commands, subcommands, and flags.
 - **Cross-platform** - Windows Terminal, macOS Terminal, Linux shells.
 - **Built on public APIs** - Fabric REST, OneLake, and Microsoft.Fabric ARM endpoints.
+
+
+## Release status
+
+The Fabric CLI is generally available (GA). For the current version and changelog, see the [release notes](./release-notes.md). Run `fab --version` to check your installed version.
+
+**Note:** The CLI may support Fabric items that are still in preview, and some commands may rely on Fabric public APIs that are still in [preview](https://learn.microsoft.com/rest/api/fabric/articles/api-structure#api-endpoints). Preview items and APIs aren't covered by the standard Fabric SLA.
 
 
 ## Get started
