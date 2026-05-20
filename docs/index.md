@@ -27,6 +27,13 @@ Get powerful control over your Fabric resources:
 - **Built on public APIs** - Fabric REST, OneLake, and Microsoft.Fabric ARM endpoints.
 
 
+## Release status
+
+The Fabric CLI is generally available (GA). For the current version and changelog, see the [release notes](./release-notes.md). Run `fab --version` to check your installed version.
+
+**Note:** The CLI may support Fabric items that are still in preview, and some commands may rely on Fabric public APIs that are still in [preview](https://learn.microsoft.com/rest/api/fabric/articles/api-structure#api-endpoints). Preview items and APIs aren't covered by the [Microsoft Fabric SLA](https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services).
+
+
 ## Get started
 
 ### What you need
