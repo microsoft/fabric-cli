@@ -3,7 +3,13 @@
 
 import json
 
-from fabric_cli.core.fab_exceptions import FabricAPIError, FabricCLIError
+from fabric_cli.core.fab_exceptions import (
+    DEFAULT_ERROR_CODE,
+    AzureAPIError,
+    FabricAPIError,
+    FabricCLIError,
+    OnelakeAPIError,
+)
 
 
 def test_custom_error_message():
@@ -81,6 +87,42 @@ def test_fabric_api_error_formatted_message_non_json_no_request_id_line():
 
 def test_fabric_api_error_none_input_falls_back_to_default_message():
     error = FabricAPIError(None)
+    assert error.message == FabricCLIError(None).message
     assert error.status_code is None
     assert error.request_id is None
     assert error.more_details == []
+
+
+def test_fabric_cli_error_status_code_omitted_uses_default():
+    error = FabricCLIError("boom")
+    assert error.status_code == DEFAULT_ERROR_CODE
+
+
+def test_fabric_cli_error_status_code_omitted_no_args_uses_default():
+    error = FabricCLIError()
+    assert error.status_code == DEFAULT_ERROR_CODE
+
+
+def test_fabric_cli_error_status_code_explicit_none_is_preserved():
+    error = FabricCLIError("boom", status_code=None)
+    assert error.status_code is None
+    # And formatted output must omit the bracketed code prefix.
+    assert error.formatted_message() == "boom"
+    assert str(error) == "boom"
+
+
+def test_fabric_api_error_explicit_none_status_code_preserved_on_fallback():
+    # Non-JSON body triggers the fallback path that forwards error_code=None.
+    error = FabricAPIError("Internal Server Error")
+    assert error.status_code is None
+
+
+def test_onelake_api_error_explicit_none_status_code_preserved_on_fallback():
+    # Missing "error" object -> code stays None and must be preserved.
+    error = OnelakeAPIError("not json at all")
+    assert error.status_code is None
+
+
+def test_azure_api_error_explicit_none_status_code_preserved_on_fallback():
+    error = AzureAPIError("not json at all")
+    assert error.status_code is None
