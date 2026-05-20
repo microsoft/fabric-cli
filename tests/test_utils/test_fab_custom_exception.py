@@ -1,7 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from fabric_cli.core.fab_exceptions import FabricCLIError
+import json
+
+from fabric_cli.core.fab_exceptions import (
+    DEFAULT_ERROR_CODE,
+    AzureAPIError,
+    FabricAPIError,
+    FabricCLIError,
+    OnelakeAPIError,
+)
 
 
 def test_custom_error_message():
@@ -17,3 +25,104 @@ def test_custom_error_message_without_period():
 def test_custom_error_formatted_message_with_status_code():
     error = FabricCLIError("An error occurred.", status_code=404)
     assert error.formatted_message() == "[404] An error occurred"
+
+
+def test_fabric_api_error_valid_json_with_request_id():
+    payload = json.dumps(
+        {
+            "errorCode": "ItemNotFound",
+            "message": "The requested item was not found.",
+            "requestId": "abc-123",
+            "moreDetails": [],
+        }
+    )
+    error = FabricAPIError(payload)
+
+    assert error.status_code == "ItemNotFound"
+    assert error.message == "The requested item was not found"
+    assert error.request_id == "abc-123"
+    assert error.more_details == []
+
+
+def test_fabric_api_error_valid_json_without_request_id():
+    payload = json.dumps(
+        {
+            "errorCode": "Unauthorized",
+            "message": "Access denied.",
+        }
+    )
+    error = FabricAPIError(payload)
+
+    assert error.status_code == "Unauthorized"
+    assert error.request_id is None
+    # formatted_message should not append a request-id line
+    assert "Request Id" not in error.formatted_message(verbose=True)
+
+
+def test_fabric_api_error_non_json_body_falls_back_to_raw_text():
+    raw = "Internal Server Error"
+    error = FabricAPIError(raw)
+
+    assert error.message == raw.rstrip(".")
+    assert error.status_code is None
+    assert error.request_id is None
+    assert error.more_details == []
+
+
+def test_fabric_api_error_non_dict_json_falls_back_to_raw_text():
+    for raw in ('"just a string"', "[1, 2, 3]", "42", "true"):
+        error = FabricAPIError(raw)
+        assert error.message == raw.rstrip(".")
+        assert error.status_code is None
+        assert error.request_id is None
+        assert error.more_details == []
+
+
+def test_fabric_api_error_formatted_message_non_json_no_request_id_line():
+    error = FabricAPIError("Gateway Timeout")
+    formatted = error.formatted_message(verbose=True)
+    assert "Request Id" not in formatted
+    assert "Gateway Timeout" in formatted
+
+
+def test_fabric_api_error_none_input_falls_back_to_default_message():
+    error = FabricAPIError(None)
+    assert error.message == FabricCLIError(None).message
+    assert error.status_code is None
+    assert error.request_id is None
+    assert error.more_details == []
+
+
+def test_fabric_cli_error_status_code_omitted_uses_default():
+    error = FabricCLIError("boom")
+    assert error.status_code == DEFAULT_ERROR_CODE
+
+
+def test_fabric_cli_error_status_code_omitted_no_args_uses_default():
+    error = FabricCLIError()
+    assert error.status_code == DEFAULT_ERROR_CODE
+
+
+def test_fabric_cli_error_status_code_explicit_none_is_preserved():
+    error = FabricCLIError("boom", status_code=None)
+    assert error.status_code is None
+    # And formatted output must omit the bracketed code prefix.
+    assert error.formatted_message() == "boom"
+    assert str(error) == "boom"
+
+
+def test_fabric_api_error_explicit_none_status_code_preserved_on_fallback():
+    # Non-JSON body triggers the fallback path that forwards error_code=None.
+    error = FabricAPIError("Internal Server Error")
+    assert error.status_code is None
+
+
+def test_onelake_api_error_explicit_none_status_code_preserved_on_fallback():
+    # Missing "error" object -> code stays None and must be preserved.
+    error = OnelakeAPIError("not json at all")
+    assert error.status_code is None
+
+
+def test_azure_api_error_explicit_none_status_code_preserved_on_fallback():
+    error = AzureAPIError("not json at all")
+    assert error.status_code is None
