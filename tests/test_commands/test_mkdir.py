@@ -2226,156 +2226,158 @@ class TestMkdir:
         )
         rm(eventhouse_full_path)
 
-def test_mkdir_digitaltwinbuilderflow_with_creation_payload_success(
-    self,
-    workspace,
-    item_factory,
-    cli_executor,
-    mock_print_done,
-    mock_questionary_print,
-    vcr_instance,
-    cassette_name,
-    upsert_item_to_cache,
-):
-    """Test DigitalTwinBuilderFlow creation with an existing DigitalTwinBuilder ID."""
-    # Setup
-    # Create parent digital twin builder
-    digital_twin_builder = item_factory(ItemType.DIGITAL_TWIN_BUILDER)
-    get(digital_twin_builder.full_path, query="id")
-    digital_twin_builder_id = mock_questionary_print.call_args[0][0]
-    mock_print_done.reset_mock()
-    upsert_item_to_cache.reset_mock()
-    flow_display_name = generate_random_string(vcr_instance, cassette_name)
-    flow_full_path = cli_path_join(
-        workspace.full_path,
-        f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
-    )
+    def test_mkdir_digitaltwinbuilderflow_with_creation_payload_success(
+        self,
+        workspace,
+        item_factory,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        """Test DigitalTwinBuilderFlow creation with an existing DigitalTwinBuilder ID."""
+        # Setup
+        # Create parent digital twin builder
+        digital_twin_builder = item_factory(ItemType.DIGITAL_TWIN_BUILDER)
+        get(digital_twin_builder.full_path, query="id")
+        digital_twin_builder_id = mock_questionary_print.call_args[0][0]
+        mock_print_done.reset_mock()
+        upsert_item_to_cache.reset_mock()
+        flow_display_name = generate_random_string(vcr_instance, cassette_name)
+        flow_full_path = cli_path_join(
+            workspace.full_path,
+            f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
+        )
 
-    # Execute command
-    cli_executor.exec_command(
-        f"mkdir {flow_full_path} -P digitalTwinBuilderId={digital_twin_builder_id}"
-    )
+        # Execute command
+        cli_executor.exec_command(
+            f"mkdir {flow_full_path} -P digitalTwinBuilderId={digital_twin_builder_id}"
+        )
 
-    # Assert
-    upsert_item_to_cache.assert_called_once()
-    mock_print_done.assert_called_once()
-    assert flow_display_name in mock_print_done.call_args[0][0]
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert flow_display_name in mock_print_done.call_args[0][0]
 
-    mock_questionary_print.reset_mock()
-    get(flow_full_path, query=".")
-    mock_questionary_print.assert_called_once()
-    assert flow_display_name in mock_questionary_print.call_args[0][0]
-    assert digital_twin_builder_id in mock_questionary_print.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        get(flow_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert flow_display_name in mock_questionary_print.call_args[0][0]
+        assert digital_twin_builder_id in mock_questionary_print.call_args[0][0]
 
-    # Cleanup
-    rm(flow_full_path)
+        # Cleanup
+        rm(flow_full_path)
 
-def test_mkdir_digitaltwinbuilderflow_without_creation_payload_success(
-    self,
-    workspace,
-    cli_executor,
-    mock_print_done,
-    mock_questionary_print,
-    vcr_instance,
-    cassette_name,
-    upsert_item_to_cache,
-):
-    """Test DigitalTwinBuilderFlow creation auto-creates a DigitalTwinBuilder dependency."""
-    # Setup
-    flow_display_name = generate_random_string(vcr_instance, cassette_name)
-    flow_full_path = cli_path_join(
-        workspace.full_path,
-        f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
-    )
+    def test_mkdir_digitaltwinbuilderflow_without_creation_payload_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        """Test DigitalTwinBuilderFlow creation auto-creates a DigitalTwinBuilder dependency."""
+        # Setup
+        flow_display_name = generate_random_string(vcr_instance, cassette_name)
+        flow_full_path = cli_path_join(
+            workspace.full_path,
+            f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
+        )
 
-    # Execute command (this will auto-create a DigitalTwinBuilder dependency)
-    cli_executor.exec_command(f"mkdir {flow_full_path}")
+        # Execute command (this will auto-create a DigitalTwinBuilder dependency)
+        cli_executor.exec_command(f"mkdir {flow_full_path}")
 
-    # Assert
-    # call_count is 2: one for the auto-created DigitalTwinBuilder, one for the flow
-    assert upsert_item_to_cache.call_count == 2
-    # print call_count is 1 because results are batched
-    assert mock_print_done.call_count == 1
-    assert any(
-        flow_display_name in call.args[0] for call in mock_print_done.mock_calls
-    )
+        # Assert
+        # call_count is 2: one for the auto-created DigitalTwinBuilder, one for the flow
+        assert upsert_item_to_cache.call_count == 2
+        # print call_count is 1 because results are batched
+        assert mock_print_done.call_count == 1
+        assert any(
+            flow_display_name in call.args[0] for call in mock_print_done.mock_calls
+        )
 
-    mock_questionary_print.reset_mock()
-    digital_twin_builder_full_path = (
-        flow_full_path.removesuffix(f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
-        + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
-    )
-    get(digital_twin_builder_full_path, query="id")
-    digital_twin_builder_id = mock_questionary_print.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        digital_twin_builder_full_path = (
+            flow_full_path.removesuffix(
+                f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
+            + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
+        )
+        get(digital_twin_builder_full_path, query="id")
+        digital_twin_builder_id = mock_questionary_print.call_args[0][0]
 
-    mock_questionary_print.reset_mock()
-    get(flow_full_path, query=".")
-    mock_questionary_print.assert_called_once()
-    assert flow_display_name in mock_questionary_print.call_args[0][0]
-    assert digital_twin_builder_id in mock_questionary_print.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        get(flow_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert flow_display_name in mock_questionary_print.call_args[0][0]
+        assert digital_twin_builder_id in mock_questionary_print.call_args[0][0]
 
-    # Cleanup - removing parent DigitalTwinBuilder removes the flow as well
-    rm(digital_twin_builder_full_path)
+        # Cleanup - removing parent DigitalTwinBuilder removes the flow as well
+        rm(digital_twin_builder_full_path)
 
-def test_mkdir_dependency_creation_batched_output_digitaltwinbuilderflow_success(
-    self,
-    workspace,
-    cli_executor,
-    mock_print_done,
-    mock_questionary_print,
-    vcr_instance,
-    cassette_name,
-):
-    """Test that DigitalTwinBuilderFlow creation with DigitalTwinBuilder dependency produces batched output."""
-    # Setup
-    flow_display_name = generate_random_string(vcr_instance, cassette_name)
-    flow_full_path = cli_path_join(
-        workspace.full_path,
-        f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
-    )
+    def test_mkdir_dependency_creation_batched_output_digitaltwinbuilderflow_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+    ):
+        """Test that DigitalTwinBuilderFlow creation with DigitalTwinBuilder dependency produces batched output."""
+        # Setup
+        flow_display_name = generate_random_string(vcr_instance, cassette_name)
+        flow_full_path = cli_path_join(
+            workspace.full_path,
+            f"{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW}",
+        )
 
-    # Execute command (this will create DigitalTwinBuilder dependency automatically)
-    cli_executor.exec_command(f"mkdir {flow_full_path}")
+        # Execute command (this will create DigitalTwinBuilder dependency automatically)
+        cli_executor.exec_command(f"mkdir {flow_full_path}")
 
-    # Assert - should have one consolidated batched output call
-    assert mock_print_done.call_count >= 1
+        # Assert - should have one consolidated batched output call
+        assert mock_print_done.call_count >= 1
 
-    # Verify both items are mentioned in output
-    all_calls = [call.args[0] for call in mock_print_done.call_args_list]
-    all_output = " ".join(all_calls)
-    assert (
-        f"'{flow_display_name}_auto.{ItemType.DIGITAL_TWIN_BUILDER.value}' and "
-        f"'{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW.value}' created"
-        in all_output
-    )
+        # Verify both items are mentioned in output
+        all_calls = [call.args[0] for call in mock_print_done.call_args_list]
+        all_output = " ".join(all_calls)
+        assert (
+            f"'{flow_display_name}_auto.{ItemType.DIGITAL_TWIN_BUILDER.value}' and "
+            f"'{flow_display_name}.{ItemType.DIGITAL_TWIN_BUILDER_FLOW.value}' created"
+            in all_output
+        )
 
-    # Verify headers and values in table output
-    output_calls = [str(call) for call in mock_questionary_print.mock_calls]
-    table_output = "\n".join(output_calls)
+        # Verify headers and values in table output
+        output_calls = [str(call)
+                        for call in mock_questionary_print.mock_calls]
+        table_output = "\n".join(output_calls)
 
-    assert "id" in table_output or "ID" in table_output
-    assert "type" in table_output or "Type" in table_output
-    assert "displayName" in table_output or "DisplayName" in table_output
-    assert "workspaceId" in table_output or "WorkspaceId" in table_output
+        assert "id" in table_output or "ID" in table_output
+        assert "type" in table_output or "Type" in table_output
+        assert "displayName" in table_output or "DisplayName" in table_output
+        assert "workspaceId" in table_output or "WorkspaceId" in table_output
 
-    assert flow_display_name in table_output
-    assert f"{flow_display_name}_auto" in table_output
-    assert (
-        "DigitalTwinBuilderFlow" in table_output
-        or "DIGITAL_TWIN_BUILDER_FLOW" in table_output
-    )
-    assert (
-        "DigitalTwinBuilder" in table_output
-        or "DIGITAL_TWIN_BUILDER" in table_output
-    )
+        assert flow_display_name in table_output
+        assert f"{flow_display_name}_auto" in table_output
+        assert (
+            "DigitalTwinBuilderFlow" in table_output
+            or "DIGITAL_TWIN_BUILDER_FLOW" in table_output
+        )
+        assert (
+            "DigitalTwinBuilder" in table_output
+            or "DIGITAL_TWIN_BUILDER" in table_output
+        )
 
-    # Cleanup - removing parent DigitalTwinBuilder removes the flow as well
-    digital_twin_builder_full_path = (
-        flow_full_path.removesuffix(f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
-        + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
-    )
-    rm(digital_twin_builder_full_path)
-
+        # Cleanup - removing parent DigitalTwinBuilder removes the flow as well
+        digital_twin_builder_full_path = (
+            flow_full_path.removesuffix(
+                f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
+            + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
+        )
+        rm(digital_twin_builder_full_path)
 
     # endregion
 
