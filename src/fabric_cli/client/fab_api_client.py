@@ -1,6 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
+from fabric_cli.utils import fab_ui as utils_ui
+from fabric_cli.utils import fab_files as files_utils
+from fabric_cli.utils import fab_error_parser as utils_errors
+from fabric_cli.errors import ErrorMessages
+from fabric_cli.core.fab_exceptions import (
+    AzureAPIError,
+    FabricAPIError,
+    FabricCLIError,
+    OnelakeAPIError,
+)
 import json
 import os
 import platform
@@ -17,17 +28,6 @@ from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 
 _HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
-from fabric_cli.core.fab_exceptions import (
-    AzureAPIError,
-    FabricAPIError,
-    FabricCLIError,
-    OnelakeAPIError,
-)
-from fabric_cli.errors import ErrorMessages
-from fabric_cli.utils import fab_error_parser as utils_errors
-from fabric_cli.utils import fab_files as files_utils
-from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
@@ -68,7 +68,8 @@ def do_request(
     request_params = getattr(args, "request_params", {})
     uri = args.uri.split("?")[0]
     # Get query parameters from URI and add them to request_params extracted from args
-    _params_from_uri = args.uri.split("?")[1] if len(args.uri.split("?")) > 1 else None
+    _params_from_uri = args.uri.split("?")[1] if len(
+        args.uri.split("?")) > 1 else None
     if _params_from_uri:
         _params = _params_from_uri.split("&")
         for _param in _params:
@@ -103,7 +104,7 @@ def do_request(
         request_params["continuationToken"] = continuation_token
 
     # Build url
-    url = f"https://{url}/{uri}"
+    url = f"https://{url}/{uri.lstrip('/')}"
     if request_params:
         url += f"?{requests.compat.urlencode(request_params)}"
 
@@ -156,7 +157,8 @@ def do_request(
                 method, url, headers, timeout_sec, attempt, json, data, files
             )
             start_time = time.time()
-            response = session.request(method=method, url=url, **request_params)
+            response = session.request(
+                method=method, url=url, **request_params)
             fab_logger.log_debug_http_response(
                 response.status_code, response.headers, response.text, start_time
             )
@@ -209,7 +211,8 @@ def do_request(
                         content=response.content,
                         headers=response.headers,
                     )
-                    fab_logger.log_debug(f"Operation started. Polling for result...")
+                    fab_logger.log_debug(
+                        f"Operation started. Polling for result...")
                     return _handle_fab_long_running_op(api_response)
                 case 201 | 202 if wait and scope == fab_constant.SCOPE_AZURE_DEFAULT:
                     # Track Azure API asynchronous operations
@@ -219,7 +222,8 @@ def do_request(
                         content=response.content,
                         headers=response.headers,
                     )
-                    fab_logger.log_debug(f"Operation started. Polling for result...")
+                    fab_logger.log_debug(
+                        f"Operation started. Polling for result...")
                     return _handle_azure_async_op(api_response)
                 case c if c in [200, 201, 202, 204]:
                     api_response = ApiResponse(
@@ -337,7 +341,8 @@ def _get_host_app() -> str:
     host_app = f" host-app/{host_app_name.lower()}"
 
     # Check for optional version
-    host_app_version = os.environ.get(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR)
+    host_app_version = os.environ.get(
+        fab_constant.FAB_HOST_APP_VERSION_ENV_VAR)
 
     # validate host_app_version format is a valid version (e.g., 1.0.0)
     if host_app_version and _HOST_APP_VERSION_RE.fullmatch(host_app_version):
@@ -370,7 +375,8 @@ def _handle_fab_long_running_op(response: ApiResponse) -> ApiResponse:
         return response
 
     operation_uri = f"operations/{operation_id}"
-    hostname = urlparse(location_header).hostname or fab_constant.API_ENDPOINT_FABRIC
+    hostname = urlparse(
+        location_header).hostname or fab_constant.API_ENDPOINT_FABRIC
 
     return _poll_operation(
         audience="fabric",
@@ -396,7 +402,7 @@ def _handle_azure_async_op(response: ApiResponse) -> ApiResponse:
 
     uri = uri[
         uri.find(fab_constant.API_ENDPOINT_AZURE)
-        + len(fab_constant.API_ENDPOINT_AZURE) :
+        + len(fab_constant.API_ENDPOINT_AZURE):
     ]
     return _poll_operation(
         "azure",
@@ -480,7 +486,8 @@ def _poll_operation(
                     response.status_code,
                     response.text,
                 ),
-                utils_errors.map_http_status_code_to_error_code(response.status_code),
+                utils_errors.map_http_status_code_to_error_code(
+                    response.status_code),
             )
 
 
@@ -492,7 +499,8 @@ def _fetch_operation_result(
         try:
             location_header = response.headers.get("Location", "")
             hostname = (
-                urlparse(location_header).hostname or fab_constant.API_ENDPOINT_FABRIC
+                urlparse(
+                    location_header).hostname or fab_constant.API_ENDPOINT_FABRIC
             )
             args.uri = f"{uri}/result"
             args.method = "get"
