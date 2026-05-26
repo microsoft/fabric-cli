@@ -204,7 +204,10 @@ def print_output_error(
             )
             return
         case "text":
-            is_debug = fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) == "true"
+            is_debug = (
+                fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) 
+                == "true"
+            )
             _print_error_format_text(error.formatted_message(verbose=is_debug), command)
             return
         case _:
