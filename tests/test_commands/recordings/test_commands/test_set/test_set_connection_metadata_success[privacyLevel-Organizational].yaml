@@ -11,7 +11,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.6.1
+      - ms-fabric-cli-test/1.3.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/connections
   response:
@@ -25,15 +25,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '1402'
+      - '860'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Fri, 22 May 2026 09:17:59 GMT
+      - Wed, 21 Jan 2026 09:43:18 GMT
       Pragma:
       - no-cache
       RequestId:
-      - dfe2291c-92d7-4d19-822e-b45d59d6b7b7
+      - 11e3fa85-eee6-4905-a742-34c42adc0da9
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -59,7 +59,7 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.6.1
+      - ms-fabric-cli-test/1.3.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/connections/supportedConnectionTypes
   response:
@@ -96,10 +96,6 @@ interactions:
         true, "allowedValues": null}, {"name": "database", "dataType": "Text", "required":
         true, "allowedValues": null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted", "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        ["Basic"]}, {"type": "Oracle", "creationMethods": [{"name": "Oracle", "parameters":
-        [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Basic", "OAuth2"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         ["Basic"]}, {"type": "PostgreSQL", "creationMethods": [{"name": "PostgreSql",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "database", "dataType": "Text", "required": true, "allowedValues":
@@ -155,14 +151,14 @@ interactions:
         null}, {"type": "GoogleBigQueryAad", "creationMethods": [{"name": "GoogleBigQueryAad.Database",
         "parameters": [{"name": "billingProject", "dataType": "Text", "required":
         true, "allowedValues": null}, {"name": "Implementation", "dataType": "Text",
-        "required": false, "allowedValues": [null, "2.0"]}, {"name": "UseStorageApi",
-        "dataType": "Boolean", "required": false, "allowedValues": null}, {"name":
-        "ConnectionTimeout", "dataType": "Duration", "required": false, "allowedValues":
-        null}, {"name": "CommandTimeout", "dataType": "Duration", "required": false,
-        "allowedValues": null}, {"name": "BYOID_AudienceUri", "dataType": "Text",
-        "required": false, "allowedValues": null}, {"name": "ProjectId", "dataType":
-        "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
-        ["OAuth2"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        "required": false, "allowedValues": null}, {"name": "UseStorageApi", "dataType":
+        "Boolean", "required": false, "allowedValues": null}, {"name": "ConnectionTimeout",
+        "dataType": "Duration", "required": false, "allowedValues": null}, {"name":
+        "CommandTimeout", "dataType": "Duration", "required": false, "allowedValues":
+        null}, {"name": "BYOID_AudienceUri", "dataType": "Text", "required": false,
+        "allowedValues": null}, {"name": "ProjectId", "dataType": "Text", "required":
+        false, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
         "PowerBI", "creationMethods": [{"name": "PowerBI.Dataflows", "parameters":
         []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
@@ -219,6 +215,17 @@ interactions:
         null}, {"name": "Repository", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "AzureHive", "creationMethods": [{"name": "AzureHiveLLAP.Database",
+        "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "database", "dataType": "Text", "required": true, "allowedValues":
+        null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted", "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "ApacheHive", "creationMethods": [{"name": "ApacheHiveLLAP.Database",
+        "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "database", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "thriftTransport", "dataType": "Number", "required": true,
+        "allowedValues": ["1", "2"]}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted", "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Impala", "creationMethods": [{"name": "Impala.Database",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "Implementation", "dataType": "Text", "required": false, "allowedValues":
@@ -289,9 +296,8 @@ interactions:
         "required": false, "allowedValues": null}, {"name": "CommandTimeout", "dataType":
         "Number", "required": false, "allowedValues": null}, {"name": "Implementation",
         "dataType": "Text", "required": false, "allowedValues": [null, "2.0"]}]}],
-        "supportedCredentialTypes": ["Basic", "OAuth2", "KeyPair", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        "supportedCredentialTypes": ["Basic", "OAuth2", "KeyPair"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Spark", "creationMethods": [{"name": "AzureSpark.Tables",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "BatchSize", "dataType": "Number", "required": false, "allowedValues":
@@ -432,7 +438,7 @@ interactions:
         null}, {"name": "QueryTags", "dataType": "Text", "required": false, "allowedValues":
         null}, {"name": "EnableAutomaticProxyDiscovery", "dataType": "Text", "required":
         false, "allowedValues": ["enabled", "disabled"]}, {"name": "Implementation",
-        "dataType": "Text", "required": false, "allowedValues": ["2.0", null]}]}],
+        "dataType": "Text", "required": false, "allowedValues": [null, "2.0"]}]}],
         "supportedCredentialTypes": ["OAuth2", "Key", "Basic", "ServicePrincipal"],
         "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
@@ -444,7 +450,7 @@ interactions:
         null}, {"name": "QueryTags", "dataType": "Text", "required": false, "allowedValues":
         null}, {"name": "EnableAutomaticProxyDiscovery", "dataType": "Text", "required":
         false, "allowedValues": ["enabled", "disabled"]}, {"name": "Implementation",
-        "dataType": "Text", "required": false, "allowedValues": ["2.0", null]}]}],
+        "dataType": "Text", "required": false, "allowedValues": [null, "2.0"]}]}],
         "supportedCredentialTypes": ["OAuth2", "Key", "Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "DeltaSharing", "creationMethods": [{"name": "DeltaSharing.Contents",
@@ -659,9 +665,12 @@ interactions:
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Vena", "creationMethods": [{"name": "Vena.Contents", "parameters":
         [{"name": "source", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "modelQuery", "dataType": "Text", "required": false, "allowedValues":
-        null}, {"name": "apiVersion", "dataType": "Text", "required": false, "allowedValues":
-        ["v1", "v2"]}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
+        ["https://ca3.vena.io", "https://ca4.vena.io", "https://eu1.vena.io", "https://eu2.vena.io",
+        "https://eu3.vena.io", "https://us1.vena.io", "https://us2.vena.io", "https://us3.vena.io",
+        "https://us4.vena.io", "https://us5.vena.io"]}, {"name": "modelQuery", "dataType":
+        "Text", "required": false, "allowedValues": null}, {"name": "apiVersion",
+        "dataType": "Text", "required": false, "allowedValues": ["v1", "v2"]}]}],
+        "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "VesselInsight", "creationMethods": [{"name": "VesselInsight.Contents",
         "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
@@ -765,14 +774,12 @@ interactions:
         "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "FabricSql", "creationMethods": [{"name": "FabricSql.Contents",
-        "parameters": [{"name": "HierarchicalNavigation", "dataType": "Boolean", "required":
-        false, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "Fhir", "creationMethods": [{"name": "Fhir.Contents", "parameters": [{"name":
-        "url", "dataType": "Text", "required": true, "allowedValues": null}, {"name":
-        "searchQuery", "dataType": "Text", "required": false, "allowedValues": null}]}],
-        "supportedCredentialTypes": ["OAuth2", "Anonymous"], "supportedConnectionEncryptionTypes":
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "Fhir", "creationMethods": [{"name": "Fhir.Contents", "parameters":
+        [{"name": "url", "dataType": "Text", "required": true, "allowedValues": null},
+        {"name": "searchQuery", "dataType": "Text", "required": false, "allowedValues":
+        null}]}], "supportedCredentialTypes": ["OAuth2", "Anonymous"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "GoogleSheets", "creationMethods": [{"name": "GoogleSheets.Contents",
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
@@ -785,35 +792,20 @@ interactions:
         "30"]}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Lakehouse", "creationMethods": [{"name": "Lakehouse.Contents",
-        "parameters": [{"name": "HierarchicalNavigation", "dataType": "Boolean", "required":
-        false, "allowedValues": null}, {"name": "EnableVorder", "dataType": "Boolean",
-        "required": false, "allowedValues": null}, {"name": "OutputMetadataRefresh",
-        "dataType": "Boolean", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
-        ["OAuth2"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "MicrosoftAzureDataManagerForEnergy", "creationMethods": [{"name": "MicrosoftAzureDataManagerForEnergy.Search",
-        "parameters": [{"name": "serviceName", "dataType": "Text", "required": true,
-        "allowedValues": null}, {"name": "dataPartition", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "kind", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "query", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "limit", "dataType": "Number", "required":
-        false, "allowedValues": null}, {"name": "returnedFields", "dataType": "Text",
-        "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
-        ["OAuth2"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "OneLakeFile", "creationMethods": [{"name": "OneLake.Contents", "parameters":
-        [{"name": "path", "dataType": "Text", "required": true, "allowedValues": null}]}],
-        "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes":
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "OneLakeSql", "creationMethods": [{"name": "OneLake.SqlAnalytics",
-        "parameters": [{"name": "workspace", "dataType": "Text", "required": true,
-        "allowedValues": null}, {"name": "database", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "artifactType", "dataType": "Text",
-        "required": true, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "PowerBIDatamarts", "creationMethods": [{"name": "PowerBI.Datamarts", "parameters":
-        [{"name": "server", "dataType": "Text", "required": false, "allowedValues":
+        null}, {"type": "MicrosoftAzureDataManagerForEnergy", "creationMethods": [{"name":
+        "MicrosoftAzureDataManagerForEnergy.Search", "parameters": [{"name": "serviceName",
+        "dataType": "Text", "required": true, "allowedValues": null}, {"name": "dataPartition",
+        "dataType": "Text", "required": true, "allowedValues": null}, {"name": "kind",
+        "dataType": "Text", "required": true, "allowedValues": null}, {"name": "query",
+        "dataType": "Text", "required": true, "allowedValues": null}, {"name": "limit",
+        "dataType": "Number", "required": false, "allowedValues": null}, {"name":
+        "returnedFields", "dataType": "Text", "required": false, "allowedValues":
+        null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "PowerBIDatamarts", "creationMethods": [{"name": "PowerBI.Datamarts",
+        "parameters": [{"name": "server", "dataType": "Text", "required": false, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "PowerPlatformDataflows", "creationMethods": [{"name": "PowerPlatform.Dataflows",
@@ -826,27 +818,21 @@ interactions:
         "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Warehouse", "creationMethods": [{"name": "Fabric.Warehouse",
-        "parameters": [{"name": "HierarchicalNavigation", "dataType": "Boolean", "required":
-        false, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "VivaInsights", "creationMethods": [{"name": "VivaInsights.Data", "parameters":
-        [{"name": "scopeId", "dataType": "Text", "required": true, "allowedValues":
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "VivaInsights", "creationMethods": [{"name": "VivaInsights.Data",
+        "parameters": [{"name": "scopeId", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "jobName", "dataType": "Text", "required": false, "allowedValues":
         null}, {"name": "jobId", "dataType": "Text", "required": false, "allowedValues":
         null}, {"name": "SchemaType", "dataType": "Text", "required": false, "allowedValues":
-        ["Pivoted"]}, {"name": "APIType", "dataType": "Text", "required": false, "allowedValues":
-        ["Row-level data", "Aggregated data"]}, {"name": "TableName", "dataType":
-        "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
+        ["Pivoted", "Unpivoted"]}, {"name": "APIType", "dataType": "Text", "required":
+        false, "allowedValues": ["Aggregated data", "Row-level data"]}, {"name": "TableName",
+        "dataType": "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
         ["OAuth2"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
         "AdlsGen2CosmosStructuredStream", "creationMethods": [{"name": "AdlsGen2CosmosStructuredStream.Contents",
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "Airtable", "creationMethods": [{"name": "Airtable.Contents", "parameters":
-        []}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
+        null}]}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AmazonRdsForOracle", "creationMethods": [{"name": "AmazonRdsForOracle.Database",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
@@ -876,27 +862,20 @@ interactions:
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2", "Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "AWSIcebergCatalog", "creationMethods": [{"name": "AWSIcebergCatalog.Contents",
-        "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "warehouse", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureAISearch", "creationMethods": [{"name": "AzureAISearch.Contents",
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureArtifactFeed", "creationMethods": [{"name": "AzureArtifactFeed.Contents",
         "parameters": [{"name": "feedUrl", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Key", "OAuth2", "WorkspaceIdentity"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "AzureBatch", "creationMethods": [{"name": "AzureBatch.Contents", "parameters":
-        [{"name": "accountName", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "batchUrl", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "poolName", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Key", "OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}]}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "AzureBatch", "creationMethods": [{"name": "AzureBatch.Contents",
+        "parameters": [{"name": "accountName", "dataType": "Text", "required": true,
+        "allowedValues": null}, {"name": "batchUrl", "dataType": "Text", "required":
+        true, "allowedValues": null}, {"name": "poolName", "dataType": "Text", "required":
+        true, "allowedValues": null}]}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureCosmosDBForMongoDB", "creationMethods": [{"name": "AzureCosmosDBForMongoDB.Database",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "serverVersion", "dataType": "Text", "required": true, "allowedValues":
@@ -909,10 +888,10 @@ interactions:
         ["NotEncrypted", "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureDatabricksWorkspace", "creationMethods": [{"name": "AzureDatabricksWorkspace.Actions",
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Key", "OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "AzureDataFactory", "creationMethods": [{"name": "AzureDataFactory.Actions",
+        null}]}], "supportedCredentialTypes": ["Key", "OAuth2", "ServicePrincipal"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "AzureDataFactory", "creationMethods": [{"name": "AzureDataFactory.Actions",
         "parameters": [{"name": "subscriptionId", "dataType": "Text", "required":
         true, "allowedValues": null}, {"name": "resourceGroup", "dataType": "Text",
         "required": true, "allowedValues": null}, {"name": "dataFactoryName", "dataType":
@@ -922,13 +901,12 @@ interactions:
         null}, {"type": "AzureDataLakeStoreCosmosStructuredStream", "creationMethods":
         [{"name": "AzureDataLakeStoreCosmosStructuredStream.Contents", "parameters":
         [{"name": "url", "dataType": "Text", "required": true, "allowedValues": null}]}],
-        "supportedCredentialTypes": ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "AzureFiles", "creationMethods": [{"name": "AzureFiles.Contents", "parameters":
-        [{"name": "shareUrl", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "snapshot", "dataType": "Text", "required": false, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
+        "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "AzureFiles", "creationMethods": [{"name": "AzureFiles.Contents",
+        "parameters": [{"name": "shareUrl", "dataType": "Text", "required": true,
+        "allowedValues": null}, {"name": "snapshot", "dataType": "Text", "required":
+        false, "allowedValues": null}]}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureFunction", "creationMethods": [{"name": "AzureFunction.Contents",
         "parameters": [{"name": "functionAppUrl", "dataType": "Text", "required":
@@ -938,8 +916,7 @@ interactions:
         "AzureHDInsightCluster", "creationMethods": [{"name": "AzureHDInsightCluster.Actions",
         "parameters": [{"name": "hdiUrl", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "entSecPackageEnabled", "dataType": "Boolean", "required":
-        false, "allowedValues": null}]}], "supportedCredentialTypes": ["Basic", "OAuth2",
-        "ServicePrincipal", "WorkspaceIdentity"], "supportedConnectionEncryptionTypes":
+        false, "allowedValues": null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzureHDInsightOnDemandCluster", "creationMethods": [{"name":
         "AzureHDInsightOnDemandCluster.Actions", "parameters": [{"name": "subscriptionId",
@@ -957,12 +934,6 @@ interactions:
         true, "allowedValues": null}, {"name": "resourceGroupName", "dataType": "Text",
         "required": true, "allowedValues": null}, {"name": "workspaceName", "dataType":
         "Text", "required": true, "allowedValues": null}]}], "supportedCredentialTypes":
-        ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "AzureMonitorMirroredCatalog", "creationMethods": [{"name":
-        "AzureMonitorMirroredCatalog.Contents", "parameters": [{"name": "workspaceId",
-        "dataType": "Text", "required": true, "allowedValues": null}, {"name": "catalogEndpoint",
-        "dataType": "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
         ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "AzurePostgreSQL", "creationMethods": [{"name": "AzurePostgreSQL.Database",
@@ -1002,31 +973,26 @@ interactions:
         true, "allowedValues": null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "CopyJob", "creationMethods": [{"name": "CopyJob.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "CustomStreamSource", "creationMethods": [{"name": "CustomStreamSource.Contents",
-        "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "CustomStreamSource", "creationMethods": [{"name": "CustomStreamSource.Contents",
+        "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["Basic", "Key"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "DataBuildToolJob", "creationMethods": [{"name": "DataBuildToolJob.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "DataLakeAnalytics", "creationMethods": [{"name": "DataLakeAnalytics.Account",
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "DataLakeAnalytics", "creationMethods": [{"name": "DataLakeAnalytics.Account",
         "parameters": [{"name": "accountName", "dataType": "Text", "required": true,
         "allowedValues": null}, {"name": "subscriptionId", "dataType": "Text", "required":
         true, "allowedValues": null}, {"name": "resourceGroupName", "dataType": "Text",
-        "required": true, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2",
-        "ServicePrincipal", "WorkspaceIdentity"], "supportedConnectionEncryptionTypes":
+        "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
+        ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "DremioIcebergCatalog", "creationMethods": [{"name": "DremioIcebergCatalog.Contents",
-        "parameters": [{"name": "warehouse", "dataType": "Text", "required": true,
-        "allowedValues": null}]}], "supportedCredentialTypes": ["Key", "OAuth2"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "Dynamics365", "creationMethods": [{"name": "Dynamics365.Contents", "parameters":
-        [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"type": "Dynamics365", "creationMethods": [{"name": "Dynamics365.Contents",
+        "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal", "WorkspaceIdentity"],
         "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
@@ -1045,29 +1011,17 @@ interactions:
         null}, {"name": "entityPath", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2", "Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "EventStream", "creationMethods": [{"name": "EventStream.Contents",
-        "parameters": [{"name": "WorkspaceId", "dataType": "Text", "required": true,
-        "allowedValues": null}, {"name": "ArtifactId", "dataType": "Text", "required":
-        true, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "FabricDataPipelines", "creationMethods": [{"name": "FabricDataPipelines.Actions",
         "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
         "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
         "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "FabricMaps", "creationMethods": [{"name": "FabricMaps.Contents",
-        "parameters": [{"name": "baseUrl", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "protocol", "dataType": "Text", "required": true, "allowedValues":
-        ["WMS", "WMTS"]}, {"name": "apiKeyName", "dataType": "Text", "required": false,
-        "allowedValues": null}]}], "supportedCredentialTypes": ["Key", "Basic", "Anonymous"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "FabricMaterializedLakeView", "creationMethods": [{"name": "FabricMaterializedLakeView.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "FabricSqlEndpointMetadata", "creationMethods": [{"name": "FabricSqlEndpointMetadata.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
+        null}, {"type": "FabricMaterializedLakehouseView", "creationMethods": [{"name":
+        "FabricMaterializedLakehouseView.Actions", "parameters": []}], "supportedCredentialTypes":
+        ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
+        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "FabricSqlEndpointMetadata", "creationMethods": [{"name":
+        "FabricSqlEndpointMetadata.Actions", "parameters": []}], "supportedCredentialTypes":
+        ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
         "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "FTP", "creationMethods": [{"name": "FTP.Contents", "parameters":
         [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
@@ -1131,16 +1085,10 @@ interactions:
         "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
         "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "MicrosoftPlanetaryComputer", "creationMethods": [{"name": "MicrosoftPlanetaryComputer.Contents",
-        "parameters": [{"name": "baseUrl", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "protocol", "dataType": "Text", "required": true, "allowedValues":
-        ["WMTS"]}]}], "supportedCredentialTypes": ["OAuth2", "Anonymous"], "supportedConnectionEncryptionTypes":
+        "MicrosoftTeams", "creationMethods": [{"name": "MicrosoftTeams.Actions", "parameters":
+        []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "MicrosoftTeams", "creationMethods": [{"name": "MicrosoftTeams.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "MongoDBAtlasForPipeline", "creationMethods": [{"name": "MongoDBAtlasForPipeline.Database",
+        null}, {"type": "MongoDBAtlasForPipeline", "creationMethods": [{"name": "MongoDBAtlasForPipeline.Database",
         "parameters": [{"name": "server", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "cluster", "dataType": "Text", "required": false, "allowedValues":
         null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
@@ -1154,17 +1102,13 @@ interactions:
         null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "Notebook", "creationMethods": [{"name": "Notebook.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "OracleCloudStorage", "creationMethods": [{"name": "OracleCloudStorage.Contents",
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "OracleCloudStorage", "creationMethods": [{"name": "OracleCloudStorage.Contents",
         "parameters": [{"name": "APIEndpoint", "dataType": "Text", "required": true,
         "allowedValues": null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "PayPalForPipeline", "creationMethods": [{"name": "PayPalForPipeline.Database",
-        "parameters": [{"name": "host", "dataType": "Text", "required": true, "allowedValues":
-        null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted", "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "PowerBIDatasets", "creationMethods": [{"name": "PowerBIDatasets.Actions",
         "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
         "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
@@ -1177,9 +1121,6 @@ interactions:
         false, "allowedValues": ["Enable", "Disable"]}]}], "supportedCredentialTypes":
         ["Anonymous", "Basic"], "supportedConnectionEncryptionTypes": ["NotEncrypted",
         "Encrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "RealTimeEvents", "creationMethods": [{"name": "RealTimeEvents.Contents",
-        "parameters": []}], "supportedCredentialTypes": ["Anonymous"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "RestService", "creationMethods": [{"name": "RestService.Contents",
         "parameters": [{"name": "baseUrl", "dataType": "Text", "required": true, "allowedValues":
         null}, {"name": "audience", "dataType": "Text", "required": false, "allowedValues":
@@ -1232,13 +1173,6 @@ interactions:
         "dataType": "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
         ["Basic"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
         false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "ScopeJobDefinition", "creationMethods": [{"name": "ScopeJobDefinition.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["Key"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "SentinelCatalog", "creationMethods": [{"name": "SentinelCatalog.Contents",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
-        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
         "ServiceNow", "creationMethods": [{"name": "ServiceNow.Data", "parameters":
         [{"name": "instance", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
@@ -1263,10 +1197,10 @@ interactions:
         null}]}], "supportedCredentialTypes": ["Basic"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "SparkJobDefinition", "creationMethods": [{"name": "SparkJobDefinition.Actions",
-        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal",
-        "WorkspaceIdentity"], "supportedConnectionEncryptionTypes": ["NotEncrypted"],
-        "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "SqlAnalyticsEndpoint", "creationMethods": [{"name": "SqlAnalyticsEndpoint.Actions",
+        "parameters": []}], "supportedCredentialTypes": ["OAuth2", "ServicePrincipal"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "SqlAnalyticsEndpoint", "creationMethods": [{"name": "SqlAnalyticsEndpoint.Actions",
         "parameters": []}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "UserDataFunctions", "creationMethods": [{"name": "UserDataFunctions.Actions",
@@ -1464,25 +1398,22 @@ interactions:
         "dataType": "Text", "required": false, "allowedValues": null}, {"name": "_isOverride",
         "dataType": "Text", "required": false, "allowedValues": null}, {"name": "_aggCuThreshold",
         "dataType": "Number", "required": false, "allowedValues": null}, {"name":
-        "_experience", "dataType": "Text", "required": false, "allowedValues": null},
-        {"name": "_utilizationType", "dataType": "Text", "required": false, "allowedValues":
-        null}, {"name": "_requestFromServerlessVersion", "dataType": "Boolean", "required":
-        false, "allowedValues": null}, {"name": "_serverlessWorkloadCategoryColumnFixedDate",
-        "dataType": "Text", "required": false, "allowedValues": null}]}], "supportedCredentialTypes":
-        ["OAuth2"], "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
-        true, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
-        "Goals", "creationMethods": [{"name": "Goals.GetScorecardData", "parameters":
-        [{"name": "scorecardId", "dataType": "Text", "required": true, "allowedValues":
-        null}, {"name": "top", "dataType": "Number", "required": false, "allowedValues":
+        "_experience", "dataType": "Text", "required": false, "allowedValues": null}]}],
+        "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
+        ["NotEncrypted"], "supportsSkipTestConnection": true, "supportedCredentialTypesForUsageInUserControlledCode":
+        null}, {"type": "Goals", "creationMethods": [{"name": "Goals.GetScorecardData",
+        "parameters": [{"name": "scorecardId", "dataType": "Text", "required": true,
+        "allowedValues": null}, {"name": "top", "dataType": "Number", "required":
+        false, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"],
+        "supportedConnectionEncryptionTypes": ["NotEncrypted"], "supportsSkipTestConnection":
+        false, "supportedCredentialTypesForUsageInUserControlledCode": null}, {"type":
+        "MetricsCES", "creationMethods": [{"name": "MetricsCES.GetMetricsData", "parameters":
+        [{"name": "_capacityId", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "_database", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "_ago", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "_hour", "dataType": "Text", "required": true, "allowedValues":
+        null}, {"name": "_kustoUri", "dataType": "Text", "required": true, "allowedValues":
         null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
-        ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
-        null}, {"type": "MetricsCES", "creationMethods": [{"name": "MetricsCES.GetMetricsData",
-        "parameters": [{"name": "_capacityId", "dataType": "Text", "required": true,
-        "allowedValues": null}, {"name": "_database", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "_ago", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "_hour", "dataType": "Text", "required":
-        true, "allowedValues": null}, {"name": "_kustoUri", "dataType": "Text", "required":
-        true, "allowedValues": null}]}], "supportedCredentialTypes": ["OAuth2"], "supportedConnectionEncryptionTypes":
         ["NotEncrypted"], "supportsSkipTestConnection": false, "supportedCredentialTypesForUsageInUserControlledCode":
         null}, {"type": "MetricsDataConnector", "creationMethods": [{"name": "MetricsDataConnector.GetMetricsData",
         "parameters": [{"name": "url", "dataType": "Text", "required": true, "allowedValues":
@@ -1528,15 +1459,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '8880'
+      - '8567'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Fri, 22 May 2026 09:18:00 GMT
+      - Wed, 21 Jan 2026 09:43:20 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 653eb8ab-ab18-4c0a-8936-c1c3005ed907
+      - a1563ab2-e730-4f27-b211-94fc55ef8b27
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -1551,9 +1482,7 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '{"displayName": "fabcli000001", "connectivityType": "ShareableCloud", "privacyLevel":
-      "None", "connectionDetails": "mock_request_connection_details", "credentialDetails":
-      "mocked_credential_details"}'
+    body: '{"displayName": "fabcli000001", "connectivityType": "ShareableCloud", "privacyLevel": "None", "connectionDetails": "mock_request_connection_details", "credentialDetails": "mocked_credential_details"}'
     headers:
       Accept:
       - '*/*'
@@ -1562,41 +1491,41 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '554'
+      - '553'
+
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.6.1
+      - ms-fabric-cli-test/1.3.1
     method: POST
     uri: https://api.fabric.microsoft.com/v1/connections
   response:
     body:
-      string: '{"requestId": "524d8e4e-3591-4c5d-8cb8-8ee4df68c9ad", "errorCode":
-        "DM_GWPipeline_Gateway_DataSourceAccessError", "moreDetails": [{"errorCode":
-        "DM_ErrorDetailNameCode_UnderlyingErrorCode", "message": "-2146232060"}, {"errorCode":
-        "DM_ErrorDetailNameCode_UnderlyingErrorMessage", "message": "Login failed
-        for user ''sqladmin''."}, {"errorCode": "DM_ErrorDetailNameCode_UnderlyingHResult",
-        "message": "-2146232060"}, {"errorCode": "DM_ErrorDetailNameCode_UnderlyingNativeErrorCode",
-        "message": "18456"}], "message": "PowerBI service client received error HTTP
-        response. HttpStatus: 400. PowerBIErrorCode: DM_GWPipeline_Gateway_DataSourceAccessError",
-        "isRetriable": false}'
+      string: '{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "None", "credentialDetails": "mocked_credential_details"}'
     headers:
       Access-Control-Expose-Headers:
-      - RequestId
+      - RequestId,Location
       Cache-Control:
       - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '304'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Fri, 22 May 2026 09:18:00 GMT
+      - Wed, 21 Jan 2026 09:43:21 GMT
+      Location:
+      - https://api.fabric.microsoft.com/v1/connections/28b2782b-2401-4172-9cbd-66b1ceeb46cd
       Pragma:
       - no-cache
       RequestId:
-      - 524d8e4e-3591-4c5d-8cb8-8ee4df68c9ad
+      - f72f8bc7-e087-44b5-a4d4-ca6e5e3de316
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
-      Transfer-Encoding:
-      - chunked
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
@@ -1605,9 +1534,365 @@ interactions:
       - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
       request-redirected:
       - 'true'
-      x-ms-public-api-error-code:
-      - DM_GWPipeline_Gateway_DataSourceAccessError
     status:
-      code: 400
-      message: Bad Request
+      code: 201
+      message: Created
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/connections
+  response:
+    body:
+      string: '{"value": [{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "None", "credentialDetails": "mocked_credential_details"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '906'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:22 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 15dd52ad-7bda-4ec3-bc12-65148da598ac
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/connections/28b2782b-2401-4172-9cbd-66b1ceeb46cd
+  response:
+    body:
+      string: '{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "None", "credentialDetails": "mocked_credential_details"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '304'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:25 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 445802b6-a245-4edd-8381-6aa22c2995f6
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"privacyLevel": "Organizational", "connectivityType": "ShareableCloud"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '72'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: PATCH
+    uri: https://api.fabric.microsoft.com/v1/connections/28b2782b-2401-4172-9cbd-66b1ceeb46cd
+  response:
+    body:
+      string: '{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "Organizational", "credentialDetails": "mocked_credential_details"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '313'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:26 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 1e8895a5-5cab-4d77-8dbd-25a228c7873d
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/connections
+  response:
+    body:
+      string: '{"value": [{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "Organizational", "credentialDetails": "mocked_credential_details"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '902'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:28 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 0be9f6f0-11ab-43dd-9440-63a726f858b9
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/connections/28b2782b-2401-4172-9cbd-66b1ceeb46cd
+  response:
+    body:
+      string: '{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "Organizational", "credentialDetails": "mocked_credential_details"}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '313'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:29 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - de640af2-aaf4-4717-930b-bf0027322553
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: GET
+    uri: https://api.fabric.microsoft.com/v1/connections
+  response:
+    body:
+      string: '{"value": [{"allowConnectionUsageInGateway": false, "allowUsageInUserControlledCode":
+        false, "id": "28b2782b-2401-4172-9cbd-66b1ceeb46cd", "displayName": "fabcli000001",
+        "connectivityType": "ShareableCloud", "connectionDetails": {"path": "mocked_sql_server_server.database.windows.net;mocked_sql_server_database",
+        "type": "SQL"}, "privacyLevel": "Organizational", "credentialDetails": "mocked_credential_details"}]}'
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '902'
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 21 Jan 2026 09:43:30 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - de8166dc-38e2-485f-908f-29482763b578
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - ms-fabric-cli-test/1.3.1
+    method: DELETE
+    uri: https://api.fabric.microsoft.com/v1/connections/28b2782b-2401-4172-9cbd-66b1ceeb46cd
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Expose-Headers:
+      - RequestId
+      Cache-Control:
+      - no-store, must-revalidate, no-cache
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '0'
+      Content-Type:
+      - application/octet-stream
+      Date:
+      - Wed, 21 Jan 2026 09:43:31 GMT
+      Pragma:
+      - no-cache
+      RequestId:
+      - 0955682c-8e3b-4b80-b19e-235a5afdbdf4
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - deny
+      home-cluster-uri:
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/
+      request-redirected:
+      - 'true'
+    status:
+      code: 200
+      message: OK
 version: 1
