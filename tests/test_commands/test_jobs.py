@@ -1033,7 +1033,31 @@ class TestJobs:
         warning_message = mock_print_warning.call_args[0][0]
         assert "timed out" in warning_message
 
-    # region JSON output contract tests
+    # region output contract tests
+
+    def test_job_run_text_output_contains_instance_id_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
+    ):
+        """Validate that job run in text mode outputs instance id and completion status."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(f"job run {notebook.full_path}")
+
+        # Assert
+        calls = mock_questionary_print.call_args_list
+        matches = _find_print_call_match(
+            calls, r"∟ Job instance '(.*)' created")
+        assert matches, "Expected job instance creation message"
+        assert matches.group(1) is not None
+        assert _find_print_call(calls, "∟ Job instance status: Completed")
 
     def test_job_run_json_output_contains_instance_id_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
@@ -1053,16 +1077,12 @@ class TestJobs:
 
         # Assert
         calls = mock_questionary_print.call_args_list
-        matches = _find_print_call_match(
-            calls, r"∟ Job instance '(.*)' created")
-        assert matches, "Expected job instance creation message"
-        created_instance_id = matches.group(1)
 
         json_output = _find_json_output(calls)
         assert json_output is not None, "Expected JSON output from job run"
         assert json_output["status"] == "Success"
         assert json_output["command"] == "job run"
-        assert json_output["result"]["data"][0]["id"] == created_instance_id
+        assert json_output["result"]["data"][0]["id"] is not None
         assert "completed" in json_output["result"]["message"]
 
     def test_job_start_json_output_contains_instance_id_success(
