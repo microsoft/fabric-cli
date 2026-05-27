@@ -54,7 +54,7 @@ def wait_for_job_completion(
     job_ins_id,
     job_response: ApiResponse,
     timeout: Optional[int] = None,
-    custom_polling_interval: Optional[int] = None
+    custom_polling_interval: Optional[int] = None,
 ) -> None:
     args = Namespace(
         ws_id=getattr(job_args, "ws_id", None),
@@ -71,8 +71,10 @@ def wait_for_job_completion(
     status = "NotStarted"
     content = None
 
-    initial_interval = get_polling_interval(job_response.headers, custom_polling_interval)
-    if (timeout is not None and timeout < initial_interval):
+    initial_interval = get_polling_interval(
+        job_response.headers, custom_polling_interval
+    )
+    if timeout is not None and timeout < initial_interval:
         initial_interval = timeout
     time.sleep(initial_interval)
     total_wait_time = initial_interval
@@ -82,7 +84,7 @@ def wait_for_job_completion(
         _t1 = time.time()
         response = jobs_api.get_item_job_instance(args)
         api_call_time = int(time.time() - _t1)
-        
+
         # Add API call time to total wait time
         total_wait_time += api_call_time
 
@@ -109,14 +111,16 @@ def wait_for_job_completion(
             elif status == "Failed":
                 fab_ui.print_entries_unix_style([content], content.keys(), header=True)
                 raise FabricCLIError(
-                        ErrorMessages.Common.job_instance_failed(job_ins_id),
-                        fab_constant.ERROR_JOB_FAILED,
-                    )
+                    ErrorMessages.Common.job_instance_failed(job_ins_id),
+                    fab_constant.ERROR_JOB_FAILED,
+                )
             elif status in ["NotStarted", "InProgress"]:
                 fab_ui.print_progress(f"Job instance status: {status}")
-                
-                interval = get_polling_interval(response.headers, custom_polling_interval)
-                
+
+                interval = get_polling_interval(
+                    response.headers, custom_polling_interval
+                )
+
                 time.sleep(interval)
                 total_wait_time += interval
 
@@ -131,8 +135,6 @@ def wait_for_job_completion(
     raise TimeoutError(
         f"Job instance '{job_ins_id}' timed out after {total_wait_time} seconds"
     )
-
-
 
 
 def _extract_times(times: str) -> list[str]:
@@ -425,8 +427,12 @@ def validate_timeout_polling_interval(args: Namespace) -> None:
     """Validate that polling interval is not greater than or equal to timeout."""
     timeout = getattr(args, "timeout", None)
     polling_interval = getattr(args, "polling_interval", None)
-    
-    if timeout is not None and polling_interval is not None and polling_interval >= timeout:
+
+    if (
+        timeout is not None
+        and polling_interval is not None
+        and polling_interval >= timeout
+    ):
         raise FabricCLIError(
             f"Custom polling interval ({polling_interval}s) cannot be greater than or equal to timeout ({timeout}s)",
             fab_constant.ERROR_INVALID_INPUT,

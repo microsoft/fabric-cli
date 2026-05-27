@@ -18,7 +18,7 @@ def exec_command(args: Namespace, item: Item) -> None:
     else:
         payload = None
 
-    (response, job_instance_id) = jobs_api.run_on_demand_item_job(args, payload)
+    response, job_instance_id = jobs_api.run_on_demand_item_job(args, payload)
 
     if response.status_code == 202:
         if args.wait:
