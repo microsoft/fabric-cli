@@ -1049,10 +1049,12 @@ class TestJobs:
         # Assert
         calls = mock_questionary_print.call_args_list
         matches = _find_print_call_match(
-            calls, r"∟ Job instance '(.*)' created")
-        assert matches, "Expected job instance creation message"
-        assert matches.group(1) is not None
+            calls, r"∟ Job instance '(.+)' created")
+        assert matches, "Expected job instance creation message with non-empty id"
+        instance_id = matches.group(1)
+
         assert _find_print_call(calls, "∟ Job instance status: Completed")
+        assert _find_print_call(calls, f"ID: {instance_id}")
 
     def test_job_run_json_output_contains_instance_id_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
@@ -1079,6 +1081,31 @@ class TestJobs:
         assert json_output["command"] == "job run"
         assert json_output["result"]["data"][0]["id"] is not None
         assert "completed" in json_output["result"]["message"]
+
+    def test_job_start_text_output_contains_instance_id_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
+    ):
+        """Validate that job start in text mode outputs instance id."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(f"job start {notebook.full_path}")
+
+        # Assert
+        calls = mock_questionary_print.call_args_list
+        hint_matches = _find_print_call_match(
+            calls, r"→ To see status run 'job run-status (.+) --id (.+)'")
+        assert hint_matches, "Expected status hint with instance id"
+        instance_id = hint_matches.group(2)
+
+        assert _find_print_call(calls, f"ID: {instance_id}")
 
     def test_job_start_json_output_contains_instance_id_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
@@ -1112,6 +1139,32 @@ class TestJobs:
             calls, r"→ To see status run 'job run-status (.+) --id (.+)'")
         assert matches
         assert matches.group(2) == instance_id
+
+    def test_job_run_timeout_cancelled_text_output_contains_instance_id_success(
+        self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config
+    ):
+        """Validate that job run timeout-cancelled path in text mode outputs instance id."""
+        # Setup
+        mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
+        mock_fab_set_state_config(constant.FAB_JOB_CANCEL_ONTIMEOUT, "true")
+        nb_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "data/sample_items/example_wait.Notebook",
+        )
+        notebook = item_factory(ItemType.NOTEBOOK, content_path=nb_path)
+        mock_questionary_print.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(f"job run {notebook.full_path} --timeout 1")
+
+        # Assert
+        calls = mock_questionary_print.call_args_list
+        matches = _find_print_call_match(
+            calls, r"∟ Job instance '(.+)' created")
+        assert matches, "Expected job instance creation message with non-empty id"
+        instance_id = matches.group(1)
+
+        assert _find_print_call(calls, f"ID: {instance_id}")
 
     def test_job_run_timeout_cancelled_json_output_contains_instance_id_success(
         self, item_factory, cli_executor, mock_questionary_print, mock_fab_set_state_config, mock_print_warning
