@@ -74,7 +74,6 @@ class TestJobs:
 
         # All the calls in between are NotStarted or InProgress status
 
-        # Assert that the completion message was printed
         assert _find_print_call(calls, "∟ Job instance status: Completed")
 
         job_run_status(notebook.full_path, job_instance_id)
@@ -229,7 +228,6 @@ class TestJobs:
             f"job run-cancel {notebook.full_path} --id {job_instance_id} --wait"
         )
 
-        # Assert that the cancelled status message was printed
         calls = mock_questionary_print.call_args_list
         assert _find_print_call(calls, "∟ Job instance status: Cancelled")
 
@@ -835,10 +833,7 @@ class TestJobs:
             f"job run {notebook.full_path} --config '{json.dumps(conf)}' --params string_param:string=new_value"
         )
 
-        # Extract the arguments passed to the mock
         calls = mock_questionary_print.call_args_list
-
-        # Assert that the completion message was printed
         assert _find_print_call(calls, "∟ Job instance status: Completed")
         # Reset the mock to avoid the previous calls
         mock_questionary_print.reset_mock()
