@@ -8,13 +8,17 @@ import re
 # Default error constants - avoids circular imports
 DEFAULT_ERROR_MESSAGE = "An error occurred while processing the operation"
 DEFAULT_ERROR_CODE = "UnknownError"
+NOT_SET = object()
 
 
 class FabricCLIError(Exception):
-    def __init__(self, message=None, status_code=None):
-        # Use default values if not provided
+    def __init__(self, message=None, status_code=NOT_SET):
+        # message: values like (None, "") fall back to the default.
+        # status_code: default is applied only when omitted entirely;
+        # an explicit None is preserved (e.g. fallback paths that have no code).
         message = message or DEFAULT_ERROR_MESSAGE
-        status_code = status_code or DEFAULT_ERROR_CODE
+        if status_code is NOT_SET:
+            status_code = DEFAULT_ERROR_CODE
 
         super().__init__(message)
         self.message = message.rstrip(".")
@@ -78,12 +82,23 @@ class FabricAPIError(FabricCLIError):
             related_resource (dict): Details about the main related resource, if available.
             request_id (str): The ID of the request associated with the error.
         """
-        response = self._parse_json_response(response_text)
-
-        message = response.get("message")
-        error_code = response.get("errorCode")
-        self.more_details: list[dict] = response.get("moreDetails", [])
-        self.request_id = response.get("requestId")
+        try:
+            response = json.loads(response_text)
+            if not isinstance(response, dict):
+                raise ValueError("Unexpected JSON shape")
+            message = (
+                response.get("message")
+                if response.get("message") is not None
+                else response_text
+            )
+            error_code = response.get("errorCode")
+            self.more_details: list[dict] = response.get("moreDetails", [])
+            self.request_id = response.get("requestId")
+        except (json.JSONDecodeError, TypeError, ValueError):
+            message = response_text
+            error_code = None
+            self.more_details = []
+            self.request_id = None
 
         super().__init__(message, error_code)
 
@@ -105,7 +120,10 @@ class FabricAPIError(FabricCLIError):
             else f"{base_message}\n<grey>{detailed_message}</grey>"
         )
 
-        return f"{final_message}\n<grey>∟ Request Id: {self.request_id}</grey>"
+        if self.request_id:
+            final_message += f"\n<grey>∟ Request Id: {self.request_id}</grey>"
+
+        return final_message
 
 
 class OnelakeAPIError(FabricCLIError):
