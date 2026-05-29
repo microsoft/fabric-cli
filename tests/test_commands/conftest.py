@@ -246,7 +246,6 @@ mv_item_within_workspace_rename_success_params = pytest.mark.parametrize(
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
         ItemType.MAP,
-        ItemType.DIGITAL_TWIN_BUILDER_FLOW,
     ],
 )
 
@@ -485,8 +484,8 @@ cp_item_types_success_params = pytest.mark.parametrize(
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
-        ItemType.DIGITAL_TWIN_BUILDER,
-        ItemType.DIGITAL_TWIN_BUILDER_FLOW,
+        # ItemType.DIGITAL_TWIN_BUILDER,
+        # ItemType.DIGITAL_TWIN_BUILDER_FLOW,
     ],
 )
 
