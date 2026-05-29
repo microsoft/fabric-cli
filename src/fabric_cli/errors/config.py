@@ -30,10 +30,6 @@ class ConfigErrors:
         return msg
 
     @staticmethod
-    def invalid_parameter_format(params: str) -> str:
-        return f"Invalid parameter format: {params}"
-
-    @staticmethod
     def config_not_set(config_name: str, message: str) -> str:
         return f"{config_name} is not set. {message}"
 

@@ -21,17 +21,17 @@ from fabric_cli.utils import fab_ui as utils_ui
 def get_payload_for_item_type(
     path: str, item: Item, input_format: Optional[str] = None
 ) -> dict:
+    # Environment does not support updateDefinition yet, custom payload / dev
     if item.item_type == ItemType.ENVIRONMENT:
         return _build_environment_payload(path)
-
-    definition = _build_definition(path, input_format)
-    return {
-        "type": str(item.item_type),
-        "description": "Imported from fab",
-        "folderId": item.folder_id,
-        "displayName": item.short_name,
-        "definition": definition,
-    }
+    else:
+        definition = _build_definition(path, input_format)
+        return {
+            "type": str(item.item_type),
+            "folderId": item.folder_id,
+            "displayName": item.short_name,
+            "definition": definition,
+        }
 
 
 def _build_definition(input_path: Any, input_format: Optional[str] = None) -> dict:

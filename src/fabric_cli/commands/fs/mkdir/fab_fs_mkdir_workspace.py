@@ -68,7 +68,6 @@ def exec(workspace: Workspace, args: Namespace) -> None:
     utils.remove_keys_from_dict(args.params, ["displayName"])
 
     payload = {
-        "description": "Created by fab",
         "displayName": workspace.short_name,
     }
     payload.update(args.params)

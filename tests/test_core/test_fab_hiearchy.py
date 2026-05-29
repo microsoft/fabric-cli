@@ -408,7 +408,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Notebook",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"format": "ipynb", "parts": _base_payload["parts"]},
@@ -429,7 +428,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "SparkJobDefinition",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {
@@ -445,7 +443,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "SparkJobDefinition",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {
@@ -469,7 +466,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Eventhouse",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -490,7 +486,6 @@ def test_get_item_payloads_success():
 
     _expected_payload = {
         "type": "Report",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -506,7 +501,6 @@ def test_get_item_payloads_success():
 
     _expected_payload_without_format = {
         "type": "SemanticModel",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {"parts": _base_payload["parts"]},
@@ -518,7 +512,6 @@ def test_get_item_payloads_success():
 
     _expected_payload_with_format = {
         "type": "SemanticModel",
-        "description": "Imported from fab",
         "displayName": "item_name",
         "folderId": None,
         "definition": {
@@ -536,6 +529,49 @@ def test_get_item_payloads_success():
     # Check that the payload is correct
     with patch("fabric_cli.utils.fab_cmd_import_utils._build_definition", side_effect=_mock_build):
         assert get_payload_for_item_type("dummy", report) == _expected_payload
+
+
+def test_import_payload_does_not_contain_description_by_default_success():
+    """Verify that get_payload_for_item_type never stamps a description in the payload
+    unless the caller explicitly includes one — i.e."""
+    tenant = Tenant(name="tenant_name", id="0000")
+    workspace = Workspace(
+        name="workspace_name", id="workspace_id", parent=tenant, type="Workspace"
+    )
+
+    def _mock_build(path, resolved_format=""):
+        result = {"parts": {}}
+        if resolved_format:
+            result["format"] = resolved_format
+        return result
+
+    item_types = [
+        "Notebook",
+        "SparkJobDefinition",
+        "EventHouse",
+        "Report",
+        "SemanticModel",
+        "DataPipeline",
+        "Lakehouse",
+    ]
+
+    for item_type in item_types:
+        item = Item(
+            name="my_item",
+            id="item_id",
+            parent=workspace,
+            item_type=item_type,
+        )
+        with patch(
+            "fabric_cli.utils.fab_cmd_import_utils._build_definition",
+            side_effect=_mock_build,
+        ):
+            payload = get_payload_for_item_type("dummy", item)
+
+        assert "description" not in payload, (
+            f"Payload for {item_type} must not contain 'description' by default, "
+            f"got: {payload}"
+        )
 
 
 # -------------------------------------------------------------------

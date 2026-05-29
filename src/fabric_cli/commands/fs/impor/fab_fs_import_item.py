@@ -102,7 +102,6 @@ def _import_create_environment_item(
 
     item_payload: dict = {
         "type": str(item.item_type),
-        "description": "Imported from fab",
         "displayName": item.short_name,
         "folderId": item.folder_id,
     }

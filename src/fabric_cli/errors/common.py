@@ -257,3 +257,10 @@ class CommonErrors:
             message = "No formats are supported"
         return f"Invalid format. {message}"
 
+    @staticmethod
+    def unsupported_parameter(key: str) -> str:
+        return f"'{key}' isn't a supported parameter"
+
+    @staticmethod
+    def invalid_parameter_format(param: str) -> str:
+        return f"Invalid parameter format: '{param}'. Use key=value or key!=value."

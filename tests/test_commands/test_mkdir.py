@@ -340,6 +340,40 @@ class TestMkdir:
         # Assert failure due to missing required params
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
 
+    def test_mkdir_item_with_description_param_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{ItemType.NOTEBOOK}"
+        )
+
+        # Execute command with description param
+        cli_executor.exec_command(
+            f"mkdir {item_full_path} -P description=My custom description"
+        )
+
+        # Assert
+        mock_print_done.assert_called_once()
+        assert item_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(item_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        result_output = mock_questionary_print.call_args[0][0]
+        assert item_display_name in result_output
+        assert '"description": "My custom description"' in result_output
+
+        # Cleanup
+        rm(item_full_path)
+
     # endregion
 
     # region WORKSPACE

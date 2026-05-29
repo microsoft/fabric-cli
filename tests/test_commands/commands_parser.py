@@ -2,10 +2,8 @@
 # Licensed under the MIT License.
 
 import platform
-from prompt_toolkit import PromptSession
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.output import DummyOutput
-from prompt_toolkit.history import InMemoryHistory
 
 from fabric_cli.core.fab_interactive import InteractiveCLI
 from fabric_cli.core.fab_parser_setup import CustomArgumentParser
@@ -34,6 +32,9 @@ from fabric_cli.parsers.fab_fs_parser import (
     register_stop_parser,
     register_unassign_parser,
 )
+from fabric_cli.parsers.fab_find_parser import (
+    register_parser as register_find_parser,
+)
 from fabric_cli.parsers.fab_jobs_parser import register_parser as register_jobs_parser
 from fabric_cli.parsers.fab_labels_parser import (
     register_parser as register_labels_parser,
@@ -50,6 +51,7 @@ parserHandlers = [
     register_export_parser,
     register_import_parser,
     register_assign_parser,
+    register_find_parser,
     register_ln_parser,
     register_ls_parser,
     register_mv_parser,
@@ -72,19 +74,30 @@ class CLIExecutor:
         self._parser = customArgumentParser.add_subparsers()
         for register_parser_handler in parserHandlers:
             register_parser_handler(self._parser)
-        self._interactiveCLI = InteractiveCLI(customArgumentParser, self._parser)
-        
-        # Override init_session for Windows compatibility
+
+        # On Windows without a console, PromptSession() raises
+        # NoConsoleScreenBufferError. Patch PromptSession in the interactive
+        # module to inject DummyInput/DummyOutput before the singleton is created.
         if platform.system() == "Windows":
-            def test_init_session(session_history: InMemoryHistory) -> PromptSession:
-                # DummyInput and DummyOutput are test classes of prompt_toolkit to
-                # solve the NoConsoleScreenBufferError issue
-                return PromptSession(
-                    history=session_history, input=DummyInput(), output=DummyOutput()
+            import fabric_cli.core.fab_interactive as _interactive_mod
+
+            _orig_ps = _interactive_mod.PromptSession
+
+            def _safe_prompt_session(*args, **kwargs):
+                kwargs.setdefault("input", DummyInput())
+                kwargs.setdefault("output", DummyOutput())
+                return _orig_ps(*args, **kwargs)
+
+            _interactive_mod.PromptSession = _safe_prompt_session
+
+            try:
+                self._interactiveCLI = InteractiveCLI(
+                    customArgumentParser, self._parser
                 )
-            self._interactiveCLI.init_session = test_init_session
-            # Reinitialize the session with test-friendly settings
-            self._interactiveCLI.session = self._interactiveCLI.init_session(self._interactiveCLI.history)
+            finally:
+                _interactive_mod.PromptSession = _orig_ps
+        else:
+            self._interactiveCLI = InteractiveCLI(customArgumentParser, self._parser)
 
     def exec_command(self, command: str) -> None:
         self._interactiveCLI.handle_command(command)
