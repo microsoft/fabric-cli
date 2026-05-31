@@ -2,17 +2,18 @@
 # Licensed under the MIT License.
 
 import json
-import pytest
-from unittest.mock import Mock, patch
 from argparse import Namespace
+from unittest.mock import Mock, patch
 
+import pytest
+
+from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils.fab_cmd_job_utils import (
-    wait_for_job_completion,
     validate_timeout_polling_interval,
+    wait_for_job_completion,
 )
 from fabric_cli.utils.fab_http_polling_utils import DEFAULT_POLLING_INTERVAL
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core import fab_constant
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def default_job_args():
         ws_id="test-ws",
         item_id="test-item",
         command="test-command",
-        output_format="json"
+        output_format="json",
     )
 
 
@@ -36,56 +37,113 @@ def create_mock_response(status_code=200, status="Completed", headers=None, erro
     mock_response = Mock()
     mock_response.status_code = status_code
     mock_response.headers = headers or {}
-    
+
     response_data = {"status": status}
     if error:
         response_data["error"] = error
-    
+
     mock_response.text = json.dumps(response_data)
     return mock_response
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_immediate_success(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_immediate_success(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response()
-    
-    wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
-    
+
+    wait_for_job_completion(
+        default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None
+    )
+
     assert mock_sleep.call_count == 1
     mock_get_polling_interval.assert_called_once_with({}, None)
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_with_custom_interval(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("questionary.print")
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_json_output_contains_instance_id_success(
+    mock_sleep,
+    mock_api,
+    mock_get_polling_interval,
+    mock_print,
+    default_job_args,
+    mock_job_response,
+):
+    """Verify that Completed status includes the job instance id in JSON output."""
+    mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
+    mock_api.return_value = create_mock_response(status="Completed")
+
+    job_instance_id = "abc12345-def6-7890-abcd-ef1234567890"
+    wait_for_job_completion(
+        default_job_args,
+        job_instance_id,
+        mock_job_response,
+        custom_polling_interval=None,
+    )
+
+    # Find the JSON output call
+    json_output = None
+    for call in mock_print.call_args_list:
+        try:
+            parsed = json.loads(call.args[0])
+            if parsed.get("status") == "Success" and "result" in parsed:
+                json_output = parsed
+                break
+        except (json.JSONDecodeError, TypeError, IndexError):
+            continue
+
+    assert json_output is not None, "Expected JSON output from wait_for_job_completion"
+    assert json_output["status"] == "Success"
+    assert "data" in json_output["result"]
+    assert len(json_output["result"]["data"]) == 1
+    assert json_output["result"]["data"][0]["id"] == job_instance_id
+    assert "completed" in json_output["result"]["message"]
+
+
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_with_custom_interval(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.return_value = 15
     mock_api.return_value = create_mock_response()
-    
-    wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=15)
-    
+
+    wait_for_job_completion(
+        default_job_args, "test-job-id", mock_job_response, custom_polling_interval=15
+    )
+
     assert mock_sleep.call_count == 1
     sleep_calls = mock_sleep.call_args_list
     assert sleep_calls[0].args[0] == 15
     mock_get_polling_interval.assert_called_once_with({}, 15)
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_progress_then_complete(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_progress_then_complete(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.side_effect = [DEFAULT_POLLING_INTERVAL, 45]
-    
-    mock_response_progress = create_mock_response(status="InProgress", headers={"Retry-After": "45"})
+
+    mock_response_progress = create_mock_response(
+        status="InProgress", headers={"Retry-After": "45"}
+    )
     mock_response_complete = create_mock_response()
-    
+
     mock_api.side_effect = [mock_response_progress, mock_response_complete]
-    
-    wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
-    
+
+    wait_for_job_completion(
+        default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None
+    )
+
     assert mock_sleep.call_count == 2
     sleep_calls = mock_sleep.call_args_list
     assert sleep_calls[0].args[0] == DEFAULT_POLLING_INTERVAL
@@ -93,95 +151,121 @@ def test_wait_for_job_completion_progress_then_complete(mock_sleep, mock_api, mo
     assert mock_get_polling_interval.call_count == 2
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_failed_status(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_failed_status(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response(status="Failed", error="Test error")
-    
+
     # Should raise FabricCLIError with ERROR_JOB_FAILED when job status is "Failed"
     with pytest.raises(FabricCLIError) as exc_info:
-        wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
-    
+        wait_for_job_completion(
+            default_job_args,
+            "test-job-id",
+            mock_job_response,
+            custom_polling_interval=None,
+        )
+
     # Verify the exception details
     assert exc_info.value.status_code == fab_constant.ERROR_JOB_FAILED
     assert "Job instance 'test-job-id' Failed" in str(exc_info.value.message)
     assert mock_sleep.call_count == 1
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_timeout(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_timeout(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response(status="InProgress")
-    
+
     with pytest.raises(TimeoutError):
-        wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, timeout=5, custom_polling_interval=None)
+        wait_for_job_completion(
+            default_job_args,
+            "test-job-id",
+            mock_job_response,
+            timeout=5,
+            custom_polling_interval=None,
+        )
 
 
-@patch('fabric_cli.utils.fab_cmd_job_utils.get_polling_interval')
-@patch('fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance')
-@patch('fabric_cli.utils.fab_cmd_job_utils.time.sleep')
-def test_wait_for_job_completion_cancelled_status(mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response):
+@patch("fabric_cli.utils.fab_cmd_job_utils.get_polling_interval")
+@patch("fabric_cli.utils.fab_cmd_job_utils.jobs_api.get_item_job_instance")
+@patch("fabric_cli.utils.fab_cmd_job_utils.time.sleep")
+def test_wait_for_job_completion_cancelled_status(
+    mock_sleep, mock_api, mock_get_polling_interval, default_job_args, mock_job_response
+):
     mock_get_polling_interval.return_value = DEFAULT_POLLING_INTERVAL
     mock_api.return_value = create_mock_response(status="Cancelled")
-    
-    wait_for_job_completion(default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None)
-    
+
+    wait_for_job_completion(
+        default_job_args, "test-job-id", mock_job_response, custom_polling_interval=None
+    )
+
     assert mock_sleep.call_count == 1
 
 
 def test_validate_timeout_polling_interval_equal_values_failure():
     args = Namespace(timeout=30, polling_interval=30)
-    
+
     with pytest.raises(FabricCLIError) as exc_info:
         validate_timeout_polling_interval(args)
-    
+
     assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-    assert "Custom polling interval (30s) cannot be greater than or equal to timeout (30s)" in str(exc_info.value)
+    assert (
+        "Custom polling interval (30s) cannot be greater than or equal to timeout (30s)"
+        in str(exc_info.value)
+    )
 
 
 def test_validate_timeout_polling_interval_greater_failure():
     args = Namespace(timeout=20, polling_interval=30)
-    
+
     with pytest.raises(FabricCLIError) as exc_info:
         validate_timeout_polling_interval(args)
-    
+
     assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-    assert "Custom polling interval (30s) cannot be greater than or equal to timeout (20s)" in str(exc_info.value)
+    assert (
+        "Custom polling interval (30s) cannot be greater than or equal to timeout (20s)"
+        in str(exc_info.value)
+    )
 
 
 def test_validate_timeout_polling_interval_valid_combination_success():
     args = Namespace(timeout=60, polling_interval=30)
-    
+
     # Should not raise any exception
     validate_timeout_polling_interval(args)
 
 
 def test_validate_timeout_polling_interval_no_values_success():
     args = Namespace()
-    
+
     validate_timeout_polling_interval(args)
 
 
 def test_validate_timeout_polling_interval_only_timeout_success():
     args = Namespace(timeout=30)
-    
+
     validate_timeout_polling_interval(args)
 
 
 def test_validate_timeout_polling_interval_only_polling_interval_success():
     args = Namespace(polling_interval=30)
-    
+
     validate_timeout_polling_interval(args)
 
 
 def test_validate_timeout_polling_interval_none_values_success():
     args = Namespace(timeout=None, polling_interval=None)
-    
+
     validate_timeout_polling_interval(args)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
