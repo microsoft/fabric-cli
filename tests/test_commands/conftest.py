@@ -282,7 +282,7 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize(
         (ItemType.NOTEBOOK, True),
         (ItemType.DATA_PIPELINE, True),
         (ItemType.LAKEHOUSE, True),
-        (ItemType.ENVIRONMENT, False),
+        (ItemType.ENVIRONMENT, True),
         (ItemType.WAREHOUSE, False),
         (ItemType.COSMOS_DB_DATABASE, True),
         (ItemType.USER_DATA_FUNCTION, True),
