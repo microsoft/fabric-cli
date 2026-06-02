@@ -15,8 +15,6 @@ from requests.adapters import HTTPAdapter, Retry
 
 from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant, fab_logger, fab_state_config
-
-_HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
 from fabric_cli.core.fab_exceptions import (
     AzureAPIError,
     FabricAPIError,
@@ -28,6 +26,8 @@ from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
+
+_HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
 
 GUID_PATTERN = r"([a-f0-9\-]{36})"
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
@@ -41,9 +41,7 @@ def _get_session() -> requests.Session:
     global _shared_session
     if _shared_session is None:
         _shared_session = requests.Session()
-        retries = Retry(
-            total=3, backoff_factor=1, status_forcelist=[502, 503, 504]
-        )
+        retries = Retry(total=3, backoff_factor=1, status_forcelist=[502, 503, 504])
         adapter = HTTPAdapter(max_retries=retries)
         _shared_session.mount("https://", adapter)
         _shared_session.headers.update({"Accept-Encoding": "gzip, deflate"})
@@ -103,7 +101,7 @@ def do_request(
         request_params["continuationToken"] = continuation_token
 
     # Build url
-    url = f"https://{url}/{uri}"
+    url = f"https://{url}/{uri.lstrip('/')}"
     if request_params:
         url += f"?{requests.compat.urlencode(request_params)}"
 

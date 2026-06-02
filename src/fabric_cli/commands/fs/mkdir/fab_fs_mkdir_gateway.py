@@ -84,7 +84,6 @@ def exec(gateway: VirtualWorkspaceItem, args: Namespace) -> None:
     }
 
     payload = {
-        # "description": "Created by fab",
         "displayName": gateway.short_name,
         "capacityId": params.get("capacityid"),
         "inactivityMinutesBeforeSleep": params.get("inactivityminutesbeforesleep", 30),

@@ -42,7 +42,6 @@ def exec(managed_private_endpoint: VirtualItem, args: Namespace) -> None:
         "name": managed_private_endpoint_name,
         "targetPrivateLinkResourceId": params.get("targetprivatelinkresourceid"),
         "targetSubresourceType": params.get("targetsubresourcetype"),
-        "requestMessage": "Created by fab",
     }
 
     args.ws_id = managed_private_endpoint.workspace.id

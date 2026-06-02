@@ -26,9 +26,11 @@ def exec(folder: Folder, args: Namespace) -> str | None:
     utils_ui.print_grey(f"Creating a new Folder...")
 
     payload = {
-        "description": "Created by fab",
         "displayName": foldername,
     }
+    if hasattr(args, 'params') and args.params.get("description"):
+        payload["description"] = args.params["description"]
+
     if parent_folder_id:
         payload["parentFolderId"] = parent_folder_id
 

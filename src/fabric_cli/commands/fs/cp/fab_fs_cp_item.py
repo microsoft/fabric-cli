@@ -204,15 +204,15 @@ def _copy_item_with_definition(
     args.ws_id = from_item.workspace.id
     args.format = ""
     item = item_api.get_item_withdefinition(args)
-    payload = json.dumps(
-        {
-            "type": str(from_item.item_type),
-            "description": item["description"],
-            "displayName": to_item.short_name,
-            "definition": item["definition"],
-            "folderId": to_item.folder_id,
-        }
-    )
+    item_payload: dict = {
+        "type": str(from_item.item_type),
+        "displayName": to_item.short_name,
+        "definition": item["definition"],
+        "folderId": to_item.folder_id,
+    }
+    if item.get("description"):
+        item_payload["description"] = item["description"]
+    payload = json.dumps(item_payload)
 
     # Create in target
     args.method = "post"

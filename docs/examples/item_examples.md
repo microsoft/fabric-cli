@@ -44,6 +44,7 @@ fab cd ../ws1.Workspace/lh1.Lakehouse
 - `.Lakehouse`: `enableSchemas`
 - `.Warehouse`: `enableCaseInsensitive`
 - `.KQLDatabase`: `dbtype`, `eventhouseId`, `clusterUri`, `databaseName`
+- `.DigitalTwinBuilderFlow`: `digitalTwinBuilderId`
 - `.MirroredDatabase`: `mirrorType`, `connectionId`, `defaultSchema`, `database`, `mountedTables`
 - `.Report`: `semanticModelId`
 
@@ -249,7 +250,7 @@ fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReferenc
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`
 - `.MirroredDatabase`, `.Reflex`
-- `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Copy Item to Workspace
@@ -324,7 +325,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.Report`, `.SemanticModel`
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`, `.MirroredDatabase`
-- `.Reflex`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.Reflex`, `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 
 
 #### Export to Lakehouse

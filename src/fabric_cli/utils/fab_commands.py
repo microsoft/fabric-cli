@@ -11,6 +11,7 @@ COMMANDS = {
         get_os_specific_command("cp"): "Copy an item or file to a destination.",
         "export": "Export an item.",
         "exists": "Check if a workspace, item, or file exists.",
+        "find": "Search the OneLake catalog for items.",
         "get": "Get workspace or item properties.",
         "import": "Import an item to create or update it.",
         get_os_specific_command("ls"): "List workspaces, items, and files.",
