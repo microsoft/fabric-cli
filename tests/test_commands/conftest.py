@@ -136,6 +136,7 @@ import_create_new_item_success_params = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER,
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.LAKEHOUSE,
+        ItemType.ENVIRONMENT,
     ],
 )
 
@@ -296,7 +297,7 @@ get_virtual_workspace_success_params = pytest.mark.parametrize(
     "virtual_workspace_type,expected_properties",
     [
         (
-            VirtualWorkspaceType.DOMAIN, 
+            VirtualWorkspaceType.DOMAIN,
             ["contributorsScope", "domainWorkspaces"]),
         (
             VirtualWorkspaceType.GATEWAY,

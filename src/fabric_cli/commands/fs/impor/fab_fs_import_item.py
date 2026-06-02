@@ -8,7 +8,6 @@ from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.utils import fab_cmd_import_utils as utils_import
 from fabric_cli.utils import fab_item_util
@@ -53,11 +52,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
                     f"Importing (update) '{_input_path}' → '{item.path}'..."
                 )
 
-                # Environment item type, not supporting definition yet
-                if item.item_type == ItemType.ENVIRONMENT:
-                    _import_update_environment_item(args, payload)
-                else:
-                    _import_update_item(args, payload)
+                _import_update_item(args, payload)
 
                 utils_ui.print_output_format(
                     args, message=f"'{item.name}' imported")
@@ -66,11 +61,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
             utils_ui.print_grey(
                 f"Importing '{_input_path}' → '{item.path}'...")
 
-            # Environment item type, not supporting definition yet
-            if item.item_type == ItemType.ENVIRONMENT:
-                response = _import_create_environment_item(item, args, payload)
-            else:
-                response = _import_create_item(args, payload)
+            response = _import_create_item(args, payload)
 
             if response.status_code in (200, 201):
                 utils_ui.print_output_format(
@@ -83,10 +74,6 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
 
 # Utils
-def _import_update_environment_item(args: Namespace, payload: dict) -> None:
-    utils_import.publish_environment_item(args, payload)
-
-
 def _import_update_item(args: Namespace, payload: dict) -> None:
     definition_payload = json.dumps(
         {
@@ -94,26 +81,6 @@ def _import_update_item(args: Namespace, payload: dict) -> None:
         }
     )
     item_api.update_item_definition(args, payload=definition_payload)
-
-
-def _import_create_environment_item(
-    item: Item, args: Namespace, payload: dict
-) -> ApiResponse:
-
-    item_payload: dict = {
-        "type": str(item.item_type),
-        "displayName": item.short_name,
-        "folderId": item.folder_id,
-    }
-    item_payload_str = json.dumps(item_payload)
-
-    # Create the item
-    response = item_api.create_item(args, payload=item_payload_str)
-    data = json.loads(response.text)
-    args.id = data["id"]
-
-    utils_import.publish_environment_item(args, payload)
-    return response
 
 
 def _import_create_item(args: Namespace, payload: dict) -> ApiResponse:
