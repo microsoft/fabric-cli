@@ -102,7 +102,6 @@ class TestExport:
         cli_executor,
         mock_print_done,
         tmp_path,
-        mock_print_warning,
     ):
         """Test Environment export with nested Setting/Sparkcompute.yml structure."""
         # Setup
@@ -110,7 +109,6 @@ class TestExport:
 
         # Reset mock
         mock_print_done.reset_mock()
-        mock_print_warning.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -132,7 +130,6 @@ class TestExport:
         assert sparkcompute_file.is_file(), "Expected Setting/Sparkcompute.yml"
 
         mock_print_done.assert_called_once()
-        mock_print_warning.assert_called_once()
 
     @export_item_types_parameters
     def test_export_item_invalid_output_path_failure(

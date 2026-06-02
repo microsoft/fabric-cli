@@ -28,8 +28,10 @@ def _build_definition(input_path: Any, input_format: Optional[str] = None) -> di
     parts = []
 
     # Recursively traverses the directory and builds the payload structure
+    # Sort dirs and files to ensure deterministic ordering across platforms
     for root, dirs, files in os.walk(directory):
-        for file in files:
+        dirs.sort()
+        for file in sorted(files):
             # Get full path and relative path
             full_path = os.path.join(root, file)
             relative_path = os.path.relpath(full_path, directory)
