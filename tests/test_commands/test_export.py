@@ -120,14 +120,17 @@ class TestExport:
         # Assert
         export_path = tmp_path / f"{item.display_name}.Environment"
         assert export_path.is_dir()
-        files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.name == ".platform" for file in files)
-        # Environment exports to nested Setting/Sparkcompute.yml
+
+        # Environment exports to: .platform + Setting/Sparkcompute.yml
+        platform_file = export_path / ".platform"
+        assert platform_file.is_file(), "Expected .platform file at root"
+
         setting_dir = export_path / "Setting"
-        assert setting_dir.is_dir()
-        setting_files = list(setting_dir.iterdir())
-        assert any(file.suffix == ".yml" for file in setting_files)
+        assert setting_dir.is_dir(), "Expected Setting/ directory"
+
+        sparkcompute_file = setting_dir / "Sparkcompute.yml"
+        assert sparkcompute_file.is_file(), "Expected Setting/Sparkcompute.yml"
+
         mock_print_done.assert_called_once()
         mock_print_warning.assert_called_once()
 

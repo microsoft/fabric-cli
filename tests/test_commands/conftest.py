@@ -295,8 +295,9 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize(
 get_virtual_workspace_success_params = pytest.mark.parametrize(
     "virtual_workspace_type,expected_properties",
     [
-        (VirtualWorkspaceType.DOMAIN, [
-         "contributorsScope", "domainWorkspaces"]),
+        (
+            VirtualWorkspaceType.DOMAIN, 
+            ["contributorsScope", "domainWorkspaces"]),
         (
             VirtualWorkspaceType.GATEWAY,
             ["type", "capacityId", "numberOfMemberGateways"],
