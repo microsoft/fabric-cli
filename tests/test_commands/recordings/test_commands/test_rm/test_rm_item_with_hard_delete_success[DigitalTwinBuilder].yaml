@@ -11,14 +11,15 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "",
+        "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -27,15 +28,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2130'
+      - '2530'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:21 GMT
+      - Wed, 13 May 2026 07:22:00 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 642edff4-2b48-4ec7-a0a8-d6411edac04f
+      - 810c33f3-a310-483a-8dc8-f3636dbcf8aa
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -61,21 +62,33 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items
   response:
     body:
-      string: '{"value": [{"id": "8887ff69-8828-4412-92cb-6df939454aad", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1f792c3a-4991-4cca-a44a-fd4682c70313", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "ab9a18e5-cf41-4d6e-85fb-1df81c21dd3b",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260402104649",
-        "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "dacc9423-f3c8-4d13-8762-e71892778f52", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}]}'
+      string: '{"value": [{"id": "912e93bd-bdff-4cc6-8abf-a2331c763506", "type": "SQLEndpoint",
+        "displayName": "fabcli000001_autodtdm", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "7e87f525-921f-41ff-81c6-b209b42c7ffb",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "abb4a7e1-4661-4f2a-a9be-54774e74de5b",
+        "type": "SQLEndpoint", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "6062fd74-e26c-4a3f-ba9a-b6e3b55284a5",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001_auto", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "e30be52f-cae8-4586-88f2-d421b1236a37",
+        "type": "Lakehouse", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "ba76572d-7526-4636-8329-db337f7a1d99",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001_autoOnDemand",
+        "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "b3238d3a-f38f-43fe-8495-bf254f095f4e", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "cdca5ddc-b1e9-40dc-931f-fce7acd476aa", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "f6f7a3ac-2484-4894-8f28-2e8e0209c132", "type": "Lakehouse", "displayName":
+        "fabcli000001_autodtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "29c2332c-9f26-4b63-825f-fabd98721bd0", "type": "DigitalTwinBuilderFlow",
+        "displayName": "fabcli000001_autoOnDemand", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -84,15 +97,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '328'
+      - '497'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:22 GMT
+      - Wed, 13 May 2026 07:22:01 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 1e2ce745-5735-457c-ba1e-d62aea8dba07
+      - 2f54fe78-98e6-4da9-8268-6d21b130bb20
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -118,21 +131,33 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items
   response:
     body:
-      string: '{"value": [{"id": "8887ff69-8828-4412-92cb-6df939454aad", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1f792c3a-4991-4cca-a44a-fd4682c70313", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "ab9a18e5-cf41-4d6e-85fb-1df81c21dd3b",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260402104649",
-        "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "dacc9423-f3c8-4d13-8762-e71892778f52", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}]}'
+      string: '{"value": [{"id": "912e93bd-bdff-4cc6-8abf-a2331c763506", "type": "SQLEndpoint",
+        "displayName": "fabcli000001_autodtdm", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "7e87f525-921f-41ff-81c6-b209b42c7ffb",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "abb4a7e1-4661-4f2a-a9be-54774e74de5b",
+        "type": "SQLEndpoint", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "6062fd74-e26c-4a3f-ba9a-b6e3b55284a5",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001_auto", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "e30be52f-cae8-4586-88f2-d421b1236a37",
+        "type": "Lakehouse", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "ba76572d-7526-4636-8329-db337f7a1d99",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001_autoOnDemand",
+        "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "b3238d3a-f38f-43fe-8495-bf254f095f4e", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "cdca5ddc-b1e9-40dc-931f-fce7acd476aa", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "f6f7a3ac-2484-4894-8f28-2e8e0209c132", "type": "Lakehouse", "displayName":
+        "fabcli000001_autodtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "29c2332c-9f26-4b63-825f-fabd98721bd0", "type": "DigitalTwinBuilderFlow",
+        "displayName": "fabcli000001_autoOnDemand", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -141,15 +166,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '328'
+      - '497'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:23 GMT
+      - Wed, 13 May 2026 07:22:02 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 97ca3788-b66a-4819-bedd-0b967d8ade7d
+      - 0bd9b212-4486-413d-9fa1-dd7e4e907071
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -164,8 +189,8 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '{"displayName": "fabcli000001", "type":
-      "DigitalTwinBuilder", "folderId": null}'
+    body: '{"displayName": "fabcli000001", "type": "DigitalTwinBuilder", "folderId":
+      null}'
     headers:
       Accept:
       - '*/*'
@@ -174,13 +199,13 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '116'
+      - '83'
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: POST
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/digitalTwinBuilders
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/digitalTwinBuilders
   response:
     body:
       string: 'null'
@@ -196,15 +221,15 @@ interactions:
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:25 GMT
+      - Wed, 13 May 2026 07:22:04 GMT
       ETag:
       - '""'
       Location:
-      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/9971c562-e632-4663-b903-9fe216b56bf0
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/8ba4f6c1-bde5-48f2-9a58-acc9c64c718e
       Pragma:
       - no-cache
       RequestId:
-      - 11496704-bdaf-454e-b6f5-ad8b02b675e2
+      - d92aede2-3d7a-47d6-addc-eaf8b0784e6a
       Retry-After:
       - '20'
       Strict-Transport-Security:
@@ -218,7 +243,7 @@ interactions:
       request-redirected:
       - 'true'
       x-ms-operation-id:
-      - 9971c562-e632-4663-b903-9fe216b56bf0
+      - 8ba4f6c1-bde5-48f2-9a58-acc9c64c718e
     status:
       code: 202
       message: Accepted
@@ -234,13 +259,13 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/9971c562-e632-4663-b903-9fe216b56bf0
+    uri: https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/8ba4f6c1-bde5-48f2-9a58-acc9c64c718e
   response:
     body:
-      string: '{"status": "Succeeded", "createdTimeUtc": "2026-04-02T10:47:24.1874265",
-        "lastUpdatedTimeUtc": "2026-04-02T10:47:33.6106131", "percentComplete": 100,
+      string: '{"status": "Succeeded", "createdTimeUtc": "2026-05-13T07:22:04.4917488",
+        "lastUpdatedTimeUtc": "2026-05-13T07:22:11.4021137", "percentComplete": 100,
         "error": null}'
     headers:
       Access-Control-Expose-Headers:
@@ -250,17 +275,17 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '131'
+      - '132'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:46 GMT
+      - Wed, 13 May 2026 07:22:25 GMT
       Location:
-      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/9971c562-e632-4663-b903-9fe216b56bf0/result
+      - https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/8ba4f6c1-bde5-48f2-9a58-acc9c64c718e/result
       Pragma:
       - no-cache
       RequestId:
-      - 5829c18b-e1c1-4517-bc67-c534dd054cad
+      - dc8ec6aa-8173-462d-a237-0bdf246806a5
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -268,7 +293,7 @@ interactions:
       X-Frame-Options:
       - deny
       x-ms-operation-id:
-      - 9971c562-e632-4663-b903-9fe216b56bf0
+      - 8ba4f6c1-bde5-48f2-9a58-acc9c64c718e
     status:
       code: 200
       message: OK
@@ -284,14 +309,13 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/9971c562-e632-4663-b903-9fe216b56bf0/result
+    uri: https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/8ba4f6c1-bde5-48f2-9a58-acc9c64c718e/result
   response:
     body:
-      string: '{"id": "6ff7ee08-e568-4233-ba02-403756948c2a", "type": "DigitalTwinBuilder",
-        "displayName": "fabcli000001", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}'
+      string: '{"id": "fe3b69dc-431a-496a-83d6-1d4a9f90be23", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -302,11 +326,11 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Thu, 02 Apr 2026 10:47:47 GMT
+      - Wed, 13 May 2026 07:22:26 GMT
       Pragma:
       - no-cache
       RequestId:
-      - 8e821c04-2b4a-4cff-a759-8bb5e99b6fe1
+      - 67b73f38-9e5c-4445-bb43-b6e56eb99ba9
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       Transfer-Encoding:
@@ -330,14 +354,15 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "",
+        "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -346,15 +371,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2130'
+      - '2530'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:48 GMT
+      - Wed, 13 May 2026 07:22:27 GMT
       Pragma:
       - no-cache
       RequestId:
-      - b0308001-a528-4405-b549-bc58469d4fa7
+      - 08b63e43-4ed0-4398-8f74-b3972b0f98da
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -380,28 +405,41 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items
   response:
     body:
-      string: '{"value": [{"id": "8887ff69-8828-4412-92cb-6df939454aad", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1f792c3a-4991-4cca-a44a-fd4682c70313", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "ab9a18e5-cf41-4d6e-85fb-1df81c21dd3b",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260402104649",
-        "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "91cc4c9f-2a19-4a13-b664-6593b1eb82fd", "type": "SQLEndpoint", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "dacc9423-f3c8-4d13-8762-e71892778f52", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "6ff7ee08-e568-4233-ba02-403756948c2a",
-        "type": "DigitalTwinBuilder", "displayName": "fabcli000001", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "23dbe9fc-ff1f-451a-9854-86a470ea9484", "type": "Lakehouse", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1c6f7dfd-7646-4688-9513-149e3bd39df5", "type": "DigitalTwinBuilderFlow",
-        "displayName": "fabcli000001OnDemand", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}]}'
+      string: '{"value": [{"id": "912e93bd-bdff-4cc6-8abf-a2331c763506", "type": "SQLEndpoint",
+        "displayName": "fabcli000001_autodtdm", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "7e87f525-921f-41ff-81c6-b209b42c7ffb",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "abb4a7e1-4661-4f2a-a9be-54774e74de5b",
+        "type": "SQLEndpoint", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "60144191-2851-4d9f-a329-a81b92e8ab50",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "6062fd74-e26c-4a3f-ba9a-b6e3b55284a5",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001_auto", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "e30be52f-cae8-4586-88f2-d421b1236a37",
+        "type": "Lakehouse", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "ba76572d-7526-4636-8329-db337f7a1d99",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001_autoOnDemand",
+        "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "b3238d3a-f38f-43fe-8495-bf254f095f4e", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "cdca5ddc-b1e9-40dc-931f-fce7acd476aa", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "f6f7a3ac-2484-4894-8f28-2e8e0209c132", "type": "Lakehouse", "displayName":
+        "fabcli000001_autodtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "29c2332c-9f26-4b63-825f-fabd98721bd0", "type": "DigitalTwinBuilderFlow",
+        "displayName": "fabcli000001_autoOnDemand", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "fe3b69dc-431a-496a-83d6-1d4a9f90be23",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "88029014-5996-4d2a-98a1-76c450e67637",
+        "type": "Lakehouse", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "13847435-487d-4937-b17e-7859efb75c55",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001OnDemand", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -410,15 +448,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '494'
+      - '620'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:49 GMT
+      - Wed, 13 May 2026 07:22:28 GMT
       Pragma:
       - no-cache
       RequestId:
-      - b1d0ed0e-c5f0-4028-bda6-4a3eba1559be
+      - bf131ab3-6854-4012-b7f9-da8b14841a5f
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -446,9 +484,9 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: DELETE
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items/6ff7ee08-e568-4233-ba02-403756948c2a?hardDelete=true
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items/fe3b69dc-431a-496a-83d6-1d4a9f90be23?hardDelete=true
   response:
     body:
       string: ''
@@ -464,11 +502,11 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Thu, 02 Apr 2026 10:47:50 GMT
+      - Wed, 13 May 2026 07:22:29 GMT
       Pragma:
       - no-cache
       RequestId:
-      - aeb7afad-ac1d-41f0-a355-6fa67cc0d526
+      - 8082859d-8d96-4318-a3fe-fd3c3aa2d9db
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -494,14 +532,15 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
     uri: https://api.fabric.microsoft.com/v1/workspaces
   response:
     body:
       string: '{"value": [{"id": "3634a139-2c9e-4205-910b-3b089a31be47", "displayName":
-        "My workspace", "description": "", "type": "Personal"}, {"id": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff",
-        "displayName": "fabriccli_WorkspacePerTestclass_000001", "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
+        "My workspace", "description": "", "type": "Personal"}, {"id": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6",
+        "displayName": "fabriccli_WorkspacePerTestclass_000001", "description": "",
+        "type": "Workspace", "capacityId": "00000000-0000-0000-0000-000000000004"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -510,15 +549,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '2130'
+      - '2530'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:51 GMT
+      - Wed, 13 May 2026 07:22:30 GMT
       Pragma:
       - no-cache
       RequestId:
-      - fe82ec44-d493-4177-9711-5de195e9b3b0
+      - 4d4e0ae0-502b-4a17-8372-92cbd8005016
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -544,25 +583,37 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items
   response:
     body:
-      string: '{"value": [{"id": "8887ff69-8828-4412-92cb-6df939454aad", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1f792c3a-4991-4cca-a44a-fd4682c70313", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "ab9a18e5-cf41-4d6e-85fb-1df81c21dd3b",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260402104649",
-        "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "91cc4c9f-2a19-4a13-b664-6593b1eb82fd", "type": "SQLEndpoint", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "dacc9423-f3c8-4d13-8762-e71892778f52", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "23dbe9fc-ff1f-451a-9854-86a470ea9484",
+      string: '{"value": [{"id": "912e93bd-bdff-4cc6-8abf-a2331c763506", "type": "SQLEndpoint",
+        "displayName": "fabcli000001_autodtdm", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "7e87f525-921f-41ff-81c6-b209b42c7ffb",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "abb4a7e1-4661-4f2a-a9be-54774e74de5b",
+        "type": "SQLEndpoint", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "60144191-2851-4d9f-a329-a81b92e8ab50",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "6062fd74-e26c-4a3f-ba9a-b6e3b55284a5",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001_auto", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "e30be52f-cae8-4586-88f2-d421b1236a37",
+        "type": "Lakehouse", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "ba76572d-7526-4636-8329-db337f7a1d99",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001_autoOnDemand",
+        "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "b3238d3a-f38f-43fe-8495-bf254f095f4e", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "cdca5ddc-b1e9-40dc-931f-fce7acd476aa", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "f6f7a3ac-2484-4894-8f28-2e8e0209c132", "type": "Lakehouse", "displayName":
+        "fabcli000001_autodtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "29c2332c-9f26-4b63-825f-fabd98721bd0", "type": "DigitalTwinBuilderFlow",
+        "displayName": "fabcli000001_autoOnDemand", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "88029014-5996-4d2a-98a1-76c450e67637",
         "type": "Lakehouse", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}]}'
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -571,15 +622,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '396'
+      - '558'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:51 GMT
+      - Wed, 13 May 2026 07:22:30 GMT
       Pragma:
       - no-cache
       RequestId:
-      - cda9243b-702c-4583-bdbc-af76c566b813
+      - ebcf8fae-4734-4a16-b029-b641b712eadc
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:
@@ -605,25 +656,37 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - ms-fabric-cli-test/1.5.0
+      - ms-fabric-cli-test/1.6.1
     method: GET
-    uri: https://api.fabric.microsoft.com/v1/workspaces/0b64fa1c-8afe-42d0-bcd6-afb110aa2cff/items
+    uri: https://api.fabric.microsoft.com/v1/workspaces/a3a42ced-efa8-497d-b2e0-e7f5bc1149e6/items
   response:
     body:
-      string: '{"value": [{"id": "8887ff69-8828-4412-92cb-6df939454aad", "type": "SemanticModel",
-        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "1f792c3a-4991-4cca-a44a-fd4682c70313", "type": "SQLEndpoint", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "ab9a18e5-cf41-4d6e-85fb-1df81c21dd3b",
-        "type": "Warehouse", "displayName": "StagingWarehouseForDataflows_20260402104649",
-        "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "91cc4c9f-2a19-4a13-b664-6593b1eb82fd", "type": "SQLEndpoint", "displayName":
-        "fabcli000001dtdm", "description": "", "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"},
-        {"id": "dacc9423-f3c8-4d13-8762-e71892778f52", "type": "Lakehouse", "displayName":
-        "StagingLakehouseForDataflows_20260402104636", "description": "", "workspaceId":
-        "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}, {"id": "23dbe9fc-ff1f-451a-9854-86a470ea9484",
+      string: '{"value": [{"id": "912e93bd-bdff-4cc6-8abf-a2331c763506", "type": "SQLEndpoint",
+        "displayName": "fabcli000001_autodtdm", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "7e87f525-921f-41ff-81c6-b209b42c7ffb",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "abb4a7e1-4661-4f2a-a9be-54774e74de5b",
+        "type": "SQLEndpoint", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "60144191-2851-4d9f-a329-a81b92e8ab50",
+        "type": "SQLEndpoint", "displayName": "fabcli000001dtdm", "description": "",
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "6062fd74-e26c-4a3f-ba9a-b6e3b55284a5",
+        "type": "DigitalTwinBuilder", "displayName": "fabcli000001_auto", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "e30be52f-cae8-4586-88f2-d421b1236a37",
+        "type": "Lakehouse", "displayName": "fabcli000001_autodtdm", "description":
+        "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "ba76572d-7526-4636-8329-db337f7a1d99",
+        "type": "DigitalTwinBuilderFlow", "displayName": "fabcli000001_autoOnDemand",
+        "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "b3238d3a-f38f-43fe-8495-bf254f095f4e", "type": "Lakehouse", "displayName":
+        "fabcli000001dtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "cdca5ddc-b1e9-40dc-931f-fce7acd476aa", "type": "DigitalTwinBuilder",
+        "displayName": "fabcli000001_auto", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "f6f7a3ac-2484-4894-8f28-2e8e0209c132", "type": "Lakehouse", "displayName":
+        "fabcli000001_autodtdm", "description": "", "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"},
+        {"id": "29c2332c-9f26-4b63-825f-fabd98721bd0", "type": "DigitalTwinBuilderFlow",
+        "displayName": "fabcli000001_autoOnDemand", "description": "", "workspaceId":
+        "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}, {"id": "88029014-5996-4d2a-98a1-76c450e67637",
         "type": "Lakehouse", "displayName": "fabcli000001dtdm", "description": "",
-        "workspaceId": "0b64fa1c-8afe-42d0-bcd6-afb110aa2cff"}]}'
+        "workspaceId": "a3a42ced-efa8-497d-b2e0-e7f5bc1149e6"}]}'
     headers:
       Access-Control-Expose-Headers:
       - RequestId
@@ -632,15 +695,15 @@ interactions:
       Content-Encoding:
       - gzip
       Content-Length:
-      - '396'
+      - '558'
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Thu, 02 Apr 2026 10:47:52 GMT
+      - Wed, 13 May 2026 07:22:32 GMT
       Pragma:
       - no-cache
       RequestId:
-      - acc4c1a6-06d9-41d7-93a5-e5c8a00be941
+      - b39685dd-e3dc-49f7-894e-0535b31b6dc5
       Strict-Transport-Security:
       - max-age=31536000; includeSubDomains
       X-Content-Type-Options:

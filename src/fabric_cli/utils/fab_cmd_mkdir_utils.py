@@ -89,6 +89,34 @@ def add_type_specific_payload(item: Item, args, payload):
                     "parentEventhouseItemId": _eventhouse_id,
                 }
 
+        case ItemType.DIGITAL_TWIN_BUILDER_FLOW:
+            _digital_twin_builder_id = params.get("digitaltwinbuilderid")
+            _workspace_id = item.workspace.id
+
+            if not _digital_twin_builder_id:
+                fab_logger.log_warning(
+                    "DigitalTwinBuilder not provided in params. Creating one first"
+                )
+
+                _initialize_batch_collection_for_dependency_creation(args)
+
+                _digital_twin_builder = Item(
+                    f"{item.short_name}_auto",
+                    None,
+                    item.parent,
+                    "DigitalTwinBuilder",
+                )
+                _digital_twin_builder_id = mkdir_item.exec(
+                    _digital_twin_builder, args)
+
+            payload_dict["creationPayload"] = {
+                "digitalTwinBuilderItemReference": {
+                    "referenceType": "ById",
+                    "itemId": _digital_twin_builder_id,
+                    "workspaceId": _workspace_id,
+                }
+            }
+
         case ItemType.MIRRORED_DATABASE:
             _type = "genericmirror"
             payload_folder = "MirroredDatabase.GenericMirror"
@@ -118,7 +146,8 @@ def add_type_specific_payload(item: Item, args, payload):
                 payload_folder,
             )
 
-            payload_dict["definition"] = _create_payload(payload_path, params, _type)
+            payload_dict["definition"] = _create_payload(
+                payload_path, params, _type)
 
         case ItemType.REPORT:
             payload_folder = "Blank.Report"
@@ -176,7 +205,8 @@ def add_type_specific_payload(item: Item, args, payload):
                 "dataFactoryResourceId": f"/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.DataFactory/factories/{factory_name}"
             }
             json_str = json.dumps(data)
-            encoded_content = base64.b64encode(json_str.encode("utf-8")).decode("utf-8")
+            encoded_content = base64.b64encode(
+                json_str.encode("utf-8")).decode("utf-8")
 
             payload_dict["definition"] = {
                 "parts": [
@@ -267,7 +297,8 @@ def _create_payload(directory, params, type=None, semantic_model_id=None, encode
                 with open(full_path, "rb") as file:
                     content = file.read()
                     encoded_content = (
-                        base64.b64encode(content).decode("utf-8") if encode else content
+                        base64.b64encode(content).decode(
+                            "utf-8") if encode else content
                     )
 
             # Add file data to parts
@@ -296,7 +327,10 @@ def get_params_per_item_type(item: Item):
         case ItemType.WAREHOUSE:
             optional_params = ["enableCaseInsensitive"]
         case ItemType.KQL_DATABASE:
-            optional_params = ["dbType", "eventhouseId", "clusterUri", "databaseName"]
+            optional_params = ["dbType", "eventhouseId",
+                               "clusterUri", "databaseName"]
+        case ItemType.DIGITAL_TWIN_BUILDER_FLOW:
+            optional_params = ["digitalTwinBuilderId"]
         case ItemType.MIRRORED_DATABASE:
             optional_params = [
                 "mirrorType",
@@ -308,7 +342,8 @@ def get_params_per_item_type(item: Item):
         case ItemType.REPORT:
             optional_params = ["semanticModelId"]
         case ItemType.MOUNTED_DATA_FACTORY:
-            required_params = ["subscriptionId", "resourceGroup", "factoryName"]
+            required_params = ["subscriptionId",
+                               "resourceGroup", "factoryName"]
 
     return required_params, optional_params
 
@@ -316,8 +351,10 @@ def get_params_per_item_type(item: Item):
 def show_params_desc(params, type, required_params=None, optional_params=None):
 
     if not params:
-        required_params_filtered = [p for p in (required_params or []) if p is not None]
-        optional_params_filtered = [p for p in (optional_params or []) if p is not None]
+        required_params_filtered = [p for p in (
+            required_params or []) if p is not None]
+        optional_params_filtered = [p for p in (
+            optional_params or []) if p is not None]
 
         # Construct the parts of the message conditionally
         required_param_list = "\n  ".join(sorted(required_params_filtered))
@@ -331,9 +368,11 @@ def show_params_desc(params, type, required_params=None, optional_params=None):
             ]
 
             if required_param_list:
-                message_parts.append(f"\n\nRequired params:\n  {required_param_list}")
+                message_parts.append(
+                    f"\n\nRequired params:\n  {required_param_list}")
             if optional_param_list:
-                message_parts.append(f"\n\nOptional params:\n  {optional_param_list}")
+                message_parts.append(
+                    f"\n\nOptional params:\n  {optional_param_list}")
 
         utils_ui.print("".join(message_parts) + "\n")
 
@@ -392,9 +431,11 @@ def _get_params_per_cred_type(cred_type, is_on_premises_gateway):
                 f"Unsupported credential type {cred_type}. Skipping validation"
             )
             return []
-    
 
-def _validate_credential_params(cred_type, provided_cred_params, is_on_premises_gateway):
+
+def _validate_credential_params(
+    cred_type, provided_cred_params, is_on_premises_gateway
+):
     ignored_params = []
     params = {}
     param_keys = _get_params_per_cred_type(cred_type, is_on_premises_gateway)
@@ -418,12 +459,17 @@ def _validate_credential_params(cred_type, provided_cred_params, is_on_premises_
             f"Ignoring unsupported parameters for credential type {cred_type}: {ignored_params}"
         )
     if is_on_premises_gateway:
-        provided_cred_params["values"] = _validate_and_get_on_premises_gateway_credential_values(provided_cred_params.get("values"))
+        provided_cred_params["values"] = (
+            _validate_and_get_on_premises_gateway_credential_values(
+                provided_cred_params.get("values")
+            )
+        )
 
     for key in param_keys:
         params[key] = provided_cred_params[key.lower()]
 
     return params
+
 
 def _validate_and_get_on_premises_gateway_credential_values(cred_values):
     for item in cred_values:
@@ -432,17 +478,21 @@ def _validate_and_get_on_premises_gateway_credential_values(cred_values):
                 ErrorMessages.Common.invalid_onpremises_gateway_values(),
                 fab_constant.ERROR_INVALID_INPUT,
             )
-        
+
     param_values_keys = ["gatewayId", "encryptedCredentials"]
     missing_params = [
-        key for key in param_values_keys 
-        if not all(key.lower() in {k.lower() for k in item.keys()} for item in cred_values)
+        key
+        for key in param_values_keys
+        if not all(
+            key.lower() in {k.lower() for k in item.keys()} for item in cred_values
+        )
     ]
     if len(missing_params) > 0:
         raise FabricCLIError(
-            ErrorMessages.Common.missing_onpremises_gateway_parameters(missing_params),
+            ErrorMessages.Common.missing_onpremises_gateway_parameters(
+                missing_params),
             fab_constant.ERROR_INVALID_INPUT,
-    )
+        )
 
     ignored_params = [
         key
@@ -453,9 +503,13 @@ def _validate_and_get_on_premises_gateway_credential_values(cred_values):
     if len(ignored_params) > 0:
         utils_ui.print_warning(
             f"Ignoring unsupported parameters for on-premises gateway: {ignored_params}"
-    )
+        )
 
-    return [{key: item[key.lower()] for key in param_values_keys if key.lower() in item} for item in cred_values]
+    return [
+        {key: item[key.lower()]
+         for key in param_values_keys if key.lower() in item}
+        for item in cred_values
+    ]
 
 
 def get_connection_config_from_params(payload, con_type, con_type_def, params):
@@ -496,7 +550,8 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         )
     provided_params = params.get("connectiondetails").get("parameters")
 
-    supported_creation_methods = [m["name"] for m in con_type_def["creationMethods"]]
+    supported_creation_methods = [m["name"]
+                                  for m in con_type_def["creationMethods"]]
     if not params.get("connectiondetails").get("creationmethod"):
         if provided_params:
             # We default to pick the first creation method that matches the provided parameters
@@ -506,7 +561,12 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
                     for item in con_type_def["creationMethods"]
                     if all(
                         (k.get("name") or "").lower()
-                        in [key.lower() for key in params.get("connectiondetails").get("parameters").keys()]
+                        in [
+                            key.lower()
+                            for key in params.get("connectiondetails")
+                            .get("parameters")
+                            .keys()
+                        ]
                         for k in item["parameters"]
                     )
                 ),
@@ -546,12 +606,15 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     missing_params = []
     if not provided_params:
         # Check if the creation method actually requires parameters
-        required_params = [p["name"] for p in creation_method["parameters"] if p["required"]]
+        required_params = [
+            p["name"] for p in creation_method["parameters"] if p["required"]
+        ]
         if required_params:
             # Get required and optional parameters from the creation method
             req_params_str = ", ".join(required_params)
             opt_params_str = ", ".join(
-                [p["name"] for p in creation_method["parameters"] if not p["required"]]
+                [p["name"]
+                    for p in creation_method["parameters"] if not p["required"]]
             )
             raise FabricCLIError(
                 f"Parameters are required for the connection creation method. Required parameters are: {req_params_str}. Optional parameters are: {opt_params_str}",
@@ -590,7 +653,7 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
         "type": con_type,
         "creationMethod": creation_method["name"],
     }
-    
+
     # Only add parameters if there are any
     if parsed_params:
         connection_request["connectionDetails"]["parameters"] = parsed_params
@@ -656,8 +719,13 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     if "skiptestconnection" in provided_cred_params:
         provided_cred_params.pop("skiptestconnection")
 
-    is_on_premises_gateway = connection_request.get("connectivityType").lower() == "onpremisesgateway"
-    connection_params = _validate_credential_params(cred_type, provided_cred_params, is_on_premises_gateway)
+    is_on_premises_gateway = (
+        connection_request.get(
+            "connectivityType").lower() == "onpremisesgateway"
+    )
+    connection_params = _validate_credential_params(
+        cred_type, provided_cred_params, is_on_premises_gateway
+    )
 
     connection_request["credentialDetails"] = {
         "singleSignOnType": singleSignOnType,
@@ -667,10 +735,11 @@ def get_connection_config_from_params(payload, con_type, con_type_def, params):
     }
 
     connection_request["credentialDetails"]["credentials"]["credentialType"] = cred_type
-        
+
     if is_on_premises_gateway:
-        connection_request["credentialDetails"]["credentials"]["values"] = connection_params.get(
-            "values")
+        connection_request["credentialDetails"]["credentials"]["values"] = (
+            connection_params.get("values")
+        )
 
     return connection_request
 
@@ -690,7 +759,8 @@ def find_vnet_subnet(vnet_name, subnet_name) -> tuple:
         vnet_req = azure_api.list_vnets_azure(_args)
         vnets = json.loads(vnet_req.text)["value"]
         vnet = next(
-            (item for item in vnets if item["name"].lower() == vnet_name.lower()),
+            (item for item in vnets if item["name"].lower(
+            ) == vnet_name.lower()),
             None,
         )
         if vnet:
@@ -767,27 +837,25 @@ def find_mpe_connection(managed_private_endpoint, targetprivatelinkresourceid):
 
     return None
 
+
 def _initialize_batch_collection_for_dependency_creation(args):
     """Initialize batch collection for scenarios where dependent items need to be created automatically.
-    
+
     This method is used when creating items that have dependencies that don't exist yet, such as:
     - Creating a KQL Database without an EventHouse (auto-creates EventHouse first)
     - Creating a Report without a Semantic Model (auto-creates Semantic Model first)
-    
+
     The batch collection allows multiple related items to be created in sequence and then
     display a consolidated output message showing all items that were created together.
-    
+
     Args:
         args (Namespace): The command arguments namespace that will be augmented with
                          'output_batch' attribute containing 'items' and 'names' lists
                          to collect creation results.
-    
+
     Note:
         This method only initializes the batch collection if it doesn't already exist,
         ensuring it's safe to call multiple times during a dependency creation chain.
     """
-    if not hasattr(args, 'output_batch'):
-        args.output_batch = {
-            'items': [],
-            'names': []
-        }
+    if not hasattr(args, "output_batch"):
+        args.output_batch = {"items": [], "names": []}
