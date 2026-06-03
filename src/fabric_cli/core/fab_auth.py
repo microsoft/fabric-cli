@@ -256,6 +256,7 @@ class FabAuth:
                     authority=self._get_authority_url(),
                     token_cache=self.cache,
                     enable_broker_on_windows=True,
+                    enable_broker_on_mac=True,
                 )
                 self._set_auth_properties(
                     {
