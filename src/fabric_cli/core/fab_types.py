@@ -140,8 +140,7 @@ class VirtualWorkspaceType(Enum):
 class _BaseItemType(Enum):
     @classmethod
     def from_string(cls, item_type_str):
-        raise NotImplementedError(
-            "This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the subclass")
 
 
 ##################################
@@ -200,8 +199,7 @@ class VirtualItemContainerType(Enum):
             if item.value.lower() == vws_type_str.lower():
                 return item
         raise FabricCLIError(
-            ErrorMessages.Common.invalid_virtual_item_container_type(
-                vws_type_str),
+            ErrorMessages.Common.invalid_virtual_item_container_type(vws_type_str),
             fab_constant.ERROR_INVALID_ITEM_TYPE,
         )
 
@@ -262,6 +260,7 @@ class ItemType(_BaseItemType):
     DATAMART = "Datamart"
     DATA_PIPELINE = "DataPipeline"
     DIGITAL_TWIN_BUILDER = "DigitalTwinBuilder"
+    DIGITAL_TWIN_BUILDER_FLOW = "DigitalTwinBuilderFlow"
     ENVIRONMENT = "Environment"
     EVENTHOUSE = "Eventhouse"
     EVENTSTREAM = "Eventstream"
@@ -502,6 +501,7 @@ format_mapping = {
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
     ItemType.DIGITAL_TWIN_BUILDER: "digitalTwinBuilders",
+    ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digitalTwinBuilderFlows",
     ItemType.ENVIRONMENT: "environments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -550,6 +550,7 @@ uri_mapping = {
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_PIPELINE: "pipelines",
     ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
+    ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digital-twin-builder-flow",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
@@ -599,6 +600,7 @@ definition_format_mapping = {
     },
     ItemType.COSMOS_DB_DATABASE: {"default": ""},
     ItemType.DIGITAL_TWIN_BUILDER: {"default": ""},
+    ItemType.DIGITAL_TWIN_BUILDER_FLOW: {"default": ""},
     ItemType.USER_DATA_FUNCTION: {"default": ""},
     ItemType.GRAPH_QUERY_SET: {"default": ""},
     ItemType.VARIABLE_LIBRARY: {"default": ""},

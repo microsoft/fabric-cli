@@ -256,6 +256,7 @@ class FabAuth:
                     authority=self._get_authority_url(),
                     token_cache=self.cache,
                     enable_broker_on_windows=True,
+                    enable_broker_on_mac=True,
                 )
                 self._set_auth_properties(
                     {
@@ -773,8 +774,8 @@ class FabAuth:
         pem_bytes = b"".join(pem_sections)
 
         fingerprint = cert.fingerprint(
-            hashes.SHA1()
-        )  # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+            hashes.SHA1() # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+        )  
 
         return self._Cert(pem_bytes, private_key, fingerprint)
 
