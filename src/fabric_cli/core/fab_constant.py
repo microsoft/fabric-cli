@@ -19,8 +19,7 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable(
-        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -264,7 +263,7 @@ ERROR_INVALID_JSON = "InvalidJson"
 ERROR_INVALID_OPERATION = "InvalidOperation"
 ERROR_INVALID_PATH = "InvalidPath"
 ERROR_INVALID_PROPERTY = "InvalidProperty"
-ERROR_INVALID_DETLA_TABLE = "InvalidDeltaTable"
+ERROR_INVALID_DELTA_TABLE = "InvalidDeltaTable"
 ERROR_INVALID_QUERY_FIELDS = "InvalidQueryFields"
 ERROR_INVALID_WORKSPACE_TYPE = "InvalidWorkspaceType"
 ERROR_INVALID_QUERY = "InvalidQuery"
@@ -351,4 +350,3 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
 
 # Invalid query parameters for set command across all fabric resources
 SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
-
