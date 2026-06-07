@@ -1064,3 +1064,54 @@ def test_auth_mode_migration(tmp_path):
     assert (
         auth.get_identity_type() == "user"
     ), "get_identity_type returns wrong value after migration"
+
+
+# region security: auth file permission tests
+
+_skip_on_windows = pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission tests not applicable on Windows"
+)
+
+
+@_skip_on_windows
+def test_save_auth_creates_file_with_restricted_permissions(tmp_path):
+    """Verify auth.json is created with mode 0o600 (owner read/write only)."""
+    auth = FabAuth()
+    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    auth._save_auth()
+
+    assert os.path.exists(auth.auth_file)
+    mode = oct(os.stat(auth.auth_file).st_mode & 0o777)
+    assert mode == "0o600", f"auth.json has mode {mode}, expected 0o600"
+
+    # Verify content is still correct
+    with open(auth.auth_file, "r") as f:
+        data = json.load(f)
+    assert data[con.IDENTITY_TYPE] == "user"
+
+
+@_skip_on_windows
+def test_save_auth_tightens_permissions_on_existing_file(tmp_path):
+    """Verify _save_auth() enforces 0o600 on a pre-existing permissive file."""
+    auth = FabAuth()
+    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
+
+    # Create file with overly permissive mode (simulating old CLI version)
+    with open(auth.auth_file, "w") as f:
+        json.dump({con.IDENTITY_TYPE: "user"}, f)
+    os.chmod(auth.auth_file, 0o644)
+
+    auth._auth_info = {con.IDENTITY_TYPE: "spn"}
+    auth._save_auth()
+
+    mode = oct(os.stat(auth.auth_file).st_mode & 0o777)
+    assert mode == "0o600", f"auth.json has mode {mode} after overwrite, expected 0o600"
+
+    with open(auth.auth_file, "r") as f:
+        data = json.load(f)
+    assert data[con.IDENTITY_TYPE] == "spn"
+
+
+# endregion

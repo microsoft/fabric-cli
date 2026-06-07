@@ -5,6 +5,8 @@ import json
 import os
 import tempfile
 
+import pytest
+
 import fabric_cli.core.fab_state_config as cfg
 from fabric_cli.core import fab_constant
 
@@ -163,5 +165,87 @@ def test_init_defaults_preserves_user_overrides_success(monkeypatch, tmp_path):
 
     result = cfg.read_config(config_file)
     assert result[fab_constant.FAB_CACHE_ENABLED] == "false"
+
+# endregion
+
+
+# region security: file permission tests
+
+_skip_on_windows = pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission tests not applicable on Windows"
+)
+
+
+@_skip_on_windows
+def test_config_location_creates_directory_with_restricted_permissions(
+    monkeypatch, tmp_path
+):
+    """Verify config directory is created with mode 0o700 (owner-only access)."""
+    monkeypatch.setattr(
+        "fabric_cli.core.fab_state_config.expanduser",
+        lambda path: path.replace("~", str(tmp_path)),
+    )
+
+    location = cfg.config_location()
+    assert os.path.isdir(location)
+
+    mode = oct(os.stat(location).st_mode & 0o777)
+    assert mode == "0o700", f"Config directory has mode {mode}, expected 0o700"
+
+
+@_skip_on_windows
+def test_config_location_tightens_permissions_on_existing_directory(
+    monkeypatch, tmp_path
+):
+    """Verify config_location() enforces 0o700 on a pre-existing permissive directory."""
+    config_dir = tmp_path / ".config" / "fab"
+    config_dir.mkdir(parents=True, mode=0o755)
+    monkeypatch.setattr(
+        "fabric_cli.core.fab_state_config.expanduser",
+        lambda path: path.replace("~", str(tmp_path)),
+    )
+
+    cfg.config_location()
+
+    mode = oct(config_dir.stat().st_mode & 0o777)
+    assert mode == "0o700", f"Config directory has mode {mode}, expected 0o700"
+
+
+@_skip_on_windows
+def test_write_config_creates_file_with_restricted_permissions(monkeypatch, tmp_path):
+    """Verify config files are created with mode 0o600 (owner read/write only)."""
+    config_file = os.path.join(str(tmp_path), "config.json")
+    monkeypatch.setattr(cfg, "config_file", config_file)
+
+    cfg.write_config({"key": "value"})
+
+    assert os.path.exists(config_file)
+    mode = oct(os.stat(config_file).st_mode & 0o777)
+    assert mode == "0o600", f"Config file has mode {mode}, expected 0o600"
+
+    # Verify content is still correct
+    data = cfg.read_config(config_file)
+    assert data == {"key": "value"}
+
+
+@_skip_on_windows
+def test_write_config_tightens_permissions_on_existing_file(monkeypatch, tmp_path):
+    """Verify write_config() enforces 0o600 on a pre-existing permissive file."""
+    config_file = os.path.join(str(tmp_path), "config.json")
+    monkeypatch.setattr(cfg, "config_file", config_file)
+
+    # Create file with overly permissive mode (simulating old CLI version)
+    with open(config_file, "w") as f:
+        json.dump({"old": "data"}, f)
+    os.chmod(config_file, 0o644)
+
+    cfg.write_config({"new": "data"})
+
+    mode = oct(os.stat(config_file).st_mode & 0o777)
+    assert mode == "0o600", f"Config file has mode {mode} after overwrite, expected 0o600"
+
+    data = cfg.read_config(config_file)
+    assert data == {"new": "data"}
+
 
 # endregion

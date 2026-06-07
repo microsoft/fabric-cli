@@ -46,16 +46,19 @@ def test_context_persistence_save(monkeypatch):
         # Create a mock workspace with the tenant as parent
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock json.dump to avoid actually writing to the file system
-        with patch("json.dump") as mock_json_dump, patch("builtins.open", MagicMock()):
+        # Mock _write_restricted_file to avoid actually writing to the file system
+        with patch(
+            "fabric_cli.core.fab_state_config._write_restricted_file"
+        ) as mock_write:
 
             # Set the context
             context.context = workspace
 
-            # Check that json.dump was called with the right data
-            mock_json_dump.assert_called_once()
-            args, _ = mock_json_dump.call_args
-            assert args[0] == {"path": workspace.path}
+            # Check that _write_restricted_file was called with the right data
+            mock_write.assert_called_once()
+            args, _ = mock_write.call_args
+            assert args[0] == temp_context_file
+            assert json.loads(args[1]) == {"path": workspace.path}
     finally:
         os.remove(temp_context_file)
 
@@ -185,16 +188,18 @@ def test_context_persistence_enabled_when_configured(monkeypatch):
         tenant = Tenant("test_tenant", "1234")
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock json.dump to avoid actually writing to the file system
-        with patch("json.dump") as mock_json_dump, patch("builtins.open", MagicMock()):
+        # Mock _write_restricted_file to avoid actually writing to the file system
+        with patch(
+            "fabric_cli.core.fab_state_config._write_restricted_file"
+        ) as mock_write:
 
             # Set the context - this SHOULD trigger file save when persistence is enabled
             context.context = workspace
 
-            # Check that json.dump was called with the right data
-            mock_json_dump.assert_called_once()
-            args, _ = mock_json_dump.call_args
-            assert args[0] == {"path": workspace.path}
+            # Check that _write_restricted_file was called with the right data
+            mock_write.assert_called_once()
+            args, _ = mock_write.call_args
+            assert json.loads(args[1]) == {"path": workspace.path}
     finally:
         os.remove(temp_context_file)
 
