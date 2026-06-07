@@ -2,19 +2,24 @@
 # Licensed under the MIT License.
 
 import json
+import logging
 import os
 from os.path import expanduser
 
 from fabric_cli.core import fab_constant
 
+_logger = logging.getLogger(__name__)
+
 
 def _chmod_if_posix(path, mode):
-    """Best-effort chmod; no-op on Windows where POSIX modes don't apply."""
+    """Best-effort chmod with warning on failure; no-op on Windows."""
     if os.name != "nt":
         try:
             os.chmod(path, mode)
-        except OSError:
-            pass
+        except OSError as e:
+            _logger.warning(
+                "Failed to set permissions %o on %s: %s", mode, path, e
+            )
 
 
 def config_location():

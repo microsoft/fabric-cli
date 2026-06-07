@@ -3,7 +3,6 @@
 
 import json
 import os
-import sys
 import tempfile
 
 import pytest
@@ -182,7 +181,6 @@ def test_config_location_creates_directory_with_restricted_permissions(
     monkeypatch, tmp_path
 ):
     """Verify config directory is created with mode 0o700 (owner-only access)."""
-    config_dir = str(tmp_path / ".config" / "fab")
     monkeypatch.setattr(
         "fabric_cli.core.fab_state_config.expanduser",
         lambda path: path.replace("~", str(tmp_path)),

@@ -157,7 +157,18 @@ def _get_log_file_path():
     """Create a log file path in the user's log directory."""
     log_dir = user_log_dir("fabric-cli")
     os.makedirs(log_dir, mode=0o700, exist_ok=True)
+    # Enforce permissions on pre-existing directories from older versions
+    _chmod_if_posix(log_dir, 0o700)
     return os.path.join(log_dir, "fabcli_debug.log")
+
+
+def _chmod_if_posix(path, mode):
+    """Best-effort chmod with warning on failure; no-op on Windows."""
+    if os.name != "nt":
+        try:
+            os.chmod(path, mode)
+        except OSError:
+            pass
 
 
 def get_logger():
