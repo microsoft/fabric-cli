@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import os
 import tempfile
 from argparse import Namespace
 
@@ -25,4 +26,8 @@ def exec_command(args: Namespace) -> None:
         args.configuration = None
         args.input = temp_file.name
         args.params = None
-        jobs.run_command(args)
+
+        try:
+            jobs.run_command(args)
+        finally:
+            os.unlink(temp_file.name)
