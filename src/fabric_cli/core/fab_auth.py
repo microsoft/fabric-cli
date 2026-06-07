@@ -56,9 +56,9 @@ class FabAuth:
         self._load_env()
 
     def _save_auth(self):
-        fd = os.open(self.auth_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as file:
-            file.write(json.dumps(self._get_auth_info()))
+        from fabric_cli.core.fab_state_config import _write_restricted_file
+
+        _write_restricted_file(self.auth_file, json.dumps(self._get_auth_info()))
 
     def _load_auth(self):
         if os.path.exists(self.auth_file) and os.stat(self.auth_file).st_size != 0:

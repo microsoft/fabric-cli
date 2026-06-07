@@ -254,6 +254,7 @@ def mock_get_log_file_path():
 # ── Security: log directory permissions ──────────────────────────────────────
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission tests not applicable on Windows")
 def test_get_log_file_path_creates_directory_with_restricted_permissions(
     monkeypatch, tmp_path
 ):

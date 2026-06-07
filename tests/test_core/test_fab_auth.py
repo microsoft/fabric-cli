@@ -1068,7 +1068,12 @@ def test_auth_mode_migration(tmp_path):
 
 # region security: auth file permission tests
 
+_skip_on_windows = pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission tests not applicable on Windows"
+)
 
+
+@_skip_on_windows
 def test_save_auth_creates_file_with_restricted_permissions(tmp_path):
     """Verify auth.json is created with mode 0o600 (owner read/write only)."""
     auth = FabAuth()
@@ -1087,13 +1092,16 @@ def test_save_auth_creates_file_with_restricted_permissions(tmp_path):
     assert data[con.IDENTITY_TYPE] == "user"
 
 
-def test_save_auth_preserves_restricted_permissions_on_overwrite(tmp_path):
-    """Verify permissions stay restricted when auth.json is overwritten."""
+@_skip_on_windows
+def test_save_auth_tightens_permissions_on_existing_file(tmp_path):
+    """Verify _save_auth() enforces 0o600 on a pre-existing permissive file."""
     auth = FabAuth()
     auth.auth_file = os.path.join(str(tmp_path), "auth.json")
 
-    auth._auth_info = {con.IDENTITY_TYPE: "user"}
-    auth._save_auth()
+    # Create file with overly permissive mode (simulating old CLI version)
+    with open(auth.auth_file, "w") as f:
+        json.dump({con.IDENTITY_TYPE: "user"}, f)
+    os.chmod(auth.auth_file, 0o644)
 
     auth._auth_info = {con.IDENTITY_TYPE: "spn"}
     auth._save_auth()
