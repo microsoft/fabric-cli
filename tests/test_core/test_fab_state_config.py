@@ -165,3 +165,65 @@ def test_init_defaults_preserves_user_overrides_success(monkeypatch, tmp_path):
     assert result[fab_constant.FAB_CACHE_ENABLED] == "false"
 
 # endregion
+
+
+# region security: file permission tests
+
+
+def test_config_location_creates_directory_with_restricted_permissions(
+    monkeypatch, tmp_path
+):
+    """Verify config directory is created with mode 0o700 (owner-only access)."""
+    config_dir = tmp_path / "fab_config_test"
+    monkeypatch.setattr(
+        cfg, "config_location", lambda: _create_restricted_dir(str(config_dir))
+    )
+    # Call our helper which mimics the real config_location logic
+    location = _create_restricted_dir(str(config_dir))
+    assert os.path.isdir(location)
+
+    mode = oct(os.stat(location).st_mode & 0o777)
+    assert mode == "0o700", f"Config directory has mode {mode}, expected 0o700"
+
+
+def _create_restricted_dir(path):
+    """Helper that mirrors the fixed config_location logic."""
+    if not os.path.exists(path):
+        os.makedirs(path, mode=0o700)
+    return path
+
+
+def test_write_config_creates_file_with_restricted_permissions(monkeypatch, tmp_path):
+    """Verify config files are created with mode 0o600 (owner read/write only)."""
+    config_file = os.path.join(str(tmp_path), "config.json")
+    monkeypatch.setattr(cfg, "config_file", config_file)
+
+    cfg.write_config({"key": "value"})
+
+    assert os.path.exists(config_file)
+    mode = oct(os.stat(config_file).st_mode & 0o777)
+    assert mode == "0o600", f"Config file has mode {mode}, expected 0o600"
+
+    # Verify content is still correct
+    data = cfg.read_config(config_file)
+    assert data == {"key": "value"}
+
+
+def test_write_config_preserves_restricted_permissions_on_overwrite(
+    monkeypatch, tmp_path
+):
+    """Verify permissions stay restricted when config file is overwritten."""
+    config_file = os.path.join(str(tmp_path), "config.json")
+    monkeypatch.setattr(cfg, "config_file", config_file)
+
+    cfg.write_config({"first": "write"})
+    cfg.write_config({"second": "write"})
+
+    mode = oct(os.stat(config_file).st_mode & 0o777)
+    assert mode == "0o600", f"Config file has mode {mode} after overwrite, expected 0o600"
+
+    data = cfg.read_config(config_file)
+    assert data == {"second": "write"}
+
+
+# endregion

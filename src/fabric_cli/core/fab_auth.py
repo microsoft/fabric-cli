@@ -56,7 +56,8 @@ class FabAuth:
         self._load_env()
 
     def _save_auth(self):
-        with open(self.auth_file, "w") as file:
+        fd = os.open(self.auth_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as file:
             file.write(json.dumps(self._get_auth_info()))
 
     def _load_auth(self):

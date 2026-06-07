@@ -156,7 +156,7 @@ def log_debug_http_request_exception(e):
 def _get_log_file_path():
     """Create a log file path in the user's log directory."""
     log_dir = user_log_dir("fabric-cli")
-    os.makedirs(log_dir, exist_ok=True)
+    os.makedirs(log_dir, mode=0o700, exist_ok=True)
     return os.path.join(log_dir, "fabcli_debug.log")
 
 

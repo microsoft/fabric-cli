@@ -11,7 +11,7 @@ from fabric_cli.core import fab_constant
 def config_location():
     _location = expanduser("~/.config/fab/")
     if not exists(_location):
-        os.makedirs(_location)
+        os.makedirs(_location, mode=0o700)
     return _location
 
 
@@ -29,8 +29,19 @@ def read_config(file_path) -> dict:
 
 
 def write_config(data):
-    with open(config_file, "w") as file:
-        json.dump(data, file, indent=4)
+    _write_restricted_file(config_file, json.dumps(data, indent=4))
+
+
+def _write_restricted_file(file_path, content):
+    """Write content to a file with owner-only permissions (0o600)."""
+    fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(fd, "w") as file:
+            file.write(content)
+    except BaseException:
+        # fd is already closed by os.fdopen on success; only close on failure
+        # before os.fdopen wraps it
+        raise
 
 
 def set_config(key, value):
