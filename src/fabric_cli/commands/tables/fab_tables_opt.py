@@ -21,15 +21,18 @@ def exec_command(args: Namespace) -> None:
         _config["schemaName"] = args.schema
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        with open(temp_file.name, "w") as fp:
+        temp_path = temp_file.name
+        with open(temp_path, "w") as fp:
             json.dump(_config, fp)
 
-        args.configuration = None
-        args.input = temp_file.name
-        args.params = None
+    # Run outside the with block so the temp file handle is closed first,
+    # which is required for deletion to succeed on Windows.
+    args.configuration = None
+    args.input = temp_path
+    args.params = None
 
-        try:
-            jobs.run_command(args)
-        finally:
-            with contextlib.suppress(FileNotFoundError):
-                os.unlink(temp_file.name)
+    try:
+        jobs.run_command(args)
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(temp_path)
