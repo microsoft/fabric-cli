@@ -6,6 +6,8 @@ import os
 from argparse import Namespace
 from unittest.mock import patch
 
+import pytest
+
 from fabric_cli.commands.tables import fab_tables_opt
 
 
@@ -66,10 +68,8 @@ def test_exec_command_cleans_up_temp_file_on_error():
         "fabric_cli.commands.tables.fab_tables_opt.jobs.run_command",
         side_effect=mock_run_command,
     ):
-        try:
+        with pytest.raises(RuntimeError, match="Job failed"):
             fab_tables_opt.exec_command(args)
-        except RuntimeError:
-            pass
 
     assert len(created_temp_files) == 1
     assert not os.path.exists(

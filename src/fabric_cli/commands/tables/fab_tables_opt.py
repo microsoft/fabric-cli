@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import contextlib
 import json
 import os
 import tempfile
@@ -30,4 +31,5 @@ def exec_command(args: Namespace) -> None:
         try:
             jobs.run_command(args)
         finally:
-            os.unlink(temp_file.name)
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(temp_file.name)
