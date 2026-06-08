@@ -53,11 +53,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
                     f"Importing (update) '{_input_path}' → '{item.path}'..."
                 )
 
-                # Environment item type, not supporting definition yet
-                if item.item_type == ItemType.ENVIRONMENT:
-                    _import_update_environment_item(args, payload)
-                else:
-                    _import_update_item(args, payload)
+                _import_update_item(args, payload, item, _input_path)
 
                 utils_ui.print_output_format(
                     args, message=f"'{item.name}' imported")
@@ -66,11 +62,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
             utils_ui.print_grey(
                 f"Importing '{_input_path}' → '{item.path}'...")
 
-            # Environment item type, not supporting definition yet
-            if item.item_type == ItemType.ENVIRONMENT:
-                response = _import_create_environment_item(item, args, payload)
-            else:
-                response = _import_create_item(args, payload)
+            response = _import_create_item(args, payload, item, _input_path)
 
             if response.status_code in (200, 201):
                 utils_ui.print_output_format(
@@ -83,23 +75,51 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
 
 # Utils
-def _import_update_environment_item(args: Namespace, payload: dict) -> None:
-    utils_import.publish_environment_item(args, payload)
-
-
-def _import_update_item(args: Namespace, payload: dict) -> None:
+def _import_update_item(
+    args: Namespace, payload: dict, item: Item, input_path: str
+) -> None:
     definition_payload = json.dumps(
         {
             "definition": payload["definition"],
         }
     )
-    item_api.update_item_definition(args, payload=definition_payload)
+    try:
+        item_api.update_item_definition(args, payload=definition_payload)
+    except FabricCLIError as e:
+        # Fallback for Environment if definition-based update fails
+        if item.item_type == ItemType.ENVIRONMENT:
+            fab_logger.log_warning(
+                f"Definition-based import failed ({e}), using fallback method..."
+            )
+            fallback_payload = utils_import.get_environment_fallback_payload(
+                input_path, item
+            )
+            utils_import.publish_environment_item(args, fallback_payload)
+        else:
+            raise
 
 
-def _import_create_environment_item(
-    item: Item, args: Namespace, payload: dict
+def _import_create_item(
+    args: Namespace, payload: dict, item: Item, input_path: str
 ) -> ApiResponse:
+    _payload = json.dumps(payload)
+    try:
+        return item_api.create_item(args, payload=_payload)
+    except FabricCLIError as e:
+        # Fallback for Environment if definition-based create fails
+        if item.item_type == ItemType.ENVIRONMENT:
+            fab_logger.log_warning(
+                f"Definition-based import failed ({e}), using fallback method..."
+            )
+            return _import_create_environment_fallback(item, args, input_path)
+        else:
+            raise
 
+
+def _import_create_environment_fallback(
+    item: Item, args: Namespace, input_path: str
+) -> ApiResponse:
+    """Create environment using staging APIs (fallback method)."""
     item_payload: dict = {
         "type": str(item.item_type),
         "displayName": item.short_name,
@@ -107,15 +127,14 @@ def _import_create_environment_item(
     }
     item_payload_str = json.dumps(item_payload)
 
-    # Create the item
+    # Create the item first (without definition)
     response = item_api.create_item(args, payload=item_payload_str)
     data = json.loads(response.text)
     args.id = data["id"]
 
-    utils_import.publish_environment_item(args, payload)
+    # Then publish using staging APIs
+    fallback_payload = utils_import.get_environment_fallback_payload(
+        input_path, item
+    )
+    utils_import.publish_environment_item(args, fallback_payload)
     return response
-
-
-def _import_create_item(args: Namespace, payload: dict) -> ApiResponse:
-    _payload = json.dumps(payload)
-    return item_api.create_item(args, payload=_payload)

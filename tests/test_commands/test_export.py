@@ -96,6 +96,41 @@ class TestExport:
         mock_print_done.assert_called_once()
         mock_print_warning.assert_called_once()
 
+    def test_export_environment_item_success(
+        self,
+        item_factory,
+        cli_executor,
+        mock_print_done,
+        tmp_path,
+    ):
+        """Test Environment export with nested Setting/Sparkcompute.yml structure."""
+        # Setup
+        item = item_factory(ItemType.ENVIRONMENT)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"export {item.full_path} --output {str(tmp_path)} --force"
+        )
+
+        # Assert
+        export_path = tmp_path / f"{item.display_name}.Environment"
+        assert export_path.is_dir()
+
+        # Environment exports to: .platform + Setting/Sparkcompute.yml
+        platform_file = export_path / ".platform"
+        assert platform_file.is_file(), "Expected .platform file at root"
+
+        setting_dir = export_path / "Setting"
+        assert setting_dir.is_dir(), "Expected Setting/ directory"
+
+        sparkcompute_file = setting_dir / "Sparkcompute.yml"
+        assert sparkcompute_file.is_file(), "Expected Setting/Sparkcompute.yml"
+
+        mock_print_done.assert_called_once()
+
     @export_item_types_parameters
     def test_export_item_invalid_output_path_failure(
         self, item_factory, cli_executor, mock_print_done, assert_fabric_cli_error, item_type

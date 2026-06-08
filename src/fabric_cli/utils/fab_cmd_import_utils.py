@@ -13,7 +13,6 @@ import yaml
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.utils import fab_ui as utils_ui
 
@@ -21,17 +20,13 @@ from fabric_cli.utils import fab_ui as utils_ui
 def get_payload_for_item_type(
     path: str, item: Item, input_format: Optional[str] = None
 ) -> dict:
-    # Environment does not support updateDefinition yet, custom payload / dev
-    if item.item_type == ItemType.ENVIRONMENT:
-        return _build_environment_payload(path)
-    else:
-        definition = _build_definition(path, input_format)
-        return {
-            "type": str(item.item_type),
-            "folderId": item.folder_id,
-            "displayName": item.short_name,
-            "definition": definition,
-        }
+    definition = _build_definition(path, input_format)
+    return {
+        "type": str(item.item_type),
+        "folderId": item.folder_id,
+        "displayName": item.short_name,
+        "definition": definition,
+    }
 
 
 def _build_definition(input_path: Any, input_format: Optional[str] = None) -> dict:
@@ -39,8 +34,10 @@ def _build_definition(input_path: Any, input_format: Optional[str] = None) -> di
     parts = []
 
     # Recursively traverses the directory and builds the payload structure
+    # Sort dirs and files to ensure deterministic ordering across platforms
     for root, dirs, files in os.walk(directory):
-        for file in files:
+        dirs.sort()
+        for file in sorted(files):
             # Get full path and relative path
             full_path = os.path.join(root, file)
             relative_path = os.path.relpath(full_path, directory)
@@ -83,17 +80,23 @@ def _encode_file_to_base64(file_path: str) -> str:
         return base64.b64encode(file.read()).decode("utf-8")
 
 
-# Environments
+# Environments — fallback when definition-based import is not supported
+
+
+def get_environment_fallback_payload(path: str, item: Item) -> dict:
+    """Build environment-specific payload for fallback import."""
+    return _build_environment_payload(path)
 
 
 def publish_environment_item(args: Namespace, payload: dict) -> None:
+    """Publish environment using staging APIs (fallback method)."""
     # Check for ongoing publish
     _check_environment_publish_state(args, True)
 
     # Update compute settings
     _update_compute_settings(args, payload)
 
-    # Add libraries to environment, overwriting anything with the same name and return the list of libraries
+    # Add libraries to environment, overwriting anything with the same name
     _add_libraries(args, payload)
 
     # Remove libraries from live environment
@@ -105,7 +108,7 @@ def publish_environment_item(args: Namespace, payload: dict) -> None:
     # Wait for ongoing publish to complete
     _check_environment_publish_state(args)
 
-    utils_ui.print_info(f"Published")
+    utils_ui.print_info("Published")
 
 
 def _check_environment_publish_state(
@@ -127,11 +130,9 @@ def _check_environment_publish_state(
         )
 
         if initial_check:
-
-            prepend_message = "Existing Environment publish is in progess"
+            prepend_message = "Existing Environment publish is in progress"
             pass_values = ["success", "failed", "cancelled"]
-            fail_values = []
-
+            fail_values: list[str] = []
         else:
             prepend_message = "Operation in progress"
             pass_values = ["success"]
@@ -164,9 +165,10 @@ def _build_environment_payload(input_path: Any) -> dict:
 
             # Spark compute settings
             if "Setting" in full_path:
-                with open(full_path, "r") as file:
-                    yaml_body = yaml.safe_load(file)
-                parts["sparkCompute"] = _convert_environment_compute_to_camel(yaml_body)
+                with open(full_path, "r") as f:
+                    yaml_body = yaml.safe_load(f)
+                parts["sparkCompute"] = _convert_environment_compute_to_camel(
+                    yaml_body)
 
             # Spark libraries
             elif "Libraries" in full_path:
@@ -187,7 +189,8 @@ def _convert_environment_compute_to_camel(input_dict: dict) -> dict:
             # Convert the key to camelCase
             key_components = key.split("_")
             # Capitalize the first letter of each component except the first one
-            new_key = key_components[0] + "".join(x.title() for x in key_components[1:])
+            new_key = key_components[0] + \
+                "".join(x.title() for x in key_components[1:])
 
         # Recursively update dictionary values if they are dictionaries
         if isinstance(value, dict):
@@ -242,10 +245,10 @@ def _remove_libraries(args: Namespace, payload: dict) -> None:
     try:
         response = item_api.get_item(args, item_uri=True, ext_uri=True)
         if response.status_code == 200:
-            response_json = response.json()  # Convert to dictionary
+            response_json = response.json()
 
             repo_library_files = tuple(
-                os.path.basename(file) for file in payload["parts"]["libraries"]
+                os.path.basename(file) for file in payload["parts"].get("libraries", [])
             )
 
             if (
@@ -263,7 +266,7 @@ def _remove_libraries(args: Namespace, payload: dict) -> None:
                             if file not in repo_library_files:
                                 _remove_library(args, file)
 
-    except Exception as e:
+    except Exception:
         pass
 
 
