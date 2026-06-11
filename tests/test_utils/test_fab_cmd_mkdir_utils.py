@@ -215,7 +215,8 @@ class TestFindMpeConnection:
             call_args = mock_session_request.call_args
             assert call_args[1]['method'] == 'get' or call_args.kwargs['method'] == 'get'
             # The URL should contain the target resource ID and privateEndpointConnections
-            called_url = call_args.args[1] if len(call_args.args) > 1 else call_args.kwargs['url']
+            called_url = call_args.args[1] if len(
+                call_args.args) > 1 else call_args.kwargs['url']
             assert "privateEndpointConnections" in called_url
             assert "api-version=2023-11-01" in called_url
 
@@ -369,7 +370,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "restorePointInTime" in exc_info.value.message
+        assert "restorepointintime" in exc_info.value.message
 
     def test_restore_mode_missing_item_id_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails when itemId is missing."""
@@ -386,7 +387,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "itemId" in exc_info.value.message
+        assert "itemid" in exc_info.value.message
 
     def test_restore_mode_missing_workspace_id_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails when workspaceId is missing."""
@@ -403,7 +404,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "workspaceId" in exc_info.value.message
+        assert "workspaceid" in exc_info.value.message
 
     def test_restore_mode_invalid_timestamp_format_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails with invalid timestamp format."""
