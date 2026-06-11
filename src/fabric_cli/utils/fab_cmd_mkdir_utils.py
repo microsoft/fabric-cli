@@ -4,6 +4,7 @@
 import base64
 import json
 import os
+import re
 from argparse import Namespace
 
 from fabric_cli.client import fab_api_azure as azure_api
@@ -14,7 +15,40 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors import ErrorMessages
+from fabric_cli.errors.mkdir import MkdirErrors
 from fabric_cli.utils import fab_ui as utils_ui
+
+# GUID pattern for validation
+GUID_PATTERN = re.compile(
+    r"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+)
+
+# ISO 8601 timestamp patterns for validation
+ISO8601_UTC_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z"
+)
+ISO8601_OFFSET_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?[+-]\d{2}:\d{2}"
+)
+
+
+def is_valid_guid(value: str) -> bool:
+    """Validate that a string is a valid GUID format."""
+    return bool(GUID_PATTERN.match(value))
+
+
+def is_valid_iso8601_timestamp(value: str) -> bool:
+    """
+    Validate that a string is a valid ISO 8601 timestamp with timezone.
+    Accepts formats like:
+    - 2024-01-15T10:30:00Z
+    - 2024-01-15T10:30:00+00:00
+    - 2024-01-15T10:30:00.123456Z
+    """
+    return bool(
+        ISO8601_UTC_PATTERN.fullmatch(value)
+        or ISO8601_OFFSET_PATTERN.fullmatch(value)
+    )
 
 
 def add_type_specific_payload(item: Item, args, payload):
@@ -218,6 +252,67 @@ def add_type_specific_payload(item: Item, args, payload):
                 ]
             }
 
+        case ItemType.SQL_DATABASE:
+            mode = params.get("mode", "").lower()
+
+            if mode == "restore":
+                # Point-in-time restore mode
+                # Note: params are pre-lowercased, but error messages use camelCase
+                # to match get_params_per_item_type() output
+                restore_point_in_time = params.get("restorepointintime")
+                source_item_id = params.get("itemid")
+                source_workspace_id = params.get("workspaceid")
+
+                # Validate all required parameters are present
+                missing_params = []
+                if not restore_point_in_time:
+                    missing_params.append("restorePointInTime")
+                if not source_item_id:
+                    missing_params.append("itemId")
+                if not source_workspace_id:
+                    missing_params.append("workspaceId")
+
+                if missing_params:
+                    raise FabricCLIError(
+                        MkdirErrors.missing_restore_params(missing_params),
+                        fab_constant.ERROR_INVALID_INPUT,
+                    )
+
+                # Validate restorePointInTime format (ISO 8601 with timezone)
+                if not is_valid_iso8601_timestamp(restore_point_in_time):
+                    raise FabricCLIError(
+                        MkdirErrors.invalid_restore_point_in_time(),
+                        fab_constant.ERROR_INVALID_INPUT,
+                    )
+
+                # Validate GUID formats
+                if not is_valid_guid(source_item_id):
+                    raise FabricCLIError(
+                        ErrorMessages.Common.invalid_guid("itemId"),
+                        fab_constant.ERROR_INVALID_GUID,
+                    )
+                if not is_valid_guid(source_workspace_id):
+                    raise FabricCLIError(
+                        ErrorMessages.Common.invalid_guid("workspaceId"),
+                        fab_constant.ERROR_INVALID_GUID,
+                    )
+
+                payload_dict["creationPayload"] = {
+                    "creationMode": "Restore",
+                    "sourceDatabaseReference": {
+                        "referenceType": "ById",
+                        "itemId": source_item_id,
+                        "workspaceId": source_workspace_id,
+                    },
+                    "restorePointInTime": restore_point_in_time,
+                }
+            elif mode:
+                # Invalid mode specified
+                raise FabricCLIError(
+                    MkdirErrors.invalid_restore_mode(),
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+
     return payload_dict
 
 
@@ -344,6 +439,15 @@ def get_params_per_item_type(item: Item):
         case ItemType.MOUNTED_DATA_FACTORY:
             required_params = ["subscriptionId",
                                "resourceGroup", "factoryName"]
+        case ItemType.SQL_DATABASE:
+            # Note: params are lowercased during parsing, for internal lookups
+            # These camelCase names are for user-facing help text display only.
+            optional_params = [
+                "mode",
+                "restorePointInTime",
+                "itemId",
+                "workspaceId",
+            ]
 
     return required_params, optional_params
 
