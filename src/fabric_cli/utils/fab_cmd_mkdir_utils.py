@@ -257,6 +257,8 @@ def add_type_specific_payload(item: Item, args, payload):
 
             if mode == "restore":
                 # Point-in-time restore mode
+                # Note: params are pre-lowercased, but error messages use camelCase
+                # to match get_params_per_item_type() output
                 restore_point_in_time = params.get("restorepointintime")
                 source_item_id = params.get("itemid")
                 source_workspace_id = params.get("workspaceid")
@@ -264,11 +266,11 @@ def add_type_specific_payload(item: Item, args, payload):
                 # Validate all required parameters are present
                 missing_params = []
                 if not restore_point_in_time:
-                    missing_params.append("restorepointintime")
+                    missing_params.append("restorePointInTime")
                 if not source_item_id:
-                    missing_params.append("itemid")
+                    missing_params.append("itemId")
                 if not source_workspace_id:
-                    missing_params.append("workspaceid")
+                    missing_params.append("workspaceId")
 
                 if missing_params:
                     raise FabricCLIError(
@@ -438,6 +440,8 @@ def get_params_per_item_type(item: Item):
             required_params = ["subscriptionId",
                                "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
+            # Note: params are lowercased during parsing, for internal lookups
+            # These camelCase names are for user-facing help text display only.
             optional_params = [
                 "mode",
                 "restorePointInTime",

@@ -370,7 +370,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "restorepointintime" in exc_info.value.message
+        assert "restorePointInTime" in exc_info.value.message
 
     def test_restore_mode_missing_item_id_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails when itemId is missing."""
@@ -387,7 +387,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "itemid" in exc_info.value.message
+        assert "itemId" in exc_info.value.message
 
     def test_restore_mode_missing_workspace_id_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails when workspaceId is missing."""
@@ -404,7 +404,7 @@ class TestSQLDatabaseRestore:
                 mock_sql_database_item, mock_args, payload)
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "workspaceid" in exc_info.value.message
+        assert "workspaceId" in exc_info.value.message
 
     def test_restore_mode_invalid_timestamp_format_failure(self, mock_sql_database_item, mock_args):
         """Test SQLDatabase restore fails with invalid timestamp format."""
