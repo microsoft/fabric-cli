@@ -23,6 +23,14 @@ GUID_PATTERN = re.compile(
     r"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
 )
 
+# ISO 8601 timestamp patterns for validation
+ISO8601_UTC_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z"
+)
+ISO8601_OFFSET_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?[+-]\d{2}:\d{2}"
+)
+
 
 def is_valid_guid(value: str) -> bool:
     """Validate that a string is a valid GUID format."""
@@ -37,13 +45,10 @@ def is_valid_iso8601_timestamp(value: str) -> bool:
     - 2024-01-15T10:30:00+00:00
     - 2024-01-15T10:30:00.123456Z
     """
-    # ISO 8601 pattern with timezone
-    iso8601_patterns = [
-        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$",  # UTC with Z suffix
-        # With offset
-        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?[+-]\d{2}:\d{2}$",
-    ]
-    return any(re.match(pattern, value) for pattern in iso8601_patterns)
+    return bool(
+        ISO8601_UTC_PATTERN.fullmatch(value)
+        or ISO8601_OFFSET_PATTERN.fullmatch(value)
+    )
 
 
 def add_type_specific_payload(item: Item, args, payload):
@@ -299,7 +304,7 @@ def add_type_specific_payload(item: Item, args, payload):
                     },
                     "restorePointInTime": restore_point_in_time,
                 }
-            elif mode and mode != "":
+            elif mode:
                 # Invalid mode specified
                 raise FabricCLIError(
                     MkdirErrors.invalid_restore_mode(),
@@ -434,10 +439,10 @@ def get_params_per_item_type(item: Item):
                                "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
             optional_params = [
-                "mode (restore for point-in-time restore)",
-                "restorepointintime (ISO 8601 timestamp, e.g. 2024-01-15T10:30:00Z)",
-                "itemid (source database GUID)",
-                "workspaceid (source workspace GUID)",
+                "mode",
+                "restorePointInTime",
+                "itemId",
+                "workspaceId",
             ]
 
     return required_params, optional_params
