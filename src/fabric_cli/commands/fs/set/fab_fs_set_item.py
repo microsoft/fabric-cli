@@ -8,7 +8,11 @@ from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import definition_format_mapping, format_mapping
+from fabric_cli.core.fab_types import (
+    ItemType,
+    definition_format_mapping,
+    format_mapping,
+)
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_cmd_set_utils as utils_set
@@ -23,6 +27,10 @@ def exec(item: Item, args: Namespace) -> None:
     query_value = item.extract_friendly_name_path_or_default(query)
 
     utils_set.validate_item_query(query_value, item)
+
+    # Validate SQLDatabase-specific properties
+    if item.item_type == ItemType.SQL_DATABASE:
+        utils_set.validate_sql_database_property(query_value, args.input)
 
     utils_set.print_set_warning()
     if force or utils_ui.prompt_confirm():

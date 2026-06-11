@@ -92,6 +92,45 @@ def validate_query_not_in_blocklist(
             )
 
 
+def validate_sql_database_property(query: str, input_value: str) -> None:
+    """Validate SQLDatabase-specific property values.
+
+    Args:
+        query: The property query path being set.
+        input_value: The input value to validate.
+
+    Raises:
+        FabricCLIError: If the value is invalid for the property.
+    """
+    if query == fab_constant.SQL_DATABASE_BACKUP_RETENTION_PROPERTY:
+        try:
+            # Try to parse as JSON first (handles numeric input)
+            try:
+                value = json.loads(input_value)
+            except (TypeError, json.JSONDecodeError):
+                value = input_value
+
+            # Ensure it's an integer
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError("Not an integer")
+
+            # Validate range
+            min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS
+            max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS
+            if value < min_days or value > max_days:
+                raise ValueError("Out of range")
+
+        except (ValueError, TypeError):
+            raise FabricCLIError(
+                CommonErrors.invalid_backup_retention_days(
+                    str(input_value),
+                    fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS,
+                    fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS,
+                ),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+
+
 def ensure_notebook_dependency(decoded_item_def: dict, query: str) -> dict:
     dependency_types = ["lakehouse", "warehouse", "environment"]
 
