@@ -6,7 +6,6 @@ import json
 import os
 import re
 from argparse import Namespace
-from datetime import datetime
 
 from fabric_cli.client import fab_api_azure as azure_api
 from fabric_cli.client import fab_api_managedprivateendpoint as mpe_api
@@ -260,15 +259,15 @@ def add_type_specific_payload(item: Item, args, payload):
                 # Validate all required parameters are present
                 missing_params = []
                 if not restore_point_in_time:
-                    missing_params.append("restorePointInTime")
+                    missing_params.append("restorepointintime")
                 if not source_item_id:
-                    missing_params.append("itemId")
+                    missing_params.append("itemid")
                 if not source_workspace_id:
-                    missing_params.append("workspaceId")
+                    missing_params.append("workspaceid")
 
                 if missing_params:
                     raise FabricCLIError(
-                        MkdirErrors.missing_restore_params(),
+                        MkdirErrors.missing_restore_params(missing_params),
                         fab_constant.ERROR_INVALID_INPUT,
                     )
 
@@ -436,9 +435,9 @@ def get_params_per_item_type(item: Item):
         case ItemType.SQL_DATABASE:
             optional_params = [
                 "mode (restore for point-in-time restore)",
-                "restorePointInTime (ISO 8601 timestamp, e.g. 2024-01-15T10:30:00Z)",
-                "itemId (source database GUID)",
-                "workspaceId (source workspace GUID)",
+                "restorepointintime (ISO 8601 timestamp, e.g. 2024-01-15T10:30:00Z)",
+                "itemid (source database GUID)",
+                "workspaceid (source workspace GUID)",
             ]
 
     return required_params, optional_params

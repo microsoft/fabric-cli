@@ -23,16 +23,15 @@ class MkdirErrors:
     @staticmethod
     def invalid_restore_point_in_time() -> str:
         return (
-            "Invalid restorePointInTime format. "
+            "Invalid restorepointintime format. "
             "Please provide an ISO 8601 timestamp with timezone (e.g., '2024-01-15T10:30:00Z' or '2024-01-15T10:30:00+00:00')"
         )
 
     @staticmethod
-    def missing_restore_params() -> str:
+    def missing_restore_params(missing: list[str]) -> str:
         return (
-            "When mode=restore, the following parameters are required: "
-            "restorePointInTime, itemId, workspaceId. "
-            "Example: -P mode=restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<guid>,workspaceId=<guid>"
+            f"Missing required parameter(s) for restore mode: {', '.join(missing)}. "
+            "Example: -P mode=restore,restorepointintime=2024-01-15T10:30:00Z,itemid=<guid>,workspaceid=<guid>"
         )
 
     @staticmethod

@@ -215,8 +215,7 @@ class TestFindMpeConnection:
             call_args = mock_session_request.call_args
             assert call_args[1]['method'] == 'get' or call_args.kwargs['method'] == 'get'
             # The URL should contain the target resource ID and privateEndpointConnections
-            called_url = call_args.args[1] if len(
-                call_args.args) > 1 else call_args.kwargs['url']
+            called_url = call_args.args[1] if len(call_args.args) > 1 else call_args.kwargs['url']
             assert "privateEndpointConnections" in called_url
             assert "api-version=2023-11-01" in called_url
 
