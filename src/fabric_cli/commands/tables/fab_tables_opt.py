@@ -22,16 +22,15 @@ def exec_command(args: Namespace) -> None:
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_path = temp_file.name
+
+    try:
         with open(temp_path, "w") as fp:
             json.dump(_config, fp)
 
-    # Run outside the with block so the temp file handle is closed first,
-    # which is required for deletion to succeed on Windows.
-    args.configuration = None
-    args.input = temp_path
-    args.params = None
+        args.configuration = None
+        args.input = temp_path
+        args.params = None
 
-    try:
         jobs.run_command(args)
     finally:
         with contextlib.suppress(OSError):
