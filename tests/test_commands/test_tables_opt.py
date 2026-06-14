@@ -83,7 +83,8 @@ def test_exec_command_cleans_up_temp_file_on_open_failure(table_maintenance_args
 
     def mock_open(path, *args, **kwargs):
         # Raise PermissionError only for the write to the captured temp file
-        if created_temp_paths and path == created_temp_paths[0] and args == ("w",):
+        mode = args[0] if args else kwargs.get("mode", "r")
+        if created_temp_paths and path == created_temp_paths[0] and mode == "w":
             raise PermissionError("Permission denied")
         return original_open(path, *args, **kwargs)
 
@@ -115,7 +116,7 @@ def test_exec_command_cleans_up_temp_file_on_serialization_failure(
         created_temp_paths.append(tf.name)
         return tf
 
-    def mock_json_dump(obj, fp):
+    def mock_json_dump(*args, **kwargs):
         raise TypeError("Object of type set is not JSON serializable")
 
     with patch(
