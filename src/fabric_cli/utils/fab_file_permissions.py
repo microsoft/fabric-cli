@@ -41,7 +41,7 @@ def write_restricted_file(file_path: str, content: str) -> None:
     """
     fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     try:
-        with os.fdopen(fd, "w") as file:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
             file.write(content)
     except Exception:
         # os.fdopen may fail before wrapping fd; close to avoid leak.
