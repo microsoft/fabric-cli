@@ -26,7 +26,7 @@ def exec_command(args: Namespace) -> None:
     # Reopen the file after closing the NamedTemporaryFile handle so that
     # the path is not locked when os.unlink is called on Windows.
     try:
-        with open(temp_path, "w") as fp:
+        with open(temp_path, "w", encoding="utf-8") as fp:
             json.dump(_config, fp)
 
         args.configuration = None

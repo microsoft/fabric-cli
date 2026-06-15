@@ -3,6 +3,7 @@
 
 import json
 import os
+import tempfile
 from argparse import Namespace
 from unittest.mock import patch
 
@@ -11,10 +12,9 @@ import pytest
 from fabric_cli.commands.tables import fab_tables_opt
 
 
-@pytest.fixture
-def table_maintenance_args():
-    """Provide a default Namespace for table maintenance tests."""
-    return Namespace(
+def make_table_maintenance_args(**overrides):
+    """Construct a Namespace for table maintenance tests with optional overrides."""
+    defaults = dict(
         jobType=None,
         lakehouse_path="/workspace/lakehouse",
         jobs_command=None,
@@ -25,10 +25,34 @@ def table_maintenance_args():
         params=None,
         path=None,
     )
+    defaults.update(overrides)
+    return Namespace(**defaults)
 
 
-def test_exec_command_cleans_up_temp_file_success(table_maintenance_args):
+def make_capturing_ntf():
+    """Return a wrapper around NamedTemporaryFile that records created paths."""
+    created_paths = []
+    original_ntf = tempfile.NamedTemporaryFile
+
+    def capturing_ntf(*args, **kwargs):
+        tf = original_ntf(*args, **kwargs)
+        created_paths.append(tf.name)
+        return tf
+
+    return capturing_ntf, created_paths
+
+
+def assert_temp_file_cleaned_up(created_paths):
+    """Assert exactly one temp file was created and it no longer exists."""
+    assert len(created_paths) == 1
+    assert not os.path.exists(
+        created_paths[0]
+    ), "Temp file should be cleaned up after execution"
+
+
+def test_exec_command_cleans_up_temp_file_success():
     """Verify the temporary config file is removed after job execution."""
+    args = make_table_maintenance_args()
     created_temp_files = []
 
     def mock_run_command(a):
@@ -39,16 +63,14 @@ def test_exec_command_cleans_up_temp_file_success(table_maintenance_args):
         "fabric_cli.commands.tables.fab_tables_opt.jobs.run_command",
         side_effect=mock_run_command,
     ):
-        fab_tables_opt.exec_command(table_maintenance_args)
+        fab_tables_opt.exec_command(args)
 
-    assert len(created_temp_files) == 1
-    assert not os.path.exists(
-        created_temp_files[0]
-    ), "Temp file should be cleaned up after job execution"
+    assert_temp_file_cleaned_up(created_temp_files)
 
 
-def test_exec_command_cleans_up_temp_file_on_job_failure(table_maintenance_args):
+def test_exec_command_cleans_up_temp_file_on_job_failure():
     """Verify the temporary config file is removed even if the job fails."""
+    args = make_table_maintenance_args()
     created_temp_files = []
 
     def mock_run_command(a):
@@ -60,29 +82,19 @@ def test_exec_command_cleans_up_temp_file_on_job_failure(table_maintenance_args)
         side_effect=mock_run_command,
     ):
         with pytest.raises(RuntimeError, match="Job failed"):
-            fab_tables_opt.exec_command(table_maintenance_args)
+            fab_tables_opt.exec_command(args)
 
-    assert len(created_temp_files) == 1
-    assert not os.path.exists(
-        created_temp_files[0]
-    ), "Temp file should be cleaned up even when job fails"
+    assert_temp_file_cleaned_up(created_temp_files)
 
 
-def test_exec_command_cleans_up_temp_file_on_open_failure(table_maintenance_args):
+def test_exec_command_cleans_up_temp_file_on_open_failure():
     """Verify the temp file is removed when open() raises a PermissionError."""
-    import tempfile
-
-    created_temp_paths = []
-    original_ntf = tempfile.NamedTemporaryFile
+    args = make_table_maintenance_args()
+    capturing_ntf, created_temp_paths = make_capturing_ntf()
     original_open = open
 
-    def capturing_ntf(*a, **kw):
-        tf = original_ntf(*a, **kw)
-        created_temp_paths.append(tf.name)
-        return tf
-
-    def mock_open(path, *args, **kwargs):
-        # Raise PermissionError only for the write to the captured temp file
+    def fail_on_temp_file_write(path, *args, **kwargs):
+        """Raise PermissionError when the temp file is opened for writing."""
         mode = args[0] if args else kwargs.get("mode", "r")
         if created_temp_paths and path == created_temp_paths[0] and mode == "w":
             raise PermissionError("Permission denied")
@@ -92,31 +104,20 @@ def test_exec_command_cleans_up_temp_file_on_open_failure(table_maintenance_args
         "fabric_cli.commands.tables.fab_tables_opt.tempfile.NamedTemporaryFile",
         side_effect=capturing_ntf,
     ):
-        with patch("builtins.open", side_effect=mock_open):
+        with patch("builtins.open", side_effect=fail_on_temp_file_write):
             with pytest.raises(PermissionError, match="Permission denied"):
-                fab_tables_opt.exec_command(table_maintenance_args)
+                fab_tables_opt.exec_command(args)
 
-    assert len(created_temp_paths) == 1
-    assert not os.path.exists(
-        created_temp_paths[0]
-    ), "Temp file should be cleaned up when open() fails"
+    assert_temp_file_cleaned_up(created_temp_paths)
 
 
-def test_exec_command_cleans_up_temp_file_on_serialization_failure(
-    table_maintenance_args,
-):
+def test_exec_command_cleans_up_temp_file_on_serialization_failure():
     """Verify the temp file is removed when json.dump raises due to non-serializable config."""
-    import tempfile
+    args = make_table_maintenance_args()
+    capturing_ntf, created_temp_paths = make_capturing_ntf()
 
-    created_temp_paths = []
-    original_ntf = tempfile.NamedTemporaryFile
-
-    def capturing_ntf(*a, **kw):
-        tf = original_ntf(*a, **kw)
-        created_temp_paths.append(tf.name)
-        return tf
-
-    def mock_json_dump(*args, **kwargs):
+    def json_dump_raises_type_error(*args, **kwargs):
+        """Simulate a serialization failure in json.dump."""
         raise TypeError("Object of type set is not JSON serializable")
 
     with patch(
@@ -125,33 +126,20 @@ def test_exec_command_cleans_up_temp_file_on_serialization_failure(
     ):
         with patch(
             "fabric_cli.commands.tables.fab_tables_opt.json.dump",
-            side_effect=mock_json_dump,
+            side_effect=json_dump_raises_type_error,
         ):
             with pytest.raises(TypeError, match="not JSON serializable"):
-                fab_tables_opt.exec_command(table_maintenance_args)
+                fab_tables_opt.exec_command(args)
 
-    assert len(created_temp_paths) == 1
-    assert not os.path.exists(
-        created_temp_paths[0]
-    ), "Temp file should be cleaned up when serialization fails"
+    assert_temp_file_cleaned_up(created_temp_paths)
 
 
 def test_exec_command_writes_correct_config_success():
     """Verify the temp file contains the expected job configuration."""
-    args = Namespace(
-        jobType=None,
-        lakehouse_path="/workspace/lakehouse",
-        jobs_command=None,
-        configuration='{"optimize": true}',
-        table_name="sales",
-        schema="dbo",
-        input=None,
-        params=None,
-        path=None,
-    )
+    args = make_table_maintenance_args(table_name="sales", schema="dbo")
 
     def mock_run_command(a):
-        with open(a.input, "r") as f:
+        with open(a.input, "r", encoding="utf-8") as f:
             config = json.load(f)
         assert config["tableName"] == "sales"
         assert config["schemaName"] == "dbo"
