@@ -8,8 +8,6 @@ import time
 from argparse import Namespace
 from typing import Any, Optional
 
-import yaml
-
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -80,46 +78,62 @@ def _encode_file_to_base64(file_path: str) -> str:
         return base64.b64encode(file.read()).decode("utf-8")
 
 
-# Environments — fallback when definition-based import is not supported
+# Environments
 
 
-def get_environment_fallback_payload(path: str, item: Item) -> dict:
-    """Build environment-specific payload for fallback import."""
-    return _build_environment_payload(path)
+def check_environment_publish_ready(args: Namespace) -> None:
+    """Check if environment is ready for import (no publish in progress).
+
+    Before modifying any Environment definitions, we check the current publish
+    state. This ensures we don't attempt to import new definitions while a
+    previous publish is still in progress.
+    """
+    _wait_for_environment_publish_state(
+        args,
+        pass_states=["success", "failed", "cancelled"],
+        fail_states=[],
+        message_prefix="Existing Environment publish is in progress",
+    )
 
 
-def publish_environment_item(args: Namespace, payload: dict) -> None:
-    """Publish environment using staging APIs (fallback method)."""
-    # Check for ongoing publish
-    _check_environment_publish_state(args, True)
+def trigger_environment_publish(args: Namespace) -> None:
+    """Trigger environment publish after definition import.
 
-    # Update compute settings
-    _update_compute_settings(args, payload)
-
-    # Add libraries to environment, overwriting anything with the same name
-    _add_libraries(args, payload)
-
-    # Remove libraries from live environment
-    _remove_libraries(args, payload)
-
-    # Publish
+    Immediately after import, call the Environment-specific publish API
+    to start the async library publishing.
+    """
     item_api.environment_publish(args)
-
-    # Wait for ongoing publish to complete
-    _check_environment_publish_state(args)
-
-    utils_ui.print_info("Published")
+    utils_ui.print_info("Environment publish triggered")
 
 
-def _check_environment_publish_state(
-    args: Namespace, initial_check: bool = False
+def wait_for_environment_publish(args: Namespace) -> None:
+    """Wait for environment publish to complete.
+
+    Poll the GET Environment publish details API until the environment
+    reaches a success or failure state, with retries as needed.
+    """
+    _wait_for_environment_publish_state(
+        args,
+        pass_states=["success"],
+        fail_states=["failed", "cancelled"],
+        message_prefix="Environment publish in progress",
+    )
+    utils_ui.print_info("Environment publish completed")
+
+
+def _wait_for_environment_publish_state(
+    args: Namespace,
+    pass_states: list[str],
+    fail_states: list[str],
+    message_prefix: str,
 ) -> None:
+    """Wait for environment to reach the published state."""
     publishing = True
     iteration = 1
+    max_retries = 60
 
     while publishing:
-        args.item_uri = "environments"
-        response = item_api.get_item(args, item_uri=True)
+        response = item_api.environment_get_publish_details(args)
         data = response.json()
 
         current_state = (
@@ -129,150 +143,19 @@ def _check_environment_publish_state(
             .lower()
         )
 
-        if initial_check:
-            prepend_message = "Existing Environment publish is in progress"
-            pass_values = ["success", "failed", "cancelled"]
-            fail_values: list[str] = []
-        else:
-            prepend_message = "Operation in progress"
-            pass_values = ["success"]
-            fail_values = ["failed", "cancelled"]
-
-        if current_state in pass_values:
+        if current_state in pass_states:
             publishing = False
-        elif current_state in fail_values:
-            msg = f"Publish {current_state} for Libraries"
-            raise Exception(msg)
+        elif current_state in fail_states:
+            msg = f"Environment publish {current_state}"
+            raise FabricCLIError(msg, fab_constant.ERROR_UNEXPECTED_ERROR)
         else:
             _handle_retry(
                 attempt=iteration,
                 base_delay=5,
-                max_retries=20,
-                response_retry_after=120,
-                prepend_message=prepend_message,
+                max_retries=max_retries,
+                prepend_message=message_prefix,
             )
             iteration += 1
-
-
-def _build_environment_payload(input_path: Any) -> dict:
-    directory = input_path
-
-    parts: dict[Any, Any] = {}
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            # Get full path and relative path
-            full_path = os.path.join(root, file)
-
-            # Spark compute settings
-            if "Setting" in full_path:
-                with open(full_path, "r") as f:
-                    yaml_body = yaml.safe_load(f)
-                parts["sparkCompute"] = _convert_environment_compute_to_camel(
-                    yaml_body)
-
-            # Spark libraries
-            elif "Libraries" in full_path:
-                parts["libraries"] = parts.get("libraries", [])
-                # Append instead of overwrite
-                parts["libraries"].append(full_path)
-
-    return {"parts": parts}
-
-
-def _convert_environment_compute_to_camel(input_dict: dict) -> dict:
-    new_input_dict = {}
-
-    for key, value in input_dict.items():
-        if key == "spark_conf":
-            new_key = "sparkProperties"
-        else:
-            # Convert the key to camelCase
-            key_components = key.split("_")
-            # Capitalize the first letter of each component except the first one
-            new_key = key_components[0] + \
-                "".join(x.title() for x in key_components[1:])
-
-        # Recursively update dictionary values if they are dictionaries
-        if isinstance(value, dict):
-            value = _convert_environment_compute_to_camel(value)
-
-        new_input_dict[new_key] = value
-
-    return new_input_dict
-
-
-def _update_compute_settings(args: Namespace, payload: dict) -> None:
-    if "sparkCompute" in payload["parts"]:
-        spark_compute = payload["parts"]["sparkCompute"]
-        _spark_compute_payload = json.dumps(spark_compute)
-
-        args.ext_uri = "/staging/sparkcompute"
-        args.item_uri = "environments"
-
-        response = item_api.update_item(
-            args, payload=_spark_compute_payload, item_uri=True, ext_uri=True
-        )
-
-        if response.status_code == 200:
-            utils_ui.print_info("Updated Spark Settings")
-
-
-def _add_libraries(args: Namespace, payload: dict) -> None:
-    if "libraries" in payload["parts"]:
-        # Extract the list of libraries
-        library_paths = payload["parts"]["libraries"]
-
-        for file_path in library_paths:
-            file_name = os.path.basename(file_path)
-
-            # Open the file in binary mode for reading
-            with open(file_path, "rb") as file:
-                library_file = {"file": (file_name, file)}
-
-                # Upload libraries to the environment
-                response = item_api.environment_upload_staging_library(
-                    args, library_file
-                )
-
-                if response.status_code == 200:
-                    utils_ui.print_info(f"Updated Library '{file_name}'")
-
-
-def _remove_libraries(args: Namespace, payload: dict) -> None:
-    args.ext_uri = "/libraries"
-    args.item_uri = "environments"
-
-    try:
-        response = item_api.get_item(args, item_uri=True, ext_uri=True)
-        if response.status_code == 200:
-            response_json = response.json()
-
-            repo_library_files = tuple(
-                os.path.basename(file) for file in payload["parts"].get("libraries", [])
-            )
-
-            if (
-                "environmentYml" in response_json
-                and response_json["environmentYml"]  # Not None or ''
-                and "environment.yml" not in repo_library_files
-            ):
-                _remove_library(args, "environment.yml")
-
-            custom_libraries = response_json.get("customLibraries", {})
-            if isinstance(custom_libraries, dict):
-                for files in custom_libraries.values():
-                    if isinstance(files, list):
-                        for file in files:
-                            if file not in repo_library_files:
-                                _remove_library(args, file)
-
-    except Exception:
-        pass
-
-
-def _remove_library(args: Namespace, file_name: str) -> None:
-    item_api.environment_delete_library_staging(args, file_name)
-    utils_ui.print_info(f"Removed {file_name}")
 
 
 def _handle_retry(

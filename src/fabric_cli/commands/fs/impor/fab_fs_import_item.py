@@ -6,7 +6,7 @@ from argparse import Namespace
 
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client.fab_api_types import ApiResponse
-from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
@@ -43,7 +43,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
         )
 
         if item_exists:
-            fab_logger.log_warning("An item with the same name exists")
+            utils_ui.print_warning("An item with the same name exists")
 
             # Update
             if args.force or utils_ui.prompt_confirm("Overwrite?"):
@@ -53,7 +53,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
                     f"Importing (update) '{_input_path}' → '{item.path}'..."
                 )
 
-                _import_update_item(args, payload, item, _input_path)
+                _import_update_item(args, payload, item)
 
                 utils_ui.print_output_format(
                     args, message=f"'{item.name}' imported")
@@ -62,7 +62,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
             utils_ui.print_grey(
                 f"Importing '{_input_path}' → '{item.path}'...")
 
-            response = _import_create_item(args, payload, item, _input_path)
+            response = _import_create_item(args, payload, item)
 
             if response.status_code in (200, 201):
                 utils_ui.print_output_format(
@@ -76,65 +76,55 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
 # Utils
 def _import_update_item(
-    args: Namespace, payload: dict, item: Item, input_path: str
+    args: Namespace, payload: dict, item: Item
 ) -> None:
+    """Update an existing item's definition.
+
+    For Environment items, implements the two-phase approach:
+    1. Check that no publish is currently in progress
+    2. Import the definition via the Items Definition API
+    3. Trigger publish automatically after import
+    4. Wait for publish to complete
+    """
+    is_environment = item.item_type == ItemType.ENVIRONMENT
+
+    # Phase 1: For environments, check publish state before import
+    if is_environment:
+        utils_import.check_environment_publish_ready(args)
+
+    # Phase 2: Import definition via Items Definition API
     definition_payload = json.dumps(
         {
             "definition": payload["definition"],
         }
     )
-    try:
-        item_api.update_item_definition(args, payload=definition_payload)
-    except FabricCLIError as e:
-        # Fallback for Environment if definition-based update fails
-        if item.item_type == ItemType.ENVIRONMENT:
-            fab_logger.log_warning(
-                f"Definition-based import failed ({e}), using fallback method..."
-            )
-            fallback_payload = utils_import.get_environment_fallback_payload(
-                input_path, item
-            )
-            utils_import.publish_environment_item(args, fallback_payload)
-        else:
-            raise
+    item_api.update_item_definition(args, payload=definition_payload)
+
+    # Phase 3 & 4: For environments, trigger publish and wait for completion
+    if is_environment:
+        utils_import.trigger_environment_publish(args)
+        utils_import.wait_for_environment_publish(args)
 
 
 def _import_create_item(
-    args: Namespace, payload: dict, item: Item, input_path: str
+    args: Namespace, payload: dict, item: Item
 ) -> ApiResponse:
+    """Create a new item with definition.
+
+    For Environment items, implements the two-phase approach:
+    1. Create the item via the Items Definition API
+    2. Trigger publish automatically after creation
+    3. Wait for publish to complete
+    """
+
     _payload = json.dumps(payload)
-    try:
-        return item_api.create_item(args, payload=_payload)
-    except FabricCLIError as e:
-        # Fallback for Environment if definition-based create fails
-        if item.item_type == ItemType.ENVIRONMENT:
-            fab_logger.log_warning(
-                f"Definition-based import failed ({e}), using fallback method..."
-            )
-            return _import_create_environment_fallback(item, args, input_path)
-        else:
-            raise
+    response = item_api.create_item(args, payload=_payload)
 
+    # For environments, trigger publish and wait for completion
+    if item.item_type == ItemType.ENVIRONMENT:
+        data = json.loads(response.text)
+        args.id = data["id"]
+        utils_import.trigger_environment_publish(args)
+        utils_import.wait_for_environment_publish(args)
 
-def _import_create_environment_fallback(
-    item: Item, args: Namespace, input_path: str
-) -> ApiResponse:
-    """Create environment using staging APIs (fallback method)."""
-    item_payload: dict = {
-        "type": str(item.item_type),
-        "displayName": item.short_name,
-        "folderId": item.folder_id,
-    }
-    item_payload_str = json.dumps(item_payload)
-
-    # Create the item first (without definition)
-    response = item_api.create_item(args, payload=item_payload_str)
-    data = json.loads(response.text)
-    args.id = data["id"]
-
-    # Then publish using staging APIs
-    fallback_payload = utils_import.get_environment_fallback_payload(
-        input_path, item
-    )
-    utils_import.publish_environment_item(args, fallback_payload)
     return response
