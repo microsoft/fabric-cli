@@ -46,15 +46,15 @@ def test_context_persistence_save(monkeypatch):
         # Create a mock workspace with the tenant as parent
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock _write_restricted_file to avoid actually writing to the file system
+        # Mock write_restricted_file to avoid actually writing to the file system
         with patch(
-            "fabric_cli.core.fab_state_config._write_restricted_file"
+            "fabric_cli.utils.fab_file_permissions.write_restricted_file"
         ) as mock_write:
 
             # Set the context
             context.context = workspace
 
-            # Check that _write_restricted_file was called with the right data
+            # Check that write_restricted_file was called with the right data
             mock_write.assert_called_once()
             args, _ = mock_write.call_args
             assert args[0] == temp_context_file
@@ -93,7 +93,9 @@ def test_context_persistence_not_used_in_interactive_mode(monkeypatch):
 
     # Set runtime mode to interactive and enable persistence
     context = Context()
-    monkeypatch.setattr(context, "get_runtime_mode", lambda: fab_constant.FAB_MODE_INTERACTIVE)
+    monkeypatch.setattr(
+        context, "get_runtime_mode", lambda: fab_constant.FAB_MODE_INTERACTIVE
+    )
 
     def mock_get_config(key):
         if key == fab_constant.FAB_CONTEXT_PERSISTENCE_ENABLED:
@@ -188,15 +190,15 @@ def test_context_persistence_enabled_when_configured(monkeypatch):
         tenant = Tenant("test_tenant", "1234")
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock _write_restricted_file to avoid actually writing to the file system
+        # Mock write_restricted_file to avoid actually writing to the file system
         with patch(
-            "fabric_cli.core.fab_state_config._write_restricted_file"
+            "fabric_cli.utils.fab_file_permissions.write_restricted_file"
         ) as mock_write:
 
             # Set the context - this SHOULD trigger file save when persistence is enabled
             context.context = workspace
 
-            # Check that _write_restricted_file was called with the right data
+            # Check that write_restricted_file was called with the right data
             mock_write.assert_called_once()
             args, _ = mock_write.call_args
             assert json.loads(args[1]) == {"path": workspace.path}

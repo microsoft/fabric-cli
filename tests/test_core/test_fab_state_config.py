@@ -117,10 +117,14 @@ def _create_temp_config(monkeypatch, tmp_path, config_data):
 
 def test_init_defaults_removes_mode_key_success(monkeypatch, tmp_path):
     """If an existing config file contains 'mode', init_defaults must delete it."""
-    config_file = _create_temp_config(monkeypatch, tmp_path, {
-        fab_constant.FAB_MODE: fab_constant.FAB_MODE_INTERACTIVE,
-        fab_constant.FAB_CACHE_ENABLED: "true",
-    })
+    config_file = _create_temp_config(
+        monkeypatch,
+        tmp_path,
+        {
+            fab_constant.FAB_MODE: fab_constant.FAB_MODE_INTERACTIVE,
+            fab_constant.FAB_CACHE_ENABLED: "true",
+        },
+    )
 
     cfg.init_defaults()
 
@@ -131,9 +135,13 @@ def test_init_defaults_removes_mode_key_success(monkeypatch, tmp_path):
 
 def test_init_defaults_no_mode_key_success(monkeypatch, tmp_path):
     """Config without 'mode' must initialize cleanly (distinct from removes_mode_key: verifies no error on absence)."""
-    config_file = _create_temp_config(monkeypatch, tmp_path, {
-        fab_constant.FAB_DEBUG_ENABLED: "true",
-    })
+    config_file = _create_temp_config(
+        monkeypatch,
+        tmp_path,
+        {
+            fab_constant.FAB_DEBUG_ENABLED: "true",
+        },
+    )
 
     cfg.init_defaults()
 
@@ -150,21 +158,26 @@ def test_init_defaults_applies_missing_defaults_success(monkeypatch, tmp_path):
 
     result = cfg.read_config(config_file)
     for key, default_val in fab_constant.CONFIG_DEFAULT_VALUES.items():
-        assert result.get(key) == default_val, (
-            f"Expected default for '{key}' = '{default_val}', got '{result.get(key)}'"
-        )
+        assert (
+            result.get(key) == default_val
+        ), f"Expected default for '{key}' = '{default_val}', got '{result.get(key)}'"
 
 
 def test_init_defaults_preserves_user_overrides_success(monkeypatch, tmp_path):
     """User-set values must not be overwritten by defaults."""
-    config_file = _create_temp_config(monkeypatch, tmp_path, {
-        fab_constant.FAB_CACHE_ENABLED: "false",
-    })
+    config_file = _create_temp_config(
+        monkeypatch,
+        tmp_path,
+        {
+            fab_constant.FAB_CACHE_ENABLED: "false",
+        },
+    )
 
     cfg.init_defaults()
 
     result = cfg.read_config(config_file)
     assert result[fab_constant.FAB_CACHE_ENABLED] == "false"
+
 
 # endregion
 
@@ -242,7 +255,9 @@ def test_write_config_tightens_permissions_on_existing_file(monkeypatch, tmp_pat
     cfg.write_config({"new": "data"})
 
     mode = oct(os.stat(config_file).st_mode & 0o777)
-    assert mode == "0o600", f"Config file has mode {mode} after overwrite, expected 0o600"
+    assert (
+        mode == "0o600"
+    ), f"Config file has mode {mode} after overwrite, expected 0o600"
 
     data = cfg.read_config(config_file)
     assert data == {"new": "data"}

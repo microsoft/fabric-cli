@@ -159,11 +159,9 @@ class Context:
             }
 
             try:
-                from fabric_cli.core.fab_state_config import _write_restricted_file
+                from fabric_cli.utils.fab_file_permissions import write_restricted_file
 
-                _write_restricted_file(
-                    self._context_file, json.dumps(context_data)
-                )
+                write_restricted_file(self._context_file, json.dumps(context_data))
             except Exception:
                 utils_ui.print_warning(
                     "Warning: Failed to save context file. Context persistence may not work as expected."

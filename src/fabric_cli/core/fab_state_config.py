@@ -2,31 +2,19 @@
 # Licensed under the MIT License.
 
 import json
-import logging
 import os
 from os.path import expanduser
 
 from fabric_cli.core import fab_constant
-
-_logger = logging.getLogger(__name__)
-
-
-def _chmod_if_posix(path, mode):
-    """Best-effort chmod with warning on failure; no-op on Windows."""
-    if os.name != "nt":
-        try:
-            os.chmod(path, mode)
-        except OSError as e:
-            _logger.warning(
-                "Failed to set permissions %o on %s: %s", mode, path, e
-            )
+from fabric_cli.utils.fab_file_permissions import (
+    create_restricted_dir,
+    write_restricted_file,
+)
 
 
 def config_location():
     _location = expanduser("~/.config/fab/")
-    os.makedirs(_location, mode=0o700, exist_ok=True)
-    # Enforce permissions on pre-existing directories from older versions
-    _chmod_if_posix(_location, 0o700)
+    create_restricted_dir(_location)
     return _location
 
 
@@ -44,29 +32,7 @@ def read_config(file_path) -> dict:
 
 
 def write_config(data):
-    _write_restricted_file(config_file, json.dumps(data, indent=4))
-
-
-def _write_restricted_file(file_path, content):
-    """Write content to a file with owner-only permissions (0o600).
-
-    Handles both new file creation and tightening permissions on
-    pre-existing files from older CLI versions.
-    """
-    fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        with os.fdopen(fd, "w") as file:
-            file.write(content)
-    except Exception:
-        # os.fdopen may fail before wrapping fd; close to avoid leak.
-        # If os.fdopen succeeded, fd is already closed by the with block.
-        try:
-            os.close(fd)
-        except OSError:
-            pass
-        raise
-    # Enforce permissions on pre-existing files from older versions
-    _chmod_if_posix(file_path, 0o600)
+    write_restricted_file(config_file, json.dumps(data, indent=4))
 
 
 def set_config(key, value):

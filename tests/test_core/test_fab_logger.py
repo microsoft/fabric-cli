@@ -254,15 +254,15 @@ def mock_get_log_file_path():
 # ── Security: log directory permissions ──────────────────────────────────────
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX permission tests not applicable on Windows")
+@pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission tests not applicable on Windows"
+)
 def test_get_log_file_path_creates_directory_with_restricted_permissions(
     monkeypatch, tmp_path
 ):
     """Verify log directory is created with mode 0o700 (owner-only)."""
     log_dir = tmp_path / "fabric-cli" / "log"
-    monkeypatch.setattr(
-        logger, "user_log_dir", lambda app_name: str(log_dir)
-    )
+    monkeypatch.setattr(logger, "user_log_dir", lambda app_name: str(log_dir))
 
     result = logger._get_log_file_path()
     assert result.endswith("fabcli_debug.log")
