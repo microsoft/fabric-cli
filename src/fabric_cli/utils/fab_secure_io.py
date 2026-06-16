@@ -17,7 +17,7 @@ import os
 _logger = logging.getLogger(__name__)
 
 # True on Linux/macOS; False on Windows where POSIX permission bits are a no-op.
-_IS_POSIX = os.name != "nt"
+IS_POSIX = os.name != "nt"
 
 
 def chmod_if_posix(path: str, mode: int) -> None:
@@ -26,7 +26,7 @@ def chmod_if_posix(path: str, mode: int) -> None:
     Logs at debug level when chmod fails (e.g. permission denied on
     restrictive filesystems) since the user cannot act on it.
     """
-    if _IS_POSIX:
+    if IS_POSIX:
         try:
             os.chmod(path, mode)
         except OSError as e:
@@ -37,8 +37,14 @@ def write_restricted_file(file_path: str, content: str) -> None:
     """Write content to a file with owner-only permissions (0o600).
 
     Handles both new file creation and tightening permissions on
-    pre-existing files from older CLI versions.
+    pre-existing files from older CLI versions.  Permissions are
+    tightened *before* truncation so that sensitive content is never
+    written to a world-readable file descriptor.
     """
+    # Tighten permissions on pre-existing files before writing, so
+    # the truncate+write never exposes new content through a permissive fd.
+    if os.path.exists(file_path):
+        chmod_if_posix(file_path, 0o600)
     fd = os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as file:
@@ -51,8 +57,6 @@ def write_restricted_file(file_path: str, content: str) -> None:
         except OSError:
             pass
         raise
-    # Enforce permissions on pre-existing files from older versions
-    chmod_if_posix(file_path, 0o600)
 
 
 def create_restricted_dir(dir_path: str) -> None:

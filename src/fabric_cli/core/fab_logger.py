@@ -14,7 +14,7 @@ import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
 from fabric_cli.utils.fab_secure_io import (
-    _IS_POSIX,
+    IS_POSIX,
     chmod_if_posix,
     create_restricted_dir,
 )
@@ -201,7 +201,7 @@ class _RestrictedRotatingFileHandler(RotatingFileHandler):
             self.mode,
             encoding=self.encoding,
             errors=self.errors,
-            opener=_restricted_file_opener if _IS_POSIX else None,
+            opener=_restricted_file_opener if IS_POSIX else None,
         )
 
     def doRollover(self):

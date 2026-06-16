@@ -298,6 +298,11 @@ def test_log_file_created_with_restricted_permissions_success(monkeypatch, tmp_p
     content = log_file.read_text()
     assert "permission test entry" in content
 
+    # Cleanup: remove handlers to avoid accumulation on the global singleton
+    for handler in log_instance.handlers[:]:
+        log_instance.removeHandler(handler)
+        handler.close()
+
 
 @_skip_on_windows
 def test_log_file_rotation_preserves_restricted_permissions_success(
