@@ -27,7 +27,6 @@ from tests.test_commands.conftest import (
     set_item_metadata_success_params,
     set_item_metadata_success_params_complete,
     set_item_metadata_for_all_types_success_item_params,
-    set_item_metadata_success_params,
     set_workspace_success_params,
     set_sparkpool_success_params,
     set_capacity_success_params,
@@ -239,6 +238,66 @@ class TestSET:
         get(variable_library.full_path, query="properties.activeValueSetName")
         assert "Default value set" in str(
             mock_questionary_print.call_args[0][0])
+
+    def test_set_sql_database_backup_retention_days_invalid_value_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+    ):
+        """Test that setting backupRetentionDays with non-integer value fails."""
+        # Setup
+        sql_database = item_factory(ItemType.SQL_DATABASE)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
+
+        # Execute command with invalid (non-integer) value
+        cli_executor.exec_command(
+            f"set {sql_database.full_path} --query properties.backupRetentionDays --input seven --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT,
+            "backupRetentionDays",
+        )
+        mock_upsert_item_to_cache.assert_not_called()
+
+    def test_set_sql_database_backup_retention_days_out_of_range_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+    ):
+        """Test that setting backupRetentionDays with out-of-range value fails."""
+        # Setup
+        sql_database = item_factory(ItemType.SQL_DATABASE)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
+
+        # Execute command with out-of-range value (above max of 35)
+        cli_executor.exec_command(
+            f"set {sql_database.full_path} --query properties.backupRetentionDays --input 100 --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT,
+            "backupRetentionDays",
+        )
+        mock_upsert_item_to_cache.assert_not_called()
 
     # endregion
 
