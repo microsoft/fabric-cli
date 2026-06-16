@@ -13,7 +13,7 @@ from logging.handlers import RotatingFileHandler
 import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
-from fabric_cli.utils.fab_file_permissions import (
+from fabric_cli.utils.fab_secure_io import (
     _IS_POSIX,
     chmod_if_posix,
     create_restricted_dir,

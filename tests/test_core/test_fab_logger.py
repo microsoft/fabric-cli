@@ -251,13 +251,15 @@ def mock_get_log_file_path():
         yield mock
 
 
-# ── Security: log directory permissions ──────────────────────────────────────
+# ── Security: log directory and file permissions ─────────────────────────────
 
-
-@pytest.mark.skipif(
+_skip_on_windows = pytest.mark.skipif(
     os.name == "nt", reason="POSIX permission tests not applicable on Windows"
 )
-def test_get_log_file_path_creates_directory_with_restricted_permissions(
+
+
+@_skip_on_windows
+def test_get_log_file_path_creates_directory_with_restricted_permissions_success(
     monkeypatch, tmp_path
 ):
     """Verify log directory is created with mode 0o700 (owner-only)."""
@@ -270,3 +272,71 @@ def test_get_log_file_path_creates_directory_with_restricted_permissions(
 
     mode = oct(log_dir.stat().st_mode & 0o777)
     assert mode == "0o700", f"Log directory has mode {mode}, expected 0o700"
+
+
+@_skip_on_windows
+def test_log_file_created_with_restricted_permissions_success(monkeypatch, tmp_path):
+    """Verify log file is created with mode 0o600 and is readable by the owner."""
+    log_dir = tmp_path / "fabric-cli" / "log"
+    log_dir.mkdir(parents=True, mode=0o700)
+    monkeypatch.setattr(logger, "user_log_dir", lambda app_name: str(log_dir))
+
+    # Reset singleton so _setup_logger creates a fresh handler
+    monkeypatch.setattr(logger, "_logger_instance", None)
+
+    log_file = log_dir / "fabcli_debug.log"
+    log_instance = logger._setup_logger(str(log_file))
+
+    # Write something to ensure the file exists
+    log_instance.debug("permission test entry")
+
+    assert log_file.exists()
+    mode = oct(log_file.stat().st_mode & 0o777)
+    assert mode == "0o600", f"Log file has mode {mode}, expected 0o600"
+
+    # Verify the owner can still read the file
+    content = log_file.read_text()
+    assert "permission test entry" in content
+
+
+@_skip_on_windows
+def test_log_file_rotation_preserves_restricted_permissions_success(
+    monkeypatch, tmp_path
+):
+    """Verify rotated log files maintain 0o600 permissions."""
+    log_dir = tmp_path / "fabric-cli" / "log"
+    log_dir.mkdir(parents=True, mode=0o700)
+    log_file = log_dir / "fabcli_debug.log"
+
+    # Create a handler with a small maxBytes to force rotation quickly
+    handler = logger._RestrictedRotatingFileHandler(
+        str(log_file),
+        maxBytes=100,  # Very small to trigger rotation
+        backupCount=2,
+    )
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+
+    test_logger = logging.getLogger("FabricCLI_rotation_test")
+    test_logger.setLevel(logging.DEBUG)
+    test_logger.addHandler(handler)
+
+    # Write enough data to trigger at least one rotation
+    for i in range(20):
+        test_logger.debug(f"rotation test entry {i} with padding to exceed limit")
+
+    # Check that at least one rotated file was created
+    rotated_file_1 = log_dir / "fabcli_debug.log.1"
+    assert rotated_file_1.exists(), "Expected at least one rotated log file"
+
+    # Verify permissions on the base log file
+    mode = oct(log_file.stat().st_mode & 0o777)
+    assert mode == "0o600", f"Base log file has mode {mode}, expected 0o600"
+
+    # Verify permissions on the rotated file
+    mode = oct(rotated_file_1.stat().st_mode & 0o777)
+    assert mode == "0o600", f"Rotated log file has mode {mode}, expected 0o600"
+
+    # Cleanup
+    test_logger.removeHandler(handler)
+    handler.close()

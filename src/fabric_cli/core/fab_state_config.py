@@ -6,7 +6,7 @@ import os
 from os.path import expanduser
 
 from fabric_cli.core import fab_constant
-from fabric_cli.utils.fab_file_permissions import (
+from fabric_cli.utils.fab_secure_io import (
     create_restricted_dir,
     write_restricted_file,
 )

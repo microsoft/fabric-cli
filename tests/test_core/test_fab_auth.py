@@ -1078,7 +1078,7 @@ _skip_on_windows = pytest.mark.skipif(
 
 
 @_skip_on_windows
-def test_save_auth_creates_file_with_restricted_permissions(tmp_path):
+def test_save_auth_creates_file_with_restricted_permissions_success(tmp_path):
     """Verify auth.json is created with mode 0o600 (owner read/write only)."""
     auth = FabAuth()
     auth.auth_file = os.path.join(str(tmp_path), "auth.json")
@@ -1097,12 +1097,13 @@ def test_save_auth_creates_file_with_restricted_permissions(tmp_path):
 
 
 @_skip_on_windows
-def test_save_auth_tightens_permissions_on_existing_file(tmp_path):
+def test_save_auth_tightens_permissions_on_existing_file_success(tmp_path):
     """Verify _save_auth() enforces 0o600 on a pre-existing permissive file."""
     auth = FabAuth()
     auth.auth_file = os.path.join(str(tmp_path), "auth.json")
 
-    # Create file with overly permissive mode (simulating old CLI version)
+    # Create file with world-readable permissions (0o644) to simulate a
+    # pre-existing file written by an older CLI version without hardening
     with open(auth.auth_file, "w") as f:
         json.dump({con.IDENTITY_TYPE: "user"}, f)
     os.chmod(auth.auth_file, 0o644)

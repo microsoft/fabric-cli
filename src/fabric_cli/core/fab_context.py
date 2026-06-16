@@ -159,7 +159,7 @@ class Context:
             }
 
             try:
-                from fabric_cli.utils.fab_file_permissions import write_restricted_file
+                from fabric_cli.utils.fab_secure_io import write_restricted_file
 
                 write_restricted_file(self._context_file, json.dumps(context_data))
             except Exception:

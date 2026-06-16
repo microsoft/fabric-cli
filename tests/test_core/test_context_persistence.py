@@ -48,7 +48,7 @@ def test_context_persistence_save(monkeypatch):
 
         # Mock write_restricted_file to avoid actually writing to the file system
         with patch(
-            "fabric_cli.utils.fab_file_permissions.write_restricted_file"
+            "fabric_cli.utils.fab_secure_io.write_restricted_file"
         ) as mock_write:
 
             # Set the context
@@ -192,7 +192,7 @@ def test_context_persistence_enabled_when_configured(monkeypatch):
 
         # Mock write_restricted_file to avoid actually writing to the file system
         with patch(
-            "fabric_cli.utils.fab_file_permissions.write_restricted_file"
+            "fabric_cli.utils.fab_secure_io.write_restricted_file"
         ) as mock_write:
 
             # Set the context - this SHOULD trigger file save when persistence is enabled

@@ -21,16 +21,16 @@ _IS_POSIX = os.name != "nt"
 
 
 def chmod_if_posix(path: str, mode: int) -> None:
-    """Best-effort chmod with warning on failure; no-op on Windows.
+    """Best-effort chmod on POSIX; no-op on Windows.
 
-    Emits a warning when chmod fails on POSIX so operators can detect
-    restrictive filesystems or unexpected ownership/ACL conditions.
+    Logs at debug level when chmod fails (e.g. permission denied on
+    restrictive filesystems) since the user cannot act on it.
     """
     if _IS_POSIX:
         try:
             os.chmod(path, mode)
         except OSError as e:
-            _logger.warning("Failed to set permissions %o on %s: %s", mode, path, e)
+            _logger.debug("Failed to set permissions %o on %s: %s", mode, path, e)
 
 
 def write_restricted_file(file_path: str, content: str) -> None:

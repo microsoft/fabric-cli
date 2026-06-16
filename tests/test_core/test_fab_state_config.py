@@ -190,7 +190,7 @@ _skip_on_windows = pytest.mark.skipif(
 
 
 @_skip_on_windows
-def test_config_location_creates_directory_with_restricted_permissions(
+def test_config_location_creates_directory_with_restricted_permissions_success(
     monkeypatch, tmp_path
 ):
     """Verify config directory is created with mode 0o700 (owner-only access)."""
@@ -207,7 +207,7 @@ def test_config_location_creates_directory_with_restricted_permissions(
 
 
 @_skip_on_windows
-def test_config_location_tightens_permissions_on_existing_directory(
+def test_config_location_tightens_permissions_on_existing_directory_success(
     monkeypatch, tmp_path
 ):
     """Verify config_location() enforces 0o700 on a pre-existing permissive directory."""
@@ -225,7 +225,9 @@ def test_config_location_tightens_permissions_on_existing_directory(
 
 
 @_skip_on_windows
-def test_write_config_creates_file_with_restricted_permissions(monkeypatch, tmp_path):
+def test_write_config_creates_file_with_restricted_permissions_success(
+    monkeypatch, tmp_path
+):
     """Verify config files are created with mode 0o600 (owner read/write only)."""
     config_file = os.path.join(str(tmp_path), "config.json")
     monkeypatch.setattr(cfg, "config_file", config_file)
@@ -242,12 +244,15 @@ def test_write_config_creates_file_with_restricted_permissions(monkeypatch, tmp_
 
 
 @_skip_on_windows
-def test_write_config_tightens_permissions_on_existing_file(monkeypatch, tmp_path):
+def test_write_config_tightens_permissions_on_existing_file_success(
+    monkeypatch, tmp_path
+):
     """Verify write_config() enforces 0o600 on a pre-existing permissive file."""
     config_file = os.path.join(str(tmp_path), "config.json")
     monkeypatch.setattr(cfg, "config_file", config_file)
 
-    # Create file with overly permissive mode (simulating old CLI version)
+    # Create file with world-readable permissions (0o644) to simulate a
+    # pre-existing file written by an older CLI version without hardening
     with open(config_file, "w") as f:
         json.dump({"old": "data"}, f)
     os.chmod(config_file, 0o644)
