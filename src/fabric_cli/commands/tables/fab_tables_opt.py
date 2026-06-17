@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import contextlib
 import json
+import os
 import tempfile
 from argparse import Namespace
 
@@ -19,10 +21,19 @@ def exec_command(args: Namespace) -> None:
         _config["schemaName"] = args.schema
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        with open(temp_file.name, "w") as fp:
+        temp_path = temp_file.name
+
+    # Reopen the file after closing the NamedTemporaryFile handle so that
+    # the path is not locked when os.unlink is called on Windows.
+    try:
+        with open(temp_path, "w", encoding="utf-8") as fp:
             json.dump(_config, fp)
 
         args.configuration = None
-        args.input = temp_file.name
+        args.input = temp_path
         args.params = None
+
         jobs.run_command(args)
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(temp_path)

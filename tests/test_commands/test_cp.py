@@ -18,7 +18,10 @@ from fabric_cli.core.hiearchy.fab_hiearchy import LocalPath, OneLakeItem
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.commands_parser import CLIExecutor
 from tests.test_commands.conftest import (
-    rm, cp_item_types_success_params, cp_virtual_workspace_item_failure_params
+    rm,
+    cp_item_types_success_params,
+    cp_virtual_workspace_item_failure_params,
+    cp_folder_item_types_success_params
 )
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.utils import cli_path_join
@@ -1112,7 +1115,7 @@ class TestCP:
             ErrorMessages.Cp.item_exists_different_path(),
         )
 
-    @cp_item_types_success_params
+    @cp_folder_item_types_success_params
     def test_cp_folder_with_different_item_types_success(
         self,
         workspace_factory,

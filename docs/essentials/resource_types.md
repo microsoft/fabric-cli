@@ -42,6 +42,7 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.ApacheAirflowJob`    | Apache Airflow job definitions     |
 | `.CosmosDBDatabase`    | Cosmos DB databases                |
 | `.DigitalTwinBuilder`  | Digital twin builder resources     |
+| `.DigitalTwinBuilderFlow` | Digital Twin Builder flows      |
 | `.GraphQuerySet`       | Graph query collections            |
 | `.UserDataFunction`    | User data functions                |
 
