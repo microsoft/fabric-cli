@@ -103,31 +103,34 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
         FabricCLIError: If the value is invalid for the property.
     """
     if query == fab_constant.SQL_DATABASE_BACKUP_RETENTION_PROPERTY:
+        min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS
+        max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS
+
         try:
-            # Try to parse as JSON first (handles numeric input)
             try:
-                value = json.loads(input_value)
-            except (TypeError, json.JSONDecodeError):
-                value = input_value
-
-            if isinstance(value, str):
-                value = int(value)
-
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise ValueError("Not an integer")
+                value = int(input_value)
+            except ValueError:
+                # Fall back to JSON for encoded values like '7' or '"7"'
+                parsed = json.loads(input_value)
+                if isinstance(parsed, bool):
+                    raise ValueError("Booleans are not valid integer values")
+                elif isinstance(parsed, int):
+                    value = parsed
+                elif isinstance(parsed, str):
+                    value = int(parsed)
+                else:
+                    raise ValueError("Value must be an integer")
 
             # Validate range
-            min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS
-            max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS
-            if value < min_days or value > max_days:
+            if not min_days <= value <= max_days:
                 raise ValueError("Out of range")
 
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, json.JSONDecodeError):
             raise FabricCLIError(
                 CommonErrors.invalid_backup_retention_days(
                     str(input_value),
-                    fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS,
-                    fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS,
+                    min_days,
+                    max_days,
                 ),
                 fab_constant.ERROR_INVALID_INPUT,
             )
