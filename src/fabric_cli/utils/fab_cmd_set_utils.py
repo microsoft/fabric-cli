@@ -110,7 +110,9 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
             except (TypeError, json.JSONDecodeError):
                 value = input_value
 
-            # Ensure it's an integer
+            if isinstance(value, str):
+                value = int(value)
+
             if not isinstance(value, int) or isinstance(value, bool):
                 raise ValueError("Not an integer")
 
@@ -233,7 +235,8 @@ def update_cache(
 
 
 def print_set_warning() -> None:
-    fab_logger.log_warning("Modifying properties may lead to unintended consequences")
+    fab_logger.log_warning(
+        "Modifying properties may lead to unintended consequences")
 
 
 def extract_updated_properties(updated_data: dict, query_path: str) -> dict:
@@ -299,7 +302,8 @@ def _decode_payload(item_def: dict) -> dict:
                 payload_base64 = part["payload"]
 
                 if payload_base64:
-                    decoded_payload = base64.b64decode(payload_base64).decode("utf-8")
+                    decoded_payload = base64.b64decode(
+                        payload_base64).decode("utf-8")
                     decoded_payload = json.loads(decoded_payload)
                     # Store the decoded payload
                     part["payload"] = decoded_payload
