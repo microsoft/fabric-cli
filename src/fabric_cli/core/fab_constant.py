@@ -355,7 +355,6 @@ SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
 # SQLDatabase property validation
 SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS = 1
 SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS = 35
-SQL_DATABASE_BACKUP_RETENTION_PROPERTY = "properties.backupRetentionDays"
 
 # SQLDatabase creation modes
 SQL_DATABASE_CREATION_MODE_NEW = "New"

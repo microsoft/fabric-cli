@@ -842,7 +842,9 @@ def _build_sql_database_creation_payload(params: dict) -> dict | None:
         ]:
             if prop_value is not None:
                 raise FabricCLIError(
-                    CommonErrors.sql_database_property_not_allowed_for_mode(prop_name, mode),
+                    CommonErrors.sql_database_property_not_allowed_for_mode(
+                        prop_name, mode
+                    ),
                     fab_constant.ERROR_INVALID_INPUT,
                 )
 
