@@ -12,8 +12,11 @@ from fabric_cli.commands.tables import fab_tables_schema
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
+from fabric_cli.utils import fab_cmd_table_utils as utils_table
 from tests.conftest import mock_questionary_print  # noqa: F401
 from tests.test_commands.commands_parser import CLIExecutor
+
+_DELTA_CLIENT = "fabric_cli.client.fab_delta_client"
 
 
 class TestTablesSchemaUnit:
@@ -21,7 +24,7 @@ class TestTablesSchemaUnit:
 
     @pytest.fixture
     def mock_auth(self):
-        with patch("fabric_cli.commands.tables.fab_tables_schema.FabAuth") as mock:
+        with patch(f"{_DELTA_CLIENT}.FabAuth") as mock:
             instance = MagicMock()
             instance.get_access_token.return_value = "mock_token"
             mock.return_value = instance
@@ -29,7 +32,7 @@ class TestTablesSchemaUnit:
 
     @pytest.fixture
     def mock_delta_table(self):
-        with patch("fabric_cli.commands.tables.fab_tables_schema.DeltaTable") as mock:
+        with patch(f"{_DELTA_CLIENT}.DeltaTable") as mock:
             yield mock
 
     def _make_delta_table_mock(self, mock_delta_table, schema_json):
@@ -44,8 +47,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema=None,
+            table_local_path="Tables/test_table",
         )
 
         mock_schema = {
@@ -77,8 +79,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema="dbo",
+            table_local_path="Tables/dbo/test_table",
         )
 
         mock_schema = {
@@ -103,8 +104,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema=None,
+            table_local_path="Tables/test_table",
         )
 
         mock_delta_table.side_effect = error_cls("error")
@@ -120,8 +120,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema=None,
+            table_local_path="Tables/test_table",
         )
 
         self._make_delta_table_mock(mock_delta_table, "invalid json {")
@@ -137,8 +136,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema=None,
+            table_local_path="Tables/test_table",
         )
 
         self._make_delta_table_mock(mock_delta_table, json.dumps({"some_other_key": "value"}))
@@ -154,8 +152,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="test-ws-id",
             lakehouse_id="test-lakehouse-id",
-            table_name="test_table",
-            schema=None,
+            table_local_path="Tables/test_table",
         )
 
         self._make_delta_table_mock(mock_delta_table, json.dumps({"fields": "not a list"}))
@@ -171,8 +168,7 @@ class TestTablesSchemaUnit:
         args = Namespace(
             ws_id="workspace-guid-123",
             lakehouse_id="lakehouse-guid-456",
-            table_name="my_table",
-            schema=None,
+            table_local_path="Tables/my_table",
         )
 
         mock_schema = {
@@ -199,6 +195,54 @@ class TestTablesSchemaUnit:
         assert len(result) == 1
 
 
+class TestAddTablePropsToArgs:
+    """Tests for add_table_props_to_args normalization."""
+
+    def _make_context(self, local_path: str) -> MagicMock:
+        from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
+
+        context = MagicMock()
+        context.__class__ = OneLakeItem  # make isinstance(context, OneLakeItem) pass
+        context.local_path = local_path
+        return context
+
+    def test_shortcut_suffix_stripped_from_table_local_path(self):
+        """Regression: .Shortcut must not appear in args.table_local_path."""
+        args = Namespace()
+        context = self._make_context("Tables/my_table.Shortcut")
+
+        utils_table.add_table_props_to_args(args, context)
+
+        assert ".Shortcut" not in args.table_local_path
+        assert args.table_local_path == "Tables/my_table"
+
+    def test_shortcut_suffix_stripped_from_schema_path(self):
+        """Regression: .Shortcut must not appear anywhere in table_local_path for schema tables."""
+        args = Namespace()
+        context = self._make_context("Tables/dbo/my_table.Shortcut")
+
+        utils_table.add_table_props_to_args(args, context)
+
+        assert ".Shortcut" not in args.table_local_path
+        assert args.table_local_path == "Tables/dbo/my_table"
+
+    def test_normal_path_unchanged(self):
+        args = Namespace()
+        context = self._make_context("Tables/my_table")
+
+        utils_table.add_table_props_to_args(args, context)
+
+        assert args.table_local_path == "Tables/my_table"
+
+    def test_schema_path_unchanged(self):
+        args = Namespace()
+        context = self._make_context("Tables/dbo/my_table")
+
+        utils_table.add_table_props_to_args(args, context)
+
+        assert args.table_local_path == "Tables/dbo/my_table"
+
+
 class TestTablesSchemaIntegration:
     """Integration tests for table schema command - validates full dispatch stack."""
 
@@ -213,9 +257,9 @@ class TestTablesSchemaIntegration:
         mock_questionary_print.reset_mock()
 
         with patch(
-            "fabric_cli.commands.tables.fab_tables_schema.DeltaTable"
+            f"{_DELTA_CLIENT}.DeltaTable"
         ) as mock_dt, patch(
-            "fabric_cli.commands.tables.fab_tables_schema.FabAuth"
+            f"{_DELTA_CLIENT}.FabAuth"
         ) as mock_auth:
             mock_auth.return_value.get_access_token.return_value = "mock_token"
             mock_table = MagicMock()

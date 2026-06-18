@@ -7,6 +7,7 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_onelake_element import OneLakeItem
 from fabric_cli.errors import ErrorMessages
+from fabric_cli.utils import fab_util as utils
 
 
 def add_table_props_to_args(args: Any, context: OneLakeItem) -> None:
@@ -23,7 +24,7 @@ def add_table_props_to_args(args: Any, context: OneLakeItem) -> None:
     table_path = context.local_path.split("/")
     args.table_name = table_path[-1]
     args.schema = table_path[-2] if len(table_path) == 3 else None
-    args.table_local_path = context.local_path
+    args.table_local_path = utils.remove_dot_suffix(context.local_path)
 
 
 def convert_hours_to_dhhmmss(hours: int) -> str:
