@@ -59,6 +59,17 @@ def write_restricted_file(file_path: str, content: str) -> None:
         raise
 
 
+def get_restricted_file_opener():
+    """Return a file opener that creates files with 0o600 on POSIX, or None on Windows.
+
+    Intended for use as the ``opener`` argument to :func:`open`.  Returns
+    ``None`` on Windows so that the default opener is used.
+    """
+    if IS_POSIX:
+        return lambda path, flags: os.open(path, flags, 0o600)
+    return None
+
+
 def create_restricted_dir(dir_path: str) -> None:
     """Create a directory with owner-only permissions (0o700).
 

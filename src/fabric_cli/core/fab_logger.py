@@ -14,9 +14,9 @@ import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
 from fabric_cli.utils.fab_secure_io import (
-    IS_POSIX,
     chmod_if_posix,
     create_restricted_dir,
+    get_restricted_file_opener,
 )
 
 _logger_instance = None  # Singleton instance
@@ -176,11 +176,6 @@ def get_logger():
     return _logger_instance
 
 
-def _restricted_file_opener(path, flags):
-    """Custom opener that creates files with owner-only permissions (0o600)."""
-    return os.open(path, flags, 0o600)
-
-
 class _RestrictedRotatingFileHandler(RotatingFileHandler):
     """RotatingFileHandler that enforces 0o600 on log files (including rotated ones).
 
@@ -201,7 +196,7 @@ class _RestrictedRotatingFileHandler(RotatingFileHandler):
             self.mode,
             encoding=self.encoding,
             errors=self.errors,
-            opener=_restricted_file_opener if IS_POSIX else None,
+            opener=get_restricted_file_opener(),
         )
 
     def doRollover(self):
