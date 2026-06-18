@@ -22,7 +22,7 @@ def add_table_props_to_args(args: Any, context: OneLakeItem) -> None:
     args.lakehouse_path = context.item.path
 
     table_path = context.local_path.split("/")
-    args.table_name = table_path[-1]
+    args.table_name = utils.remove_dot_suffix(table_path[-1])
     args.schema = table_path[-2] if len(table_path) == 3 else None
     args.table_local_path = utils.remove_dot_suffix(context.local_path)
 

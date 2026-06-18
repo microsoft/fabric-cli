@@ -18,6 +18,12 @@ def _make_context(local_path: str) -> MagicMock:
 class TestAddTablePropsToArgs:
     """Unit tests for add_table_props_to_args path normalization."""
 
+    def test_shortcut_suffix_stripped_from_table_name(self):
+        """Regression: .Shortcut must not appear in args.table_name (used in REST URIs)."""
+        args = Namespace()
+        utils_table.add_table_props_to_args(args, _make_context("Tables/my_table.Shortcut"))
+        assert args.table_name == "my_table"
+
     def test_shortcut_suffix_stripped_from_table_local_path(self):
         """Regression: .Shortcut must not appear in args.table_local_path."""
         args = Namespace()
