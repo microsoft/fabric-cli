@@ -66,8 +66,18 @@ class TestDeltaClientSchemaUnit:
         result = fab_tables_schema._get_table_schema(args)
 
         assert len(result) == 2
-        assert result[0] == {"name": "id", "type": "integer", "nullable": False, "metadata": {}}
-        assert result[1] == {"name": "name", "type": "string", "nullable": True, "metadata": {}}
+        assert result[0] == {
+            "name": "id",
+            "type": "integer",
+            "nullable": False,
+            "metadata": {},
+        }
+        assert result[1] == {
+            "name": "name",
+            "type": "string",
+            "nullable": True,
+            "metadata": {},
+        }
 
         call_args = mock_delta_table.call_args
         assert "test-lakehouse-id" in call_args[0][0]
@@ -84,7 +94,18 @@ class TestDeltaClientSchemaUnit:
         )
         self._make_delta_table_mock(
             mock_delta_table,
-            json.dumps({"fields": [{"name": "col1", "type": "long", "nullable": True, "metadata": {}}]}),
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "col1",
+                            "type": "long",
+                            "nullable": True,
+                            "metadata": {},
+                        }
+                    ]
+                }
+            ),
         )
 
         result = fab_tables_schema._get_table_schema(args)
@@ -101,7 +122,18 @@ class TestDeltaClientSchemaUnit:
         )
         self._make_delta_table_mock(
             mock_delta_table,
-            json.dumps({"fields": [{"name": "c", "type": "string", "nullable": True, "metadata": {}}]}),
+            json.dumps(
+                {
+                    "fields": [
+                        {
+                            "name": "c",
+                            "type": "string",
+                            "nullable": True,
+                            "metadata": {},
+                        }
+                    ]
+                }
+            ),
         )
 
         fab_tables_schema._get_table_schema(args)
@@ -115,10 +147,10 @@ class TestDeltaClientSchemaUnit:
         assert opts["use_fabric_endpoint"] == "true"
 
     @pytest.mark.parametrize("error_cls", [TableNotFoundError, DeltaError])
-    def test_delta_exceptions_map_to_fabric_cli_error(self, mock_auth, mock_delta_table, error_cls):
-        args = Namespace(
-            ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t"
-        )
+    def test_delta_exceptions_map_to_fabric_cli_error(
+        self, mock_auth, mock_delta_table, error_cls
+    ):
+        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t")
         mock_delta_table.side_effect = error_cls("error")
 
         with pytest.raises(FabricCLIError) as exc_info:
@@ -136,7 +168,9 @@ class TestDeltaClientSchemaUnit:
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_DELTA_TABLE
 
-    def test_missing_fields_key_maps_to_fabric_cli_error(self, mock_auth, mock_delta_table):
+    def test_missing_fields_key_maps_to_fabric_cli_error(
+        self, mock_auth, mock_delta_table
+    ):
         args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t")
         self._make_delta_table_mock(mock_delta_table, json.dumps({"other": "value"}))
 
@@ -145,9 +179,13 @@ class TestDeltaClientSchemaUnit:
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_DELTA_TABLE
 
-    def test_fields_not_list_maps_to_fabric_cli_error(self, mock_auth, mock_delta_table):
+    def test_fields_not_list_maps_to_fabric_cli_error(
+        self, mock_auth, mock_delta_table
+    ):
         args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t")
-        self._make_delta_table_mock(mock_delta_table, json.dumps({"fields": "not a list"}))
+        self._make_delta_table_mock(
+            mock_delta_table, json.dumps({"fields": "not a list"})
+        )
 
         with pytest.raises(FabricCLIError) as exc_info:
             fab_tables_schema._get_table_schema(args)
@@ -170,12 +208,27 @@ class TestDeltaClientSchemaUnit:
         complex_schema_json = {
             "type": "struct",
             "fields": [
-                {"name": "id",         "type": "long",          "nullable": False, "metadata": {}},
-                {"name": "price",      "type": "decimal(10,2)", "nullable": True,  "metadata": {}},
-                {"name": "created_at", "type": "timestamp_ntz", "nullable": True,  "metadata": {}},
+                {"name": "id", "type": "long", "nullable": False, "metadata": {}},
+                {
+                    "name": "price",
+                    "type": "decimal(10,2)",
+                    "nullable": True,
+                    "metadata": {},
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp_ntz",
+                    "nullable": True,
+                    "metadata": {},
+                },
                 {
                     "name": "tags",
-                    "type": {"type": "map", "keyType": "string", "valueType": "string", "valueContainsNull": True},
+                    "type": {
+                        "type": "map",
+                        "keyType": "string",
+                        "valueType": "string",
+                        "valueContainsNull": True,
+                    },
                     "nullable": True,
                     "metadata": {},
                 },
@@ -184,8 +237,18 @@ class TestDeltaClientSchemaUnit:
                     "type": {
                         "type": "struct",
                         "fields": [
-                            {"name": "street", "type": "string", "nullable": True, "metadata": {}},
-                            {"name": "city",   "type": "string", "nullable": True, "metadata": {}},
+                            {
+                                "name": "street",
+                                "type": "string",
+                                "nullable": True,
+                                "metadata": {},
+                            },
+                            {
+                                "name": "city",
+                                "type": "string",
+                                "nullable": True,
+                                "metadata": {},
+                            },
                         ],
                     },
                     "nullable": True,
@@ -193,18 +256,40 @@ class TestDeltaClientSchemaUnit:
                 },
             ],
         }
-        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/complex_table")
+        args = Namespace(
+            ws_id="ws", lakehouse_id="lh", table_local_path="Tables/complex_table"
+        )
         self._make_delta_table_mock(mock_delta_table, json.dumps(complex_schema_json))
 
         fields = fab_tables_schema._get_table_schema(args)
 
         assert len(fields) == 5
-        assert fields[0] == {"name": "id", "type": "long", "nullable": False, "metadata": {}}
-        assert fields[1] == {"name": "price", "type": "decimal(10,2)", "nullable": True, "metadata": {}}
-        assert fields[2] == {"name": "created_at", "type": "timestamp_ntz", "nullable": True, "metadata": {}}
+        assert fields[0] == {
+            "name": "id",
+            "type": "long",
+            "nullable": False,
+            "metadata": {},
+        }
+        assert fields[1] == {
+            "name": "price",
+            "type": "decimal(10,2)",
+            "nullable": True,
+            "metadata": {},
+        }
+        assert fields[2] == {
+            "name": "created_at",
+            "type": "timestamp_ntz",
+            "nullable": True,
+            "metadata": {},
+        }
         assert fields[3] == {
             "name": "tags",
-            "type": {"type": "map", "keyType": "string", "valueType": "string", "valueContainsNull": True},
+            "type": {
+                "type": "map",
+                "keyType": "string",
+                "valueType": "string",
+                "valueContainsNull": True,
+            },
             "nullable": True,
             "metadata": {},
         }
@@ -213,8 +298,18 @@ class TestDeltaClientSchemaUnit:
             "type": {
                 "type": "struct",
                 "fields": [
-                    {"name": "street", "type": "string", "nullable": True, "metadata": {}},
-                    {"name": "city",   "type": "string", "nullable": True, "metadata": {}},
+                    {
+                        "name": "street",
+                        "type": "string",
+                        "nullable": True,
+                        "metadata": {},
+                    },
+                    {
+                        "name": "city",
+                        "type": "string",
+                        "nullable": True,
+                        "metadata": {},
+                    },
                 ],
             },
             "nullable": True,
@@ -239,15 +334,34 @@ class TestDeltaItemTypeValidation:
             mock.return_value.schema.return_value = schema
             yield mock
 
-    @pytest.mark.parametrize("item_type", [
-        "Lakehouse", "Warehouse", "KQLDatabase", "MirroredDatabase", "SQLDatabase",
-    ])
-    def test_supported_item_types_pass_validation(self, mock_auth, mock_delta_table, item_type):
-        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t", item_type=item_type)
+    @pytest.mark.parametrize(
+        "item_type",
+        [
+            "Lakehouse",
+            "Warehouse",
+            "KQLDatabase",
+            "MirroredDatabase",
+            "SQLDatabase",
+        ],
+    )
+    def test_supported_item_types_pass_validation(
+        self, mock_auth, mock_delta_table, item_type
+    ):
+        args = Namespace(
+            ws_id="ws",
+            lakehouse_id="lh",
+            table_local_path="Tables/t",
+            item_type=item_type,
+        )
         fab_tables_schema._get_table_schema(args)  # must not raise
 
     def test_semantic_model_raises_clear_error(self, mock_auth, mock_delta_table):
-        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t", item_type="SemanticModel")
+        args = Namespace(
+            ws_id="ws",
+            lakehouse_id="lh",
+            table_local_path="Tables/t",
+            item_type="SemanticModel",
+        )
         with pytest.raises(FabricCLIError) as exc_info:
             fab_tables_schema._get_table_schema(args)
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_ITEM_TYPE
@@ -273,11 +387,15 @@ class TestTablesSchemaCheckpointRegression:
     def checkpointed_delta_table(self, tmp_path):
         """Real local Delta table: checkpoint written, JSON commit log removed."""
         table_path = tmp_path / "test_table"
-        df = pa.table({
-            "id":         pa.array([1, 2], pa.int64()),
-            "price":      pa.array([Decimal("9.99"), Decimal("19.99")], pa.decimal128(10, 2)),
-            "created_at": pa.array([1_000_000, 2_000_000], pa.timestamp("us")),
-        })
+        df = pa.table(
+            {
+                "id": pa.array([1, 2], pa.int64()),
+                "price": pa.array(
+                    [Decimal("9.99"), Decimal("19.99")], pa.decimal128(10, 2)
+                ),
+                "created_at": pa.array([1_000_000, 2_000_000], pa.timestamp("us")),
+            }
+        )
         write_deltalake(str(table_path), df)
 
         dt = DeltaTable(str(table_path))
@@ -287,18 +405,22 @@ class TestTablesSchemaCheckpointRegression:
             json_log.unlink()
 
         log_files = list((table_path / "_delta_log").iterdir())
-        assert not any(f.suffix == ".json" for f in log_files), (
-            "fixture must leave no JSON logs — only checkpoint parquet"
-        )
+        assert not any(
+            f.suffix == ".json" for f in log_files
+        ), "fixture must leave no JSON logs — only checkpoint parquet"
         return table_path
 
     def test_schema_readable_after_log_compaction(self, checkpointed_delta_table):
         """Schema extraction succeeds when only a checkpoint parquet file exists."""
         real_dt = DeltaTable(str(checkpointed_delta_table))
-        args = Namespace(ws_id="ws-id", lakehouse_id="lh-id", table_local_path="Tables/test_table")
+        args = Namespace(
+            ws_id="ws-id", lakehouse_id="lh-id", table_local_path="Tables/test_table"
+        )
 
-        with patch(f"{_DELTA_CLIENT}.FabAuth") as mock_auth, \
-             patch(f"{_DELTA_CLIENT}.DeltaTable", return_value=real_dt):
+        with (
+            patch(f"{_DELTA_CLIENT}.FabAuth") as mock_auth,
+            patch(f"{_DELTA_CLIENT}.DeltaTable", return_value=real_dt),
+        ):
             mock_auth.return_value.get_access_token.return_value = "mock_token"
             fields = fab_tables_schema._get_table_schema(args)
 

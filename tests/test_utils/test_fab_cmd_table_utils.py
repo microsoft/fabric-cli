@@ -21,19 +21,25 @@ class TestAddTablePropsToArgs:
     def test_shortcut_suffix_stripped_from_table_name(self):
         """Regression: .Shortcut must not appear in args.table_name (used in REST URIs)."""
         args = Namespace()
-        utils_table.add_table_props_to_args(args, _make_context("Tables/my_table.Shortcut"))
+        utils_table.add_table_props_to_args(
+            args, _make_context("Tables/my_table.Shortcut")
+        )
         assert args.table_name == "my_table"
 
     def test_shortcut_suffix_stripped_from_table_local_path(self):
         """Regression: .Shortcut must not appear in args.table_local_path."""
         args = Namespace()
-        utils_table.add_table_props_to_args(args, _make_context("Tables/my_table.Shortcut"))
+        utils_table.add_table_props_to_args(
+            args, _make_context("Tables/my_table.Shortcut")
+        )
         assert args.table_local_path == "Tables/my_table"
 
     def test_shortcut_suffix_stripped_from_schema_qualified_path(self):
         """Regression: .Shortcut must not appear in schema-qualified table_local_path."""
         args = Namespace()
-        utils_table.add_table_props_to_args(args, _make_context("Tables/dbo/my_table.Shortcut"))
+        utils_table.add_table_props_to_args(
+            args, _make_context("Tables/dbo/my_table.Shortcut")
+        )
         assert args.table_local_path == "Tables/dbo/my_table"
 
     def test_normal_path_unchanged(self):

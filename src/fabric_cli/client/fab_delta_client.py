@@ -15,13 +15,15 @@ from fabric_cli.errors import ErrorMessages
 # Item types whose OneLake Tables/ folder contains standard Delta tables.
 # SemanticModel is explicitly excluded: its Tables/ entries are columnar
 # semantic-model representations, not Delta-compatible parquet.
-_DELTA_SUPPORTED_ITEM_TYPES: frozenset[str] = frozenset({
-    "Lakehouse",
-    "Warehouse",
-    "KQLDatabase",
-    "MirroredDatabase",
-    "SQLDatabase",
-})
+_DELTA_SUPPORTED_ITEM_TYPES: frozenset[str] = frozenset(
+    {
+        "Lakehouse",
+        "Warehouse",
+        "KQLDatabase",
+        "MirroredDatabase",
+        "SQLDatabase",
+    }
+)
 
 
 def get_table_schema(args: Namespace, local_path: str) -> list[dict]:
@@ -61,7 +63,9 @@ def get_table_schema(args: Namespace, local_path: str) -> list[dict]:
         schema_dict = json.loads(table.schema().to_json())
         schema_fields = schema_dict.get("fields")
         if not isinstance(schema_fields, list):
-            raise ValueError("Delta table schema JSON does not contain a valid 'fields' list.")
+            raise ValueError(
+                "Delta table schema JSON does not contain a valid 'fields' list."
+            )
         return schema_fields
     except (DeltaError, json.JSONDecodeError, ValueError) as exc:
         raise FabricCLIError(
