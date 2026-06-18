@@ -1,0 +1,50 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+import json
+from argparse import Namespace
+
+from deltalake import DeltaTable
+from deltalake.exceptions import DeltaError
+
+from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_auth import FabAuth
+from fabric_cli.core.fab_exceptions import FabricCLIError
+
+
+def get_table_schema(args: Namespace, local_path: str) -> list[dict]:
+    """Return schema fields for a Delta table on OneLake.
+
+    Single seam for DeltaTable construction: owns URI building,
+    storage_options assembly, token acquisition, and exception mapping.
+    """
+    token = FabAuth().get_access_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
+    if token is None:
+        raise FabricCLIError(
+            "Failed to obtain access token.",
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
+
+    table_uri = (
+        f"abfss://{args.ws_id}@{fab_constant.API_ENDPOINT_ONELAKE}"
+        f"/{args.lakehouse_id}/{local_path}"
+    )
+
+    try:
+        table = DeltaTable(
+            table_uri,
+            storage_options={
+                "bearer_token": token,
+                "use_fabric_endpoint": "true",
+            },
+        )
+        schema_dict = json.loads(table.schema().to_json())
+        schema_fields = schema_dict.get("fields")
+        if not isinstance(schema_fields, list):
+            raise ValueError("Delta table schema JSON does not contain a valid 'fields' list.")
+        return schema_fields
+    except (DeltaError, json.JSONDecodeError, ValueError) as exc:
+        raise FabricCLIError(
+            "Failed to extract the table schema. Please ensure the path points to a valid Delta table.",
+            fab_constant.ERROR_INVALID_DELTA_TABLE,
+        ) from exc
