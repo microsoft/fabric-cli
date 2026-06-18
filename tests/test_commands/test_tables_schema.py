@@ -195,6 +195,49 @@ class TestTablesSchemaUnit:
         assert len(result) == 1
 
 
+class TestDeltaItemTypeValidation:
+    """Regression tests: only item types with Delta-compatible Tables/ are accepted."""
+
+    @pytest.fixture
+    def mock_auth(self):
+        with patch(f"{_DELTA_CLIENT}.FabAuth") as mock:
+            mock.return_value.get_access_token.return_value = "mock_token"
+            yield mock
+
+    @pytest.fixture
+    def mock_delta_table(self):
+        with patch(f"{_DELTA_CLIENT}.DeltaTable") as mock:
+            mock_schema = MagicMock()
+            mock_schema.to_json.return_value = json.dumps({"fields": []})
+            mock.return_value.schema.return_value = mock_schema
+            yield mock
+
+    @pytest.mark.parametrize("item_type", [
+        "Lakehouse", "Warehouse", "KQLDatabase", "MirroredDatabase", "SQLDatabase",
+    ])
+    def test_supported_item_types_pass_validation(self, mock_auth, mock_delta_table, item_type):
+        args = Namespace(
+            ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t", item_type=item_type
+        )
+        # should not raise
+        fab_tables_schema._get_table_schema(args)
+
+    def test_semantic_model_raises_clear_error(self, mock_auth, mock_delta_table):
+        args = Namespace(
+            ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t", item_type="SemanticModel"
+        )
+        with pytest.raises(FabricCLIError) as exc_info:
+            fab_tables_schema._get_table_schema(args)
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_ITEM_TYPE
+        assert "SemanticModel" in exc_info.value.message
+        assert "Delta" in exc_info.value.message
+
+    def test_missing_item_type_does_not_raise(self, mock_auth, mock_delta_table):
+        """item_type is absent when _get_table_schema is called directly in unit tests."""
+        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t")
+        fab_tables_schema._get_table_schema(args)
+
+
 class TestAddTablePropsToArgs:
     """Tests for add_table_props_to_args normalization."""
 
