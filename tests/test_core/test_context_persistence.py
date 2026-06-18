@@ -46,16 +46,19 @@ def test_context_persistence_save(monkeypatch):
         # Create a mock workspace with the tenant as parent
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock json.dump to avoid actually writing to the file system
-        with patch("json.dump") as mock_json_dump, patch("builtins.open", MagicMock()):
+        # Mock write_restricted_file to avoid actually writing to the file system
+        with patch(
+            "fabric_cli.utils.fab_secure_io.write_restricted_file"
+        ) as mock_write:
 
             # Set the context
             context.context = workspace
 
-            # Check that json.dump was called with the right data
-            mock_json_dump.assert_called_once()
-            args, _ = mock_json_dump.call_args
-            assert args[0] == {"path": workspace.path}
+            # Check that write_restricted_file was called with the right data
+            mock_write.assert_called_once()
+            args, _ = mock_write.call_args
+            assert args[0] == temp_context_file
+            assert json.loads(args[1]) == {"path": workspace.path}
     finally:
         os.remove(temp_context_file)
 
@@ -90,7 +93,9 @@ def test_context_persistence_not_used_in_interactive_mode(monkeypatch):
 
     # Set runtime mode to interactive and enable persistence
     context = Context()
-    monkeypatch.setattr(context, "get_runtime_mode", lambda: fab_constant.FAB_MODE_INTERACTIVE)
+    monkeypatch.setattr(
+        context, "get_runtime_mode", lambda: fab_constant.FAB_MODE_INTERACTIVE
+    )
 
     def mock_get_config(key):
         if key == fab_constant.FAB_CONTEXT_PERSISTENCE_ENABLED:
@@ -185,16 +190,18 @@ def test_context_persistence_enabled_when_configured(monkeypatch):
         tenant = Tenant("test_tenant", "1234")
         workspace = Workspace("test_workspace", "5678", tenant, "Workspace")
 
-        # Mock json.dump to avoid actually writing to the file system
-        with patch("json.dump") as mock_json_dump, patch("builtins.open", MagicMock()):
+        # Mock write_restricted_file to avoid actually writing to the file system
+        with patch(
+            "fabric_cli.utils.fab_secure_io.write_restricted_file"
+        ) as mock_write:
 
             # Set the context - this SHOULD trigger file save when persistence is enabled
             context.context = workspace
 
-            # Check that json.dump was called with the right data
-            mock_json_dump.assert_called_once()
-            args, _ = mock_json_dump.call_args
-            assert args[0] == {"path": workspace.path}
+            # Check that write_restricted_file was called with the right data
+            mock_write.assert_called_once()
+            args, _ = mock_write.call_args
+            assert json.loads(args[1]) == {"path": workspace.path}
     finally:
         os.remove(temp_context_file)
 
