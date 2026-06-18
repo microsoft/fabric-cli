@@ -41,7 +41,7 @@ def get_table_schema(args: Namespace, local_path: str) -> list[dict]:
     token = FabAuth().get_access_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
     if token is None:
         raise FabricCLIError(
-            "Failed to obtain access token.",
+            ErrorMessages.Auth.access_token_failed(),
             fab_constant.ERROR_AUTHENTICATION_FAILED,
         )
 
