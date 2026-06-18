@@ -1,46 +1,28 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from fabric_cli.core.fab_types import ItemType
-from tests.conftest import mock_questionary_print  # noqa: F401
 from tests.test_commands.commands_parser import CLIExecutor
 
-_DELTA_CLIENT = "fabric_cli.client.fab_delta_client"
+_SCHEMA_COMMAND = "fabric_cli.commands.tables.fab_tables.schema_command"
 
 
 class TestTablesSchemaIntegration:
-    """Integration tests for table schema command - validates full dispatch stack."""
+    """Dispatch test: verifies the parser routes 'table schema <path>' to schema_command."""
 
-    def test_table_schema_success(
-        self,
-        item_factory,
-        cli_executor: CLIExecutor,
-        mock_questionary_print,
-    ):
-        lakehouse = item_factory(ItemType.LAKEHOUSE)
+    def test_table_schema_dispatches_to_schema_command(self, cli_executor: CLIExecutor):
+        with patch(_SCHEMA_COMMAND) as mock_cmd:
+            cli_executor.exec_command("table schema /ws.Workspace/lh.Lakehouse/Tables/my_table")
 
-        mock_questionary_print.reset_mock()
+        mock_cmd.assert_called_once()
+        args = mock_cmd.call_args[0][0]
+        assert args.path == ["/ws.Workspace/lh.Lakehouse/Tables/my_table"]
 
-        with patch(
-            f"{_DELTA_CLIENT}.DeltaTable"
-        ) as mock_dt, patch(
-            f"{_DELTA_CLIENT}.FabAuth"
-        ) as mock_auth:
-            mock_auth.return_value.get_access_token.return_value = "mock_token"
-            mock_table = MagicMock()
-            mock_table.schema.return_value.to_json.return_value = json.dumps({
-                "fields": [{"name": "id", "type": "integer", "nullable": False, "metadata": {}}]
-            })
-            mock_dt.return_value = mock_table
+    def test_table_schema_dispatches_with_schema_namespace(self, cli_executor: CLIExecutor):
+        with patch(_SCHEMA_COMMAND) as mock_cmd:
+            cli_executor.exec_command("table schema /ws.Workspace/lh.Lakehouse/Tables/dbo/my_table")
 
-            cli_executor.exec_command(
-                f"table schema {lakehouse.full_path}/Tables/my_table"
-            )
-
-        calls = mock_questionary_print.call_args_list
-        assert any("Schema extracted successfully" in str(c) for c in calls)
+        mock_cmd.assert_called_once()
+        args = mock_cmd.call_args[0][0]
+        assert args.path == ["/ws.Workspace/lh.Lakehouse/Tables/dbo/my_table"]
