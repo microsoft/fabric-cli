@@ -3,10 +3,14 @@
 
 import json
 from argparse import Namespace
-from unittest.mock import MagicMock, patch
+from decimal import Decimal
+from unittest.mock import patch
 
+import pyarrow as pa
 import pytest
+from deltalake import DeltaTable, write_deltalake
 from deltalake.exceptions import DeltaError, TableNotFoundError
+from unittest.mock import MagicMock
 
 from fabric_cli.commands.tables import fab_tables_schema
 from fabric_cli.core import fab_constant
@@ -396,3 +400,58 @@ class TestTablesSchemaIntegration:
 
         calls = mock_questionary_print.call_args_list
         assert any("Schema extracted successfully" in str(c) for c in calls)
+
+
+class TestTablesSchemaCheckpointRegression:
+    """Regression for #228: schema must be readable from a checkpointed Delta table
+    that has no pre-checkpoint JSON commit logs (compacted-log scenario).
+
+    The old implementation walked _delta_log/*.json manually; after log compaction
+    those files are removed and only the .checkpoint.parquet + _last_checkpoint
+    remain.  The new implementation delegates to DeltaTable.schema(), which uses
+    delta-rs's native reader that prefers checkpoints over JSON logs.
+    """
+
+    @pytest.fixture
+    def checkpointed_delta_table(self, tmp_path):
+        """Real local Delta table: one checkpoint, JSON log removed."""
+        table_path = tmp_path / "test_table"
+        df = pa.table({
+            "id":         pa.array([1, 2], pa.int64()),
+            "price":      pa.array([Decimal("9.99"), Decimal("19.99")], pa.decimal128(10, 2)),
+            "created_at": pa.array([1_000_000, 2_000_000], pa.timestamp("us")),
+        })
+        write_deltalake(str(table_path), df)
+
+        dt = DeltaTable(str(table_path))
+        dt.create_checkpoint()
+
+        for json_log in (table_path / "_delta_log").glob("*.json"):
+            json_log.unlink()
+
+        log_files = list((table_path / "_delta_log").iterdir())
+        assert not any(f.suffix == ".json" for f in log_files), (
+            "fixture must leave no JSON logs — only checkpoint parquet"
+        )
+
+        return table_path
+
+    def test_schema_readable_after_log_compaction(self, checkpointed_delta_table):
+        """Schema extraction must succeed when only a checkpoint file exists."""
+        real_dt = DeltaTable(str(checkpointed_delta_table))
+
+        args = Namespace(
+            ws_id="ws-id", lakehouse_id="lh-id", table_local_path="Tables/test_table"
+        )
+
+        with patch(f"{_DELTA_CLIENT}.FabAuth") as mock_auth, \
+             patch(f"{_DELTA_CLIENT}.DeltaTable", return_value=real_dt):
+            mock_auth.return_value.get_access_token.return_value = "mock_token"
+            fields = fab_tables_schema._get_table_schema(args)
+
+        names = [f["name"] for f in fields]
+        assert names == ["id", "price", "created_at"]
+
+        assert fields[0]["type"] == "long"
+        assert fields[1]["type"] == "decimal(10,2)"
+        assert fields[2]["type"] == "timestamp_ntz"
