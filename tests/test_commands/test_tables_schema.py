@@ -163,6 +163,85 @@ class TestTablesSchemaUnit:
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_DELTA_TABLE
         assert "Failed to extract the table schema" in exc_info.value.message
 
+    def test_complex_schema_field_contract(self, mock_auth, mock_delta_table):
+        """Lock the exact JSON shape returned for complex Delta types.
+
+        delta-rs serialises Arrow → Delta-protocol JSON via Schema.to_json().
+        The mapping below was validated against the installed deltalake wheel
+        and must be stable for users who pipe --output_format json into scripts.
+
+        Verified mappings:
+          pyarrow int64          → "long"          (NOT "integer")
+          pyarrow decimal128     → "decimal(10,2)" (compact string, NOT an object)
+          pyarrow timestamp('us')→ "timestamp_ntz" (NOT "timestamp")
+          map / struct           → nested objects with keyType/valueType/fields
+        """
+        complex_schema_json = {
+            "type": "struct",
+            "fields": [
+                {"name": "id",         "type": "long",           "nullable": False, "metadata": {}},
+                {"name": "price",      "type": "decimal(10,2)",  "nullable": True,  "metadata": {}},
+                {"name": "created_at", "type": "timestamp_ntz",  "nullable": True,  "metadata": {}},
+                {
+                    "name": "tags",
+                    "type": {
+                        "type": "map",
+                        "keyType": "string",
+                        "valueType": "string",
+                        "valueContainsNull": True,
+                    },
+                    "nullable": True,
+                    "metadata": {},
+                },
+                {
+                    "name": "address",
+                    "type": {
+                        "type": "struct",
+                        "fields": [
+                            {"name": "street", "type": "string", "nullable": True, "metadata": {}},
+                            {"name": "city",   "type": "string", "nullable": True, "metadata": {}},
+                        ],
+                    },
+                    "nullable": True,
+                    "metadata": {},
+                },
+            ],
+        }
+        args = Namespace(
+            ws_id="ws", lakehouse_id="lh", table_local_path="Tables/complex_table"
+        )
+        self._make_delta_table_mock(mock_delta_table, json.dumps(complex_schema_json))
+
+        fields = fab_tables_schema._get_table_schema(args)
+
+        assert len(fields) == 5
+
+        assert fields[0] == {"name": "id", "type": "long", "nullable": False, "metadata": {}}
+
+        assert fields[1] == {"name": "price", "type": "decimal(10,2)", "nullable": True, "metadata": {}}
+
+        assert fields[2] == {"name": "created_at", "type": "timestamp_ntz", "nullable": True, "metadata": {}}
+
+        assert fields[3] == {
+            "name": "tags",
+            "type": {"type": "map", "keyType": "string", "valueType": "string", "valueContainsNull": True},
+            "nullable": True,
+            "metadata": {},
+        }
+
+        assert fields[4] == {
+            "name": "address",
+            "type": {
+                "type": "struct",
+                "fields": [
+                    {"name": "street", "type": "string", "nullable": True, "metadata": {}},
+                    {"name": "city",   "type": "string", "nullable": True, "metadata": {}},
+                ],
+            },
+            "nullable": True,
+            "metadata": {},
+        }
+
     def test_get_table_schema_verifies_abfss_uri_format(self, mock_auth, mock_delta_table):
         """Test that table URI is correctly formatted with ABFSS protocol."""
         args = Namespace(
