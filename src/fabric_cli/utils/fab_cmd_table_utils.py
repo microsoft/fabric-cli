@@ -23,6 +23,7 @@ def add_table_props_to_args(args: Any, context: OneLakeItem) -> None:
     table_path = context.local_path.split("/")
     args.table_name = table_path[-1]
     args.schema = table_path[-2] if len(table_path) == 3 else None
+    args.table_local_path = context.local_path
 
 
 def convert_hours_to_dhhmmss(hours: int) -> str:

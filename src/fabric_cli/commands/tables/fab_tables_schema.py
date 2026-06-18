@@ -14,8 +14,4 @@ def exec_command(args: Namespace) -> None:
 
 
 def _get_table_schema(args: Namespace) -> list[dict]:
-    if args.schema:
-        local_path = f"Tables/{args.schema}/{args.table_name}"
-    else:
-        local_path = f"Tables/{args.table_name}"
-    return delta_client.get_table_schema(args, local_path)
+    return delta_client.get_table_schema(args, args.table_local_path)
