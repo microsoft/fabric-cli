@@ -52,6 +52,6 @@ def _get_table_schema(args: Namespace) -> list[dict]:
         return schema_fields
     except (DeltaError, json.JSONDecodeError, ValueError) as exc:
         raise FabricCLIError(
-            f"Failed to extract the table schema. Please ensure the path points to a valid Delta table: {exc}",
+            "Failed to extract the table schema. Please ensure the path points to a valid Delta table.",
             fab_constant.ERROR_INVALID_DELTA_TABLE,
         ) from exc
