@@ -41,6 +41,14 @@ class TestDeltaClientSchemaUnit:
         mock_table_instance.schema.return_value = mock_arrow_schema
         mock_delta_table.return_value = mock_table_instance
 
+    def test_auth_token_none_raises_authentication_error(self):
+        args = Namespace(ws_id="ws", lakehouse_id="lh", table_local_path="Tables/t")
+        with patch(f"{_DELTA_CLIENT}.FabAuth") as mock_auth:
+            mock_auth.return_value.get_access_token.return_value = None
+            with pytest.raises(FabricCLIError) as exc_info:
+                fab_tables_schema._get_table_schema(args)
+        assert exc_info.value.status_code == fab_constant.ERROR_AUTHENTICATION_FAILED
+
     def test_get_table_schema_success(self, mock_auth, mock_delta_table):
         args = Namespace(
             ws_id="test-ws-id",
