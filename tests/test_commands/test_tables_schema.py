@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from tests.test_commands.commands_parser import CLIExecutor
 
