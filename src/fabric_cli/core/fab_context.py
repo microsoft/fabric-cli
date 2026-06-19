@@ -159,8 +159,9 @@ class Context:
             }
 
             try:
-                with open(self._context_file, "w") as f:
-                    json.dump(context_data, f)
+                from fabric_cli.utils.fab_secure_io import write_restricted_file
+
+                write_restricted_file(self._context_file, json.dumps(context_data))
             except Exception:
                 utils_ui.print_warning(
                     "Warning: Failed to save context file. Context persistence may not work as expected."
