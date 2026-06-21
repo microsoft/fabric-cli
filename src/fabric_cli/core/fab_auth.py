@@ -494,7 +494,7 @@ class FabAuth:
                     scopes=scope, account=account
                 )
 
-                if token is None and interactive_renew and identity_type == "user":
+                if token is None and interactive_renew:
                     token = self._get_app().acquire_token_interactive(
                         scopes=scope,
                         prompt="select_account",

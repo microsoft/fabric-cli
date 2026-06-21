@@ -89,7 +89,7 @@ class AuthErrors:
         return (
             "Something went wrong while trying to acquire a token. Please try to "
             "run `fab auth logout` and then `fab auth login` to re-login and "
-            "acquire new tokens."
+            "acquire new tokens"
         )
 
     @staticmethod
