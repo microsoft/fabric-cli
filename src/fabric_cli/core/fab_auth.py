@@ -215,10 +215,6 @@ class FabAuth:
                     con.ERROR_ENCRYPTION_FAILED,
                 )
 
-        # cache.bin is created and written by msal_extensions, not the CLI, so
-        # tighten any pre-existing file (e.g. left world-readable by an older
-        # CLI version) to owner-only before it is used. Newly written caches
-        # are tightened after token acquisition in acquire_token().
         restrict_existing_file(self.cache_file)
 
         return persistence
@@ -512,9 +508,7 @@ class FabAuth:
                     f"Error in get token: {token.get('error_description')}"
                 )
                 raise FabricCLIError(
-                    ErrorMessages.Auth.access_token_error(
-                        "Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."
-                    ),
+                    ErrorMessages.Auth.token_acquisition_failed(),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
             if token is None or not token.get("access_token"):
@@ -525,10 +519,6 @@ class FabAuth:
 
             return token
         finally:
-            # MSAL writes the refreshed token cache (cache.bin) during the
-            # acquire_token_* calls above. Tighten it to owner-only afterwards,
-            # since msal_extensions does not enforce restrictive permissions on
-            # all platforms/paths (e.g. the encrypted signal file).
             restrict_existing_file(self.cache_file)
 
     def get_access_token(self, scope: list[str], interactive_renew=True) -> str | None:

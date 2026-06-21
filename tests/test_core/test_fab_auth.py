@@ -878,8 +878,7 @@ def test_get_access_token_token_error(monkeypatch):
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
     assert (
         exc_info.value.message
-        == "Failed to get access token: "
-        + ErrorMessages.Auth.token_acquisition_failed().rstrip(".")
+        == ErrorMessages.Auth.token_acquisition_failed().rstrip(".")
     )
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
