@@ -242,3 +242,11 @@ def environment_delete_library_staging(
     args.method = "delete"
 
     return fabric_api.do_request(args)
+
+
+def environment_get_publish_details(args: Namespace) -> ApiResponse:
+    """https://learn.microsoft.com/en-us/rest/api/fabric/environment/items/get-environment"""
+    args.uri = f"workspaces/{args.ws_id}/environments/{args.id}"
+    args.method = "get"
+
+    return fabric_api.do_request(args)
