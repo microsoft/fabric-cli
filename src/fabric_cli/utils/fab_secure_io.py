@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 IS_POSIX = os.name != "nt"
 
 # Owner read/write only (rw-------); the permission we enforce on every
-# sensitive file the CLI manages.
+# file the CLI manages.
 OWNER_ONLY_FILE_MODE = 0o600
 
 # Owner read/write/execute only (rwx------); the permission we enforce on every

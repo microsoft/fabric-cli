@@ -85,6 +85,14 @@ class AuthErrors:
         return "Failed to obtain access token"
 
     @staticmethod
+    def token_acquisition_failed() -> str:
+        return (
+            "Something went wrong while trying to acquire a token. Please try to "
+            "run `fab auth logout` and then `fab auth login` to re-login and "
+            "acquire new tokens."
+        )
+
+    @staticmethod
     def jwt_decode_failed() -> str:
         return "Failed to decode JWT token"
 

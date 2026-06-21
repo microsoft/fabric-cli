@@ -21,6 +21,7 @@ from cryptography.x509.oid import NameOID
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.errors import ErrorMessages
 
 
 @pytest.fixture(autouse=True)
@@ -877,7 +878,8 @@ def test_get_access_token_token_error(monkeypatch):
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
     assert (
         exc_info.value.message
-        == "Failed to get access token: Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens"
+        == "Failed to get access token: "
+        + ErrorMessages.Auth.token_acquisition_failed().rstrip(".")
     )
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
