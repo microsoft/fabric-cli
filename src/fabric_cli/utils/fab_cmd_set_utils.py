@@ -112,7 +112,7 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
             except ValueError:
                 # Fall back to JSON for encoded values like '7' or '"7"'
                 parsed = json.loads(input_value)
-                if isinstance(parsed, int):
+                if type(parsed) is int:
                     value = parsed
                 elif isinstance(parsed, str):
                     value = int(parsed)
