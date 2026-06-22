@@ -14,6 +14,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors import ErrorMessages
+from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_ui as utils_ui
 
 
@@ -218,6 +219,11 @@ def add_type_specific_payload(item: Item, args, payload):
                 ]
             }
 
+        case ItemType.SQL_DATABASE:
+            creation_payload = _build_sql_database_creation_payload(params)
+            if creation_payload:
+                payload_dict["creationPayload"] = creation_payload
+
     return payload_dict
 
 
@@ -344,6 +350,8 @@ def get_params_per_item_type(item: Item):
         case ItemType.MOUNTED_DATA_FACTORY:
             required_params = ["subscriptionId",
                                "resourceGroup", "factoryName"]
+        case ItemType.SQL_DATABASE:
+            optional_params = ["mode", "backupRetentionDays", "collation"]
 
     return required_params, optional_params
 
@@ -789,6 +797,83 @@ def lowercase_keys(data):
         return [lowercase_keys(item) for item in data]
     else:
         return data
+
+
+def _build_sql_database_creation_payload(params: dict) -> dict | None:
+    """Build the creationPayload for SQLDatabase creation.
+
+    Supports 'New' mode (default) with backupRetentionDays and collation properties.
+    Restore modes do not accept these properties.
+
+    Returns None if no SQLDatabase-specific params provided.
+    """
+    mode = params.get("mode")
+    backup_retention_days = params.get("backupretentiondays")
+    collation = params.get("collation")
+
+    if mode is None and backup_retention_days is None and collation is None:
+        return None
+
+    # Resolve and validate mode
+    if mode:
+        matched_mode = next(
+            (
+                m for m in fab_constant.SQL_DATABASE_VALID_CREATION_MODES
+                if m.lower() == mode.lower()
+            ),
+            None
+        )
+        if not matched_mode:
+            raise FabricCLIError(
+                CommonErrors.invalid_sql_database_creation_mode(
+                    mode, fab_constant.SQL_DATABASE_VALID_CREATION_MODES
+                ),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        mode = matched_mode
+    else:
+        mode = fab_constant.SQL_DATABASE_CREATION_MODE_NEW
+
+    # Validate properties are only used with 'New' mode
+    if mode != fab_constant.SQL_DATABASE_CREATION_MODE_NEW:
+        for prop_name, prop_value in [
+            ("backupRetentionDays", backup_retention_days),
+            ("collation", collation)
+        ]:
+            if prop_value is not None:
+                raise FabricCLIError(
+                    CommonErrors.sql_database_property_not_allowed_for_mode(
+                        prop_name, mode
+                    ),
+                    fab_constant.ERROR_INVALID_INPUT,
+                )
+
+    creation_payload: dict = {"creationMode": mode}
+
+    if backup_retention_days is not None:
+        _validate_backup_retention_days(backup_retention_days)
+        creation_payload["backupRetentionDays"] = int(backup_retention_days)
+
+    if collation is not None:
+        creation_payload["collation"] = collation
+
+    return creation_payload
+
+
+def _validate_backup_retention_days(value: str) -> None:
+    """Validate backupRetentionDays is an integer within 1-35 range."""
+    min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS
+    max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS
+
+    try:
+        int_value = int(value)
+        if not min_days <= int_value <= max_days:
+            raise ValueError()
+    except (ValueError, TypeError):
+        raise FabricCLIError(
+            CommonErrors.invalid_backup_retention_days(str(value), min_days, max_days),
+            fab_constant.ERROR_INVALID_INPUT,
+        )
 
 
 def validate_spark_pool_params(params):

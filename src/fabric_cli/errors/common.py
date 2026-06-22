@@ -264,3 +264,25 @@ class CommonErrors:
     @staticmethod
     def invalid_parameter_format(param: str) -> str:
         return f"Invalid parameter format: '{param}'. Use key=value or key!=value."
+
+    @staticmethod
+    def invalid_backup_retention_days(value: str, min_days: int, max_days: int) -> str:
+        return (
+            f"Invalid backupRetentionDays value '{value}'. "
+            f"Must be an integer between {min_days} and {max_days} days."
+        )
+
+    @staticmethod
+    def invalid_sql_database_creation_mode(mode: str, valid_modes: list) -> str:
+        return (
+            f"Invalid creation mode '{mode}'. "
+            f"Valid modes are: {', '.join(valid_modes)}."
+        )
+
+    @staticmethod
+    def sql_database_property_not_allowed_for_mode(
+        property_name: str, mode: str
+    ) -> str:
+        return (
+            f"Property '{property_name}' is not allowed when using creation mode '{mode}'."
+        )
