@@ -28,16 +28,17 @@ class MkdirErrors:
         )
 
     @staticmethod
-    def missing_restore_params(missing: list[str]) -> str:
+    def missing_restore_params() -> str:
         return (
-            f"Missing required parameter(s) for restore mode: {', '.join(missing)}. "
+            "Missing required parameter(s) for restore mode. "
+            "Required: restorePointInTime, itemId, workspaceId. "
             "Example: -P mode=restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<guid>,workspaceId=<guid>"
         )
 
     @staticmethod
-    def invalid_restore_mode() -> str:
+    def invalid_creation_mode(mode: str) -> str:
         return (
-            "Invalid mode for SQLDatabase creation. "
-            "Supported modes: 'restore' for point-in-time restore. "
+            f"Invalid mode '{mode}' for SQLDatabase creation. "
+            "Supported modes: 'restore'. "
             "Omit mode parameter for standard database creation."
         )
