@@ -14,7 +14,6 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors import ErrorMessages
-from fabric_cli.errors.mkdir import MkdirErrors
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils.fab_util import is_valid_guid, is_valid_iso8601_timestamp
 
@@ -235,14 +234,14 @@ def add_type_specific_payload(item: Item, args, payload):
                     or not source_workspace_id
                 ):
                     raise FabricCLIError(
-                        MkdirErrors.missing_restore_params(),
+                        ErrorMessages.Mkdir.missing_restore_params(),
                         fab_constant.ERROR_INVALID_INPUT,
                     )
 
                 # Validate restorePointInTime format (ISO 8601 with timezone)
                 if not is_valid_iso8601_timestamp(restore_point_in_time):
                     raise FabricCLIError(
-                        MkdirErrors.invalid_restore_point_in_time(),
+                        ErrorMessages.Mkdir.invalid_restore_point_in_time(),
                         fab_constant.ERROR_INVALID_INPUT,
                     )
 
@@ -270,7 +269,7 @@ def add_type_specific_payload(item: Item, args, payload):
             elif mode:
                 # Invalid mode specified
                 raise FabricCLIError(
-                    MkdirErrors.invalid_creation_mode(mode),
+                    ErrorMessages.Mkdir.invalid_creation_mode(mode),
                     fab_constant.ERROR_INVALID_INPUT,
                 )
 

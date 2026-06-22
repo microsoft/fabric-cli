@@ -8,6 +8,7 @@ import pytest
 
 import fabric_cli.utils.fab_util as utils
 from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.utils.fab_util import is_valid_guid, is_valid_iso8601_timestamp
 
 
 def test_dumps():
@@ -16,32 +17,34 @@ def test_dumps():
     data = {"key": "value", "number": 42}
     result = utils.dumps(data)
     assert result == '{"key": "value", "number": 42}'
-    
+
     # Test with indentation
     result = utils.dumps(data, indent=2)
     expected = '{\n  "key": "value",\n  "number": 42\n}'
     assert result == expected
-    
+
     # Test bytes redaction
     data_with_bytes = {"key": "value", "bytes_data": b"secret"}
     result = utils.dumps(data_with_bytes)
     assert '"__REDACTED__bytes__"' in result
-    assert 'secret' not in result
-    
+    assert "secret" not in result
+
     # Test bytearray redaction
     data_with_bytearray = {"key": "value", "bytearray_data": bytearray(b"secret")}
     result = utils.dumps(data_with_bytearray)
     assert '"__REDACTED__bytes__"' in result
-    assert 'secret' not in result
-    
+    assert "secret" not in result
+
     # Test non-serializable object raises TypeError
     class NonSerializable:
         pass
-    
+
     data_with_non_serializable = {"key": "value", "obj": NonSerializable()}
     with pytest.raises(TypeError) as excinfo:
         utils.dumps(data_with_non_serializable)
-    assert "Object of type NonSerializable is not JSON serializable" in str(excinfo.value)
+    assert "Object of type NonSerializable is not JSON serializable" in str(
+        excinfo.value
+    )
 
 
 def test_process_nargs():
@@ -74,8 +77,6 @@ def test_remove_dotshortcut_from_path_for_onelake():
     path = "path"
     result = utils.remove_dot_suffix(path)
     assert result == "path"
-
-
 
 
 def test_get_dict_from_params():
@@ -142,31 +143,32 @@ def test_get_dict_from_params():
     params = "key1=value1, key2=value2, key3=value3"
     result = utils.get_dict_from_params(params)
     assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
-    
+
     # Test multiple spaces after comma
     params = "key1=value1,  key2=value2,   key3=value3"
     result = utils.get_dict_from_params(params)
     assert result == {"key1": "value1", "key2": "value2", "key3": "value3"}
-    
+
     # Test mixed spacing (some with spaces, some without)
     params = "key1=value1,key2=value2, key3=value3,  key4=value4"
     result = utils.get_dict_from_params(params)
-    assert result == {"key1": "value1", "key2": "value2", "key3": "value3", "key4": "value4"}
-    
+    assert result == {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3",
+        "key4": "value4",
+    }
+
     # Test with nested keys and spaces
     params = "key1.sub1=value1, key1.sub2=value2, key2=value3"
     result = utils.get_dict_from_params(params)
     assert result == {"key1": {"sub1": "value1", "sub2": "value2"}, "key2": "value3"}
-    
+
     # Test with complex values and spaces
     params = 'key1={"nested": "value"}, key2=[1,2,3], key3=simple'
     result = utils.get_dict_from_params(params)
-    assert result == {
-        "key1": '{nested: value}',
-        "key2": "[1,2,3]",
-        "key3": "simple"
-    }
-    
+    assert result == {"key1": "{nested: value}", "key2": "[1,2,3]", "key3": "simple"}
+
     # Test tabs and mixed whitespace after comma
     params = "key1=value1,\tkey2=value2,\n key3=value3"
     result = utils.get_dict_from_params(params)
@@ -243,9 +245,6 @@ def test_remove_keys_from_dict():
     keys = ["key3"]
     result = utils.remove_keys_from_dict(_dict, keys)
     assert result == _dict
-
-
-
 
 
 def test_get_os_specific_command(monkeypatch):
@@ -329,4 +328,77 @@ def test_get_capacity_settings(monkeypatch):
     assert result == ("new_admin", "new_loc", "new_sub_id", "new_rg", "F2")
 
 
+class TestIsValidGuid:
+    """Test cases for is_valid_guid function."""
 
+    def test_valid_guid_lowercase(self):
+        """Test valid GUID with lowercase letters."""
+        assert is_valid_guid("12345678-1234-1234-1234-123456789abc")
+
+    def test_valid_guid_uppercase(self):
+        """Test valid GUID with uppercase letters."""
+        assert is_valid_guid("12345678-1234-1234-1234-123456789ABC")
+
+    def test_valid_guid_mixed_case(self):
+        """Test valid GUID with mixed case letters."""
+        assert is_valid_guid("12345678-abcd-ABCD-1234-123456789AbC")
+
+    def test_invalid_guid_wrong_format(self):
+        """Test invalid GUID with wrong format."""
+        assert not is_valid_guid("not-a-guid")
+
+    def test_invalid_guid_missing_hyphens(self):
+        """Test invalid GUID with missing hyphens."""
+        assert not is_valid_guid("1234567812341234123412345678abc")
+
+    def test_invalid_guid_extra_characters(self):
+        """Test invalid GUID with extra characters."""
+        assert not is_valid_guid("12345678-1234-1234-1234-123456789abcd")
+
+    def test_invalid_guid_empty_string(self):
+        """Test empty string is not a valid GUID."""
+        assert not is_valid_guid("")
+
+
+class TestIsValidIso8601Timestamp:
+    """Test cases for is_valid_iso8601_timestamp function."""
+
+    def test_valid_timestamp_utc_z_suffix(self):
+        """Test valid ISO 8601 timestamp with Z suffix."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00Z")
+
+    def test_valid_timestamp_with_milliseconds(self):
+        """Test valid ISO 8601 timestamp with milliseconds."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00.123Z")
+
+    def test_valid_timestamp_with_microseconds(self):
+        """Test valid ISO 8601 timestamp with microseconds."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00.123456Z")
+
+    def test_valid_timestamp_positive_offset(self):
+        """Test valid ISO 8601 timestamp with positive timezone offset."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00+05:30")
+
+    def test_valid_timestamp_negative_offset(self):
+        """Test valid ISO 8601 timestamp with negative timezone offset."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00-08:00")
+
+    def test_valid_timestamp_zero_offset(self):
+        """Test valid ISO 8601 timestamp with zero offset."""
+        assert is_valid_iso8601_timestamp("2024-01-15T10:30:00+00:00")
+
+    def test_invalid_timestamp_no_timezone(self):
+        """Test timestamp without timezone is invalid."""
+        assert not is_valid_iso8601_timestamp("2024-01-15T10:30:00")
+
+    def test_invalid_timestamp_date_only(self):
+        """Test date-only string is invalid."""
+        assert not is_valid_iso8601_timestamp("2024-01-15")
+
+    def test_invalid_timestamp_wrong_format(self):
+        """Test invalid timestamp format."""
+        assert not is_valid_iso8601_timestamp("not-a-timestamp")
+
+    def test_invalid_timestamp_empty_string(self):
+        """Test empty string is not a valid timestamp."""
+        assert not is_valid_iso8601_timestamp("")
