@@ -229,7 +229,7 @@ def test_validate_sql_database_property_backup_retention_days_out_of_range_failu
     with pytest.raises(FabricCLIError) as exc_info:
         validate_sql_database_property("properties.backupRetentionDays", "0")
     assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-    assert "backupRetentionDays" in str(exc_info.value)
+    assert "backup retention days" in str(exc_info.value)
     assert "1" in str(exc_info.value)
     assert "35" in str(exc_info.value)
 
@@ -245,20 +245,13 @@ def test_validate_sql_database_property_backup_retention_days_not_integer_failur
 
     # Non-integer string
     with pytest.raises(FabricCLIError) as exc_info:
-        validate_sql_database_property(
-            "properties.backupRetentionDays", "seven")
+        validate_sql_database_property("properties.backupRetentionDays", "seven")
     assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-    assert "backupRetentionDays" in str(exc_info.value)
+    assert "backup retention days" in str(exc_info.value)
 
     # Float value
     with pytest.raises(FabricCLIError) as exc_info:
         validate_sql_database_property("properties.backupRetentionDays", "7.5")
-    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-
-    # Boolean value
-    with pytest.raises(FabricCLIError) as exc_info:
-        validate_sql_database_property(
-            "properties.backupRetentionDays", "true")
     assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
 
 

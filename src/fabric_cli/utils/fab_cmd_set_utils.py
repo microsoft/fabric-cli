@@ -103,8 +103,8 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
         FabricCLIError: If the value is invalid for the property.
     """
     if query == fab_constant.SQL_DATABASE_BACKUP_RETENTION["property"]:
-        min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION["min_days"]
-        max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION["max_days"]
+        min_days: int = fab_constant.SQL_DATABASE_BACKUP_RETENTION["min_days"]  # type: ignore[assignment]
+        max_days: int = fab_constant.SQL_DATABASE_BACKUP_RETENTION["max_days"]  # type: ignore[assignment]
 
         try:
             try:
@@ -236,8 +236,7 @@ def update_cache(
 
 
 def print_set_warning() -> None:
-    fab_logger.log_warning(
-        "Modifying properties may lead to unintended consequences")
+    fab_logger.log_warning("Modifying properties may lead to unintended consequences")
 
 
 def extract_updated_properties(updated_data: dict, query_path: str) -> dict:
@@ -303,8 +302,7 @@ def _decode_payload(item_def: dict) -> dict:
                 payload_base64 = part["payload"]
 
                 if payload_base64:
-                    decoded_payload = base64.b64decode(
-                        payload_base64).decode("utf-8")
+                    decoded_payload = base64.b64decode(payload_base64).decode("utf-8")
                     decoded_payload = json.loads(decoded_payload)
                     # Store the decoded payload
                     part["payload"] = decoded_payload
