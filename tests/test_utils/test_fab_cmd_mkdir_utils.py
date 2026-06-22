@@ -538,7 +538,7 @@ class TestGetParamsPerItemTypeSQLDatabase:
 
         assert required == []
         assert len(optional) == 4
-        assert any("mode" in param for param in optional)
-        assert any("restorePointInTime" in param for param in optional)
-        assert any("itemId" in param for param in optional)
-        assert any("workspaceId" in param for param in optional)
+        assert "mode" in optional
+        assert "restorePointInTime" in optional
+        assert "itemId" in optional
+        assert "workspaceId" in optional
