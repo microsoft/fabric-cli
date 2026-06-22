@@ -265,7 +265,7 @@ class TestSET:
         # Assert
         assert_fabric_cli_error(
             constant.ERROR_INVALID_INPUT,
-            "backupRetentionDays",
+            "backup retention days",
         )
         mock_upsert_item_to_cache.assert_not_called()
 
@@ -295,7 +295,97 @@ class TestSET:
         # Assert
         assert_fabric_cli_error(
             constant.ERROR_INVALID_INPUT,
-            "backupRetentionDays",
+            "backup retention days",
+        )
+        mock_upsert_item_to_cache.assert_not_called()
+
+    def test_set_sql_database_backup_retention_days_negative_value_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+    ):
+        """Test that setting backupRetentionDays with negative value fails."""
+        # Setup
+        sql_database = item_factory(ItemType.SQL_DATABASE)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
+
+        # Execute command with negative value
+        cli_executor.exec_command(
+            f"set {sql_database.full_path} --query properties.backupRetentionDays --input -5 --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT,
+            "backup retention days",
+        )
+        mock_upsert_item_to_cache.assert_not_called()
+
+    def test_set_sql_database_backup_retention_days_float_value_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+    ):
+        """Test that setting backupRetentionDays with float value fails."""
+        # Setup
+        sql_database = item_factory(ItemType.SQL_DATABASE)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
+
+        # Execute command with float value
+        cli_executor.exec_command(
+            f"set {sql_database.full_path} --query properties.backupRetentionDays --input 7.5 --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT,
+            "backup retention days",
+        )
+        mock_upsert_item_to_cache.assert_not_called()
+
+    def test_set_sql_database_backup_retention_days_zero_value_failure(
+        self,
+        item_factory,
+        cli_executor,
+        assert_fabric_cli_error,
+        mock_questionary_print,
+        mock_print_done,
+        mock_upsert_item_to_cache,
+    ):
+        """Test that setting backupRetentionDays with zero value fails."""
+        # Setup
+        sql_database = item_factory(ItemType.SQL_DATABASE)
+
+        # Reset mocks
+        mock_questionary_print.reset_mock()
+        mock_print_done.reset_mock()
+        mock_upsert_item_to_cache.reset_mock()
+
+        # Execute command with zero value (below min of 1)
+        cli_executor.exec_command(
+            f"set {sql_database.full_path} --query properties.backupRetentionDays --input 0 --force"
+        )
+
+        # Assert
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_INPUT,
+            "backup retention days",
         )
         mock_upsert_item_to_cache.assert_not_called()
 

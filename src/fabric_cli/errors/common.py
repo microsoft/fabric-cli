@@ -268,6 +268,6 @@ class CommonErrors:
     @staticmethod
     def invalid_backup_retention_days(value: str, min_days: int, max_days: int) -> str:
         return (
-            f"Invalid backupRetentionDays value '{value}'. "
+            f"Invalid backup retention days value '{value}'. "
             f"Must be an integer between {min_days} and {max_days} days."
         )

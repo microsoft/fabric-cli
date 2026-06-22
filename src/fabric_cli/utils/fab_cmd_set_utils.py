@@ -102,9 +102,9 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
     Raises:
         FabricCLIError: If the value is invalid for the property.
     """
-    if query == fab_constant.SQL_DATABASE_BACKUP_RETENTION_PROPERTY:
-        min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS
-        max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS
+    if query == fab_constant.SQL_DATABASE_BACKUP_RETENTION["property"]:
+        min_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION["min_days"]
+        max_days = fab_constant.SQL_DATABASE_BACKUP_RETENTION["max_days"]
 
         try:
             try:
@@ -112,9 +112,7 @@ def validate_sql_database_property(query: str, input_value: str) -> None:
             except ValueError:
                 # Fall back to JSON for encoded values like '7' or '"7"'
                 parsed = json.loads(input_value)
-                if isinstance(parsed, bool):
-                    raise ValueError("Booleans are not valid integer values")
-                elif isinstance(parsed, int):
+                if isinstance(parsed, int):
                     value = parsed
                 elif isinstance(parsed, str):
                     value = int(parsed)

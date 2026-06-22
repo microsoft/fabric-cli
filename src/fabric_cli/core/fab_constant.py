@@ -353,6 +353,8 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
 SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
 
 # SQLDatabase property validation
-SQL_DATABASE_BACKUP_RETENTION_MIN_DAYS = 1
-SQL_DATABASE_BACKUP_RETENTION_MAX_DAYS = 35
-SQL_DATABASE_BACKUP_RETENTION_PROPERTY = "properties.backupRetentionDays"
+SQL_DATABASE_BACKUP_RETENTION = {
+    "property": "properties.backupRetentionDays",
+    "min_days": 1,
+    "max_days": 35,
+}
