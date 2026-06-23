@@ -352,3 +352,9 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
 # Invalid query parameters for set command across all fabric resources
 SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
 
+# SQLDatabase property validation
+SQL_DATABASE_BACKUP_RETENTION = {
+    "property": "properties.backupRetentionDays",
+    "min_days": 1,
+    "max_days": 35,
+}

@@ -205,3 +205,69 @@ def test_update_cache_with_custom_name_key_success():
 
     assert mock_element._name == "New Spark Pool Name"
     mock_cache_update_func.assert_called_once_with(mock_element)
+
+
+# SQLDatabase validation tests
+
+
+def test_validate_sql_database_property_backup_retention_days_valid_int_success():
+    from fabric_cli.utils.fab_cmd_set_utils import validate_sql_database_property
+
+    # Valid integer within range should not raise
+    validate_sql_database_property("properties.backupRetentionDays", "7")
+    validate_sql_database_property("properties.backupRetentionDays", "14")
+    validate_sql_database_property("properties.backupRetentionDays", "21")
+    validate_sql_database_property("properties.backupRetentionDays", "35")
+    validate_sql_database_property("properties.backupRetentionDays", "1")
+
+
+def test_validate_sql_database_property_backup_retention_days_out_of_range_failure():
+    from fabric_cli.core import fab_constant
+    from fabric_cli.utils.fab_cmd_set_utils import validate_sql_database_property
+
+    # Value below minimum
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_sql_database_property("properties.backupRetentionDays", "0")
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+    assert "backup retention days" in str(exc_info.value)
+    assert "1" in str(exc_info.value)
+    assert "35" in str(exc_info.value)
+
+    # Value above maximum
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_sql_database_property("properties.backupRetentionDays", "36")
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+
+def test_validate_sql_database_property_backup_retention_days_not_integer_failure():
+    from fabric_cli.core import fab_constant
+    from fabric_cli.utils.fab_cmd_set_utils import validate_sql_database_property
+
+    # Non-integer string
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_sql_database_property("properties.backupRetentionDays", "seven")
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+    assert "backup retention days" in str(exc_info.value)
+
+    # Float value
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_sql_database_property("properties.backupRetentionDays", "7.5")
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+
+def test_validate_sql_database_property_backup_retention_days_negative_failure():
+    from fabric_cli.core import fab_constant
+    from fabric_cli.utils.fab_cmd_set_utils import validate_sql_database_property
+
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_sql_database_property("properties.backupRetentionDays", "-5")
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+
+def test_validate_sql_database_property_other_property_no_validation_success():
+    from fabric_cli.utils.fab_cmd_set_utils import validate_sql_database_property
+
+    # Other properties should pass without validation
+    validate_sql_database_property("properties.description", "any value")
+    validate_sql_database_property("properties.other", "some value")
+    validate_sql_database_property("displayName", "new name")
