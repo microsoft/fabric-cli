@@ -58,8 +58,11 @@ def write_restricted_file(file_path: str, content: str) -> None:
     exposed through a world-readable file descriptor.
     """
     restrict_existing_file(file_path)
-    fd = os.open(file_path, os.O_WRONLY | os.O_CREAT |
-                 os.O_TRUNC, OWNER_ONLY_FILE_MODE)
+    fd = os.open(
+        file_path,
+        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+        OWNER_ONLY_FILE_MODE,
+    )
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as file:
             file.write(content)

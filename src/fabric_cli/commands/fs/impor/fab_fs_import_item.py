@@ -6,7 +6,7 @@ from argparse import Namespace
 
 from fabric_cli.client import fab_api_item as item_api
 from fabric_cli.client.fab_api_types import ApiResponse
-from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
@@ -43,7 +43,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
         )
 
         if item_exists:
-            fab_logger.log_warning("An item with the same name exists")
+            utils_ui.print_warning("An item with the same name exists")
 
             # Update
             if args.force or utils_ui.prompt_confirm("Overwrite?"):
@@ -53,11 +53,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
                     f"Importing (update) '{_input_path}' → '{item.path}'..."
                 )
 
-                # Environment item type, not supporting definition yet
-                if item.item_type == ItemType.ENVIRONMENT:
-                    _import_update_environment_item(args, payload)
-                else:
-                    _import_update_item(args, payload)
+                _import_update_item(args, payload, item)
 
                 utils_ui.print_output_format(
                     args, message=f"'{item.name}' imported")
@@ -66,11 +62,7 @@ def import_single_item(item: Item, args: Namespace) -> None:
             utils_ui.print_grey(
                 f"Importing '{_input_path}' → '{item.path}'...")
 
-            # Environment item type, not supporting definition yet
-            if item.item_type == ItemType.ENVIRONMENT:
-                response = _import_create_environment_item(item, args, payload)
-            else:
-                response = _import_create_item(args, payload)
+            response = _import_create_item(args, payload, item)
 
             if response.status_code in (200, 201):
                 utils_ui.print_output_format(
@@ -83,11 +75,24 @@ def import_single_item(item: Item, args: Namespace) -> None:
 
 
 # Utils
-def _import_update_environment_item(args: Namespace, payload: dict) -> None:
-    utils_import.publish_environment_item(args, payload)
+def _import_update_item(
+    args: Namespace, payload: dict, item: Item
+) -> None:
+    """Update an existing item's definition.
 
+    For Environment items, implements the two-phase approach:
+    1. Check that no publish is currently in progress
+    2. Import the definition via the Items Definition API
+    3. Trigger publish automatically after import
+    4. Wait for publish to complete
+    """
+    is_environment = item.item_type == ItemType.ENVIRONMENT
 
-def _import_update_item(args: Namespace, payload: dict) -> None:
+    # Phase 1: For environments, check publish state before import
+    if is_environment:
+        utils_import.check_environment_publish_ready(args)
+
+    # Phase 2: Import definition via Items Definition API
     definition_payload = json.dumps(
         {
             "definition": payload["definition"],
@@ -95,27 +100,31 @@ def _import_update_item(args: Namespace, payload: dict) -> None:
     )
     item_api.update_item_definition(args, payload=definition_payload)
 
+    # Phase 3 & 4: For environments, trigger publish and wait for completion
+    if is_environment:
+        utils_import.trigger_environment_publish(args)
+        utils_import.wait_for_environment_publish(args)
 
-def _import_create_environment_item(
-    item: Item, args: Namespace, payload: dict
+
+def _import_create_item(
+    args: Namespace, payload: dict, item: Item
 ) -> ApiResponse:
+    """Create a new item with definition.
 
-    item_payload: dict = {
-        "type": str(item.item_type),
-        "displayName": item.short_name,
-        "folderId": item.folder_id,
-    }
-    item_payload_str = json.dumps(item_payload)
+    For Environment items, implements the two-phase approach:
+    1. Create the item via the Items Definition API
+    2. Trigger publish automatically after creation
+    3. Wait for publish to complete
+    """
 
-    # Create the item
-    response = item_api.create_item(args, payload=item_payload_str)
-    data = json.loads(response.text)
-    args.id = data["id"]
-
-    utils_import.publish_environment_item(args, payload)
-    return response
-
-
-def _import_create_item(args: Namespace, payload: dict) -> ApiResponse:
     _payload = json.dumps(payload)
-    return item_api.create_item(args, payload=_payload)
+    response = item_api.create_item(args, payload=_payload)
+
+    # For environments, trigger publish and wait for completion
+    if item.item_type == ItemType.ENVIRONMENT:
+        data = json.loads(response.text)
+        args.id = data["id"]
+        utils_import.trigger_environment_publish(args)
+        utils_import.wait_for_environment_publish(args)
+
+    return response

@@ -294,15 +294,12 @@ def _import_update_existing_item_success(
         f"import {item.full_path} --input {str(tmp_path)}/{item.name} --force"
     )
 
-    if item_type == ItemType.ENVIRONMENT:
-        mock_print_done.assert_called_once()
-    else:
-        mock_print_warning.assert_called_once()
-        mock_print_grey.assert_called_once()
-        assert "Importing (update) " in mock_print_grey.call_args[0][0]
-        spy_update_item_definition.assert_called_once()
-        mock_print_done.assert_called_once()
-        upsert_item_to_cache.assert_called_once()
+    mock_print_warning.assert_called_once()
+    mock_print_grey.assert_called_once()
+    assert "Importing (update) " in mock_print_grey.call_args[0][0]
+    spy_update_item_definition.assert_called_once()
+    mock_print_done.assert_called_once()
+    upsert_item_to_cache.assert_called_once()
 
 
 def _import_create_new_item_fail(

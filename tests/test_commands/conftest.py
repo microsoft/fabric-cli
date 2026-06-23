@@ -136,6 +136,7 @@ import_create_new_item_success_params = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER,
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.LAKEHOUSE,
+        ItemType.ENVIRONMENT,
     ],
 )
 
@@ -212,6 +213,7 @@ mv_item_to_item_success_params = pytest.mark.parametrize(
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
         ItemType.MAP,
+        ItemType.ENVIRONMENT,
     ],
 )
 
@@ -246,6 +248,7 @@ mv_item_within_workspace_rename_success_params = pytest.mark.parametrize(
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
         ItemType.MAP,
+        ItemType.ENVIRONMENT,
     ],
 )
 
@@ -282,7 +285,7 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize(
         (ItemType.NOTEBOOK, True),
         (ItemType.DATA_PIPELINE, True),
         (ItemType.LAKEHOUSE, True),
-        (ItemType.ENVIRONMENT, False),
+        (ItemType.ENVIRONMENT, True),
         (ItemType.WAREHOUSE, False),
         (ItemType.COSMOS_DB_DATABASE, True),
         (ItemType.USER_DATA_FUNCTION, True),
@@ -293,7 +296,9 @@ get_item_warning_behavior_success_params = pytest.mark.parametrize(
 get_virtual_workspace_success_params = pytest.mark.parametrize(
     "virtual_workspace_type,expected_properties",
     [
-        (VirtualWorkspaceType.DOMAIN, ["contributorsScope", "domainWorkspaces"]),
+        (
+            VirtualWorkspaceType.DOMAIN,
+            ["contributorsScope", "domainWorkspaces"]),
         (
             VirtualWorkspaceType.GATEWAY,
             ["type", "capacityId", "numberOfMemberGateways"],
@@ -412,6 +417,7 @@ export_item_types_parameters = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.MAP,
         ItemType.LAKEHOUSE,
+        ItemType.ENVIRONMENT,
     ],
 )
 
@@ -443,6 +449,7 @@ export_item_default_format_parameters = pytest.mark.parametrize(
         (ItemType.DIGITAL_TWIN_BUILDER, 2),
         (ItemType.DIGITAL_TWIN_BUILDER_FLOW, 2),
         (ItemType.LAKEHOUSE, 4),
+        (ItemType.ENVIRONMENT, 2),
     ],
 )
 
@@ -484,6 +491,7 @@ cp_item_types_success_params = pytest.mark.parametrize(
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
+        ItemType.ENVIRONMENT,
         # ItemType.DIGITAL_TWIN_BUILDER,
         # ItemType.DIGITAL_TWIN_BUILDER_FLOW,
     ],
@@ -501,6 +509,7 @@ cp_folder_item_types_success_params = pytest.mark.parametrize(
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
+        ItemType.ENVIRONMENT,
     ],
 )
 
