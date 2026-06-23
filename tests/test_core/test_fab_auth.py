@@ -368,8 +368,7 @@ def test_acquire_token_tightens_cache_file_permissions_success(tmp_path):
     auth.cache_file = cache_file
 
     with patch.object(auth, "app", wraps=auth.app) as mock_app:
-        mock_app.acquire_token_silent.return_value = {
-            "access_token": "silent_token"}
+        mock_app.acquire_token_silent.return_value = {"access_token": "silent_token"}
         auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
 
     mode = stat.S_IMODE(os.stat(cache_file).st_mode)
