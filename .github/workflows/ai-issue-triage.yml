@@ -79,7 +79,13 @@ jobs:
               }
             }
 
+            // Prepend the author handle so prompts can address the author reliably
+            // (the AI model only receives issue_body as input).
+            const authorHandle = issue.user.login;
+            issueBody = `Issue author: @${authorHandle}\n\n${issueBody}`;
+
             core.setOutput('number', issue.number);
+            core.setOutput('author', authorHandle);
             core.setOutput('body', issueBody);
             core.setOutput('title', issue.title);
             core.setOutput('html_url', issue.html_url);
@@ -97,7 +103,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           ai_review_label: 'needs triage'
           prompts_directory: '.github/prompts'
-          labels_to_prompts_mapping: 'bug,bug-triage.prompt.yml|enhancement,feature-triage.prompt.yml|question,question-triage.prompt.yml'
+          labels_to_prompts_mapping: 'bug,bug-triage.prompt.yml|enhancement,feature-triage.prompt.yml|question,question-triage.prompt.yml|documentation,documentation-triage.prompt.yml'
           model: 'openai/gpt-4.1'
           max_tokens: 2000
           suppress_comments: ${{ env.SUPPRESS_COMMENTS }}
@@ -123,28 +129,41 @@ jobs:
             let addHelpWanted = false;
             let needsAuthorFeedback = false;
             let canAutoClose = false;
+            let surfaceToTeam = false;
+            let closeReason = 'completed';
 
             for (const assessment of assessments) {
               const label = (assessment.assessmentLabel || '').toLowerCase();
 
-              // Check if the assessment requires human review
-              if (label.includes('needs team review') || label.includes('needs maintainer input') || label.includes('potential bug') || label.includes('needs discussion')) {
+              // Requires human investigation → escalate with an @mention.
+              if (label.includes('needs team review') || label.includes('potential bug') || label.includes('needs discussion')) {
                 needsHumanReview = true;
               }
 
-              // Check if feature should be tagged as help wanted
+              // Valuable enhancement → surface for backlog filtering (no @mention spam).
+              if (label.includes('valuable enhancement')) {
+                surfaceToTeam = true;
+              }
+
+              // Suitable for community contribution.
               if (label.includes('help wanted')) {
                 addHelpWanted = true;
               }
 
-              // Check if more information is needed from the issue author
+              // More information is needed from the issue author.
               if (label.includes('needs author feedback') || label.includes('requires additional details')) {
                 needsAuthorFeedback = true;
               }
 
-              // Check if the AI fully resolved the issue (answered question, explained misconfiguration, redirected to docs)
+              // The AI fully resolved the issue (answered, misconfiguration, redirected to docs).
               if (label.includes('answered') || label.includes('likely misconfiguration') || label.includes('redirect to docs')) {
                 canAutoClose = true;
+              }
+
+              // Out of scope → close as "not planned" rather than "completed".
+              if (label.includes('out of scope')) {
+                canAutoClose = true;
+                closeReason = 'not_planned';
               }
 
               // Log for job summary
@@ -155,7 +174,7 @@ jobs:
             if (suppressLabels) {
               core.info('Labels suppressed — logging decisions only.');
               core.exportVariable('LABEL_DECISIONS', JSON.stringify({
-                needsHumanReview, addHelpWanted, needsAuthorFeedback, canAutoClose,
+                needsHumanReview, addHelpWanted, needsAuthorFeedback, canAutoClose, surfaceToTeam, closeReason,
                 assessmentLabels: assessments.map(a => a.assessmentLabel),
               }));
               return;
@@ -172,20 +191,20 @@ jobs:
               core.info('Added "help wanted" label based on AI assessment.');
             }
 
-            // If AI fully handled the issue without needing team review
-            if (!needsHumanReview) {
-              // Auto-close if AI fully resolved (answered, misconfiguration, redirected)
-              if (canAutoClose && !needsAuthorFeedback && !addHelpWanted) {
-                await github.rest.issues.update({
-                  owner,
-                  repo,
-                  issue_number: issueNumber,
-                  state: 'closed',
-                  state_reason: 'completed'
-                });
-                core.info('Auto-closed issue — AI fully resolved it.');
-              }
-            } else {
+            // If more info is needed, mirror the '/needinfo' policy: add 'needs author
+            // feedback' so the policy automation re-triages automatically when the author
+            // replies (it watches for that label). 'needs triage' is removed below.
+            if (needsAuthorFeedback) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                labels: ['needs author feedback']
+              });
+              core.info('Added "needs author feedback" — awaiting author response.');
+            }
+
+            if (needsHumanReview) {
               // Add consolidated label for easy filtering of all issues needing team attention
               await github.rest.issues.addLabels({
                 owner,
@@ -202,9 +221,30 @@ jobs:
                 body: '🔔 @microsoft/fabric-cli-dev — This issue has been flagged by AI triage as requiring team attention. Please review the assessment above.'
               });
               core.info('Escalated to team.');
+            } else if (surfaceToTeam) {
+              // Valuable enhancement → label for backlog filtering, but no @mention spam.
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                labels: ['ai:needs team attention']
+              });
+              core.info('Surfaced valuable enhancement for team backlog review.');
+            } else if (canAutoClose && !needsAuthorFeedback && !addHelpWanted) {
+              // Auto-close if AI fully resolved (answered, misconfiguration, redirected, out of scope)
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                state: 'closed',
+                state_reason: closeReason
+              });
+              core.info(`Auto-closed issue (${closeReason}) — AI fully resolved it.`);
             }
 
-            // Always remove 'needs triage' — triage is complete regardless of outcome
+            // Always remove 'needs triage' — triage is complete regardless of outcome.
+            // When awaiting author feedback this mirrors '/needinfo' (drop 'needs triage',
+            // keep 'needs author feedback'); the policy re-adds 'needs triage' on reply.
             try {
               await github.rest.issues.removeLabel({
                 owner,
@@ -251,11 +291,11 @@ jobs:
               summary += `| Decision | Value |\n|----------|-------|\n`;
               summary += `| AI assessment labels | ${(ld.assessmentLabels || []).map(l => '`' + l + '`').join(', ')} |\n`;
               summary += `| Would add \`help wanted\` | ${ld.addHelpWanted ? '✅ Yes' : '❌ No'} |\n`;
-              summary += `| Would add \`ai:needs team attention\` | ${ld.needsHumanReview ? '✅ Yes' : '❌ No'} |\n`;
-              summary += `| Would request author feedback | ${ld.needsAuthorFeedback ? '✅ Yes' : '❌ No'} |\n`;
-              summary += `| Would remove \`needs triage\` | ${!ld.needsHumanReview ? '✅ Yes' : '❌ No'} |\n`;
-              summary += `| Would auto-close | ${ld.canAutoClose && !ld.needsAuthorFeedback && !ld.addHelpWanted ? '✅ Yes' : '❌ No'} |\n`;
-              summary += `| Would notify team | ${ld.needsHumanReview ? '✅ Yes' : '❌ No'} |\n\n`;
+              summary += `| Would add \`needs author feedback\` | ${ld.needsAuthorFeedback ? '✅ Yes' : '❌ No'} |\n`;
+              summary += `| Would add \`ai:needs team attention\` | ${(ld.needsHumanReview || ld.surfaceToTeam) ? '✅ Yes' : '❌ No'} |\n`;
+              summary += `| Would auto-close | ${ld.canAutoClose && !ld.needsAuthorFeedback && !ld.addHelpWanted && !ld.needsHumanReview && !ld.surfaceToTeam ? '✅ Yes (' + (ld.closeReason || 'completed') + ')' : '❌ No'} |\n`;
+              summary += `| Would notify team (@mention) | ${ld.needsHumanReview ? '✅ Yes' : '❌ No'} |\n`;
+              summary += `| Would remove \`needs triage\` | ✅ Yes |\n\n`;
             }
 
             summary += `---\n\n`;
