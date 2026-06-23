@@ -214,8 +214,8 @@ class FabAuth:
                     ErrorMessages.Auth.encrypted_cache_error(),
                     con.ERROR_ENCRYPTION_FAILED,
                 )
-
-        restrict_existing_file(self.cache_file)
+        finally:
+            restrict_existing_file(self.cache_file)
 
         return persistence
 
