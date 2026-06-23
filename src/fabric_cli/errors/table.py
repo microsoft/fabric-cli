@@ -14,3 +14,10 @@ class TableErrors:
     @staticmethod
     def invalid_key(key: str, allowed_keys: str) -> str:
         return f"Invalid key: '{key}'. Allowed keys are: {allowed_keys}"
+
+    @staticmethod
+    def unsupported_item_type_for_delta(item_type: str) -> str:
+        return (
+            f"'{item_type}' does not expose Delta tables under Tables/. "
+            "Delta table schema is supported for: Lakehouse, Warehouse, KQLDatabase, MirroredDatabase, SQLDatabase."
+        )
