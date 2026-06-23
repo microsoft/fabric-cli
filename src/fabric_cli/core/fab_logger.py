@@ -14,9 +14,9 @@ import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
 from fabric_cli.utils.fab_secure_io import (
-    chmod_if_posix,
     create_restricted_dir,
     get_restricted_file_opener,
+    restrict_existing_file,
 )
 
 _logger_instance = None  # Singleton instance
@@ -187,7 +187,7 @@ class _RestrictedRotatingFileHandler(RotatingFileHandler):
         # Use a custom opener to create the initial log file with 0o600
         super().__init__(*args, **kwargs)
         # Tighten permissions on the log file (handles pre-existing files)
-        chmod_if_posix(self.baseFilename, 0o600)
+        restrict_existing_file(self.baseFilename)
 
     def _open(self):  # type: ignore[override]
         """Override _open to use restricted permissions for new log files."""
@@ -206,8 +206,7 @@ class _RestrictedRotatingFileHandler(RotatingFileHandler):
         # base file is created. Tighten permissions on all rotated backups.
         for i in range(1, self.backupCount + 1):
             rotated_file = self.rotation_filename(f"{self.baseFilename}.{i}")
-            if os.path.exists(rotated_file):
-                chmod_if_posix(rotated_file, 0o600)
+            restrict_existing_file(rotated_file)
 
 
 def _setup_logger(file_name: str):
