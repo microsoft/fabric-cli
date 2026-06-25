@@ -9,6 +9,7 @@ from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils.fab_cmd_mkdir_utils import (
+    _build_sql_database_creation_payload_if_exists,
     find_mpe_connection,
     get_connection_config_from_params,
 )
@@ -209,222 +210,101 @@ class TestFindMpeConnection:
 
 # SQLDatabase creation payload tests
 class TestBuildSqlDatabaseCreationPayload:
-    """Test cases for _build_sql_database_creation_payload function."""
+    """Test cases for _build_sql_database_creation_payload_if_exists function."""
 
-    def test_build_sql_database_creation_payload_no_params_returns_none(self):
-        """Test that no creationPayload is returned when no SQLDatabase params provided."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {},
+            {"description": "test"},
+        ],
+    )
+    def test_build_sql_database_creation_payload_returns_empty_success(self, params):
+        """Test that an empty creationPayload is returned when no SQLDatabase params provided."""
+        result = _build_sql_database_creation_payload_if_exists(params)
+        assert result == {}
 
-        result = _build_sql_database_creation_payload({})
-        assert result is None
-
-    def test_build_sql_database_creation_payload_unrelated_params_returns_none(self):
-        """Test that no creationPayload is returned when unrelated params provided."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        result = _build_sql_database_creation_payload({"description": "test"})
-        assert result is None
-
-    def test_build_sql_database_creation_payload_mode_new_explicit_success(self):
-        """Test SQLDatabase creation with explicit mode=New."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "new"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result is not None
-        assert result["creationMode"] == "New"
-
-    def test_build_sql_database_creation_payload_backup_retention_days_success(self):
-        """Test SQLDatabase creation with backupRetentionDays infers mode=New."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "21"}
-        result = _build_sql_database_creation_payload(params)
+    @pytest.mark.parametrize(
+        "provided",
+        [
+            "new",
+            "New",
+            "NEW",
+            "restore",
+            "Restore",
+            "InvalidMode",
+        ],
+    )
+    def test_build_sql_database_creation_payload_mode_success(self, provided):
+        """Test that the mode param is set as provided by the user."""
+        result = _build_sql_database_creation_payload_if_exists(
+            {"mode": provided})
 
         assert result is not None
-        assert result["creationMode"] == "New"
-        assert result["backupRetentionDays"] == 21
+        assert result["creationMode"] == provided
 
-    def test_build_sql_database_creation_payload_collation_success(self):
-        """Test SQLDatabase creation with collation infers mode=New."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
+    @pytest.mark.parametrize(
+        "provided, expected",
+        [
+            ("21", 21),
+            ("10", 10),
+            ("seven", "seven"),
+        ],
+    )
+    def test_build_sql_database_creation_payload_backup_retention_success(
+        self, provided, expected
+    ):
+        """Test that backupRetentionDays is converted to int when numeric, else passed through."""
+        result = _build_sql_database_creation_payload_if_exists(
+            {"backupretentiondays": provided}
+        )
 
+        assert result is not None
+        assert "creationMode" not in result
+        assert result["backupRetentionDays"] == expected
+
+    def test_build_sql_database_creation_payload_collation_only_success(self):
+        """Test that collation alone is set without a mode."""
         params = {"collation": "SQL_Latin1_General_CP1_CI_AS"}
-        result = _build_sql_database_creation_payload(params)
+        result = _build_sql_database_creation_payload_if_exists(params)
 
         assert result is not None
-        assert result["creationMode"] == "New"
+        assert "creationMode" not in result
         assert result["collation"] == "SQL_Latin1_General_CP1_CI_AS"
 
-    def test_build_sql_database_creation_payload_both_properties_success(self):
-        """Test SQLDatabase creation with both backupRetentionDays and collation."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {
-            "mode": "New",
-            "backupretentiondays": "7",
-            "collation": "Latin1_General_100_CI_AS_KS_WS_SC_UTF8",
-        }
-        result = _build_sql_database_creation_payload(params)
-
-        assert result is not None
-        assert result["creationMode"] == "New"
-        assert result["backupRetentionDays"] == 7
-        assert result["collation"] == "Latin1_General_100_CI_AS_KS_WS_SC_UTF8"
-
-    def test_build_sql_database_creation_payload_mode_case_insensitive_success(self):
-        """Test that mode parameter is case-insensitive."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "NEW", "backupretentiondays": "14"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result is not None
-        assert result["creationMode"] == "New"
-        assert result["backupRetentionDays"] == 14
-
-    def test_build_sql_database_creation_payload_backup_retention_min_success(self):
-        """Test backupRetentionDays with minimum value (1)."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "1"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result["backupRetentionDays"] == 1
-
-    def test_build_sql_database_creation_payload_backup_retention_max_success(self):
-        """Test backupRetentionDays with maximum value (35)."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "35"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result["backupRetentionDays"] == 35
-
-    def test_build_sql_database_creation_payload_backup_retention_out_of_range_failure(
-        self,
+    @pytest.mark.parametrize(
+        "params, expected",
+        [
+            (
+                {
+                    "mode": "New",
+                    "backupretentiondays": "7",
+                    "collation": "some_collation_value",
+                },
+                {
+                    "creationMode": "New",
+                    "backupRetentionDays": 7,
+                    "collation": "some_collation_value",
+                },
+            ),
+            (
+                {
+                    "mode": "Restore",
+                    "backupretentiondays": "21",
+                    "collation": "some_collation_value",
+                },
+                {
+                    "creationMode": "Restore",
+                    "backupRetentionDays": 21,
+                    "collation": "some_collation_value",
+                },
+            ),
+        ],
+    )
+    def test_build_sql_database_creation_payload_all_properties_success(
+        self, params, expected
     ):
-        """Test that backupRetentionDays outside 1-35 range raises error."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
+        """Test SQLDatabase creation with mode, backupRetentionDays and collation."""
+        result = _build_sql_database_creation_payload_if_exists(params)
 
-        params = {"backupretentiondays": "36"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "36" in str(exc_info.value.message)
-        assert "1" in str(exc_info.value.message)
-        assert "35" in str(exc_info.value.message)
-
-    def test_build_sql_database_creation_payload_backup_retention_zero_failure(self):
-        """Test that backupRetentionDays of 0 raises error."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "0"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-
-    def test_build_sql_database_creation_payload_backup_retention_not_integer_failure(
-        self,
-    ):
-        """Test that non-integer backupRetentionDays raises error."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "seven"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "seven" in str(exc_info.value.message)
-
-    def test_build_sql_database_creation_payload_backup_retention_negative_failure(
-        self,
-    ):
-        """Test that negative backupRetentionDays raises error."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"backupretentiondays": "-5"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-
-    def test_build_sql_database_creation_payload_invalid_mode_failure(self):
-        """Test that invalid creation mode raises error."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "InvalidMode"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "InvalidMode" in str(exc_info.value.message)
-        assert "New" in str(exc_info.value.message)
-        assert "Restore" in str(exc_info.value.message)
-
-    def test_build_sql_database_creation_payload_restore_mode_no_properties_success(
-        self,
-    ):
-        """Test Restore mode without backupRetentionDays or collation is valid."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "Restore"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result is not None
-        assert result["creationMode"] == "Restore"
-        assert "backupRetentionDays" not in result
-        assert "collation" not in result
-
-    def test_build_sql_database_creation_payload_restore_mode_backup_retention_failure(
-        self,
-    ):
-        """Test that backupRetentionDays is not allowed in Restore mode."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "Restore", "backupretentiondays": "21"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "backupRetentionDays" in str(exc_info.value.message)
-        assert "Restore" in str(exc_info.value.message)
-
-    def test_build_sql_database_creation_payload_restore_mode_collation_failure(self):
-        """Test that collation is not allowed in Restore mode."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "Restore", "collation": "SQL_Latin1_General_CP1_CI_AS"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "collation" in str(exc_info.value.message)
-        assert "Restore" in str(exc_info.value.message)
-
-    def test_build_sql_database_creation_payload_restore_deleted_mode_success(self):
-        """Test RestoreDeletedDatabase mode is valid."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "RestoreDeletedDatabase"}
-        result = _build_sql_database_creation_payload(params)
-
-        assert result is not None
-        assert result["creationMode"] == "RestoreDeletedDatabase"
-
-    def test_build_sql_database_creation_payload_restore_deleted_mode_properties_failure(
-        self,
-    ):
-        """Test that properties are not allowed in RestoreDeletedDatabase mode."""
-        from fabric_cli.utils.fab_cmd_mkdir_utils import _build_sql_database_creation_payload
-
-        params = {"mode": "RestoreDeletedDatabase", "backupretentiondays": "7"}
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "backupRetentionDays" in str(exc_info.value.message)
-        assert "RestoreDeletedDatabase" in str(exc_info.value.message)
+        assert result == expected

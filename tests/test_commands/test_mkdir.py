@@ -242,6 +242,44 @@ class TestMkdir:
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         rm(eventhouse_full_path)
 
+    def test_mkdir_sqldatabase_with_creation_payload_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        # Setup
+        sqldatabase_display_name = generate_random_string(
+            vcr_instance, cassette_name)
+        sqldatabase_full_path = cli_path_join(
+            workspace.full_path, f"{sqldatabase_display_name}.{ItemType.SQL_DATABASE}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(
+            f"mkdir {sqldatabase_full_path} -P mode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
+        )
+
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert sqldatabase_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(sqldatabase_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        result_output = mock_questionary_print.call_args[0][0]
+        assert sqldatabase_display_name in result_output
+        assert "backupRetentionDays" in result_output
+        assert "SQL_Latin1_General_CP1_CI_AS" in result_output
+
+        # Cleanup
+        rm(sqldatabase_full_path)
+
     @mkdir_item_with_creation_payload_success_params
     def test_mkdir_item_with_creation_payload_success(
         self,
