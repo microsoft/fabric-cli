@@ -2,21 +2,17 @@
 # Licensed under the MIT License.
 
 
-from argparse import Namespace
 from unittest.mock import Mock, patch
 
 import pytest
 
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType
-from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils.fab_cmd_mkdir_utils import (
     _build_sql_database_creation_payload_if_exists,
     find_mpe_connection,
     get_connection_config_from_params,
-    get_params_per_item_type,
 )
 
 
