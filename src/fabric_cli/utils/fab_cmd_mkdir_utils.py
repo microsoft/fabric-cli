@@ -14,9 +14,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors import ErrorMessages
-from fabric_cli.errors.common import CommonErrors
 from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils.fab_util import is_valid_guid, is_valid_iso8601_timestamp
 
 
 def add_type_specific_payload(item: Item, args, payload):
