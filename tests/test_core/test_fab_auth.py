@@ -4,6 +4,7 @@
 import datetime
 import json
 import os
+import stat
 import tempfile
 import uuid
 from unittest.mock import patch
@@ -20,6 +21,7 @@ from cryptography.x509.oid import NameOID
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.errors import ErrorMessages
 
 
 @pytest.fixture(autouse=True)
@@ -349,6 +351,55 @@ def test_get_access_token_user_silent_success():
         token = auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
         assert token == expected_token
         set_tenant_spy.assert_not_called()
+
+
+@pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission bits are a no-op on Windows"
+)
+def test_acquire_token_tightens_cache_file_permissions_success(tmp_path):
+
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    cache_file = os.path.join(str(tmp_path), "cache.bin")
+    with open(cache_file, "w", encoding="utf-8") as handle:
+        handle.write("serialized-token-cache")
+    os.chmod(cache_file, 0o644)
+    auth.cache_file = cache_file
+
+    with patch.object(auth, "app", wraps=auth.app) as mock_app:
+        mock_app.acquire_token_silent.return_value = {"access_token": "silent_token"}
+        auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
+
+    mode = stat.S_IMODE(os.stat(cache_file).st_mode)
+    assert mode == 0o600
+
+
+@pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission bits are a no-op on Windows"
+)
+def test_acquire_token_tightens_cache_file_on_error_success(tmp_path):
+    # Even when token acquisition fails, the cache file written by MSAL during
+    # the attempt must still be tightened (finally block).
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    cache_file = os.path.join(str(tmp_path), "cache.bin")
+    with open(cache_file, "w", encoding="utf-8") as handle:
+        handle.write("serialized-token-cache")
+    os.chmod(cache_file, 0o644)
+    auth.cache_file = cache_file
+
+    with patch.object(auth, "app", wraps=auth.app) as mock_app:
+        mock_app.acquire_token_silent.return_value = None
+        mock_app.acquire_token_interactive.return_value = {
+            "error": "token acquisition failed"
+        }
+        with pytest.raises(FabricCLIError):
+            auth.get_access_token([con.SCOPE_FABRIC_DEFAULT])
+
+    mode = stat.S_IMODE(os.stat(cache_file).st_mode)
+    assert mode == 0o600
 
 
 def test_get_access_token_user_interactive_error_response_failure():
@@ -824,8 +875,12 @@ def test_get_access_token_token_error(monkeypatch):
     with pytest.raises(FabricCLIError) as exc_info:
         auth.get_access_token(["dummy_scope"])
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert exc_info.value.message == "Failed to get access token: Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens"
+    assert (
+        exc_info.value.message
+        == ErrorMessages.Auth.token_acquisition_failed()
+    )
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
 
 def test_set_access_mode_success(monkeypatch):
     """Test setting a valid access mode"""
@@ -1064,3 +1119,55 @@ def test_auth_mode_migration(tmp_path):
     assert (
         auth.get_identity_type() == "user"
     ), "get_identity_type returns wrong value after migration"
+
+
+# region security: auth file permission tests
+
+_skip_on_windows = pytest.mark.skipif(
+    os.name == "nt", reason="POSIX permission tests not applicable on Windows"
+)
+
+
+@_skip_on_windows
+def test_save_auth_creates_file_with_restricted_permissions_success(tmp_path):
+    """Verify auth.json is created with mode 0o600 (owner read/write only)."""
+    auth = FabAuth()
+    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+
+    auth._save_auth()
+
+    assert os.path.exists(auth.auth_file)
+    mode = oct(os.stat(auth.auth_file).st_mode & 0o777)
+    assert mode == "0o600", f"auth.json has mode {mode}, expected 0o600"
+
+    # Verify content is still correct
+    with open(auth.auth_file, "r") as f:
+        data = json.load(f)
+    assert data[con.IDENTITY_TYPE] == "user"
+
+
+@_skip_on_windows
+def test_save_auth_tightens_permissions_on_existing_file_success(tmp_path):
+    """Verify _save_auth() enforces 0o600 on a pre-existing permissive file."""
+    auth = FabAuth()
+    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
+
+    # Create file with world-readable permissions (0o644) to simulate a
+    # pre-existing file written by an older CLI version without hardening
+    with open(auth.auth_file, "w") as f:
+        json.dump({con.IDENTITY_TYPE: "user"}, f)
+    os.chmod(auth.auth_file, 0o644)
+
+    auth._auth_info = {con.IDENTITY_TYPE: "spn"}
+    auth._save_auth()
+
+    mode = oct(os.stat(auth.auth_file).st_mode & 0o777)
+    assert mode == "0o600", f"auth.json has mode {mode} after overwrite, expected 0o600"
+
+    with open(auth.auth_file, "r") as f:
+        data = json.load(f)
+    assert data[con.IDENTITY_TYPE] == "spn"
+
+
+# endregion

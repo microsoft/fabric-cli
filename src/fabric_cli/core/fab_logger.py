@@ -13,6 +13,11 @@ from logging.handlers import RotatingFileHandler
 import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
+from fabric_cli.utils.fab_secure_io import (
+    create_restricted_dir,
+    get_restricted_file_opener,
+    restrict_existing_file,
+)
 
 _logger_instance = None  # Singleton instance
 log_file_path = None  # Path to the current log file
@@ -156,7 +161,7 @@ def log_debug_http_request_exception(e):
 def _get_log_file_path():
     """Create a log file path in the user's log directory."""
     log_dir = user_log_dir("fabric-cli")
-    os.makedirs(log_dir, exist_ok=True)
+    create_restricted_dir(log_dir)
     return os.path.join(log_dir, "fabcli_debug.log")
 
 
@@ -171,13 +176,46 @@ def get_logger():
     return _logger_instance
 
 
+class _RestrictedRotatingFileHandler(RotatingFileHandler):
+    """RotatingFileHandler that enforces 0o600 on log files (including rotated ones).
+
+    Overrides doRollover to tighten permissions on newly created backup files,
+    ensuring that rotated log files are not world-readable.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Use a custom opener to create the initial log file with 0o600
+        super().__init__(*args, **kwargs)
+        # Tighten permissions on the log file (handles pre-existing files)
+        restrict_existing_file(self.baseFilename)
+
+    def _open(self):  # type: ignore[override]
+        """Override _open to use restricted permissions for new log files."""
+        return open(
+            self.baseFilename,
+            self.mode,
+            encoding=self.encoding,
+            errors=self.errors,
+            opener=get_restricted_file_opener(),
+        )
+
+    def doRollover(self):
+        """Perform rollover and enforce permissions on the rotated file."""
+        super().doRollover()
+        # After rotation, the old file is renamed (e.g., .log.1) and a new
+        # base file is created. Tighten permissions on all rotated backups.
+        for i in range(1, self.backupCount + 1):
+            rotated_file = self.rotation_filename(f"{self.baseFilename}.{i}")
+            restrict_existing_file(rotated_file)
+
+
 def _setup_logger(file_name: str):
     # Initialize the singleton logger
     _logger_instance = logging.getLogger("FabricCLI")
     _logger_instance.setLevel(logging.DEBUG)
 
-    # Configure the log file rotation.
-    file_handler = RotatingFileHandler(
+    # Configure the log file rotation with restricted permissions.
+    file_handler = _RestrictedRotatingFileHandler(
         file_name,
         maxBytes=5 * 1024 * 1024,  # 5 MB
         backupCount=7,  # Retain 7 rotated files (35 MB total)

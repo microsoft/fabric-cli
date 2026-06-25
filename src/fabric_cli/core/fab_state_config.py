@@ -3,15 +3,18 @@
 
 import json
 import os
-from os.path import exists, expanduser
+from os.path import expanduser
 
 from fabric_cli.core import fab_constant
+from fabric_cli.utils.fab_secure_io import (
+    create_restricted_dir,
+    write_restricted_file,
+)
 
 
 def config_location():
     _location = expanduser("~/.config/fab/")
-    if not exists(_location):
-        os.makedirs(_location)
+    create_restricted_dir(_location)
     return _location
 
 
@@ -29,8 +32,7 @@ def read_config(file_path) -> dict:
 
 
 def write_config(data):
-    with open(config_file, "w") as file:
-        json.dump(data, file, indent=4)
+    write_restricted_file(config_file, json.dumps(data, indent=4))
 
 
 def set_config(key, value):

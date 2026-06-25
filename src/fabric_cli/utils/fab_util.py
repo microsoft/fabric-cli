@@ -15,6 +15,7 @@ The module includes functions for:
 - Path and string processing
 - OS-specific operations
 - Azure capacity configuration management
+- Format validation (GUIDs, timestamps)
 """
 
 import json
@@ -26,6 +27,49 @@ from typing import Any
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
+
+# Validation patterns
+GUID_PATTERN = re.compile(
+    r"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+)
+GUID_PATTERN_STR = r"([a-f0-9\-]{36})"
+
+# ISO 8601 timestamp patterns for validation
+ISO8601_UTC_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z")
+ISO8601_OFFSET_PATTERN = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?[+-]\d{2}:\d{2}"
+)
+
+
+def is_valid_guid(value: str) -> bool:
+    """Validate that a string is a valid GUID format.
+
+    Args:
+        value: String to validate.
+
+    Returns:
+        True if the string matches GUID format, False otherwise.
+    """
+    return bool(GUID_PATTERN.match(value))
+
+
+def is_valid_iso8601_timestamp(value: str) -> bool:
+    """Validate that a string is a valid ISO 8601 timestamp with timezone.
+
+    Accepts formats like:
+    - 2024-01-15T10:30:00Z
+    - 2024-01-15T10:30:00+00:00
+    - 2024-01-15T10:30:00.123456Z
+
+    Args:
+        value: String to validate.
+
+    Returns:
+        True if the string matches ISO 8601 timestamp format with timezone, False otherwise.
+    """
+    return bool(
+        ISO8601_UTC_PATTERN.fullmatch(value) or ISO8601_OFFSET_PATTERN.fullmatch(value)
+    )
 
 
 # JSON utilities
@@ -42,6 +86,7 @@ def dumps(obj: Any, **kw) -> str:
     Raises:
         TypeError: If object contains non-serializable types other than bytes/bytearray
     """
+
     def _default(o):
         if isinstance(o, (bytes, bytearray)):
             return "__REDACTED__bytes__"
@@ -138,7 +183,7 @@ def try_get_json_value_from_string(value: str) -> Any:
     Returns:
         Parsed JSON if valid, otherwise original string
     """
-    if value.strip().startswith('[{') and value.strip().endswith('}]'):
+    if value.strip().startswith("[{") and value.strip().endswith("}]"):
         try:
             return json.loads(value)
         except json.JSONDecodeError:
@@ -198,20 +243,15 @@ def get_capacity_settings(
     """
     az_subscription_id = params.get(
         "subscriptionid",
-        fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID
-        ),
+        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID),
     )
     az_resource_group = params.get(
         "resourcegroup",
-        fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP
-        ),
+        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_RESOURCE_GROUP),
     )
     az_default_location = params.get(
-        "location", fab_state_config.get_config(
-            fab_constant.FAB_DEFAULT_AZ_LOCATION
-        ),
+        "location",
+        fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_LOCATION),
     )
     az_default_admin = params.get(
         "admin", fab_state_config.get_config(fab_constant.FAB_DEFAULT_AZ_ADMIN)

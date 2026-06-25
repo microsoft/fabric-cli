@@ -56,8 +56,9 @@ class FabAuth:
         self._load_env()
 
     def _save_auth(self):
-        with open(self.auth_file, "w") as file:
-            file.write(json.dumps(self._get_auth_info()))
+        from fabric_cli.utils.fab_secure_io import write_restricted_file
+
+        write_restricted_file(self.auth_file, json.dumps(self._get_auth_info()))
 
     def _load_auth(self):
         if os.path.exists(self.auth_file) and os.stat(self.auth_file).st_size != 0:
@@ -198,6 +199,8 @@ class FabAuth:
         return decoded_dict
 
     def _get_persistence(self):
+        from fabric_cli.utils.fab_secure_io import restrict_existing_file
+
         persistence = None
         try:
             persistence = build_encrypted_persistence(self.cache_file)
@@ -211,6 +214,8 @@ class FabAuth:
                     ErrorMessages.Auth.encrypted_cache_error(),
                     con.ERROR_ENCRYPTION_FAILED,
                 )
+        finally:
+            restrict_existing_file(self.cache_file)
 
         return persistence
 
@@ -433,96 +438,103 @@ class FabAuth:
     def acquire_token(self, scope: list[str], interactive_renew=True) -> dict:
         """
         Core MSAL token acquisition method that returns the full MSAL result.
-        
+
         This method contains the common authentication logic shared between
         get_access_token and msal_bridge.get_token. It performs no validation
         on scopes - callers are responsible for their own validation needs.
-        
+
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
-            
+
         Returns:
             Full MSAL result dictionary containing access_token, expires_on, etc.
-            
+
         Raises:
             FabricCLIError: When token acquisition fails
         """
-        token = None
-        env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
+        from fabric_cli.utils.fab_secure_io import restrict_existing_file
 
-        identity_type = self.get_identity_type()
+        try:
+            token = None
+            env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
 
-        if identity_type == "service_principal":
-            token = self._get_app().acquire_token_for_client(scopes=scope)
+            identity_type = self.get_identity_type()
 
-        elif identity_type == "managed_identity":
-            # remove the .default from the scope
-            resource = scope[0].replace("/.default", "")
-            try:
-                token = self._get_app().acquire_token_for_client(resource=resource)
+            if identity_type == "service_principal":
+                token = self._get_app().acquire_token_for_client(scopes=scope)
 
-            except ConnectionError:
+            elif identity_type == "managed_identity":
+                # remove the .default from the scope
+                resource = scope[0].replace("/.default", "")
+                try:
+                    token = self._get_app().acquire_token_for_client(resource=resource)
+
+                except ConnectionError:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.managed_identity_connection_failed(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
+                except Exception:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.managed_identity_token_failed(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
+            elif env_var_token:
+                token = {
+                    "access_token": env_var_token,
+                }
+            elif identity_type == "user":
+                # Use the cache to get the token
+                accounts = self._get_app().get_accounts()
+                account = None
+                if accounts:
+                    account = accounts[0]
+                token = self._get_app().acquire_token_silent(
+                    scopes=scope, account=account
+                )
+
+                if token is None and interactive_renew:
+                    token = self._get_app().acquire_token_interactive(
+                        scopes=scope,
+                        prompt="select_account",
+                        parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
+                    )
+                    if token is not None and "id_token_claims" in token:
+                        self.set_tenant(token.get("id_token_claims")["tid"])
+
+            if token and token.get("error"):
+                fab_logger.log_debug(
+                    f"Error in get token: {token.get('error_description')}"
+                )
                 raise FabricCLIError(
-                    ErrorMessages.Auth.managed_identity_connection_failed(),
+                    ErrorMessages.Auth.token_acquisition_failed(),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
-            except Exception:
+            if token is None or not token.get("access_token"):
                 raise FabricCLIError(
-                    ErrorMessages.Auth.managed_identity_token_failed(),
+                    ErrorMessages.Auth.access_token_error(),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
-        elif env_var_token:
-            token = {
-                "access_token": env_var_token,
-            }
-        elif identity_type == "user":
-            # Use the cache to get the token
-            accounts = self._get_app().get_accounts()
-            account = None
-            if accounts:
-                account = accounts[0]
-            token = self._get_app().acquire_token_silent(scopes=scope, account=account)
 
-            if token is None and interactive_renew and identity_type == "user":
-                token = self._get_app().acquire_token_interactive(
-                    scopes=scope,
-                    prompt="select_account",
-                    parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
-                )
-                if token is not None and "id_token_claims" in token:
-                    self.set_tenant(token.get("id_token_claims")["tid"])
-
-        if token and token.get("error"):
-            fab_logger.log_debug(
-                f"Error in get token: {token.get('error_description')}")
-            raise FabricCLIError(
-                ErrorMessages.Auth.access_token_error(
-                    "Something went wrong while trying to acquire a token. Please try to run `fab auth logout` and then `fab auth login` to re-login and acquire new tokens."),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-        if token is None or not token.get("access_token"):
-            raise FabricCLIError(
-                ErrorMessages.Auth.access_token_error(),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-
-        return token
+            return token
+        finally:
+            restrict_existing_file(self.cache_file)
 
     def get_access_token(self, scope: list[str], interactive_renew=True) -> str | None:
         """
         Get an access token string for the specified scopes.
-        
+
         This method maintains the existing CLI API - returns just the token string
         for backward compatibility. Uses the shared acquire_token method internally.
-        
+
         Args:
             scope: The scopes for which to request the token
             interactive_renew: Whether to allow interactive authentication for user flows
-            
+
         Returns:
             Access token string or None if acquisition fails
-            
+
         Raises:
             FabricCLIError: When token acquisition fails
         """
@@ -732,8 +744,8 @@ class FabAuth:
         )
         cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
         fingerprint = cert.fingerprint(
-            hashes.SHA1() # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
-        )  
+            hashes.SHA1()  # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+        )
         return self._Cert(certificate_data, private_key, fingerprint)
 
     def _load_pkcs12_certificate(
@@ -774,8 +786,8 @@ class FabAuth:
         pem_bytes = b"".join(pem_sections)
 
         fingerprint = cert.fingerprint(
-            hashes.SHA1() # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
-        )  
+            hashes.SHA1()  # CodeQL [SM02167] SHA‑1 thumbprint is only a certificate identifier required by MSAL/Microsoft Entra, not a cryptographic operation
+        )
 
         return self._Cert(pem_bytes, private_key, fingerprint)
 
