@@ -2,21 +2,17 @@
 # Licensed under the MIT License.
 
 
-from argparse import Namespace
 from unittest.mock import Mock, patch
 
 import pytest
 
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_types import ItemType
-from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils.fab_cmd_mkdir_utils import (
-    add_type_specific_payload,
+    _build_sql_database_creation_payload_if_exists,
     find_mpe_connection,
     get_connection_config_from_params,
-    get_params_per_item_type,
 )
 
 
@@ -223,245 +219,103 @@ class TestFindMpeConnection:
             assert "api-version=2023-11-01" in called_url
 
 
-class TestSQLDatabaseRestore:
-    """Test cases for SQLDatabase point-in-time restore functionality."""
+# SQLDatabase creation payload tests
+class TestBuildSqlDatabaseCreationPayload:
+    """Test cases for _build_sql_database_creation_payload_if_exists function."""
 
-    @pytest.fixture
-    def mock_sql_database_item(self):
-        """Create a mock SQL database item."""
-        mock_workspace = Mock(spec=Workspace)
-        mock_workspace.id = "workspace-id-123"
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {},
+            {"description": "test"},
+        ],
+    )
+    def test_build_sql_database_creation_payload_returns_empty_success(self, params):
+        """Test that an empty creationPayload is returned when no SQLDatabase params provided."""
+        result = _build_sql_database_creation_payload_if_exists(params)
+        assert result == {}
 
-        item = Mock(spec=Item)
-        item.item_type = ItemType.SQL_DATABASE
-        item.workspace = mock_workspace
-        item.short_name = "test-db"
-        return item
+    @pytest.mark.parametrize(
+        "provided",
+        [
+            "new",
+            "New",
+            "NEW",
+            "restore",
+            "Restore",
+            "InvalidMode",
+        ],
+    )
+    def test_build_sql_database_creation_payload_mode_success(self, provided):
+        """Test that the mode param is set as provided by the user."""
+        result = _build_sql_database_creation_payload_if_exists(
+            {"mode": provided})
 
-    @pytest.fixture
-    def mock_args(self):
-        """Create mock args namespace."""
-        args = Namespace()
-        args.params = {}
-        return args
+        assert result is not None
+        assert result["creationMode"] == provided
 
-    def test_restore_mode_valid_params_success(self, mock_sql_database_item, mock_args):
-        """Test SQLDatabase restore with valid parameters."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-        result = add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert "creationPayload" in result
-        assert result["creationPayload"]["creationMode"] == "Restore"
-        assert result["creationPayload"]["restorePointInTime"] == "2024-01-15T10:30:00Z"
-        assert (
-            result["creationPayload"]["sourceDatabaseReference"]["referenceType"]
-            == "ById"
-        )
-        assert (
-            result["creationPayload"]["sourceDatabaseReference"]["itemId"]
-            == "12345678-1234-1234-1234-123456789abc"
-        )
-        assert (
-            result["creationPayload"]["sourceDatabaseReference"]["workspaceId"]
-            == "87654321-4321-4321-4321-cba987654321"
-        )
-
-    def test_restore_mode_with_offset_timestamp_success(
-        self, mock_sql_database_item, mock_args
+    @pytest.mark.parametrize(
+        "provided, expected",
+        [
+            ("21", 21),
+            ("10", 10),
+            ("seven", "seven"),
+        ],
+    )
+    def test_build_sql_database_creation_payload_backup_retention_success(
+        self, provided, expected
     ):
-        """Test SQLDatabase restore with timezone offset timestamp."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00+05:30",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-        result = add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert "creationPayload" in result
-        assert (
-            result["creationPayload"]["restorePointInTime"]
-            == "2024-01-15T10:30:00+05:30"
+        """Test that backupRetentionDays is converted to int when numeric, else passed through."""
+        result = _build_sql_database_creation_payload_if_exists(
+            {"backupretentiondays": provided}
         )
 
-    def test_restore_mode_missing_restore_point_in_time_failure(
-        self, mock_sql_database_item, mock_args
+        assert result is not None
+        assert "creationMode" not in result
+        assert result["backupRetentionDays"] == expected
+
+    def test_build_sql_database_creation_payload_collation_only_success(self):
+        """Test that collation alone is set without a mode."""
+        params = {"collation": "SQL_Latin1_General_CP1_CI_AS"}
+        result = _build_sql_database_creation_payload_if_exists(params)
+
+        assert result is not None
+        assert "creationMode" not in result
+        assert result["collation"] == "SQL_Latin1_General_CP1_CI_AS"
+
+    @pytest.mark.parametrize(
+        "params, expected",
+        [
+            (
+                {
+                    "mode": "New",
+                    "backupretentiondays": "7",
+                    "collation": "some_collation_value",
+                },
+                {
+                    "creationMode": "New",
+                    "backupRetentionDays": 7,
+                    "collation": "some_collation_value",
+                },
+            ),
+            (
+                {
+                    "mode": "Restore",
+                    "backupretentiondays": "21",
+                    "collation": "some_collation_value",
+                },
+                {
+                    "creationMode": "Restore",
+                    "backupRetentionDays": 21,
+                    "collation": "some_collation_value",
+                },
+            ),
+        ],
+    )
+    def test_build_sql_database_creation_payload_all_properties_success(
+        self, params, expected
     ):
-        """Test SQLDatabase restore fails when restorePointInTime is missing."""
-        mock_args.params = {
-            "mode": "restore",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
+        """Test SQLDatabase creation with mode, backupRetentionDays and collation."""
+        result = _build_sql_database_creation_payload_if_exists(params)
 
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "restorePointInTime" in exc_info.value.message
-
-    def test_restore_mode_missing_item_id_failure(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore fails when itemId is missing."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "itemId" in exc_info.value.message
-
-    def test_restore_mode_missing_workspace_id_failure(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore fails when workspaceId is missing."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "workspaceId" in exc_info.value.message
-
-    def test_restore_mode_invalid_timestamp_format_failure(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore fails with invalid timestamp format."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00",  # Missing timezone
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "ISO 8601" in exc_info.value.message
-
-    def test_restore_mode_invalid_item_id_guid_failure(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore fails with invalid itemId GUID."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "not-a-valid-guid",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_GUID
-        assert "itemId" in exc_info.value.message
-
-    def test_restore_mode_invalid_workspace_id_guid_failure(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore fails with invalid workspaceId GUID."""
-        mock_args.params = {
-            "mode": "restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "not-a-valid-guid",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_GUID
-        assert "workspaceId" in exc_info.value.message
-
-    def test_invalid_mode_failure(self, mock_sql_database_item, mock_args):
-        """Test SQLDatabase creation fails with invalid mode."""
-        mock_args.params = {
-            "mode": "invalid",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "mode" in exc_info.value.message.lower()
-
-    def test_standard_creation_no_mode_success(self, mock_sql_database_item, mock_args):
-        """Test standard SQLDatabase creation without mode parameter."""
-        mock_args.params = {}
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-        result = add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        # Standard creation should not add creationPayload
-        assert "creationPayload" not in result
-
-    def test_restore_mode_case_insensitive_success(
-        self, mock_sql_database_item, mock_args
-    ):
-        """Test SQLDatabase restore mode is case-insensitive."""
-        mock_args.params = {
-            "mode": "RESTORE",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "12345678-1234-1234-1234-123456789abc",
-            "workspaceid": "87654321-4321-4321-4321-cba987654321",
-        }
-
-        payload = {"displayName": "test-db", "type": "SQLDatabase"}
-        result = add_type_specific_payload(mock_sql_database_item, mock_args, payload)
-
-        assert "creationPayload" in result
-
-
-class TestGetParamsPerItemTypeSQLDatabase:
-    """Test cases for get_params_per_item_type for SQLDatabase."""
-
-    @pytest.fixture
-    def mock_sql_database_item(self):
-        """Create a mock SQL database item."""
-        item = Mock(spec=Item)
-        item.item_type = ItemType.SQL_DATABASE
-        return item
-
-    def test_sql_database_params(self, mock_sql_database_item):
-        """Test that SQL Database returns correct optional parameters."""
-        required, optional = get_params_per_item_type(mock_sql_database_item)
-
-        assert required == []
-        assert len(optional) == 4
-        assert "mode" in optional
-        assert "restorePointInTime" in optional
-        assert "itemId" in optional
-        assert "workspaceId" in optional
+        assert result == expected

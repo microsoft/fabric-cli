@@ -15,7 +15,6 @@ from fabric_cli.core.fab_types import ItemType
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils.fab_util import is_valid_guid, is_valid_iso8601_timestamp
 
 
 def add_type_specific_payload(item: Item, args, payload):
@@ -217,61 +216,10 @@ def add_type_specific_payload(item: Item, args, payload):
             }
 
         case ItemType.SQL_DATABASE:
-            mode = params.get("mode", "").lower()
-
-            if mode == "restore":
-                # Point-in-time restore mode
-                # Note: params are pre-lowercased, but error messages use camelCase
-                # to match get_params_per_item_type() output
-                restore_point_in_time = params.get("restorepointintime")
-                source_item_id = params.get("itemid")
-                source_workspace_id = params.get("workspaceid")
-
-                # Validate all required parameters are present
-                if (
-                    not restore_point_in_time
-                    or not source_item_id
-                    or not source_workspace_id
-                ):
-                    raise FabricCLIError(
-                        ErrorMessages.Mkdir.missing_restore_params(),
-                        fab_constant.ERROR_INVALID_INPUT,
-                    )
-
-                # Validate restorePointInTime format (ISO 8601 with timezone)
-                if not is_valid_iso8601_timestamp(restore_point_in_time):
-                    raise FabricCLIError(
-                        ErrorMessages.Mkdir.invalid_restore_point_in_time(),
-                        fab_constant.ERROR_INVALID_INPUT,
-                    )
-
-                # Validate GUID formats
-                if not is_valid_guid(source_item_id):
-                    raise FabricCLIError(
-                        ErrorMessages.Common.invalid_guid("itemId"),
-                        fab_constant.ERROR_INVALID_GUID,
-                    )
-                if not is_valid_guid(source_workspace_id):
-                    raise FabricCLIError(
-                        ErrorMessages.Common.invalid_guid("workspaceId"),
-                        fab_constant.ERROR_INVALID_GUID,
-                    )
-
-                payload_dict["creationPayload"] = {
-                    "creationMode": "Restore",
-                    "sourceDatabaseReference": {
-                        "referenceType": "ById",
-                        "itemId": source_item_id,
-                        "workspaceId": source_workspace_id,
-                    },
-                    "restorePointInTime": restore_point_in_time,
-                }
-            elif mode:
-                # Invalid mode specified
-                raise FabricCLIError(
-                    ErrorMessages.Mkdir.invalid_creation_mode(mode),
-                    fab_constant.ERROR_INVALID_INPUT,
-                )
+            creation_payload = _build_sql_database_creation_payload_if_exists(
+                params)
+            if len(creation_payload) > 0:
+                payload_dict["creationPayload"] = creation_payload
 
     return payload_dict
 
@@ -395,16 +343,10 @@ def get_params_per_item_type(item: Item):
         case ItemType.REPORT:
             optional_params = ["semanticModelId"]
         case ItemType.MOUNTED_DATA_FACTORY:
-            required_params = ["subscriptionId", "resourceGroup", "factoryName"]
+            required_params = ["subscriptionId",
+                               "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
-            # Note: params are lowercased during parsing, for internal lookups
-            # These camelCase names are for user-facing help text display only.
-            optional_params = [
-                "mode",
-                "restorePointInTime",
-                "itemId",
-                "workspaceId",
-            ]
+            optional_params = ["mode", "backupRetentionDays", "collation"]
 
     return required_params, optional_params
 
@@ -840,6 +782,40 @@ def lowercase_keys(data):
         return [lowercase_keys(item) for item in data]
     else:
         return data
+
+
+def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
+    """Build the optional creationPayload for SQLDatabase creation.
+
+    Maps the SQLDatabase-specific params to the creationPayload sent to the API.
+    Supported params include:
+    - mode: The creation mode for the SQLDatabase
+    - backupRetentionDays: The number of days to retain backups
+    - collation: The collation setting for the SQLDatabase
+
+    Returns an empty dict when no SQLDatabase-specific
+    params are provided, since the creationPayload is optional.
+    """
+    mode = params.get("mode")
+    backup_retention_days = params.get("backupretentiondays")
+    collation = params.get("collation")
+
+    creation_payload: dict = {}
+
+    if mode is not None:
+        creation_payload["creationMode"] = mode
+
+    if backup_retention_days is not None:
+        try:
+            creation_payload["backupRetentionDays"] = int(
+                backup_retention_days)
+        except (ValueError, TypeError):
+            creation_payload["backupRetentionDays"] = backup_retention_days
+
+    if collation is not None:
+        creation_payload["collation"] = collation
+
+    return creation_payload
 
 
 def validate_spark_pool_params(params):
