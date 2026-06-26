@@ -26,11 +26,11 @@ from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
+from fabric_cli.utils.fab_util import GUID_PATTERN_STR
 
 _HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
 
-GUID_PATTERN = r"([a-f0-9\-]{36})"
-FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN}"
+FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN_STR}"
 
 # Module-level reusable session for connection pooling
 _shared_session = None
@@ -552,7 +552,7 @@ def _transform_workspace_url_for_private_link_if_needed(
         # For OneLake APIs, check if first segment is a valid GUID
         uri_segments = uri.strip("/").split("/")
         if uri_segments and re.match(
-            rf"^{GUID_PATTERN}$", uri_segments[0], re.IGNORECASE
+            rf"^{GUID_PATTERN_STR}$", uri_segments[0], re.IGNORECASE
         ):
             workspace_id = uri_segments[0]
     elif "admin/" in uri.lower():
