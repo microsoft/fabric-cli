@@ -216,8 +216,7 @@ def add_type_specific_payload(item: Item, args, payload):
             }
 
         case ItemType.SQL_DATABASE:
-            creation_payload = _build_sql_database_creation_payload_if_exists(
-                params)
+            creation_payload = _build_sql_database_creation_payload_if_exists(params)
             if len(creation_payload) > 0:
                 payload_dict["creationPayload"] = creation_payload
 
@@ -343,8 +342,7 @@ def get_params_per_item_type(item: Item):
         case ItemType.REPORT:
             optional_params = ["semanticModelId"]
         case ItemType.MOUNTED_DATA_FACTORY:
-            required_params = ["subscriptionId",
-                               "resourceGroup", "factoryName"]
+            required_params = ["subscriptionId", "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
             optional_params = [
                 "mode",
@@ -813,13 +811,19 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
 
     mode_lower = str(mode).lower()
 
+    if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_NEW.lower():
+        return _build_sql_database_new_payload(params)
+
     if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE.lower():
         return _build_sql_database_restore_payload(params)
 
     if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED.lower():
         return _build_sql_database_restore_deleted_payload(params)
 
-    return _build_sql_database_new_payload(params)
+    raise FabricCLIError(
+        ErrorMessages.Mkdir.unsupported_creation_mode(mode),
+        fab_constant.ERROR_INVALID_INPUT,
+    )
 
 
 def _validate_required_params(params: dict, required: list, error_message: str) -> None:
@@ -842,7 +846,15 @@ def _build_sql_database_new_payload(params: dict) -> dict:
     }
 
     if backup_retention_days is not None:
-        creation_payload["backupRetentionDays"] = backup_retention_days
+        try:
+            creation_payload["backupRetentionDays"] = int(backup_retention_days)
+        except (ValueError, TypeError):
+            raise FabricCLIError(
+                ErrorMessages.Mkdir.invalid_backup_retention_days(
+                    backup_retention_days
+                ),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
 
     if collation is not None:
         creation_payload["collation"] = collation

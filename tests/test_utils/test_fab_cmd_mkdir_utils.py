@@ -254,30 +254,55 @@ class TestBuildSqlDatabaseCreationPayload:
         assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
 
     @pytest.mark.parametrize(
-        "provided",
+        "provided, expected",
         [
-            "21",
-            "10",
-            "seven",
+            ("21", 21),
+            (7, 7),
         ],
     )
     def test_build_sql_database_creation_payload_backup_retention_success(
-        self, provided
+        self, provided, expected
     ):
-        """Test that backupRetentionDays is passed through as provided."""
+        """Test that a numeric backupRetentionDays is converted to an integer."""
         result = _build_sql_database_creation_payload_if_exists(
-            {"mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
-                "backupretentiondays": provided}
+            {
+                "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                "backupretentiondays": provided,
+            }
         )
 
         assert result is not None
         assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
-        assert result["backupRetentionDays"] == provided
+        assert result["backupRetentionDays"] == expected
+
+    @pytest.mark.parametrize(
+        "provided",
+        [
+            "seven",
+            "21days",
+            "3.5",
+        ],
+    )
+    def test_build_sql_database_creation_payload_backup_retention_failure(
+        self, provided
+    ):
+        """Test that a non-numeric backupRetentionDays raises an error."""
+        with pytest.raises(FabricCLIError) as exc_info:
+            _build_sql_database_creation_payload_if_exists(
+                {
+                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                    "backupretentiondays": provided,
+                }
+            )
+
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
 
     def test_build_sql_database_creation_payload_collation_only_success(self):
         """Test that collation is set for the New mode."""
-        params = {"mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
-                  "collation": "SQL_Latin1_General_CP1_CI_AS"}
+        params = {
+            "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+        }
         result = _build_sql_database_creation_payload_if_exists(params)
 
         assert result is not None
@@ -295,7 +320,7 @@ class TestBuildSqlDatabaseCreationPayload:
                 },
                 {
                     "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
-                    "backupRetentionDays": "7",
+                    "backupRetentionDays": 7,
                     "collation": "some_collation_value",
                 },
             ),
@@ -380,7 +405,7 @@ class TestBuildSqlDatabaseCreationPayload:
             },
         ],
     )
-    def test_build_sql_database_creation_payload_restore_missing_params_raises(
+    def test_build_sql_database_creation_payload_restore_missing_params_failure(
         self, params
     ):
         """Test that Restore mode raises when required params are missing."""
@@ -402,11 +427,27 @@ class TestBuildSqlDatabaseCreationPayload:
             },
         ],
     )
-    def test_build_sql_database_creation_payload_restore_deleted_missing_params_raises(
+    def test_build_sql_database_creation_payload_restore_deleted_missing_params_failure(
         self, params
     ):
         """Test that RestoreDeletedDatabase mode raises when required params are missing."""
         with pytest.raises(FabricCLIError) as exc_info:
             _build_sql_database_creation_payload_if_exists(params)
+
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            "foo",
+            "Restored",
+            "",
+            "restore-deleted",
+        ],
+    )
+    def test_build_sql_database_creation_payload_unsupported_mode_failure(self, mode):
+        """Test that an unsupported mode raises instead of defaulting to New."""
+        with pytest.raises(FabricCLIError) as exc_info:
+            _build_sql_database_creation_payload_if_exists({"mode": mode})
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT

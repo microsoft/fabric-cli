@@ -35,3 +35,14 @@ class MkdirErrors:
             "Required: restorableDeletedDatabaseName, restorePointInTime. "
             "Example: -P mode=RestoreDeletedDatabase,restorableDeletedDatabaseName=<name>,restorePointInTime=2024-01-15T10:30:00Z"
         )
+
+    @staticmethod
+    def unsupported_creation_mode(mode: str) -> str:
+        return (
+            f"Unsupported creation mode '{mode}'. "
+            "Supported modes: New, Restore, RestoreDeletedDatabase"
+        )
+
+    @staticmethod
+    def invalid_backup_retention_days(value: str) -> str:
+        return f"Invalid backupRetentionDays value '{value}'. It must be an integer"
