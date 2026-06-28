@@ -228,10 +228,12 @@ class TestBuildSqlDatabaseCreationPayload:
         [
             {},
             {"description": "test"},
+            {"backupretentiondays": "7"},
+            {"collation": "SQL_Latin1_General_CP1_CI_AS"},
         ],
     )
     def test_build_sql_database_creation_payload_returns_empty_success(self, params):
-        """Test that an empty creationPayload is returned when no SQLDatabase params provided."""
+        """Test that an empty creationPayload is returned when no mode is provided."""
         result = _build_sql_database_creation_payload_if_exists(params)
         assert result == {}
 
@@ -241,46 +243,45 @@ class TestBuildSqlDatabaseCreationPayload:
             "new",
             "New",
             "NEW",
-            "restore",
-            "Restore",
-            "InvalidMode",
         ],
     )
     def test_build_sql_database_creation_payload_mode_success(self, provided):
-        """Test that the mode param is set as provided by the user."""
+        """Test that the New mode is normalized to its canonical value."""
         result = _build_sql_database_creation_payload_if_exists(
             {"mode": provided})
 
         assert result is not None
-        assert result["creationMode"] == provided
+        assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
 
     @pytest.mark.parametrize(
-        "provided, expected",
+        "provided",
         [
-            ("21", 21),
-            ("10", 10),
-            ("seven", "seven"),
+            "21",
+            "10",
+            "seven",
         ],
     )
     def test_build_sql_database_creation_payload_backup_retention_success(
-        self, provided, expected
+        self, provided
     ):
-        """Test that backupRetentionDays is converted to int when numeric, else passed through."""
+        """Test that backupRetentionDays is passed through as provided."""
         result = _build_sql_database_creation_payload_if_exists(
-            {"backupretentiondays": provided}
+            {"mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                "backupretentiondays": provided}
         )
 
         assert result is not None
-        assert "creationMode" not in result
-        assert result["backupRetentionDays"] == expected
+        assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
+        assert result["backupRetentionDays"] == provided
 
     def test_build_sql_database_creation_payload_collation_only_success(self):
-        """Test that collation alone is set without a mode."""
-        params = {"collation": "SQL_Latin1_General_CP1_CI_AS"}
+        """Test that collation is set for the New mode."""
+        params = {"mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                  "collation": "SQL_Latin1_General_CP1_CI_AS"}
         result = _build_sql_database_creation_payload_if_exists(params)
 
         assert result is not None
-        assert "creationMode" not in result
+        assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
         assert result["collation"] == "SQL_Latin1_General_CP1_CI_AS"
 
     @pytest.mark.parametrize(
@@ -288,26 +289,44 @@ class TestBuildSqlDatabaseCreationPayload:
         [
             (
                 {
-                    "mode": "New",
+                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
                     "backupretentiondays": "7",
                     "collation": "some_collation_value",
                 },
                 {
-                    "creationMode": "New",
-                    "backupRetentionDays": 7,
+                    "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                    "backupRetentionDays": "7",
                     "collation": "some_collation_value",
                 },
             ),
             (
                 {
-                    "mode": "Restore",
-                    "backupretentiondays": "21",
-                    "collation": "some_collation_value",
+                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE,
+                    "restorepointintime": "2024-01-15T10:30:00Z",
+                    "itemid": "11111111-1111-1111-1111-111111111111",
+                    "workspaceid": "22222222-2222-2222-2222-222222222222",
+                    "referencetype": "ByName",
                 },
                 {
-                    "creationMode": "Restore",
-                    "backupRetentionDays": 21,
-                    "collation": "some_collation_value",
+                    "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE,
+                    "restorePointInTime": "2024-01-15T10:30:00Z",
+                    "sourceDatabaseReference": {
+                        "itemId": "11111111-1111-1111-1111-111111111111",
+                        "referenceType": "ByName",
+                        "workspaceId": "22222222-2222-2222-2222-222222222222",
+                    },
+                },
+            ),
+            (
+                {
+                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED,
+                    "restorabledeleteddatabasename": "my-deleted-db",
+                    "restorepointintime": "2024-01-15T10:30:00Z",
+                },
+                {
+                    "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED,
+                    "restorableDeletedDatabaseName": "my-deleted-db",
+                    "restorePointInTime": "2024-01-15T10:30:00Z",
                 },
             ),
         ],
@@ -315,7 +334,79 @@ class TestBuildSqlDatabaseCreationPayload:
     def test_build_sql_database_creation_payload_all_properties_success(
         self, params, expected
     ):
-        """Test SQLDatabase creation with mode, backupRetentionDays and collation."""
+        """Test SQLDatabase creation builds the correct payload for all modes."""
         result = _build_sql_database_creation_payload_if_exists(params)
 
         assert result == expected
+
+    def test_build_sql_database_creation_payload_restore_success(self):
+        """Test SQLDatabase creation in Restore mode builds the correct payload."""
+        params = {
+            "mode": "Restore",
+            "restorepointintime": "2024-01-15T10:30:00Z",
+            "itemid": "11111111-1111-1111-1111-111111111111",
+            "workspaceid": "22222222-2222-2222-2222-222222222222",
+        }
+
+        result = _build_sql_database_creation_payload_if_exists(params)
+
+        assert result == {
+            "creationMode": "Restore",
+            "restorePointInTime": "2024-01-15T10:30:00Z",
+            "sourceDatabaseReference": {
+                "itemId": "11111111-1111-1111-1111-111111111111",
+                "referenceType": "ById",
+                "workspaceId": "22222222-2222-2222-2222-222222222222",
+            },
+        }
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {
+                "mode": "Restore",
+                "itemid": "11111111-1111-1111-1111-111111111111",
+                "workspaceid": "22222222-2222-2222-2222-222222222222",
+            },
+            {
+                "mode": "Restore",
+                "restorepointintime": "2024-01-15T10:30:00Z",
+                "workspaceid": "22222222-2222-2222-2222-222222222222",
+            },
+            {
+                "mode": "Restore",
+                "restorepointintime": "2024-01-15T10:30:00Z",
+                "itemid": "11111111-1111-1111-1111-111111111111",
+            },
+        ],
+    )
+    def test_build_sql_database_creation_payload_restore_missing_params_raises(
+        self, params
+    ):
+        """Test that Restore mode raises when required params are missing."""
+        with pytest.raises(FabricCLIError) as exc_info:
+            _build_sql_database_creation_payload_if_exists(params)
+
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {
+                "mode": "RestoreDeletedDatabase",
+                "restorepointintime": "2024-01-15T10:30:00Z",
+            },
+            {
+                "mode": "RestoreDeletedDatabase",
+                "restorabledeleteddatabasename": "my-deleted-db",
+            },
+        ],
+    )
+    def test_build_sql_database_creation_payload_restore_deleted_missing_params_raises(
+        self, params
+    ):
+        """Test that RestoreDeletedDatabase mode raises when required params are missing."""
+        with pytest.raises(FabricCLIError) as exc_info:
+            _build_sql_database_creation_payload_if_exists(params)
+
+        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT

@@ -21,24 +21,17 @@ class MkdirErrors:
         return "A folder with the same name already exists"
 
     @staticmethod
-    def invalid_restore_point_in_time() -> str:
-        return (
-            "Invalid restorePointInTime format. "
-            "Please provide an ISO 8601 timestamp with timezone (e.g., '2024-01-15T10:30:00Z' or '2024-01-15T10:30:00+00:00')"
-        )
-
-    @staticmethod
     def missing_restore_params() -> str:
         return (
             "Missing required parameter(s) for restore mode. "
             "Required: restorePointInTime, itemId, workspaceId. "
-            "Example: -P mode=restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<guid>,workspaceId=<guid>"
+            "Example: -P mode=Restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<guid>,workspaceId=<guid>"
         )
 
     @staticmethod
-    def invalid_creation_mode(mode: str) -> str:
+    def missing_restore_deleted_params() -> str:
         return (
-            f"Invalid mode '{mode}' for SQLDatabase creation. "
-            "Supported modes: 'restore'. "
-            "Omit mode parameter for standard database creation."
+            "Missing required parameter(s) for RestoreDeletedDatabase mode. "
+            "Required: restorableDeletedDatabaseName, restorePointInTime. "
+            "Example: -P mode=RestoreDeletedDatabase,restorableDeletedDatabaseName=<name>,restorePointInTime=2024-01-15T10:30:00Z"
         )

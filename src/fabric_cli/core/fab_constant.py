@@ -351,3 +351,8 @@ ITEM_SET_ALLOWED_METADATA_KEYS = [
 
 # Invalid query parameters for set command across all fabric resources
 SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
+
+# SQLDatabase creation modes
+SQL_DATABASE_CREATION_MODE_NEW = "New"
+SQL_DATABASE_CREATION_MODE_RESTORE = "Restore"
+SQL_DATABASE_CREATION_MODE_RESTORE_DELETED = "RestoreDeletedDatabase"
