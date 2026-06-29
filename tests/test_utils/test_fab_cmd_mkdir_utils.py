@@ -248,7 +248,7 @@ class TestBuildSqlDatabaseCreationPayload:
     def test_build_sql_database_creation_payload_mode_success(self, provided):
         """Test that the New mode is normalized to its canonical value."""
         result = _build_sql_database_creation_payload_if_exists(
-            {"mode": provided})
+            {"creationmode": provided})
 
         assert result is not None
         assert result["creationMode"] == fab_constant.SQL_DATABASE_CREATION_MODE_NEW
@@ -266,7 +266,7 @@ class TestBuildSqlDatabaseCreationPayload:
         """Test that a numeric backupRetentionDays is converted to an integer."""
         result = _build_sql_database_creation_payload_if_exists(
             {
-                "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                "creationmode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
                 "backupretentiondays": provided,
             }
         )
@@ -290,7 +290,7 @@ class TestBuildSqlDatabaseCreationPayload:
         with pytest.raises(FabricCLIError) as exc_info:
             _build_sql_database_creation_payload_if_exists(
                 {
-                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                    "creationmode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
                     "backupretentiondays": provided,
                 }
             )
@@ -300,7 +300,7 @@ class TestBuildSqlDatabaseCreationPayload:
     def test_build_sql_database_creation_payload_collation_only_success(self):
         """Test that collation is set for the New mode."""
         params = {
-            "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+            "creationmode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
             "collation": "SQL_Latin1_General_CP1_CI_AS",
         }
         result = _build_sql_database_creation_payload_if_exists(params)
@@ -314,7 +314,7 @@ class TestBuildSqlDatabaseCreationPayload:
         [
             (
                 {
-                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
+                    "creationmode": fab_constant.SQL_DATABASE_CREATION_MODE_NEW,
                     "backupretentiondays": "7",
                     "collation": "some_collation_value",
                 },
@@ -344,6 +344,7 @@ class TestBuildSqlDatabaseCreationPayload:
     def test_build_sql_database_creation_payload_unsupported_mode_failure(self, mode):
         """Test that an unsupported mode raises instead of defaulting to New."""
         with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload_if_exists({"mode": mode})
+            _build_sql_database_creation_payload_if_exists(
+                {"creationmode": mode})
 
         assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT

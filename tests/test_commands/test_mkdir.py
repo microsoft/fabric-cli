@@ -253,7 +253,7 @@ class TestMkdir:
 
         # Execute command
         cli_executor.exec_command(
-            f"mkdir {sqldatabase_full_path} -P mode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
+            f"mkdir {sqldatabase_full_path} -P creationMode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
         )
 
         # Assert

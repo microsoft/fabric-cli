@@ -345,7 +345,7 @@ def get_params_per_item_type(item: Item):
             required_params = ["subscriptionId", "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
             optional_params = [
-                "mode",
+                "creationMode",
                 "backupRetentionDays",
                 "collation",
             ]
@@ -789,13 +789,13 @@ def lowercase_keys(data):
 def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     """Build the optional creationPayload for SQLDatabase creation.
 
-    The payload is built based on the creation mode (params["mode"]):
+    The payload is built based on the creation mode (params["creationmode"]):
     - New: creationMode, backupRetentionDays, collation
 
     Returns an empty dict when no mode is provided, since the creationPayload
     is optional.
     """
-    mode = params.get("mode")
+    mode = params.get("creationmode")
 
     if mode is None:
         return {}
