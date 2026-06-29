@@ -354,5 +354,3 @@ SET_COMMAND_INVALID_QUERIES = ["id", "type", "workspaceId", "folderId"]
 
 # SQLDatabase creation modes
 SQL_DATABASE_CREATION_MODE_NEW = "New"
-SQL_DATABASE_CREATION_MODE_RESTORE = "Restore"
-SQL_DATABASE_CREATION_MODE_RESTORE_DELETED = "RestoreDeletedDatabase"

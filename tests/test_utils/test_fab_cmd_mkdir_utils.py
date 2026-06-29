@@ -324,36 +324,6 @@ class TestBuildSqlDatabaseCreationPayload:
                     "collation": "some_collation_value",
                 },
             ),
-            (
-                {
-                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE,
-                    "restorepointintime": "2024-01-15T10:30:00Z",
-                    "itemid": "11111111-1111-1111-1111-111111111111",
-                    "workspaceid": "22222222-2222-2222-2222-222222222222",
-                    "referencetype": "ByName",
-                },
-                {
-                    "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE,
-                    "restorePointInTime": "2024-01-15T10:30:00Z",
-                    "sourceDatabaseReference": {
-                        "itemId": "11111111-1111-1111-1111-111111111111",
-                        "referenceType": "ByName",
-                        "workspaceId": "22222222-2222-2222-2222-222222222222",
-                    },
-                },
-            ),
-            (
-                {
-                    "mode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED,
-                    "restorabledeleteddatabasename": "my-deleted-db",
-                    "restorepointintime": "2024-01-15T10:30:00Z",
-                },
-                {
-                    "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED,
-                    "restorableDeletedDatabaseName": "my-deleted-db",
-                    "restorePointInTime": "2024-01-15T10:30:00Z",
-                },
-            ),
         ],
     )
     def test_build_sql_database_creation_payload_all_properties_success(
@@ -364,85 +334,11 @@ class TestBuildSqlDatabaseCreationPayload:
 
         assert result == expected
 
-    def test_build_sql_database_creation_payload_restore_success(self):
-        """Test SQLDatabase creation in Restore mode builds the correct payload."""
-        params = {
-            "mode": "Restore",
-            "restorepointintime": "2024-01-15T10:30:00Z",
-            "itemid": "11111111-1111-1111-1111-111111111111",
-            "workspaceid": "22222222-2222-2222-2222-222222222222",
-        }
-
-        result = _build_sql_database_creation_payload_if_exists(params)
-
-        assert result == {
-            "creationMode": "Restore",
-            "restorePointInTime": "2024-01-15T10:30:00Z",
-            "sourceDatabaseReference": {
-                "itemId": "11111111-1111-1111-1111-111111111111",
-                "referenceType": "ById",
-                "workspaceId": "22222222-2222-2222-2222-222222222222",
-            },
-        }
-
-    @pytest.mark.parametrize(
-        "params",
-        [
-            {
-                "mode": "Restore",
-                "itemid": "11111111-1111-1111-1111-111111111111",
-                "workspaceid": "22222222-2222-2222-2222-222222222222",
-            },
-            {
-                "mode": "Restore",
-                "restorepointintime": "2024-01-15T10:30:00Z",
-                "workspaceid": "22222222-2222-2222-2222-222222222222",
-            },
-            {
-                "mode": "Restore",
-                "restorepointintime": "2024-01-15T10:30:00Z",
-                "itemid": "11111111-1111-1111-1111-111111111111",
-            },
-        ],
-    )
-    def test_build_sql_database_creation_payload_restore_missing_params_failure(
-        self, params
-    ):
-        """Test that Restore mode raises when required params are missing."""
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload_if_exists(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-
-    @pytest.mark.parametrize(
-        "params",
-        [
-            {
-                "mode": "RestoreDeletedDatabase",
-                "restorepointintime": "2024-01-15T10:30:00Z",
-            },
-            {
-                "mode": "RestoreDeletedDatabase",
-                "restorabledeleteddatabasename": "my-deleted-db",
-            },
-        ],
-    )
-    def test_build_sql_database_creation_payload_restore_deleted_missing_params_failure(
-        self, params
-    ):
-        """Test that RestoreDeletedDatabase mode raises when required params are missing."""
-        with pytest.raises(FabricCLIError) as exc_info:
-            _build_sql_database_creation_payload_if_exists(params)
-
-        assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
-
     @pytest.mark.parametrize(
         "mode",
         [
             "foo",
-            "Restored",
             "",
-            "restore-deleted",
         ],
     )
     def test_build_sql_database_creation_payload_unsupported_mode_failure(self, mode):

@@ -348,11 +348,6 @@ def get_params_per_item_type(item: Item):
                 "mode",
                 "backupRetentionDays",
                 "collation",
-                "restorePointInTime",
-                "itemId",
-                "workspaceId",
-                "referenceType",
-                "restorableDeletedDatabaseName",
             ]
 
     return required_params, optional_params
@@ -796,10 +791,6 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
 
     The payload is built based on the creation mode (params["mode"]):
     - New: creationMode, backupRetentionDays, collation
-    - Restore: creationMode, restorePointInTime, sourceDatabaseReference
-      (itemId, referenceType, workspaceId)
-    - RestoreDeletedDatabase: creationMode, restorableDeletedDatabaseName,
-      restorePointInTime
 
     Returns an empty dict when no mode is provided, since the creationPayload
     is optional.
@@ -814,26 +805,10 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_NEW.lower():
         return _build_sql_database_new_payload(params)
 
-    if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE.lower():
-        return _build_sql_database_restore_payload(params)
-
-    if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED.lower():
-        return _build_sql_database_restore_deleted_payload(params)
-
     raise FabricCLIError(
         ErrorMessages.Mkdir.unsupported_creation_mode(mode),
         fab_constant.ERROR_INVALID_INPUT,
     )
-
-
-def _validate_required_params(params: dict, required: list, error_message: str) -> None:
-    """Raise a FabricCLIError when any required param is missing or empty.
-
-    'required' is a list of (key) param names to look up in 'params'.
-    """
-    missing = [key for key in required if not params.get(key)]
-    if missing:
-        raise FabricCLIError(error_message, fab_constant.ERROR_INVALID_INPUT)
 
 
 def _build_sql_database_new_payload(params: dict) -> dict:
@@ -860,40 +835,6 @@ def _build_sql_database_new_payload(params: dict) -> dict:
         creation_payload["collation"] = collation
 
     return creation_payload
-
-
-def _build_sql_database_restore_payload(params: dict) -> dict:
-    """Build the creationPayload for the Restore SQLDatabase mode."""
-    _validate_required_params(
-        params,
-        ["restorepointintime", "itemid", "workspaceid"],
-        ErrorMessages.Mkdir.missing_restore_params(),
-    )
-
-    return {
-        "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE,
-        "restorePointInTime": params.get("restorepointintime"),
-        "sourceDatabaseReference": {
-            "itemId": params.get("itemid"),
-            "referenceType": params.get("referencetype", "ById"),
-            "workspaceId": params.get("workspaceid"),
-        },
-    }
-
-
-def _build_sql_database_restore_deleted_payload(params: dict) -> dict:
-    """Build the creationPayload for the RestoreDeletedDatabase SQLDatabase mode."""
-    _validate_required_params(
-        params,
-        ["restorabledeleteddatabasename", "restorepointintime"],
-        ErrorMessages.Mkdir.missing_restore_deleted_params(),
-    )
-
-    return {
-        "creationMode": fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED,
-        "restorableDeletedDatabaseName": params.get("restorabledeleteddatabasename"),
-        "restorePointInTime": params.get("restorepointintime"),
-    }
 
 
 def validate_spark_pool_params(params):
