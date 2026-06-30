@@ -119,3 +119,7 @@ class AuthErrors:
     @staticmethod
     def only_supported_with_user_authentication() -> str:
         return "This operation is only supported with user authentication"
+
+    @staticmethod
+    def device_code_flow_failed(error_description: str) -> str:
+        return f"Failed to initiate device code flow: {error_description}"

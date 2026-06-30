@@ -5,6 +5,7 @@ import json
 import os
 import uuid
 from binascii import hexlify
+from contextlib import contextmanager
 from typing import Any, NamedTuple, Optional
 
 import jwt
@@ -50,10 +51,29 @@ class FabAuth:
         # Reset the auth info
         self.app: msal.ClientApplication = None
         self._auth_info = {}
+        self._use_device_code = False
 
         # Load the auth info and environment variables
         self._load_auth()
         self._load_env()
+
+    @contextmanager
+    def device_code_flow(self):
+        """Context manager to enable device code authentication flow.
+
+        Temporarily enables device code flow for token acquisition within
+        the context block. Automatically resets the flag on exit, even if
+        an exception occurs.
+
+        Usage:
+            with FabAuth().device_code_flow():
+                FabAuth().get_access_token(scope=...)
+        """
+        self._use_device_code = True
+        try:
+            yield
+        finally:
+            self._use_device_code = False
 
     def _save_auth(self):
         from fabric_cli.utils.fab_secure_io import write_restricted_file
@@ -269,6 +289,51 @@ class FabAuth:
                     }
                 )
         return self.app
+
+    def _acquire_token_by_device_code(self, scope: list[str]) -> Optional[dict]:
+        """
+        Acquire a token using the device code flow.
+
+        This initiates a device code flow, prints the user code and verification
+        URL to the console, and waits for the user to complete authentication
+        on another device. If an account already exists in the cache (from a
+        prior device code flow in the same session), attempts a silent refresh
+        first to avoid prompting the user multiple times for different scopes.
+
+        Args:
+            scope: The scopes for which to request the token
+
+        Returns:
+            Full MSAL result dictionary containing access_token, expires_on, etc.,
+            or None if the device flow returns no result.        Raises:
+            FabricCLIError: When device code flow initiation or token acquisition fails
+        """
+        # If we already have an account from a prior device code auth in this
+        # session, try silent acquisition with force_refresh to use the refresh
+        # token for a different resource scope.
+        accounts = self._get_app().get_accounts()
+        if accounts:
+            token = self._get_app().acquire_token_silent(
+                scopes=scope, account=accounts[0], force_refresh=True
+            )
+            if token and token.get("access_token"):
+                return token
+
+        flow = self._get_app().initiate_device_flow(scopes=scope)
+        if "user_code" not in flow:
+            raise FabricCLIError(
+                ErrorMessages.Auth.device_code_flow_failed(
+                    flow.get("error_description", "Unknown error")
+                ),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Display the device code message to the user
+        utils_ui.print_grey(flow["message"])
+
+        # Wait for the user to authenticate
+        token = self._get_app().acquire_token_by_device_flow(flow)
+        return token
 
     def _get_access_token_from_env_vars_if_exist(self, scope):
         if "FAB_TOKEN" in os.environ and "FAB_TOKEN_ONELAKE" in os.environ:
@@ -494,14 +559,19 @@ class FabAuth:
                     scopes=scope, account=account
                 )
 
-                if token is None and interactive_renew:
-                    token = self._get_app().acquire_token_interactive(
-                        scopes=scope,
-                        prompt="select_account",
-                        parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
-                    )
+                if (token is None or token.get("error")) and interactive_renew:
+                    if self._use_device_code:
+                        token = self._acquire_token_by_device_code(scope)
+                    else:
+                        token = self._get_app().acquire_token_interactive(
+                            scopes=scope,
+                            prompt="select_account",
+                            parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
+                        )
                     if token is not None and "id_token_claims" in token:
-                        self.set_tenant(token.get("id_token_claims")["tid"])
+                        id_token_claims = token.get("id_token_claims")
+                        if id_token_claims:
+                            self.set_tenant(id_token_claims["tid"])
 
             if token and token.get("error"):
                 fab_logger.log_debug(

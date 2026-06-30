@@ -811,6 +811,155 @@ class TestAuth:
             name="Unknown", id="mocked_tenant_id"
         )
 
+    def test_init_with_device_code_auth_command_line(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        # Arrange
+        args = prepare_auth_args({"use_device_code": True})
+
+        # Act
+        result = fab_auth.init(args)
+
+        # Assert
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("user", None)
+        assert_get_access_token(mock_fab_auth_instance)
+        assert result is True
+
+        assert_fab_context(mock_fab_context)
+
+    def test_init_with_device_code_auth_command_line_with_tenant(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        # Arrange
+        args = prepare_auth_args({"use_device_code": True, "tenant": "mock_tenant"})
+
+        # Act
+        result = fab_auth.init(args)
+
+        # Assert
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("user", "mock_tenant")
+        assert_get_access_token(mock_fab_auth_instance)
+        assert result is True
+
+        assert_fab_context(mock_fab_context)
+
+    def test_init_with_device_code_auth_interactive(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        # Arrange
+        with patch(
+            "fabric_cli.utils.fab_ui.prompt_select_item",
+            return_value="Device code",
+        ):
+            args = prepare_auth_args()
+
+            # Act
+            result = fab_auth.init(args)
+
+            # Assert
+            mock_fab_auth_instance = mock_fab_auth.get("instance")
+            mock_fab_auth_instance.set_access_mode.assert_called_with("user", None)
+            assert_get_access_token(mock_fab_auth_instance)
+            assert result is True
+
+            assert_fab_context(mock_fab_context)
+
+    def test_init_with_device_code_takes_precedence_over_identity(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """When both --use-device-code and --identity are passed, device code wins."""
+        # Arrange
+        args = prepare_auth_args({"use_device_code": True, "identity": True})
+
+        # Act
+        result = fab_auth.init(args)
+
+        # Assert: device code path was taken (set_access_mode("user")), not managed identity
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("user", None)
+        mock_fab_auth_instance.set_managed_identity.assert_not_called()
+        assert_get_access_token(mock_fab_auth_instance)
+        assert result is True
+
+        assert_fab_context(mock_fab_context)
+
+    def test_init_with_device_code_takes_precedence_over_spn_args(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """When --use-device-code is passed alongside -u/-p, device code wins."""
+        # Arrange
+        args = prepare_auth_args(
+            {
+                "use_device_code": True,
+                "username": "some_client_id",
+                "password": "some_secret",
+                "tenant": "some_tenant",
+            }
+        )
+
+        # Act
+        result = fab_auth.init(args)
+
+        # Assert: device code path was taken, not SPN
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("user", "some_tenant")
+        mock_fab_auth_instance.set_spn.assert_not_called()
+        assert_get_access_token(mock_fab_auth_instance)
+        assert result is True
+
+        assert_fab_context(mock_fab_context)
+
+    def test_init_with_device_code_resets_flag_on_success(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """Verify _use_device_code flag is reset to False after successful login."""
+        # Arrange
+        args = prepare_auth_args({"use_device_code": True})
+
+        # Act
+        fab_auth.init(args)
+
+        # Assert: flag should be reset
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        assert mock_fab_auth_instance._use_device_code is False
+
+    def test_init_with_device_code_resets_flag_on_exception(self, mock_fab_auth):
+        """Verify _use_device_code flag is reset even when get_access_token raises."""
+        # Arrange
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_access_token.side_effect = FabricCLIError(
+            "Token acquisition failed",
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
+        args = prepare_auth_args({"use_device_code": True})
+
+        # Act
+        with pytest.raises(FabricCLIError):
+            fab_auth.init(args)
+
+        # Assert: flag should be reset thanks to try/finally
+        assert mock_fab_auth_instance._use_device_code is False
+
+    def test_init_with_device_code_interactive_resets_flag_on_success(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """Verify _use_device_code flag is reset after interactive device code login."""
+        # Arrange
+        with patch(
+            "fabric_cli.utils.fab_ui.prompt_select_item",
+            return_value="Device code",
+        ):
+            args = prepare_auth_args()
+
+            # Act
+            fab_auth.init(args)
+
+            # Assert: flag should be reset
+            mock_fab_auth_instance = mock_fab_auth.get("instance")
+            assert mock_fab_auth_instance._use_device_code is False
+
     def test_init_with_args_auth_missing_arg_raise_exception(self):
         # Test without tenant
         # Arrange
@@ -821,6 +970,7 @@ class TestAuth:
             identity=None,
             certificate=None,
             federated_token=None,
+            use_device_code=None,
         )
 
         # Act
@@ -837,6 +987,7 @@ class TestAuth:
             identity=None,
             certificate=None,
             federated_token=None,
+            use_device_code=None,
         )
 
         # Act
@@ -853,6 +1004,7 @@ class TestAuth:
             identity=None,
             certificate=None,
             federated_token=None,
+            use_device_code=None,
         )
 
         # Act
@@ -971,6 +1123,7 @@ def prepare_auth_args(args=None):
                 "identity",
                 "certificate",
                 "federated_token",
+                "use_device_code",
             ]
         }
     )
