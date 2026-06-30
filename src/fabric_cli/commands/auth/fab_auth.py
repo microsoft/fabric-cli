@@ -29,12 +29,13 @@ def init(args: Namespace) -> Any:
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
     if args.use_device_code:
-        FabAuth().set_access_mode("user", args.tenant)
-        with FabAuth().device_code_flow():
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
-        Context().context = FabAuth().get_tenant()
+        auth = FabAuth()
+        auth.set_access_mode("user", args.tenant)
+        with auth.device_code_flow():
+            auth.get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+            auth.get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+            auth.get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+        Context().context = auth.get_tenant()
 
     elif args.identity:
         FabAuth().set_access_mode("managed_identity")
@@ -83,12 +84,13 @@ def init(args: Namespace) -> Any:
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
                 Context().context = FabAuth().get_tenant()
             elif selected_auth == "Device code":
-                FabAuth().set_access_mode("user", args.tenant)
-                with FabAuth().device_code_flow():
-                    FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-                    FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-                    FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
-                Context().context = FabAuth().get_tenant()
+                auth = FabAuth()
+                auth.set_access_mode("user", args.tenant)
+                with auth.device_code_flow():
+                    auth.get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+                    auth.get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+                    auth.get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                Context().context = auth.get_tenant()
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
                     "Ensure tenant setting is enabled for Service Principal auth"

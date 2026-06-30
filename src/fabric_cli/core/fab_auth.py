@@ -66,8 +66,9 @@ class FabAuth:
         an exception occurs.
 
         Usage:
-            with FabAuth().device_code_flow():
-                FabAuth().get_access_token(scope=...)
+            auth = FabAuth()
+            with auth.device_code_flow():
+                auth.get_access_token(scope=...)
         """
         self._use_device_code = True
         try:
@@ -290,7 +291,7 @@ class FabAuth:
                 )
         return self.app
 
-    def _acquire_token_by_device_code(self, scope: list[str]) -> Optional[dict]:
+    def _acquire_token_by_device_code(self, scopes: list[str]) -> Optional[dict]:
         """
         Acquire a token using the device code flow.
 
@@ -301,25 +302,28 @@ class FabAuth:
         first to avoid prompting the user multiple times for different scopes.
 
         Args:
-            scope: The scopes for which to request the token
+            scopes: The scopes for which to request the token
 
         Returns:
             Full MSAL result dictionary containing access_token, expires_on, etc.,
-            or None if the device flow returns no result.        Raises:
+            or None if the device flow returns no result.
+
+        Raises:
             FabricCLIError: When device code flow initiation or token acquisition fails
         """
         # If we already have an account from a prior device code auth in this
         # session, try silent acquisition with force_refresh to use the refresh
         # token for a different resource scope.
-        accounts = self._get_app().get_accounts()
+        app = self._get_app()
+        accounts = app.get_accounts()
         if accounts:
-            token = self._get_app().acquire_token_silent(
-                scopes=scope, account=accounts[0], force_refresh=True
+            token = app.acquire_token_silent(
+                scopes=scopes, account=accounts[0], force_refresh=True
             )
             if token and token.get("access_token"):
                 return token
 
-        flow = self._get_app().initiate_device_flow(scopes=scope)
+        flow = app.initiate_device_flow(scopes=scopes)
         if "user_code" not in flow:
             raise FabricCLIError(
                 ErrorMessages.Auth.device_code_flow_failed(
@@ -332,7 +336,7 @@ class FabAuth:
         utils_ui.print_grey(flow["message"])
 
         # Wait for the user to authenticate
-        token = self._get_app().acquire_token_by_device_flow(flow)
+        token = app.acquire_token_by_device_flow(flow)
         return token
 
     def _get_access_token_from_env_vars_if_exist(self, scope):
@@ -571,7 +575,9 @@ class FabAuth:
                     if token is not None and "id_token_claims" in token:
                         id_token_claims = token.get("id_token_claims")
                         if id_token_claims:
-                            self.set_tenant(id_token_claims["tid"])
+                            tid = id_token_claims.get("tid")
+                            if tid:
+                                self.set_tenant(tid)
 
             if token and token.get("error"):
                 fab_logger.log_debug(
