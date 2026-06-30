@@ -9,7 +9,7 @@ This document provides guidance for AI agents assisting with the [Microsoft Fabr
 The Fabric CLI is a file-system-inspired command-line interface that lets users explore, automate, and script their Microsoft Fabric environment. Key characteristics:
 
 - **Installation**: `pip install ms-fabric-cli`
-- **Python versions**: 3.10, 3.11, 3.12, 3.13
+- **Python versions**: 3.10, 3.11, 3.12, 3.13, 3.14
 - **Platforms**: Windows, macOS, Linux
 - **Shells**: PowerShell, Bash, Zsh, cmd
 - **Modes**: Interactive (REPL) and command-line (scripting)
