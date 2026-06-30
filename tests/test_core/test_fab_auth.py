@@ -875,11 +875,7 @@ def test_get_access_token_token_error(monkeypatch):
     with pytest.raises(FabricCLIError) as exc_info:
         auth.get_access_token(["dummy_scope"])
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert (
-        exc_info.value.message
-        == ErrorMessages.Auth.token_acquisition_failed()
-    )
-    assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+    assert exc_info.value.message == ErrorMessages.Auth.token_acquisition_failed()
 
 
 def test_set_access_mode_success(monkeypatch):
@@ -1168,6 +1164,488 @@ def test_save_auth_tightens_permissions_on_existing_file_success(tmp_path):
     with open(auth.auth_file, "r") as f:
         data = json.load(f)
     assert data[con.IDENTITY_TYPE] == "spn"
+
+
+# endregion
+
+
+# region device code flow tests
+
+
+def test_acquire_token_by_device_code_success(monkeypatch):
+    """Verify device code flow acquires token successfully when no cached account."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    mock_flow = {
+        "user_code": "ABC123",
+        "message": "To sign in, use a web browser to open https://microsoft.com/devicelogin and enter the code ABC123",
+        "device_code": "device_code_value",
+    }
+    mock_token = {
+        "access_token": "mocked_device_code_token",
+        "id_token_claims": {"tid": "mock_tenant_id"},
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey") as mock_print,
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        result = auth._acquire_token_by_device_code(con.SCOPE_FABRIC_DEFAULT)
+
+        mock_app.return_value.initiate_device_flow.assert_called_once_with(
+            scopes=con.SCOPE_FABRIC_DEFAULT
+        )
+        mock_print.assert_called_once_with(mock_flow["message"])
+        mock_app.return_value.acquire_token_by_device_flow.assert_called_once_with(
+            mock_flow
+        )
+        assert result == mock_token
+
+
+def test_acquire_token_by_device_code_silent_refresh_for_subsequent_scopes(
+    monkeypatch,
+):
+    """Verify device code uses silent refresh when account already exists in cache."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    cached_account = {"username": "user@test.com"}
+    silent_token = {
+        "access_token": "silently_refreshed_token",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey") as mock_print,
+    ):
+        mock_app.return_value.get_accounts.return_value = [cached_account]
+        mock_app.return_value.acquire_token_silent.return_value = silent_token
+
+        result = auth._acquire_token_by_device_code(con.SCOPE_ONELAKE_DEFAULT)
+
+        # Should use silent refresh, NOT initiate a new device code flow
+        mock_app.return_value.acquire_token_silent.assert_called_once_with(
+            scopes=con.SCOPE_ONELAKE_DEFAULT,
+            account=cached_account,
+            force_refresh=True,
+        )
+        mock_app.return_value.initiate_device_flow.assert_not_called()
+        mock_app.return_value.acquire_token_by_device_flow.assert_not_called()
+        mock_print.assert_not_called()
+        assert result == silent_token
+
+
+def test_acquire_token_by_device_code_falls_back_to_device_flow_when_silent_fails(
+    monkeypatch,
+):
+    """Verify device code falls back to full flow when silent refresh fails."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    cached_account = {"username": "user@test.com"}
+    mock_flow = {
+        "user_code": "FALL01",
+        "message": "Go to https://microsoft.com/devicelogin and enter FALL01",
+        "device_code": "device_code_value",
+    }
+    mock_token = {
+        "access_token": "device_flow_token_after_silent_failure",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey") as mock_print,
+    ):
+        mock_app.return_value.get_accounts.return_value = [cached_account]
+        # Silent returns error (no access_token)
+        mock_app.return_value.acquire_token_silent.return_value = {
+            "error": "interaction_required"
+        }
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        result = auth._acquire_token_by_device_code(con.SCOPE_ONELAKE_DEFAULT)
+
+        # Silent was tried first
+        mock_app.return_value.acquire_token_silent.assert_called_once()
+        # Then fell back to device code flow
+        mock_app.return_value.initiate_device_flow.assert_called_once()
+        mock_print.assert_called_once_with(mock_flow["message"])
+        assert result == mock_token
+
+
+def test_acquire_token_by_device_code_falls_back_when_silent_returns_none(
+    monkeypatch,
+):
+    """Verify device code falls back to full flow when silent returns None."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    cached_account = {"username": "user@test.com"}
+    mock_flow = {
+        "user_code": "NUL02",
+        "message": "Go to https://microsoft.com/devicelogin and enter NUL02",
+        "device_code": "device_code_value",
+    }
+    mock_token = {
+        "access_token": "device_flow_token_after_none",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey") as mock_print,
+    ):
+        mock_app.return_value.get_accounts.return_value = [cached_account]
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        result = auth._acquire_token_by_device_code(con.SCOPE_ONELAKE_DEFAULT)
+
+        mock_app.return_value.acquire_token_silent.assert_called_once()
+        mock_app.return_value.initiate_device_flow.assert_called_once()
+        assert result == mock_token
+
+
+def test_acquire_token_by_device_code_falls_back_when_silent_returns_null_access_token(
+    monkeypatch,
+):
+    """Verify device code falls back when silent returns access_token as None."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    cached_account = {"username": "user@test.com"}
+    mock_flow = {
+        "user_code": "NUL03",
+        "message": "Go to https://microsoft.com/devicelogin and enter NUL03",
+        "device_code": "device_code_value",
+    }
+    mock_token = {
+        "access_token": "device_flow_token_after_null_access",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+    ):
+        mock_app.return_value.get_accounts.return_value = [cached_account]
+        # Silent returns a dict with access_token key but None value
+        mock_app.return_value.acquire_token_silent.return_value = {
+            "access_token": None,
+            "error": "interaction_required",
+        }
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        result = auth._acquire_token_by_device_code(con.SCOPE_ONELAKE_DEFAULT)
+
+        # Should NOT have short-circuited on the silent result
+        mock_app.return_value.initiate_device_flow.assert_called_once()
+        assert result == mock_token
+
+
+def test_acquire_token_by_device_code_initiation_failure(monkeypatch):
+    """Verify device code flow raises error when initiation fails."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    mock_flow = {
+        "error": "authorization_pending",
+        "error_description": "Device code flow initiation failed",
+    }
+
+    with patch.object(auth, "_get_app") as mock_app:
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth._acquire_token_by_device_code(con.SCOPE_FABRIC_DEFAULT)
+
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+        assert "Device code flow initiation failed" in exc_info.value.message
+
+
+def test_acquire_token_uses_device_code_when_flag_set(monkeypatch):
+    """Verify acquire_token dispatches to device code flow when _use_device_code is True."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    mock_flow = {
+        "user_code": "XYZ789",
+        "message": "Go to https://microsoft.com/devicelogin and enter XYZ789",
+        "device_code": "device_code_value",
+    }
+    mock_token = {
+        "access_token": "device_code_access_token",
+        "id_token_claims": {"tid": "test_tenant"},
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+        patch.object(auth, "set_tenant"),
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        mock_app.return_value.acquire_token_interactive.assert_not_called()
+        mock_app.return_value.initiate_device_flow.assert_called_once()
+        assert result["access_token"] == "device_code_access_token"
+
+    auth._use_device_code = False
+
+
+def test_acquire_token_uses_interactive_when_device_code_flag_not_set(monkeypatch):
+    """Verify acquire_token dispatches to interactive flow when _use_device_code is False."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = False
+
+    mock_token = {
+        "access_token": "interactive_access_token",
+        "id_token_claims": {"tid": "test_tenant"},
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch.object(auth, "set_tenant"),
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.acquire_token_interactive.return_value = mock_token
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        mock_app.return_value.acquire_token_interactive.assert_called_once()
+        mock_app.return_value.initiate_device_flow.assert_not_called()
+        assert result["access_token"] == "interactive_access_token"
+
+
+def test_acquire_token_by_device_code_token_error(monkeypatch):
+    """Verify device code flow propagates token error through acquire_token error handling."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    mock_flow = {
+        "user_code": "ERR001",
+        "message": "Go to https://microsoft.com/devicelogin and enter ERR001",
+        "device_code": "device_code_value",
+    }
+    # MSAL returns error in the token result when auth fails (e.g. expired code)
+    mock_token = {
+        "error": "authorization_declined",
+        "error_description": "The user denied the authorization request",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+    auth._use_device_code = False
+
+
+def test_acquire_token_by_device_code_returns_none(monkeypatch):
+    """Verify device code flow raises when acquire_token_by_device_flow returns None."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    mock_flow = {
+        "user_code": "NUL001",
+        "message": "Go to https://microsoft.com/devicelogin and enter NUL001",
+        "device_code": "device_code_value",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = None
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+    auth._use_device_code = False
+
+
+def test_acquire_token_by_device_code_no_access_token_in_result(monkeypatch):
+    """Verify device code flow raises when result has no access_token key."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    mock_flow = {
+        "user_code": "EMP001",
+        "message": "Go to https://microsoft.com/devicelogin and enter EMP001",
+        "device_code": "device_code_value",
+    }
+    # Token result with no access_token and no error
+    mock_token = {"some_other_key": "value"}
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.return_value = mock_token
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+    auth._use_device_code = False
+
+
+def test_acquire_token_by_device_code_initiation_no_error_description(monkeypatch):
+    """Verify device code flow uses 'Unknown error' when no error_description present."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    # Flow missing both user_code and error_description
+    mock_flow = {"error": "some_error"}
+
+    with patch.object(auth, "_get_app") as mock_app:
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth._acquire_token_by_device_code(con.SCOPE_FABRIC_DEFAULT)
+
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+        assert "Unknown error" in exc_info.value.message
+
+
+def test_acquire_token_by_device_code_keyboard_interrupt(monkeypatch):
+    """Verify KeyboardInterrupt during device flow wait propagates up."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+
+    mock_flow = {
+        "user_code": "INT001",
+        "message": "Go to https://microsoft.com/devicelogin and enter INT001",
+        "device_code": "device_code_value",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch("fabric_cli.utils.fab_ui.print_grey"),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.initiate_device_flow.return_value = mock_flow
+        mock_app.return_value.acquire_token_by_device_flow.side_effect = (
+            KeyboardInterrupt()
+        )
+
+        with pytest.raises(KeyboardInterrupt):
+            auth._acquire_token_by_device_code(con.SCOPE_FABRIC_DEFAULT)
+
+
+def test_acquire_token_device_code_skipped_when_silent_succeeds(monkeypatch):
+    """Verify device code flow is NOT invoked when silent token acquisition succeeds."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    cached_token = {
+        "access_token": "cached_token_value",
+    }
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = [
+            {"username": "user@test.com"}
+        ]
+        mock_app.return_value.acquire_token_silent.return_value = cached_token
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=True)
+
+        # Device code should NOT be initiated because silent succeeded
+        mock_app.return_value.initiate_device_flow.assert_not_called()
+        mock_app.return_value.acquire_token_by_device_flow.assert_not_called()
+        assert result["access_token"] == "cached_token_value"
+
+    auth._use_device_code = False
+
+
+def test_acquire_token_device_code_not_used_when_interactive_renew_false(monkeypatch):
+    """Verify device code flow is NOT invoked when interactive_renew=False."""
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    auth._use_device_code = True
+
+    with (
+        patch.object(auth, "_get_app") as mock_app,
+        patch(
+            "fabric_cli.utils.fab_secure_io.restrict_existing_file",
+        ),
+    ):
+        mock_app.return_value.get_accounts.return_value = []
+        mock_app.return_value.acquire_token_silent.return_value = None
+
+        # With interactive_renew=False, no interactive/device code should happen
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=False)
+
+        mock_app.return_value.initiate_device_flow.assert_not_called()
+        mock_app.return_value.acquire_token_by_device_flow.assert_not_called()
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+    auth._use_device_code = False
 
 
 # endregion
