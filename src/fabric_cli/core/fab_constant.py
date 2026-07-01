@@ -97,6 +97,7 @@ FAB_OUTPUT_FORMAT = "output_format"
 FAB_FOLDER_LISTING_ENABLED = "folder_listing_enabled"
 FAB_WS_PRIVATE_LINKS_ENABLED = "workspace_private_links_enabled"
 FAB_CHECK_UPDATES = "check_cli_version_updates"
+FAB_DEPLOY_BULK_PUBLISH_ENABLED = "deploy_bulk_publish_enabled"
 
 # Version check settings
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
@@ -121,6 +122,7 @@ FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_FOLDER_LISTING_ENABLED: ["false", "true"],
     FAB_WS_PRIVATE_LINKS_ENABLED: ["false", "true"],
     FAB_CHECK_UPDATES: ["false", "true"],
+    FAB_DEPLOY_BULK_PUBLISH_ENABLED: ["false", "true"],
     # Add more keys and their respective allowed values as needed
 }
 
@@ -137,6 +139,7 @@ CONFIG_DEFAULT_VALUES = {
     FAB_FOLDER_LISTING_ENABLED: "false",
     FAB_WS_PRIVATE_LINKS_ENABLED: "false",
     FAB_CHECK_UPDATES: "true",
+    FAB_DEPLOY_BULK_PUBLISH_ENABLED: "false",
 }
 
 # Command descriptions

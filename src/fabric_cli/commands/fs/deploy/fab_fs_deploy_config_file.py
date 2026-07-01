@@ -29,6 +29,9 @@ def deploy_with_config_file(args: Namespace) -> None:
         # feature flags to avoid printing identity info in logs
         append_feature_flag("disable_print_identity")
 
+        # opt-in experimental bulk publish (single bulk import API call)
+        _apply_bulk_publish_feature_flags()
+
         deploy_config_file = args.config
         deploy_parameters = get_dict_from_params(args.params, max_depth=1)
         for param in deploy_parameters:
@@ -54,3 +57,26 @@ def deploy_with_config_file(args: Namespace) -> None:
         raise FabricCLIError(
             f"Deployment failed: {str(e)}",
             fab_constant.ERROR_IN_DEPLOYMENT)
+
+
+def _apply_bulk_publish_feature_flags() -> None:
+    """Enable fabric-cicd bulk publish when the opt-in config setting is on.
+
+    Bulk publish deploys all items in a single bulk import API call instead of
+    one item at a time. It is experimental in fabric-cicd and requires both the
+    'enable_experimental_features' and 'enable_bulk_publish' feature flags, so
+    the CLI appends both. Disabled by default to preserve backward-compatible
+    standard (per-item) publish behavior.
+    """
+    if (
+        fab_state_config.get_config(fab_constant.FAB_DEPLOY_BULK_PUBLISH_ENABLED)
+        == "true"
+    ):
+        append_feature_flag("enable_experimental_features")
+        append_feature_flag("enable_bulk_publish")
+        fab_ui.print_warning(
+            "Experimental bulk publish is enabled: items will be deployed in a "
+            "single bulk import API call. This feature is experimental in "
+            "fabric-cicd and may change or fail; disable it with "
+            f"'config set {fab_constant.FAB_DEPLOY_BULK_PUBLISH_ENABLED} false'."
+        )

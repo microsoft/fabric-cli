@@ -24,6 +24,7 @@ The Fabric CLI provides a comprehensive set of configuration settings that allow
 | `output_format`                | Defines the CLI output format (`text` or `json`)                 | `VARCHAR`  | `text` |
 | `folder_listing_enabled`       | Enables recursive folder listing when using `ls` command            | `BOOLEAN`  | `false` |
 | `workspace_private_links_enabled`      | Enables workspace private links support in `api` command                | `BOOLEAN`  | `false` |
+| `deploy_bulk_publish_enabled`  | Enables experimental bulk publish in the `deploy` command (deploys all items in a single bulk import API call) | `BOOLEAN`  | `false` |
 
 ## Managing Settings
 
