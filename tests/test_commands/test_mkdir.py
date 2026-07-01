@@ -37,7 +37,7 @@ from tests.test_commands.conftest import (
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
-from tests.test_commands.utils import cli_path_join
+from tests.test_commands.utils import cli_path_join, is_record_mode
 
 
 class TestMkdir:
@@ -253,7 +253,7 @@ class TestMkdir:
 
         # Execute command
         cli_executor.exec_command(
-            f"mkdir {sqldatabase_full_path} -P mode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
+            f"mkdir {sqldatabase_full_path} -P creationMode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
         )
 
         # Assert
@@ -282,12 +282,17 @@ class TestMkdir:
         cassette_name,
         upsert_item_to_cache,
     ):
+        # This test relies on live restore windows and non-deterministic
+        # restorableDeletedDatabaseName values, so it is skipped in live/record mode.
+        if is_record_mode():
+            pytest.skip("Skipping restore/restore-deleted test in live (record) mode")
+
         # Setup - create a source SQLDatabase (mode=New) to restore from
         source_display_name = generate_random_string(vcr_instance, cassette_name)
         source_full_path = cli_path_join(
             workspace.full_path, f"{source_display_name}.{ItemType.SQL_DATABASE}"
         )
-        cli_executor.exec_command(f"mkdir {source_full_path} -P mode=New")
+        cli_executor.exec_command(f"mkdir {source_full_path} -P creationMode=New")
 
         # The restore window opens a few minutes after creation. Wait for it to be
         # populated, then read the source database to capture the item id, workspace
@@ -312,7 +317,7 @@ class TestMkdir:
         # Execute command - restore using the source database as the reference
         cli_executor.exec_command(
             f"mkdir {restored_full_path} "
-            f"-P mode=Restore,restorePointInTime={restore_point_in_time},"
+            f"-P creationMode=Restore,restorePointInTime={restore_point_in_time},"
             f"itemId={source_item_id},"
             f"workspaceId={source_workspace_id}"
         )
@@ -364,7 +369,7 @@ class TestMkdir:
         # is kept last because its value contains a comma (name,<numericId>).
         cli_executor.exec_command(
             f"mkdir {restored_deleted_full_path} "
-            f"-P mode=RestoreDeletedDatabase,restorePointInTime={restore_point_in_time},"
+            f"-P creationMode=RestoreDeletedDatabase,restorePointInTime={restore_point_in_time},"
             f"restorableDeletedDatabaseName={restorable_deleted_database_name}"
         )
 

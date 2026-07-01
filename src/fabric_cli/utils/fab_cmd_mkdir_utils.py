@@ -345,7 +345,7 @@ def get_params_per_item_type(item: Item):
             required_params = ["subscriptionId", "resourceGroup", "factoryName"]
         case ItemType.SQL_DATABASE:
             optional_params = [
-                "mode",
+                "creationMode",
                 "backupRetentionDays",
                 "collation",
                 "restorePointInTime",
@@ -804,7 +804,7 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     Returns an empty dict when no mode is provided, since the creationPayload
     is optional.
     """
-    mode = params.get("mode")
+    mode = params.get("creationmode")
 
     if mode is None:
         return {}
@@ -819,6 +819,7 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
 
     if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED.lower():
         return _build_sql_database_restore_deleted_payload(params)
+
 
     raise FabricCLIError(
         ErrorMessages.Mkdir.unsupported_creation_mode(mode),
