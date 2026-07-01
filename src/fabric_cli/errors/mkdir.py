@@ -25,7 +25,7 @@ class MkdirErrors:
         return (
             "Missing required parameter(s) for restore mode. "
             "Required: restorePointInTime, itemId, workspaceId. "
-            "Example: -P mode=Restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<guid>,workspaceId=<guid>"
+            "Example: -P mode=Restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<item-id>,workspaceId=<workspace-id>"
         )
 
     @staticmethod
