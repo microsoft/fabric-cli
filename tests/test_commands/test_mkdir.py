@@ -284,7 +284,8 @@ class TestMkdir:
     ):
         # This test relies on live restore windows and non-deterministic
         # restorableDeletedDatabaseName values, so it is skipped in live/record mode.
-        if is_record_mode() == False:
+        # If you want to run this test in live mode, you can comment out the skip statement below, but be aware that it may fail if the restore window is not open or if the restorableDeletedDatabaseName is not available yet.
+        if is_record_mode():
             pytest.skip("Skipping restore/restore-deleted test in live (record) mode")
 
         # Setup - create a source SQLDatabase (mode=New) to restore from
