@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 
-from statistics import mode
 from unittest.mock import Mock, patch
 
 import pytest
@@ -373,8 +372,6 @@ class TestBuildSqlDatabaseCreationPayload:
             "itemid": "11111111-1111-1111-1111-111111111111",
             "workspaceid": "22222222-2222-2222-2222-222222222222",
         }
-        result = _build_sql_database_creation_payload_if_exists(params)
-
         result = _build_sql_database_creation_payload_if_exists(params)
 
         assert result == {

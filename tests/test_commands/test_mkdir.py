@@ -284,7 +284,7 @@ class TestMkdir:
     ):
         # This test relies on live restore windows and non-deterministic
         # restorableDeletedDatabaseName values, so it is skipped in live/record mode.
-        if is_record_mode():
+        if is_record_mode() == False:
             pytest.skip("Skipping restore/restore-deleted test in live (record) mode")
 
         # Setup - create a source SQLDatabase (mode=New) to restore from
@@ -299,7 +299,8 @@ class TestMkdir:
         # id, and latest restore point (guaranteed to fall inside the valid window).
         # Wait for 3 minutes to ensure restore point is available. when recording the test,
         # if 5 minutes is not enough, increase the sleep time to 5 minutes.
-        time.sleep(300)
+        if is_record_mode():
+            time.sleep(300)
         get(source_full_path, query=".")
         source_details = json.loads(mock_questionary_print.call_args[0][0])
         source_item_id = source_details["id"]
@@ -339,7 +340,8 @@ class TestMkdir:
 
         # RestoreDeletedDatabase - the deleted database may take a short time to
         # appear in the restorable deleted databases list.
-        time.sleep(60)
+        if is_record_mode():
+            time.sleep(60)
 
         # List the workspace's restorable deleted databases and read the
         # restorableDeletedDatabaseName of the just-deleted source.

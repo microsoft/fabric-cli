@@ -25,7 +25,7 @@ class MkdirErrors:
         return (
             "Missing required parameter(s) for restore mode. "
             "Required: restorePointInTime, itemId, workspaceId. "
-            "Example: -P mode=Restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<item-id>,workspaceId=<workspace-id>"
+            "Example: -P creationMode=Restore,restorePointInTime=2024-01-15T10:30:00Z,itemId=<item-id>,workspaceId=<workspace-id>"
         )
 
     @staticmethod
@@ -33,7 +33,7 @@ class MkdirErrors:
         return (
             "Missing required parameter(s) for RestoreDeletedDatabase mode. "
             "Required: restorableDeletedDatabaseName, restorePointInTime. "
-            "Example: -P mode=RestoreDeletedDatabase,restorableDeletedDatabaseName=<name>,restorePointInTime=2024-01-15T10:30:00Z"
+            "Example: -P creationMode=RestoreDeletedDatabase,restorableDeletedDatabaseName=<name>,restorePointInTime=2024-01-15T10:30:00Z"
         )
 
     @staticmethod

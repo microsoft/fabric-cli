@@ -794,7 +794,8 @@ def lowercase_keys(data):
 def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     """Build the optional creationPayload for SQLDatabase creation.
 
-    The payload is built based on the creation mode (params["mode"]):
+    The payload is built based on the creation mode (params["creationMode"]) and the provided parameters. 
+    The supported modes are:
     - New: creationMode, backupRetentionDays, collation
     - Restore: creationMode, restorePointInTime, sourceDatabaseReference
       (itemId, referenceType, workspaceId)
@@ -827,7 +828,7 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     )
 
 
-def _validate_required_params(params: dict, required: list, error_message: str) -> None:
+def _validate_required_params(params: dict[str, object], required: list[str], error_message: str) -> None:
     """Raise a FabricCLIError when any required param is missing or empty.
 
     'required' is a list of (key) param names to look up in 'params'.
