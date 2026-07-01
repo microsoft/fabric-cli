@@ -828,7 +828,9 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     )
 
 
-def _validate_required_params(params: dict[str, object], required: list[str], error_message: str) -> None:
+def _validate_required_params(
+    params: dict[str, object], required: list[str], error_message: str
+) -> None:
     """Raise a FabricCLIError when any required param is missing or empty.
 
     'required' is a list of (key) param names to look up in 'params'.
