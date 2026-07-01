@@ -100,9 +100,7 @@ class TestMkdir:
         workspace = workspace_factory()
 
         # Create unsupported item
-        item_display_name = generate_random_string(
-            vcr_instance, cassette_name
-        )
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
         item_name = f"{item_display_name}.{unsupported_item_type}"
         item_full_path = cli_path_join(workspace.full_path, item_name)
 
@@ -128,15 +126,13 @@ class TestMkdir:
         cassette_name,
         upsert_item_to_cache,
     ):
-        lakehouse_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        lakehouse_display_name = generate_random_string(vcr_instance, cassette_name)
         lakehouse_full_path = cli_path_join(
             workspace.full_path, f"{lakehouse_display_name}.{ItemType.LAKEHOUSE}"
         )
 
         # Execute command
-        cli_executor.exec_command(
-            f"mkdir {lakehouse_full_path} -P enableSchemas=true")
+        cli_executor.exec_command(f"mkdir {lakehouse_full_path} -P enableSchemas=true")
 
         # Assert
         upsert_item_to_cache.assert_called_once()
@@ -170,8 +166,7 @@ class TestMkdir:
         eventhouse_id = mock_questionary_print.call_args[0][0]
         mock_print_done.reset_mock()
         upsert_item_to_cache.reset_mock()
-        kqldatabase_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        kqldatabase_display_name = generate_random_string(vcr_instance, cassette_name)
         kqldatabase_full_path = cli_path_join(
             workspace.full_path, f"{kqldatabase_display_name}.{ItemType.KQL_DATABASE}"
         )
@@ -206,8 +201,7 @@ class TestMkdir:
         upsert_item_to_cache,
     ):
         # Setup
-        kqldatabase_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        kqldatabase_display_name = generate_random_string(vcr_instance, cassette_name)
         kqldatabase_full_path = cli_path_join(
             workspace.full_path, f"{kqldatabase_display_name}.{ItemType.KQL_DATABASE}"
         )
@@ -227,8 +221,7 @@ class TestMkdir:
 
         mock_questionary_print.reset_mock()
         eventhouse_full_path = (
-            kqldatabase_full_path.removesuffix(
-                ".KQLDatabase") + "_auto.Eventhouse"
+            kqldatabase_full_path.removesuffix(".KQLDatabase") + "_auto.Eventhouse"
         )
         get(eventhouse_full_path, query="id")
         eventhouse_id = mock_questionary_print.call_args[0][0]
@@ -241,6 +234,43 @@ class TestMkdir:
 
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         rm(eventhouse_full_path)
+
+    def test_mkdir_sqldatabase_with_creation_payload_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        # Setup
+        sqldatabase_display_name = generate_random_string(vcr_instance, cassette_name)
+        sqldatabase_full_path = cli_path_join(
+            workspace.full_path, f"{sqldatabase_display_name}.{ItemType.SQL_DATABASE}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(
+            f"mkdir {sqldatabase_full_path} -P creationMode=New,backupRetentionDays=7,collation=SQL_Latin1_General_CP1_CI_AS"
+        )
+
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert sqldatabase_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(sqldatabase_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        result_output = mock_questionary_print.call_args[0][0]
+        assert sqldatabase_display_name in result_output
+        assert "backupRetentionDays" in result_output
+        assert "SQL_Latin1_General_CP1_CI_AS" in result_output
+
+        # Cleanup
+        rm(sqldatabase_full_path)
 
     @mkdir_item_with_creation_payload_success_params
     def test_mkdir_item_with_creation_payload_success(
@@ -390,16 +420,14 @@ class TestMkdir:
         self, cli_executor, assert_fabric_cli_error, vcr_instance, cassette_name
     ):
         # Setup
-        fab_default_capacity = state_config.get_config(
-            constant.FAB_DEFAULT_CAPACITY)
+        fab_default_capacity = state_config.get_config(constant.FAB_DEFAULT_CAPACITY)
         fab_default_capacity_id = state_config.get_config(
             constant.FAB_DEFAULT_CAPACITY_ID
         )
 
         state_config.set_config(constant.FAB_DEFAULT_CAPACITY, "")
         state_config.set_config(constant.FAB_DEFAULT_CAPACITY_ID, "")
-        workspace_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        workspace_display_name = generate_random_string(vcr_instance, cassette_name)
         workspace_full_path = f"/{workspace_display_name}.Workspace"
 
         # Execute command
@@ -412,8 +440,7 @@ class TestMkdir:
         )
 
         # Cleanup
-        state_config.set_config(
-            constant.FAB_DEFAULT_CAPACITY, fab_default_capacity)
+        state_config.set_config(constant.FAB_DEFAULT_CAPACITY, fab_default_capacity)
         state_config.set_config(
             constant.FAB_DEFAULT_CAPACITY_ID, fab_default_capacity_id
         )
@@ -493,14 +520,11 @@ class TestMkdir:
     ):
 
         # Setup
-        workspace_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        workspace_display_name = generate_random_string(vcr_instance, cassette_name)
         workspace_full_path = f"/{workspace_display_name}.Workspace"
 
-        fab_capacity_name = state_config.get_config(
-            constant.FAB_DEFAULT_CAPACITY)
-        fab_capacity_name_id = state_config.get_config(
-            constant.FAB_DEFAULT_CAPACITY_ID)
+        fab_capacity_name = state_config.get_config(constant.FAB_DEFAULT_CAPACITY)
+        fab_capacity_name_id = state_config.get_config(constant.FAB_DEFAULT_CAPACITY_ID)
 
         # Execute command
         if capacity_name:
@@ -526,10 +550,8 @@ class TestMkdir:
         assert workspace_display_name in mock_questionary_print.call_args[0][0]
 
         # Cleanup
-        state_config.set_config(
-            constant.FAB_DEFAULT_CAPACITY, fab_capacity_name)
-        state_config.set_config(
-            constant.FAB_DEFAULT_CAPACITY_ID, fab_capacity_name_id)
+        state_config.set_config(constant.FAB_DEFAULT_CAPACITY, fab_capacity_name)
+        state_config.set_config(constant.FAB_DEFAULT_CAPACITY_ID, fab_capacity_name_id)
         rm(workspace_full_path)
 
     # endregion
@@ -541,8 +563,7 @@ class TestMkdir:
         # Setup
         lakehouse = item_factory(ItemType.LAKEHOUSE)
         mock_print_done.reset_mock()
-        onelake_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        onelake_display_name = generate_random_string(vcr_instance, cassette_name)
         onelake_full_path = cli_path_join(
             lakehouse.full_path, "Files", f"{onelake_display_name}"
         )
@@ -636,8 +657,7 @@ class TestMkdir:
         upsert_spark_pool_to_cache,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_display_name + ".SparkPool"
         )
@@ -676,8 +696,7 @@ class TestMkdir:
         upsert_spark_pool_to_cache,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_display_name + ".SparkPool"
         )
@@ -714,8 +733,7 @@ class TestMkdir:
         upsert_spark_pool_to_cache,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_display_name + ".SparkPool"
         )
@@ -756,8 +774,7 @@ class TestMkdir:
         upsert_spark_pool_to_cache,
     ):
         # Setup
-        sparkpool_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        sparkpool_display_name = generate_random_string(vcr_instance, cassette_name)
         sparkpool_full_path = cli_path_join(
             workspace.full_path, ".sparkpools", sparkpool_display_name + ".SparkPool"
         )
@@ -850,8 +867,7 @@ class TestMkdir:
         fab_default_az_resource_group = state_config.get_config(
             constant.FAB_DEFAULT_AZ_RESOURCE_GROUP
         )
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
+        state_config.set_config(constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
         state_config.set_config(constant.FAB_DEFAULT_AZ_RESOURCE_GROUP, "")
         capacity_display_name = "invalidcapacity"
         capacity_full_path = cli_path_join(
@@ -885,10 +901,8 @@ class TestMkdir:
         fab_default_az_location = state_config.get_config(
             constant.FAB_DEFAULT_AZ_LOCATION
         )
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_RESOURCE_GROUP, "placeholder")
+        state_config.set_config(constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
+        state_config.set_config(constant.FAB_DEFAULT_AZ_RESOURCE_GROUP, "placeholder")
         state_config.set_config(constant.FAB_DEFAULT_AZ_LOCATION, "")
         capacity_display_name = "invalidcapacity"
         capacity_full_path = cli_path_join(
@@ -925,14 +939,10 @@ class TestMkdir:
         fab_default_az_location = state_config.get_config(
             constant.FAB_DEFAULT_AZ_LOCATION
         )
-        fab_default_az_admin = state_config.get_config(
-            constant.FAB_DEFAULT_AZ_ADMIN)
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_RESOURCE_GROUP, "placeholder")
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_LOCATION, "placeholder")
+        fab_default_az_admin = state_config.get_config(constant.FAB_DEFAULT_AZ_ADMIN)
+        state_config.set_config(constant.FAB_DEFAULT_AZ_SUBSCRIPTION_ID, "placeholder")
+        state_config.set_config(constant.FAB_DEFAULT_AZ_RESOURCE_GROUP, "placeholder")
+        state_config.set_config(constant.FAB_DEFAULT_AZ_LOCATION, "placeholder")
         state_config.set_config(constant.FAB_DEFAULT_AZ_ADMIN, "")
         capacity_display_name = "invalidcapacity"
         capacity_full_path = cli_path_join(
@@ -955,8 +965,7 @@ class TestMkdir:
         state_config.set_config(
             constant.FAB_DEFAULT_AZ_LOCATION, fab_default_az_location
         )
-        state_config.set_config(
-            constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
+        state_config.set_config(constant.FAB_DEFAULT_AZ_ADMIN, fab_default_az_admin)
 
     def test_mkdir_capacity_with_params_success(
         self,
@@ -969,8 +978,7 @@ class TestMkdir:
         test_data: StaticTestData,
     ):
         # Setup
-        capacity_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        capacity_display_name = generate_random_string(vcr_instance, cassette_name)
         capacity_full_path = cli_path_join(
             ".capacities", capacity_display_name + ".Capacity"
         )
@@ -1007,8 +1015,7 @@ class TestMkdir:
         test_data: StaticTestData,
     ):
         # Setup
-        capacity_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        capacity_display_name = generate_random_string(vcr_instance, cassette_name)
         capacity_full_path = cli_path_join(
             ".capacities", capacity_display_name + ".Capacity"
         )
@@ -1101,10 +1108,8 @@ class TestMkdir:
         upsert_domain_to_cache,
     ):
         # Setup
-        domain_display_name = generate_random_string(
-            vcr_instance, cassette_name)
-        domain_full_path = cli_path_join(
-            ".domains", domain_display_name + ".Domain")
+        domain_display_name = generate_random_string(vcr_instance, cassette_name)
+        domain_full_path = cli_path_join(".domains", domain_display_name + ".Domain")
 
         # Execute command
         cli_executor.exec_command(f"mkdir {domain_full_path}")
@@ -1132,16 +1137,13 @@ class TestMkdir:
         upsert_domain_to_cache,
     ):
         # Setup
-        parent_domain = virtual_workspace_item_factory(
-            VirtualWorkspaceType.DOMAIN)
+        parent_domain = virtual_workspace_item_factory(VirtualWorkspaceType.DOMAIN)
         get(parent_domain.full_path, query="id")
         parent_domain_id = mock_questionary_print.call_args[0][0]
         mock_print_done.reset_mock()
         upsert_domain_to_cache.reset_mock()
-        domain_display_name = generate_random_string(
-            vcr_instance, cassette_name)
-        domain_full_path = cli_path_join(
-            ".domains", domain_display_name + ".Domain")
+        domain_display_name = generate_random_string(vcr_instance, cassette_name)
+        domain_full_path = cli_path_join(".domains", domain_display_name + ".Domain")
 
         # Execute command
         cli_executor.exec_command(
@@ -1172,8 +1174,7 @@ class TestMkdir:
     ):
 
         domain_display_name = "domainNoParams"
-        domain_full_path = cli_path_join(
-            ".domains", domain_display_name + ".Domain")
+        domain_full_path = cli_path_join(".domains", domain_display_name + ".Domain")
 
         # with params=[] we simulate -P without args
         cli_executor.exec_command(f"mkdir {domain_full_path} -P")
@@ -1364,8 +1365,7 @@ class TestMkdir:
         )
 
         # Execute command
-        cli_executor.exec_command(
-            f"mkdir {managed_private_endpoint_full_path}")
+        cli_executor.exec_command(f"mkdir {managed_private_endpoint_full_path}")
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_INVALID_INPUT)
@@ -1447,8 +1447,7 @@ class TestMkdir:
         eds_display_name = generate_random_string(vcr_instance, cassette_name)
         type = VirtualItemContainerType.EXTERNAL_DATA_SHARE
         eds_full_path = cli_path_join(
-            workspace.full_path, str(
-                type), f"{eds_display_name}.{str(VICMap[type])}"
+            workspace.full_path, str(type), f"{eds_display_name}.{str(VICMap[type])}"
         )
 
         # Execute command
@@ -1474,8 +1473,7 @@ class TestMkdir:
 
         generated_name = ".".join(parts[:2])
         eds_full_path = cli_path_join(
-            workspace.full_path, str(
-                type), f"{generated_name}.{str(VICMap[type])}"
+            workspace.full_path, str(type), f"{generated_name}.{str(VICMap[type])}"
         )
 
         # Cleanup
@@ -1497,8 +1495,7 @@ class TestMkdir:
         eds_display_name = generate_random_string(vcr_instance, cassette_name)
         type = VirtualItemContainerType.EXTERNAL_DATA_SHARE
         eds_full_path = cli_path_join(
-            workspace.full_path, str(
-                type), f"{eds_display_name}.{str(VICMap[type])}"
+            workspace.full_path, str(type), f"{eds_display_name}.{str(VICMap[type])}"
         )
 
         # Execute command
@@ -1523,8 +1520,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1565,8 +1561,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1599,8 +1594,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1619,7 +1613,10 @@ class TestMkdir:
 
         mock_print_warning.assert_called()
         assert mock_print_warning.call_count == 1
-        assert f"Ignoring unsupported parameters for on-premises gateway: ['ignoreparameters']" == mock_print_warning.call_args[0][0]
+        assert (
+            f"Ignoring unsupported parameters for on-premises gateway: ['ignoreparameters']"
+            == mock_print_warning.call_args[0][0]
+        )
 
         # Cleanup
         rm(connection_full_path)
@@ -1633,8 +1630,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1647,8 +1643,10 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][
-            0].message == "Missing parameters for credential type Basic: ['values']"
+        assert (
+            mock_fab_ui_print_error.call_args[0][0].message
+            == "Missing parameters for credential type Basic: ['values']"
+        )
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
         mock_fab_ui_print_error.reset_mock()
@@ -1661,8 +1659,11 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters([
-                                                                                                                             'encryptedCredentials'])
+        assert mock_fab_ui_print_error.call_args[0][
+            0
+        ].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(
+            ["encryptedCredentials"]
+        )
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
         mock_fab_ui_print_error.reset_mock()
@@ -1675,8 +1676,11 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.missing_onpremises_gateway_parameters([
-                                                                                                                             'gatewayId'])
+        assert mock_fab_ui_print_error.call_args[0][
+            0
+        ].message == ErrorMessages.Common.missing_onpremises_gateway_parameters(
+            ["gatewayId"]
+        )
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
         mock_fab_ui_print_error.reset_mock()
@@ -1689,7 +1693,9 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values(
+        assert (
+            mock_fab_ui_print_error.call_args[0][0].message
+            == ErrorMessages.Common.invalid_onpremises_gateway_values()
         )
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
@@ -1703,7 +1709,9 @@ class TestMkdir:
         # Assert
         mock_fab_ui_print_error.assert_called()
         assert mock_fab_ui_print_error.call_count == 1
-        assert mock_fab_ui_print_error.call_args[0][0].message == ErrorMessages.Common.invalid_onpremises_gateway_values(
+        assert (
+            mock_fab_ui_print_error.call_args[0][0].message
+            == ErrorMessages.Common.invalid_onpremises_gateway_values()
         )
         assert mock_fab_ui_print_error.call_args[0][0].status_code == "InvalidInput"
 
@@ -1717,8 +1725,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        gateway_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        gateway_display_name = generate_random_string(vcr_instance, cassette_name)
         gateway_full_path = cli_path_join(
             ".gateways", gateway_display_name + ".Gateway"
         )
@@ -1728,8 +1735,7 @@ class TestMkdir:
                 f"capacity={test_data.capacity.name},virtualNetworkName={test_data.vnet.name},subnetName={test_data.vnet.subnet}"
             ],
         )
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1789,8 +1795,7 @@ class TestMkdir:
         cassette_name,
         test_data: StaticTestData,
     ):
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1817,8 +1822,7 @@ class TestMkdir:
         test_data: StaticTestData,
     ):
         """Test that parameter name matching is case-insensitive for creation method inference."""
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1865,8 +1869,7 @@ class TestMkdir:
         test_data: StaticTestData,
     ):
         """Test that parameter name None safety doesn't break normal operation."""
-        connection_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        connection_display_name = generate_random_string(vcr_instance, cassette_name)
         connection_full_path = cli_path_join(
             ".connections", connection_display_name + ".Connection"
         )
@@ -1896,8 +1899,7 @@ class TestMkdir:
         cassette_name,
     ):
         # Setup
-        gateway_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        gateway_display_name = generate_random_string(vcr_instance, cassette_name)
         gateway_full_path = cli_path_join(
             ".gateways", gateway_display_name + ".Gateway"
         )
@@ -1988,8 +1990,7 @@ class TestMkdir:
         cassette_name,
         test_data: StaticTestData,
     ):
-        workspace_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        workspace_display_name = generate_random_string(vcr_instance, cassette_name)
         captured, workspace_full_path = self._verify_mkdir_workspace_output(
             cli_executor,
             workspace_display_name,
@@ -2015,8 +2016,7 @@ class TestMkdir:
     ):
         # Set output format to json
         mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
-        workspace_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        workspace_display_name = generate_random_string(vcr_instance, cassette_name)
         captured, workspace_full_path = self._verify_mkdir_workspace_output(
             cli_executor,
             workspace_display_name,
@@ -2042,7 +2042,14 @@ class TestMkdir:
     # region Folders
 
     def test_mkdir_item_in_folder_listing_success(
-        self, workspace, cli_executor, mock_print_done, mock_questionary_print, mock_fab_set_state_config, vcr_instance, cassette_name
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        mock_fab_set_state_config,
+        vcr_instance,
+        cassette_name,
     ):
         # Enable folder listing
         mock_fab_set_state_config(constant.FAB_FOLDER_LISTING_ENABLED, "true")
@@ -2057,7 +2064,9 @@ class TestMkdir:
         mock_print_done.reset_mock()
 
         # Create notebook in folder
-        notebook_name = f"{generate_random_string(vcr_instance, cassette_name)}.Notebook"
+        notebook_name = (
+            f"{generate_random_string(vcr_instance, cassette_name)}.Notebook"
+        )
         notebook_full_path = cli_path_join(folder_full_path, notebook_name)
         cli_executor.exec_command(f"mkdir {notebook_full_path}")
 
@@ -2073,8 +2082,7 @@ class TestMkdir:
     def test_mkdir_folder_success(self, workspace, cli_executor, mock_print_done):
         # Setup
         folder_display_name = "folder"
-        folder_full_path = cli_path_join(
-            workspace.full_path, folder_display_name)
+        folder_full_path = cli_path_join(workspace.full_path, folder_display_name)
 
         # Execute command
         cli_executor.exec_command(f"mkdir {folder_full_path}")
@@ -2134,8 +2142,7 @@ class TestMkdir:
     ):
         """Test that single item creation uses batched output structure."""
         # Setup
-        lakehouse_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        lakehouse_display_name = generate_random_string(vcr_instance, cassette_name)
         lakehouse_full_path = cli_path_join(
             workspace.full_path, f"{lakehouse_display_name}.{ItemType.LAKEHOUSE}"
         )
@@ -2151,8 +2158,7 @@ class TestMkdir:
 
         # Verify headers and values in mock_questionary_print.mock_calls
         # Look for the table output with headers
-        output_calls = [str(call)
-                        for call in mock_questionary_print.mock_calls]
+        output_calls = [str(call) for call in mock_questionary_print.mock_calls]
         table_output = "\n".join(output_calls)
 
         # Check for standard table headers
@@ -2179,8 +2185,7 @@ class TestMkdir:
     ):
         """Test that KQL Database creation with EventHouse dependency produces batched output."""
         # Setup
-        kqldatabase_display_name = generate_random_string(
-            vcr_instance, cassette_name)
+        kqldatabase_display_name = generate_random_string(vcr_instance, cassette_name)
         kqldatabase_full_path = cli_path_join(
             workspace.full_path, f"{kqldatabase_display_name}.{ItemType.KQL_DATABASE}"
         )
@@ -2201,8 +2206,7 @@ class TestMkdir:
         )
 
         # Verify headers and values in mock_questionary_print.mock_calls for batched output
-        output_calls = [str(call)
-                        for call in mock_questionary_print.mock_calls]
+        output_calls = [str(call) for call in mock_questionary_print.mock_calls]
         table_output = "\n".join(output_calls)
 
         # Check for standard table headers (should appear once for consolidated table)
@@ -2221,8 +2225,7 @@ class TestMkdir:
 
         # Cleanup - removing parent eventhouse removes the kqldatabase as well
         eventhouse_full_path = (
-            kqldatabase_full_path.removesuffix(
-                ".KQLDatabase") + "_auto.Eventhouse"
+            kqldatabase_full_path.removesuffix(".KQLDatabase") + "_auto.Eventhouse"
         )
         rm(eventhouse_full_path)
 
@@ -2302,8 +2305,7 @@ class TestMkdir:
 
         mock_questionary_print.reset_mock()
         digital_twin_builder_full_path = (
-            flow_full_path.removesuffix(
-                f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
+            flow_full_path.removesuffix(f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
             + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
         )
         get(digital_twin_builder_full_path, query="id")
@@ -2351,8 +2353,7 @@ class TestMkdir:
         )
 
         # Verify headers and values in table output
-        output_calls = [str(call)
-                        for call in mock_questionary_print.mock_calls]
+        output_calls = [str(call) for call in mock_questionary_print.mock_calls]
         table_output = "\n".join(output_calls)
 
         assert "id" in table_output or "ID" in table_output
@@ -2373,8 +2374,7 @@ class TestMkdir:
 
         # Cleanup - removing parent DigitalTwinBuilder removes the flow as well
         digital_twin_builder_full_path = (
-            flow_full_path.removesuffix(
-                f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
+            flow_full_path.removesuffix(f".{ItemType.DIGITAL_TWIN_BUILDER_FLOW}")
             + f"_auto.{ItemType.DIGITAL_TWIN_BUILDER}"
         )
         rm(digital_twin_builder_full_path)
