@@ -6,12 +6,12 @@ from unittest.mock import patch
 
 class TestDeployBulkPublish:
     """
-    Tests for the deploy_bulk_publish_enabled config setting wiring into
-    fabric-cicd feature flags. These tests mock the fabric-cicd library so
-    they do not require recorded HTTP cassettes.
+    Tests for the --bulk_publish flag wiring into fabric-cicd feature flags.
+    These tests mock the fabric-cicd library so they do not require recorded
+    HTTP cassettes.
     """
 
-    def _run_deploy(self, tmp_path, bulk_value):
+    def _run_deploy(self, tmp_path, bulk_publish):
         """Invoke deploy_with_config_file with fabric-cicd mocked, returning the
         append_feature_flag mock for assertions."""
         from argparse import Namespace
@@ -23,11 +23,10 @@ class TestDeployBulkPublish:
             config=str(tmp_path / "config.yml"),
             target_env="dev",
             params=None,
+            bulk_publish=bulk_publish,
         )
 
         def fake_get_config(key):
-            if key == fab_constant.FAB_DEPLOY_BULK_PUBLISH_ENABLED:
-                return bulk_value
             if key == fab_constant.FAB_DEBUG_ENABLED:
                 return "false"
             return None
@@ -49,8 +48,8 @@ class TestDeployBulkPublish:
         return mock_flag
 
     def test_deploy_bulk_publish_enabled_appends_experimental_flags(self, tmp_path):
-        """When the setting is 'true', both experimental bulk publish flags are appended."""
-        mock_flag = self._run_deploy(tmp_path, "true")
+        """When --bulk_publish is set, both experimental bulk publish flags are appended."""
+        mock_flag = self._run_deploy(tmp_path, True)
 
         appended = [call.args[0] for call in mock_flag.call_args_list]
         assert "enable_experimental_features" in appended
@@ -59,8 +58,8 @@ class TestDeployBulkPublish:
         assert "disable_print_identity" in appended
 
     def test_deploy_bulk_publish_disabled_by_default_omits_flags(self, tmp_path):
-        """When the setting is 'false' (default), bulk publish flags are not appended."""
-        mock_flag = self._run_deploy(tmp_path, "false")
+        """When --bulk_publish is not set (default), bulk publish flags are not appended."""
+        mock_flag = self._run_deploy(tmp_path, False)
 
         appended = [call.args[0] for call in mock_flag.call_args_list]
         assert "enable_experimental_features" not in appended

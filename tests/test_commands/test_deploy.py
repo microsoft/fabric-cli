@@ -79,20 +79,15 @@ class TestDeploy:
         cli_executor: CLIExecutor,
         workspace,
         mock_print_done,
-        monkeypatch,
     ):
         """
         Test successful deployment of multiple items when the experimental
-        deploy_bulk_publish_enabled config setting is turned on.
+        --bulk_publish flag is passed.
 
-        The setting is enabled via monkeypatch so it is automatically restored
-        when the test finishes, whether it passes or fails. The test also
-        enables CLI debug mode so fabric-cicd is configured to share the CLI
-        logger, then asserts the experimental bulk-publish flags were appended
+        The test asserts the experimental bulk-publish flags were appended
         before invoking the mocked fabric-cicd deployment call.
         """
         import fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file as deploy_mod
-        from fabric_cli.core import fab_constant, fab_state_config
 
         # Setup
         deploy_config_path = deploy_setup_factory(
@@ -101,25 +96,13 @@ class TestDeploy:
                         ItemType.NOTEBOOK, ItemType.VARIABLE_LIBRARY]
         )
 
-        # Enable the experimental bulk publish setting only for this test.
-        # monkeypatch restores the original get_config on teardown regardless
-        # of whether the test passes or fails.
-        real_get_config = fab_state_config.get_config
-
-        def fake_get_config(key):
-            if key == fab_constant.FAB_DEPLOY_BULK_PUBLISH_ENABLED:
-                return "true"
-            return real_get_config(key)
-
-        monkeypatch.setattr(fab_state_config, "get_config", fake_get_config)
-
         mock_print_done.reset_mock()
 
         with (
             patch.object(deploy_mod, "append_feature_flag") as mock_flag,
         ):
             cli_executor.exec_command(
-                f"deploy --config {str(deploy_config_path)} --target_env dev --force")
+                f"deploy --config {str(deploy_config_path)} --target_env dev --force --bulk_publish")
 
         # Assert deployment completed and the bulk publish flags were applied
         mock_print_done.assert_called()
