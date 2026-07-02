@@ -37,7 +37,7 @@ from tests.test_commands.conftest import (
 from tests.test_commands.data.models import EntityMetadata
 from tests.test_commands.data.static_test_data import StaticTestData
 from tests.test_commands.processors import generate_random_string
-from tests.test_commands.utils import cli_path_join
+from tests.test_commands.utils import cli_path_join, is_record_mode
 
 
 class TestMkdir:
@@ -271,6 +271,123 @@ class TestMkdir:
 
         # Cleanup
         rm(sqldatabase_full_path)
+
+    def test_mkdir_sqldatabase_restore_and_restore_deleted_with_creation_payload_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        # This test relies on live restore windows and non-deterministic
+        # restorableDeletedDatabaseName values, so it is skipped in live/record mode.
+        # If you want to run this test in live mode, you can comment out the skip statement below, but be aware that it may fail if the restore window is not open or if the restorableDeletedDatabaseName is not available yet.
+        if is_record_mode():
+            pytest.skip("Skipping restore/restore-deleted test in live (record) mode")
+
+        # Setup - create a source SQLDatabase (mode=New) to restore from
+        source_display_name = generate_random_string(vcr_instance, cassette_name)
+        source_full_path = cli_path_join(
+            workspace.full_path, f"{source_display_name}.{ItemType.SQL_DATABASE}"
+        )
+        cli_executor.exec_command(f"mkdir {source_full_path} -P creationMode=New")
+
+        # The restore window opens a few minutes after creation. Wait for it to be
+        # populated, then read the source database to capture the item id, workspace
+        # id, and latest restore point (guaranteed to fall inside the valid window).
+        # Wait for 3 minutes to ensure restore point is available. when recording the test,
+        # if 5 minutes is not enough, increase the sleep time to 5 minutes.
+        if is_record_mode():
+            time.sleep(300)
+        get(source_full_path, query=".")
+        source_details = json.loads(mock_questionary_print.call_args[0][0])
+        source_item_id = source_details["id"]
+        source_workspace_id = source_details["workspaceId"]
+        restore_point_in_time = source_details["properties"]["latestRestorePoint"]
+
+        mock_print_done.reset_mock()
+        upsert_item_to_cache.reset_mock()
+
+        restored_display_name = generate_random_string(vcr_instance, cassette_name)
+        restored_full_path = cli_path_join(
+            workspace.full_path, f"{restored_display_name}.{ItemType.SQL_DATABASE}"
+        )
+
+        # Execute command - restore using the source database as the reference
+        cli_executor.exec_command(
+            f"mkdir {restored_full_path} "
+            f"-P creationMode=Restore,restorePointInTime={restore_point_in_time},"
+            f"itemId={source_item_id},"
+            f"workspaceId={source_workspace_id}"
+        )
+
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert restored_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(restored_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert restored_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup the restored database and delete the source so it becomes a
+        # restorable deleted database for the RestoreDeletedDatabase scenario below.
+        rm(restored_full_path)
+        rm(source_full_path)
+
+        # RestoreDeletedDatabase - the deleted database may take a short time to
+        # appear in the restorable deleted databases list.
+        if is_record_mode():
+            time.sleep(60)
+
+        # List the workspace's restorable deleted databases and read the
+        # restorableDeletedDatabaseName of the just-deleted source.
+        mock_questionary_print.reset_mock()
+        cli_executor.exec_command(
+            f"api workspaces/{source_workspace_id}/sqlDatabases/restorableDeletedDatabases"
+        )
+        restorable_deleted = json.loads(mock_questionary_print.call_args[0][0])["text"][
+            "value"
+        ]
+        restorable_deleted_database_name = restorable_deleted[0]["properties"][
+            "restorableDeletedDatabaseName"
+        ]
+
+        mock_print_done.reset_mock()
+        upsert_item_to_cache.reset_mock()
+
+        restored_deleted_display_name = generate_random_string(
+            vcr_instance, cassette_name
+        )
+        restored_deleted_full_path = cli_path_join(
+            workspace.full_path,
+            f"{restored_deleted_display_name}.{ItemType.SQL_DATABASE}",
+        )
+
+        # Execute command - restore the deleted source database. restorableDeletedDatabaseName
+        # is kept last because its value contains a comma (name,<numericId>).
+        cli_executor.exec_command(
+            f"mkdir {restored_deleted_full_path} "
+            f"-P creationMode=RestoreDeletedDatabase,restorePointInTime={restore_point_in_time},"
+            f"restorableDeletedDatabaseName={restorable_deleted_database_name}"
+        )
+
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert restored_deleted_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(restored_deleted_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert restored_deleted_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup
+        rm(restored_deleted_full_path)
 
     @mkdir_item_with_creation_payload_success_params
     def test_mkdir_item_with_creation_payload_success(
