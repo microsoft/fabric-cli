@@ -33,7 +33,7 @@ class TestDeploy:
             target_env="dev",
             item_types=[ItemType.NOTEBOOK]
         )
-        
+
         mock_print_done.reset_mock()
 
         # Execute command
@@ -86,10 +86,10 @@ class TestDeploy:
         deploy_bulk_publish_enabled config setting is turned on.
 
         The setting is enabled via monkeypatch so it is automatically restored
-        when the test finishes, whether it passes or fails. Bulk publish uses a
-        different fabric-cicd API path (single bulk import call), so the
-        fabric-cicd deploy_with_config call is mocked to avoid recorded HTTP
-        cassettes while still exercising the CLI's bulk-publish flag wiring.
+        when the test finishes, whether it passes or fails. The test also
+        enables CLI debug mode so fabric-cicd is configured to share the CLI
+        logger, then asserts the experimental bulk-publish flags were appended
+        before invoking the mocked fabric-cicd deployment call.
         """
         import fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file as deploy_mod
         from fabric_cli.core import fab_constant, fab_state_config
@@ -115,15 +115,9 @@ class TestDeploy:
 
         mock_print_done.reset_mock()
 
-        # Execute command with fabric-cicd mocked: append_feature_flag is a
-        # pure mock so it does not mutate fabric-cicd's global feature-flag
-        # state (which would leak into other tests), and deploy_with_config is
-        # mocked because bulk publish uses an unrecorded bulk import API path.
         with (
             patch.object(deploy_mod, "append_feature_flag") as mock_flag,
-            patch.object(deploy_mod, "deploy_with_config") as mock_deploy,
         ):
-            mock_deploy.return_value.message = "Deployment completed successfully"
             cli_executor.exec_command(
                 f"deploy --config {str(deploy_config_path)} --target_env dev --force")
 
@@ -132,6 +126,7 @@ class TestDeploy:
         assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
         appended = [call.args[0] for call in mock_flag.call_args_list]
+        assert "disable_print_identity" in appended
         assert "enable_experimental_features" in appended
         assert "enable_bulk_publish" in appended
 
@@ -152,7 +147,7 @@ class TestDeploy:
         )
 
         mock_print_done.reset_mock()
-            
+
         # Execute command
         cli_executor.exec_command(
             f"deploy --config {deploy_config_path}")
