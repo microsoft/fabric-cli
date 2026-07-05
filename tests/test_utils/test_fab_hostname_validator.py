@@ -25,6 +25,7 @@ def test_validate_and_get_env_variable_valid_hostnames(capsys):
     valid_hostnames = [
         "api.fabric.microsoft.com",
         "dfs.fabric.microsoft.com",
+        "onelake.table.fabric.microsoft.com",
         "api.powerbi.com",
         "management.azure.com",
         "management.test.hostname"

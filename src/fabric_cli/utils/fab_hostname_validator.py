@@ -14,7 +14,7 @@ from fabric_cli.errors import ErrorMessages
 
 # Define a regular expression for valid hostnames with wildcards
 VALID_HOSTNAME_REGEX = re.compile(
-    r"^([\w-]+\.)?(fabric\.microsoft\.com|dfs\.fabric\.microsoft\.com|powerbi\.com|management\.[\w-]+\.[\w-]+)$"
+    r"^([\w-]+\.)?(fabric\.microsoft\.com|dfs\.fabric\.microsoft\.com|table\.fabric\.microsoft\.com|powerbi\.com|management\.[\w-]+\.[\w-]+)$"
 )
 
 def validate_and_get_env_variable(env_var_name: str, default_value: str) -> str:

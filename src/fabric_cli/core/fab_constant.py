@@ -14,6 +14,12 @@ API_ENDPOINT_ONELAKE = validate_and_get_env_variable(
     "FAB_API_ENDPOINT_ONELAKE", "onelake.dfs.fabric.microsoft.com"
 )
 
+# OneLake table API endpoint (Delta/Unity Catalog and Iceberg REST Catalog).
+# Uses the same storage token audience as the OneLake filesystem endpoint.
+API_ENDPOINT_ONELAKE_TABLE = validate_and_get_env_variable(
+    "FAB_API_ENDPOINT_ONELAKE_TABLE", "onelake.table.fabric.microsoft.com"
+)
+
 API_ENDPOINT_AZURE = validate_and_get_env_variable(
     "FAB_API_ENDPOINT_AZURE", "management.azure.com"
 )

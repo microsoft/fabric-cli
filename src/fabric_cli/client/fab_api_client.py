@@ -82,6 +82,11 @@ def do_request(
         url = _transform_workspace_url_for_private_link_if_needed(
             fab_constant.API_ENDPOINT_ONELAKE, uri, is_onelake_api=True
         )
+    elif audience_value == "onelake_table":
+        # OneLake table APIs share the storage (OneLake) token audience but are
+        # served from a dedicated host (onelake.table.fabric.microsoft.com).
+        scope = fab_constant.SCOPE_ONELAKE_DEFAULT
+        url = fab_constant.API_ENDPOINT_ONELAKE_TABLE
     elif audience_value == "azure":
         scope = fab_constant.SCOPE_AZURE_DEFAULT
         url = fab_constant.API_ENDPOINT_AZURE
@@ -232,7 +237,10 @@ def do_request(
                         hostname and hostname in url
                     ):
                         raise FabricAPIError(response.text)
-                    elif fab_constant.API_ENDPOINT_ONELAKE in url:
+                    elif (
+                        fab_constant.API_ENDPOINT_ONELAKE in url
+                        or fab_constant.API_ENDPOINT_ONELAKE_TABLE in url
+                    ):
                         raise OnelakeAPIError(response.text)
                     elif fab_constant.API_ENDPOINT_AZURE in url:
                         raise AzureAPIError(response.text)
