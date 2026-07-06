@@ -94,7 +94,7 @@ def log_debug_http_request(
     logger.debug("")
 
 
-def log_debug_http_response(status_code, headers, response_text, start_time):
+def log_debug_http_response(status_code, headers, response_text, start_time, ctxt_cmd):
     """Logs a http response debug message if FAB_DEBUG is enabled."""
     if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) != "true":
         return
@@ -130,7 +130,7 @@ def log_debug_http_response(status_code, headers, response_text, start_time):
     else:
         content_type = headers.get("Content-Type", "")
         if "application/json" in content_type:
-            logger.debug("    " + _parse_json_into_single_line(response_text))
+            logger.debug("    " + _parse_json_into_single_line(response_text, ctxt_cmd))
         else:
             # If not JSON, log as plain text
             logger.debug("    " + response_text)
@@ -265,10 +265,42 @@ def user_log_dir(app_name):
     return log_dir
 
 
-def _parse_json_into_single_line(json_text):
+def _parse_json_into_single_line(json_text, ctxt_cmd):
     try:
-        parsed_json = json.loads(json_text)
+        parsed_json = _process_json_response(json.loads(json_text), ctxt_cmd)
         compact_json = json.dumps(parsed_json, separators=(",", ":"))
         return compact_json
     except json.JSONDecodeError:
         return "Failed to parse JSON response"
+
+
+def _process_json_response(parsed_json, ctxt_cmd):
+    if parsed_json and isinstance(parsed_json, dict):
+        # process responses according to the command context
+
+        # process bulk-export response to only log the itemDefinitionsIndex and definitionParts key
+        if (
+            ctxt_cmd == "bulk-export"
+            and "itemDefinitionsIndex" in parsed_json
+            and "definitionParts" in parsed_json
+        ):
+            return {
+                "itemDefinitionsIndex": parsed_json["itemDefinitionsIndex"],
+                "definitionParts": "definitionParts",
+            }
+
+        if (
+            ctxt_cmd == "export"
+            and "definition" in parsed_json
+            and "parts" in parsed_json["definition"]
+        ):
+            definition = {
+                k: v for k, v in parsed_json["definition"].items() if k != "parts"
+            }
+            definition["parts"] = [
+                {k: ("payload" if k == "payload" else v) for k, v in part.items()}
+                for part in parsed_json["definition"]["parts"]
+            ]
+            return {"definition": definition}
+
+    return parsed_json

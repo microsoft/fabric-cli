@@ -110,6 +110,21 @@ fab rm ws1.Workspace/fd1.Folder
 
 ## Folder Operations
 
+### Bulk-Export Folder Items
+
+!!! info "When you bulk-export item definitions, the sensitivity labels are not part of the definitions"
+
+Bulk-export all supported items from a folder preserving folder structure and item bindings. See [bulk-export command](../commands/fs/bulk_export.md) for full details and supported item types.
+
+#### Bulk-Export a Folder Recursively
+
+Export a folder and all its sub-folders to a local directory.
+
+```py
+fab bulk-export ws1.Workspace/fd1.Folder -o /tmp --recursive
+```
+
+
 ### Copy Folder
 
 

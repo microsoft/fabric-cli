@@ -7,6 +7,7 @@ from fabric_cli.utils.fab_util import get_os_specific_command
 COMMANDS = {
     "Core Commands": {
         "assign": "Assign a capacity or resource to a workspace.",
+        "bulk-export": "Bulk export a workspace or folder with folder structure and preserve items bindings.",
         "cd": "Change to a workspace, item, or folder.",
         get_os_specific_command("cp"): "Copy an item or file to a destination.",
         "export": "Export an item.",

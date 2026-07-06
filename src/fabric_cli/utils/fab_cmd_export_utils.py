@@ -10,47 +10,53 @@ from fabric_cli.utils import fab_storage as utils_storage
 
 def decode_payload(item_def: dict) -> dict:
     # Check if item_def has the required structure
+    parts = []
     if "definition" in item_def and "parts" in item_def["definition"]:
-        for part in item_def["definition"]["parts"]:
+        parts = item_def["definition"]["parts"]
+    elif "definitionParts" in item_def:
+        parts = item_def["definitionParts"]
 
-            # Check if the part has a payload that needs decoding
-            if "payload" in part:
-                payload_base64 = part["payload"]
+    for part in parts:
+        # Check if the part has a payload that needs decoding
+        if "payload" in part:
+            payload_base64 = part["payload"]
 
-                if payload_base64:
-                    path = part.get("path", "")
+            if payload_base64:
+                path = part.get("path", "")
+
+                try:
+                    decoded_bytes = base64.b64decode(payload_base64)
 
                     try:
-                        decoded_bytes = base64.b64decode(payload_base64)
+                        decoded_payload = decoded_bytes.decode("utf-8")
 
-                        try:
-                            decoded_payload = decoded_bytes.decode("utf-8")
+                        # If it's a JSON file, parse it
+                        if path.endswith(
+                            (".json", ".ipynb", ".pbir", ".platform", ".pbism")
+                        ):
+                            decoded_payload = json.loads(decoded_payload)
+                    except UnicodeDecodeError:
+                        # If it's binary, store the raw bytes
+                        decoded_payload = decoded_bytes  # type: ignore[assignment]
 
-                            # If it's a JSON file, parse it
-                            if path.endswith(
-                                (".json", ".ipynb", ".pbir", ".platform", ".pbism")
-                            ):
-                                decoded_payload = json.loads(decoded_payload)
-                        except UnicodeDecodeError:
-                            # If it's binary, store the raw bytes
-                            decoded_payload = decoded_bytes  # type: ignore[assignment]
+                    part["payload"] = decoded_payload
+                    part["payloadType"] = "DecodeBase64"
 
-                        part["payload"] = decoded_payload
-                        part["payloadType"] = "DecodeBase64"
+                except Exception as e:
+                    part["error"] = f"Decoding error: {e}"
 
-                    except Exception as e:
-                        part["error"] = f"Decoding error: {e}"
-
-            # Recursively check for nested parts if applicable
-            if (
-                "nested_parts" in part
-            ):  # Assuming 'nested_parts' is a key for potential nested structures
-                decode_payload(part)
+        # Recursively check for nested parts if applicable
+        if (
+            "nested_parts" in part
+        ):  # Assuming 'nested_parts' is a key for potential nested structures
+            decode_payload(part)
 
     return item_def
 
 
-def export_json_parts(args, definition: dict, export_path: dict) -> None:
+def export_json_parts(
+    args, definition: dict, export_path: dict, definition_parts="parts"
+) -> None:
     """
     Export each 'payload' in the 'parts' array to a file named based on 'path' in 'parts'.
     The 'payload' content will be saved as the file's content.
@@ -61,7 +67,7 @@ def export_json_parts(args, definition: dict, export_path: dict) -> None:
         if not os.path.exists(original_path):
             os.makedirs(original_path)
 
-    parts = definition.get("parts", [])
+    parts = definition.get(definition_parts, [])
     for part in parts:
         path = part.get("path", "").lstrip(
             "/"

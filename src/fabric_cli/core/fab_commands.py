@@ -30,6 +30,7 @@ class Command(Enum):
     FS_CD = "cd"
     FS_EXISTS = "exists"
     FS_EXPORT = "export"
+    FS_BULKEXPORT = "bulkexport"
     FS_IMPORT = "import"
     FS_GET = "get"
     FS_SET = "set"

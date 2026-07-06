@@ -14,6 +14,7 @@ from fabric_cli.parsers.fab_config_parser import (
 )
 from fabric_cli.parsers.fab_fs_parser import (
     register_assign_parser,
+    register_bulk_export_parser,
     register_cd_parser,
     register_cp_parser,
     register_deploy_parser,
@@ -65,6 +66,7 @@ parserHandlers = [
     register_rm_parser,
     register_mkdir_parser,
     register_jobs_parser,
+    register_bulk_export_parser,
 ]
 
 

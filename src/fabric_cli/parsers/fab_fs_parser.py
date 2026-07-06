@@ -57,7 +57,7 @@ def register_ls_parser(subparsers: _SubParsersAction) -> None:
     )
 
     ls_parser.usage = f"{utils_error_parser.get_usage_prog(ls_parser)}"
-    ls_parser.set_defaults(func=lazy_command(_fs_module_path, 'ls_command'))
+    ls_parser.set_defaults(func=lazy_command(_fs_module_path, "ls_command"))
 
 
 # Command for 'mkdir'
@@ -95,7 +95,7 @@ def register_mkdir_parser(subparsers: _SubParsersAction) -> None:
 
     mkdir_parser.usage = f"{utils_error_parser.get_usage_prog(mkdir_parser)}"
     mkdir_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'mkdir_command'))
+        _fs_module_path, "mkdir_command"))
 
 
 # Command for 'cd'
@@ -116,7 +116,7 @@ def register_cd_parser(subparsers: _SubParsersAction) -> None:
     cd_parser.add_argument("path", nargs="+", type=str, help="Directory path")
 
     cd_parser.usage = f"{utils_error_parser.get_usage_prog(cd_parser)}"
-    cd_parser.set_defaults(func=lazy_command(_fs_module_path, 'cd_command'))
+    cd_parser.set_defaults(func=lazy_command(_fs_module_path, "cd_command"))
 
 
 def register_rm_parser(subparsers: _SubParsersAction) -> None:
@@ -146,11 +146,11 @@ def register_rm_parser(subparsers: _SubParsersAction) -> None:
         "--hard",
         required=False,
         action="store_true",
-        help="Permanently deletes the resource. Cannot be recovered. Applies only to item deletions. Optional"
+        help="Permanently deletes the resource. Cannot be recovered. Applies only to item deletions. Optional",
     )
 
     rm_parser.usage = f"{utils_error_parser.get_usage_prog(rm_parser)}"
-    rm_parser.set_defaults(func=lazy_command(_fs_module_path, 'rm_command'))
+    rm_parser.set_defaults(func=lazy_command(_fs_module_path, "rm_command"))
 
 
 def register_mv_parser(subparsers: _SubParsersAction) -> None:
@@ -172,9 +172,8 @@ def register_mv_parser(subparsers: _SubParsersAction) -> None:
         fab_aliases=mv_aliases,
         fab_learnmore=["_"],
     )
-    mv_parser.add_argument(
-        "from_path", nargs="+", type=str, help="Source path"
-)
+    mv_parser.add_argument("from_path", nargs="+",
+                           type=str, help="Source path")
     mv_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     mv_parser.add_argument(
         "-f",
@@ -192,7 +191,7 @@ def register_mv_parser(subparsers: _SubParsersAction) -> None:
     )
 
     mv_parser.usage = f"{utils_error_parser.get_usage_prog(mv_parser)}"
-    mv_parser.set_defaults(func=lazy_command(_fs_module_path, 'mv_command'))
+    mv_parser.set_defaults(func=lazy_command(_fs_module_path, "mv_command"))
 
 
 def register_cp_parser(subparsers: _SubParsersAction) -> None:
@@ -215,9 +214,8 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         fab_learnmore=["_"],
     )
 
-    cp_parser.add_argument(
-        "from_path", nargs="+", type=str, help="Source path"
-    )
+    cp_parser.add_argument("from_path", nargs="+",
+                           type=str, help="Source path")
     cp_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
     cp_parser.add_argument(
         "-f",
@@ -242,7 +240,7 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
     )
 
     cp_parser.usage = f"{utils_error_parser.get_usage_prog(cp_parser)}"
-    cp_parser.set_defaults(func=lazy_command(_fs_module_path, 'cp_command'))
+    cp_parser.set_defaults(func=lazy_command(_fs_module_path, "cp_command"))
 
 
 # Command for 'exists'
@@ -265,7 +263,7 @@ def register_exists_parser(subparsers: _SubParsersAction) -> None:
 
     exists_parser.usage = f"{utils_error_parser.get_usage_prog(exists_parser)}"
     exists_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'exists_command'))
+        _fs_module_path, "exists_command"))
 
 
 # Command for 'pwd'
@@ -279,7 +277,7 @@ def register_pwd_parser(subparsers: _SubParsersAction) -> None:
     )
 
     pwd_parser.usage = f"{utils_error_parser.get_usage_prog(pwd_parser)}"
-    pwd_parser.set_defaults(func=lazy_command(_fs_module_path, 'pwd_command'))
+    pwd_parser.set_defaults(func=lazy_command(_fs_module_path, "pwd_command"))
 
 
 # Command for 'open'
@@ -302,7 +300,7 @@ def register_open_parser(subparsers: _SubParsersAction) -> None:
 
     open_parser.usage = f"{utils_error_parser.get_usage_prog(open_parser)}"
     open_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'open_command'))
+        _fs_module_path, "open_command"))
 
 
 # Command for 'export'
@@ -352,7 +350,54 @@ def register_export_parser(subparsers: _SubParsersAction) -> None:
 
     export_parser.usage = f"{utils_error_parser.get_usage_prog(export_parser)}"
     export_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'export_command'))
+        _fs_module_path, "export_command"))
+
+
+# Command for 'bulk-export'
+def register_bulk_export_parser(subparsers: _SubParsersAction) -> None:
+    bulk_export_examples = [
+        "# bulk-export a workspace with folder structure to local",
+        "$ bulk-export ws1.Workspace -o /tmp --recursive\n",
+        "# bulk-export a folder recursively",
+        "$ bulk-export ws1.Workspace/folder1.Folder -o /tmp --recursive\n",
+    ]
+
+    bulk_export_parser = subparsers.add_parser(
+        "bulk-export",
+        help=fab_constant.COMMAND_FS_BULKEXPORT_DESCRIPTION,
+        fab_examples=bulk_export_examples,
+        fab_learnmore=["_"],
+    )
+    bulk_export_parser.add_argument(
+        "path", nargs="+", type=str, help="Directory path")
+    bulk_export_parser.add_argument(
+        "-o",
+        "--output",
+        nargs="+",
+        metavar="",
+        required=True,
+        help="Output path for bulk-export",
+    )
+    bulk_export_parser.add_argument(
+        "--recursive",
+        required=False,
+        action="store_true",
+        help="Recursively bulk-export folder contents",
+    )
+    bulk_export_parser.add_argument(
+        "-f",
+        "--force",
+        required=False,
+        action="store_true",
+        help="Force. Optional, Overrides confirmation prompts. Exports the item definition without the sensitivity label and confirms exporting items to non-empty output location",
+    )
+
+    bulk_export_parser.usage = (
+        f"{utils_error_parser.get_usage_prog(bulk_export_parser)}"
+    )
+    bulk_export_parser.set_defaults(
+        func=lazy_command(_fs_module_path, "bulk_export_command")
+    )
 
 
 # Command for 'get'
@@ -406,7 +451,7 @@ def register_get_parser(subparsers: _SubParsersAction) -> None:
     )
 
     get_parser.usage = f"{utils_error_parser.get_usage_prog(get_parser)}"
-    get_parser.set_defaults(func=lazy_command(_fs_module_path, 'get_command'))
+    get_parser.set_defaults(func=lazy_command(_fs_module_path, "get_command"))
 
 
 # Command for 'import'
@@ -445,7 +490,8 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
 
     import_parser.usage = f"{utils_error_parser.get_usage_prog(import_parser)}"
     import_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'import_command'))
+        _fs_module_path, "import_command"))
+
 
 # Command for 'deploy'
 
@@ -455,7 +501,7 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "# deploy fabric items to a workspace using a configuration file and target environment",
         "$ deploy --config_file config.yml --target_env dev\n",
         "# deploy with config file, environment, and optional parameters",
-        "$ deploy --config_file config.yml --target_env prod -P '[{\"param1\":\"value1\"}]' -f",
+        '$ deploy --config_file config.yml --target_env prod -P \'[{"param1":"value1"}]\' -f',
     ]
 
     deploy_parser = subparsers.add_parser(
@@ -485,7 +531,7 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "--params",
         type=str,
         nargs="+",
-        help="parameters for deployment in JSON format (e.g., '[{\"p1\":\"v1\",\"p2\":\"v2\"}]'). Optional",
+        help='parameters for deployment in JSON format (e.g., \'[{"p1":"v1","p2":"v2"}]\'). Optional',
     )
 
     deploy_parser.add_argument(
@@ -493,8 +539,9 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     )
 
     deploy_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'deploy_command'))
+        _fs_module_path, "deploy_command"))
     deploy_parser.usage = f"{utils_error_parser.get_usage_prog(deploy_parser)}"
+
 
 # Command for 'set'
 
@@ -529,7 +576,7 @@ def register_set_parser(subparsers: _SubParsersAction) -> None:
     )
 
     set_parser.usage = f"{utils_error_parser.get_usage_prog(set_parser)}"
-    set_parser.set_defaults(func=lazy_command(_fs_module_path, 'set_command'))
+    set_parser.set_defaults(func=lazy_command(_fs_module_path, "set_command"))
 
 
 # Command for 'clear'
@@ -589,7 +636,7 @@ def register_ln_parser(subparsers: _SubParsersAction) -> None:
     )
 
     ln_parser.usage = f"{utils_error_parser.get_usage_prog(ln_parser)}"
-    ln_parser.set_defaults(func=lazy_command(_fs_module_path, 'ln_command'))
+    ln_parser.set_defaults(func=lazy_command(_fs_module_path, "ln_command"))
 
 
 # Command for 'start'
@@ -615,7 +662,7 @@ def register_start_parser(subparsers: _SubParsersAction) -> None:
 
     start_parser.usage = f"{utils_error_parser.get_usage_prog(start_parser)}"
     start_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'start_command'))
+        _fs_module_path, "start_command"))
 
 
 # Command for 'stop'
@@ -641,7 +688,7 @@ def register_stop_parser(subparsers: _SubParsersAction) -> None:
 
     stop_parser.usage = f"{utils_error_parser.get_usage_prog(stop_parser)}"
     stop_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'stop_command'))
+        _fs_module_path, "stop_command"))
 
 
 # Command for 'assign'
@@ -674,7 +721,7 @@ def register_assign_parser(subparsers: _SubParsersAction) -> None:
 
     assign_parser.usage = f"{utils_error_parser.get_usage_prog(assign_parser)}"
     assign_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'assign_command'))
+        _fs_module_path, "assign_command"))
 
 
 # Command for 'unassign'
@@ -707,7 +754,7 @@ def register_unassign_parser(subparsers: _SubParsersAction) -> None:
 
     unassign_parser.usage = f"{utils_error_parser.get_usage_prog(unassign_parser)}"
     unassign_parser.set_defaults(func=lazy_command(
-        _fs_module_path, 'unassign_command'))
+        _fs_module_path, "unassign_command"))
 
 
 # Command for 'clear'
