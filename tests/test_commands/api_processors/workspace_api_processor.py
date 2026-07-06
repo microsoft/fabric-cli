@@ -7,8 +7,10 @@ from tests.test_commands.api_processors.utils import load_response_json_body
 
 
 class WorkspaceAPIProcessor(BaseAPIProcessor):
-    WORKSPACE_URI = ["https://api.fabric.microsoft.com/v1/workspaces",
-                     "https://api.powerbi.com/v1/workspaces"]
+    WORKSPACE_URI = [
+        "https://api.fabric.microsoft.com/v1/workspaces",
+        "https://api.powerbi.com/v1/workspaces",
+    ]
 
     def __init__(self, generated_name_mapping):
         self.generated_name_mapping = generated_name_mapping
