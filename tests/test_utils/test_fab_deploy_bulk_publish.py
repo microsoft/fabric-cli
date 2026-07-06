@@ -11,7 +11,7 @@ class TestDeployBulkPublish:
     HTTP cassettes.
     """
 
-    def _run_deploy(self, tmp_path, bulk_publish):
+    def _run_deploy(self, tmp_path, bulk_publish, mock_fab_set_state_config):
         """Invoke deploy_with_config_file with fabric-cicd mocked, returning the
         append_feature_flag mock for assertions."""
         from argparse import Namespace
@@ -19,17 +19,15 @@ class TestDeployBulkPublish:
         import fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file as deploy_mod
         from fabric_cli.core import fab_constant
 
+        # disable debug mode so fabric-cicd file logging is disabled during the run
+        mock_fab_set_state_config(fab_constant.FAB_DEBUG_ENABLED, "false")
+
         args = Namespace(
             config=str(tmp_path / "config.yml"),
             target_env="dev",
             params=None,
             bulk_publish=bulk_publish,
         )
-
-        def fake_get_config(key):
-            if key == fab_constant.FAB_DEBUG_ENABLED:
-                return "false"
-            return None
 
         with (
             patch.object(deploy_mod, "append_feature_flag") as mock_flag,
@@ -39,17 +37,16 @@ class TestDeployBulkPublish:
             patch.object(
                 deploy_mod, "create_fabric_token_credential", return_value=None
             ),
-            patch.object(
-                deploy_mod.fab_state_config, "get_config", side_effect=fake_get_config
-            ),
         ):
             deploy_mod.deploy_with_config_file(args)
 
         return mock_flag
 
-    def test_deploy_bulk_publish_enabled_appends_experimental_flags(self, tmp_path):
+    def test_deploy_bulk_publish_enabled_appends_experimental_flags_success(
+        self, tmp_path, mock_fab_set_state_config
+    ):
         """When --bulk_publish is set, both experimental bulk publish flags are appended."""
-        mock_flag = self._run_deploy(tmp_path, True)
+        mock_flag = self._run_deploy(tmp_path, True, mock_fab_set_state_config)
 
         appended = [call.args[0] for call in mock_flag.call_args_list]
         assert "enable_experimental_features" in appended
@@ -57,9 +54,11 @@ class TestDeployBulkPublish:
         # existing behavior is preserved
         assert "disable_print_identity" in appended
 
-    def test_deploy_bulk_publish_disabled_by_default_omits_flags(self, tmp_path):
+    def test_deploy_bulk_publish_disabled_by_default_omits_flags_success(
+        self, tmp_path, mock_fab_set_state_config
+    ):
         """When --bulk_publish is not set (default), bulk publish flags are not appended."""
-        mock_flag = self._run_deploy(tmp_path, False)
+        mock_flag = self._run_deploy(tmp_path, False, mock_fab_set_state_config)
 
         appended = [call.args[0] for call in mock_flag.call_args_list]
         assert "enable_experimental_features" not in appended
