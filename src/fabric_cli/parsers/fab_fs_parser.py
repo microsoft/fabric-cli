@@ -453,9 +453,11 @@ def register_import_parser(subparsers: _SubParsersAction) -> None:
 def register_deploy_parser(subparsers: _SubParsersAction) -> None:
     deploy_examples = [
         "# deploy fabric items to a workspace using a configuration file and target environment",
-        "$ deploy --config_file config.yml --target_env dev\n",
+        "$ deploy --config config.yml --target_env dev\n",
         "# deploy with config file, environment, and optional parameters",
-        "$ deploy --config_file config.yml --target_env prod -P '[{\"param1\":\"value1\"}]' -f",
+        "$ deploy --config config.yml --target_env prod -P '[{\"param1\":\"value1\"}]' -f\n",
+        "# deploy using experimental bulk publish (single bulk import API call)",
+        "$ deploy --config config.yml --target_env dev --bulk_publish",
     ]
 
     deploy_parser = subparsers.add_parser(
@@ -490,6 +492,13 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
 
     deploy_parser.add_argument(
         "-f", "--force", required=False, action="store_true", help="Force. Optional"
+    )
+
+    deploy_parser.add_argument(
+        "--bulk_publish",
+        required=False,
+        action="store_true",
+        help="Experimental. Deploy all items in a single bulk import API call instead of one at a time. Optional",
     )
 
     deploy_parser.set_defaults(func=lazy_command(
