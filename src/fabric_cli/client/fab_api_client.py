@@ -301,7 +301,7 @@ def _build_user_agent(ctxt_cmd: str) -> str:
     """Build the User-Agent header for API requests.
 
     Example:
-        ms-fabric-cli/1.0.0 (create; Windows/10; Python/3.10.2) host-app/ado/2.0.0
+        ms-fabric-cli/1.0.0 (create; Windows/10; Python/3.10.2) ado/2.0.0
     """
     user_agent = (
         f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} "
@@ -336,7 +336,7 @@ def _get_host_app() -> str:
     if not host_app_name:
         return ""
 
-    host_app = f" host-app/{host_app_name.lower()}"
+    host_app = f" {host_app_name.lower()}"
 
     # Check for optional version
     host_app_version = os.environ.get(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR)
