@@ -458,6 +458,8 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         "$ deploy --config config.yml --target_env prod -P '[{\"param1\":\"value1\"}]' -f\n",
         "# deploy using experimental bulk publish (single bulk import API call)",
         "$ deploy --config config.yml --target_env dev --bulk_publish",
+        "# deploy including shortcuts with lakehouses",
+        "$ deploy --config config.yml --target_env dev --shortcut_publish",
     ]
 
     deploy_parser = subparsers.add_parser(
@@ -499,6 +501,13 @@ def register_deploy_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         action="store_true",
         help="Experimental. Deploy all items in a single bulk import API call instead of one at a time. Optional",
+    )
+
+    deploy_parser.add_argument(
+        "--shortcut_publish",
+        required=False,
+        action="store_true",
+        help="Deploy shortcuts together with their Lakehouse. Optional",
     )
 
     deploy_parser.set_defaults(func=lazy_command(

@@ -113,6 +113,47 @@ class TestDeploy:
         assert "enable_experimental_features" in appended
         assert "enable_bulk_publish" in appended
 
+    def test_deploy_multiple_items_shortcut_publish_enabled_success(
+        self,
+        deploy_setup_factory,
+        cli_executor: CLIExecutor,
+        workspace,
+        mock_print_done,
+    ):
+        """
+        Test successful deployment of multiple items when the
+        --shortcut_publish flag is passed.
+
+        The test asserts the shortcut publish flag was appended before
+        invoking the mocked fabric-cicd deployment call.
+        """
+        import fabric_cli.commands.fs.deploy.fab_fs_deploy_config_file as deploy_mod
+
+        # Setup
+        deploy_config_path = deploy_setup_factory(
+            target_env="dev",
+            item_types=[ItemType.DATA_PIPELINE,
+                        ItemType.NOTEBOOK, ItemType.VARIABLE_LIBRARY]
+        )
+
+        mock_print_done.reset_mock()
+
+        with (
+            patch.object(deploy_mod, "append_feature_flag") as mock_flag,
+        ):
+            cli_executor.exec_command(
+                f"deploy --config {str(deploy_config_path)} --target_env dev --force --shortcut_publish")
+
+        # Assert deployment completed and the shortcut publish flag was applied
+        mock_print_done.assert_called()
+        assert "Deployment completed successfully" in str(
+            mock_print_done.call_args)
+        appended = [call.args[0] for call in mock_flag.call_args_list]
+        assert "disable_print_identity" in appended
+        assert "enable_shortcut_publish" in appended
+        # shortcut publish is not experimental and must not enable experimental mode
+        assert "enable_experimental_features" not in appended
+
     def test_deploy_config_without_tenv_with_prompt_success(
         self,
         deploy_setup_factory,

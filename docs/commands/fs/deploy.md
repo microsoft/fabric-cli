@@ -69,6 +69,25 @@ Notes:
 
 ---
 
+### Shortcut Publish
+
+By default, `deploy` does **not** deploy shortcuts (defined in `shortcuts.metadata.json`)
+together with their Lakehouse. You can optionally enable **shortcut publish** to include them.
+
+Enable it with the `--shortcut_publish` flag:
+
+```bash
+fab deploy --config config.yml --target_env dev --shortcut_publish
+```
+
+Notes:
+
+- This is an [optional feature](https://microsoft.github.io/fabric-cicd/latest/how_to/optional_feature/) of the underlying `fabric-cicd` library.
+- It is **disabled by default**, so existing deployments keep the standard publish behavior.
+- When enabled, the CLI turns on the `enable_shortcut_publish` fabric-cicd feature flag for you.
+
+---
+
 ### Configuration Behavior
 
 - The configuration file controls what is published and unpublished.

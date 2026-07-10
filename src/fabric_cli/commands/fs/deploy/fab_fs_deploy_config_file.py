@@ -32,6 +32,9 @@ def deploy_with_config_file(args: Namespace) -> None:
         # opt-in experimental bulk publish (single bulk import API call)
         _apply_bulk_publish_feature_flags(args)
 
+        # opt-in shortcut publish (deploy shortcuts with the lakehouse)
+        _apply_shortcut_publish_feature_flags(args)
+
         deploy_config_file = args.config
         deploy_parameters = get_dict_from_params(args.params, max_depth=1)
         for param in deploy_parameters:
@@ -77,3 +80,14 @@ def _apply_bulk_publish_feature_flags(args: Namespace) -> None:
             "fabric-cicd and may change or fail; omit the '--bulk_publish' flag "
             "to use standard per-item publish."
         )
+
+
+def _apply_shortcut_publish_feature_flags(args: Namespace) -> None:
+    """Enable fabric-cicd shortcut publish when the --shortcut_publish flag is set.
+
+    Shortcut publish deploys shortcuts together with their Lakehouse.
+    It is an opt-in fabric-cicd feature enabled via the 'enable_shortcut_publish'
+    feature flag. Disabled by default to preserve existing deploy behavior.
+    """
+    if getattr(args, "shortcut_publish", False):
+        append_feature_flag("enable_shortcut_publish")
