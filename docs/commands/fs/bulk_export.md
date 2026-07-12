@@ -1,6 +1,6 @@
 # `bulk-export` Command
 
-Bulk export a workspace or folder with folder structure and item bindings.
+Export a workspace or folder in bulk while preserving folder structure and item bindings.
 
 The `bulk-export` command exports all supported items from a workspace or folder in a single bulk API request, preserving the folder hierarchy and item bindings (logical IDs) in the exported definitions.
 
@@ -73,7 +73,7 @@ When using `--output-format json`, the output includes structured data:
   },
   "skipped": 1,
   "skipped_types": {
-    "Dashboard": 1,
+    "Dashboard": 1
   },
   "output": "/tmp"
 }

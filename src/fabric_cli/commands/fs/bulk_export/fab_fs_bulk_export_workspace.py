@@ -3,6 +3,7 @@
 
 from argparse import Namespace
 from copy import deepcopy
+import json
 
 from fabric_cli.utils import fab_mem_store as utils_mem_store
 from fabric_cli.core.hiearchy.fab_hiearchy import Item, Workspace
@@ -31,8 +32,9 @@ def bulk_export_workspace(context: Workspace, args: Namespace) -> None:
     # bulk export can be called with no items collected and create_bulk_export_payload will handle it as "export all", so we don't need to pre-collect items here like we do for folders. Just call bulk export directly with the workspace ID and let the API determine what to export based on the from_path.
     payload = bulk_export_utils.create_bulk_export_payload(items_ids=[])
     response = item_api.bulk_export_definitions(args, payload)
+    exported_definitions = json.loads(response.text)
 
-    items_support = _filter_response_by_supported_items(response, context)
+    items_support = _filter_response_by_supported_items(exported_definitions, context)
     if not items_support["supported_items"]:
         raise FabricCLIError(
             BulkExportErrors.no_exportable_items(),
@@ -40,23 +42,23 @@ def bulk_export_workspace(context: Workspace, args: Namespace) -> None:
         )
 
     bulk_export_utils.export_definition_parts_to_storage(
-        args, context.full_name, response
+        args, context.full_name, exported_definitions
     )
     bulk_export_utils.print_bulk_export_summary(args, items_support)
 
 
 def _filter_response_by_supported_items(
-    response: dict, workspace: Workspace
+    exported_definitions: dict, workspace: Workspace
 ) -> ContextItemsSupportMap:
     """Filter response items by matching IDs from itemDefinitionsIndex against known workspace items.
 
     Uses itemDefinitionsIndex to identify returned items by ID, matches them against cached
-    workspace items, and checks command support. Mutates response['definitionParts'] in-place
+    workspace items, and checks command support. Mutates exported_definitions['definitionParts'] in-place
     to remove parts belonging to unsupported or unknown item types.
     Returns a map of supported/unsupported Item objects.
     """
-    items_definitions_index = response.get("itemDefinitionsIndex", [])
-    parts = response.get("definitionParts", [])
+    items_definitions_index = exported_definitions.get("itemDefinitionsIndex", [])
+    parts = exported_definitions.get("definitionParts", [])
 
     # Build a lookup of workspace items by ID
     ws_items = utils_mem_store.get_workspace_items(workspace)
@@ -100,7 +102,7 @@ def _filter_response_by_supported_items(
         for part in parts
         if _path_belongs_to_item(part.get("path", ""), supported_item_prefixes)
     ]
-    response["definitionParts"] = filtered_parts
+    exported_definitions["definitionParts"] = filtered_parts
 
     return {
         "supported_items": supported_items_list,

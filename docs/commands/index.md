@@ -48,7 +48,7 @@ It supports both Unix-style and Windows-style command names for file system oper
 | Command | Description |
 |---------|-------------|
 | [`assign`](./fs/assign.md) | Assign a resource to a workspace |
-| [`bulk-export`](./fs/bulk_export.md) | Bulk export of Folder or Workspace |
+| [`bulk-export`](./fs/bulk_export.md) | Export Folder or Workspace items in bulk |
 | [`cd`](./fs/cd.md) | Change to the specified directory |
 | [`cp` (copy)](./fs/cp.md) | Copy an item or file | 
 | [`export`](./fs/export.md) | Export an item |

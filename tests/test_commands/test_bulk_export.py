@@ -3,7 +3,6 @@
 
 from unittest.mock import patch
 
-
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
@@ -147,8 +146,7 @@ class TestBulkExport:
         )
 
         # Assert - should print warning about non-empty output path
-        mock_print_warning.assert_called_with(
-            "Exporting to a non-empty output folder")
+        mock_print_warning.assert_called_with("Exporting to a non-empty output folder")
 
     def test_bulk_export_inner_folder_structure_success(
         self,
@@ -172,7 +170,7 @@ class TestBulkExport:
 
             # Assert - should print warning about sensitivity labels and confirm export completion
             mock_print_warning.assert_called_once_with(
-                "Item definition is exported without its sensitivity label and its data"
+                "Item definitions are exported without their sensitivity labels"
             )
             mock_print_output.assert_called_once()
             call_kwargs = mock_print_output.call_args
@@ -182,8 +180,7 @@ class TestBulkExport:
 
         # Assert
         export_path = (
-            tmp_path / folder2.display_name /
-            f"{notebook2.display_name}.Notebook"
+            tmp_path / folder2.display_name / f"{notebook2.display_name}.Notebook"
         )
         assert export_path.is_dir()
         files = list(export_path.iterdir())
@@ -217,8 +214,7 @@ class TestBulkExport:
 
             # Assert
             export_path1 = (
-                tmp_path / folder1.display_name /
-                f"{notebook1.display_name}.Notebook"
+                tmp_path / folder1.display_name / f"{notebook1.display_name}.Notebook"
             )
             export_path2 = (
                 tmp_path
@@ -332,15 +328,13 @@ class TestBulkExport:
             assert "Skipped 1 items due to unsupported item types" in message
             # Unsupported item type should be mentioned in the message
             assert "Environment (1)" in message
-            data = call_kwargs.kwargs.get(
-                "data", call_kwargs[1].get("data", []))
+            data = call_kwargs.kwargs.get("data", call_kwargs[1].get("data", []))
             assert data[0]["exported"] == 1
             assert data[0]["skipped"] == 1
 
         # Assert - only the supported notebook should be exported
         export_path = (
-            tmp_path / folder.display_name /
-            f"{notebook.display_name}.Notebook"
+            tmp_path / folder.display_name / f"{notebook.display_name}.Notebook"
         )
         assert export_path.is_dir()
         files = list(export_path.iterdir())

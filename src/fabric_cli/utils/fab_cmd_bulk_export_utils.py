@@ -48,17 +48,17 @@ def create_bulk_export_payload(items_ids: list[str]) -> str:
 def export_definition_parts_to_storage(
     args: Namespace,
     artifact_name: str,
-    response: dict,
+    exported_definitions: dict,
 ) -> None:
     # Response contains definitionParts array; extract the single item
-    item_definitions = response.get("definitionParts", [])
+    item_definitions = exported_definitions.get("definitionParts", [])
     if not item_definitions:
         raise FabricCLIError(
             BulkExportErrors.no_definition_returned(artifact_name),
             fab_constant.ERROR_INVALID_DEFINITION_PAYLOAD,
         )
 
-    item_def = utils_export.decode_payload(response)
+    item_def = utils_export.decode_payload(exported_definitions)
     _strip_parent_folders_from_definition_paths(item_def, args.from_path)
 
     export_path = fab_storage.get_export_path(args.output)
@@ -66,7 +66,6 @@ def export_definition_parts_to_storage(
     _validate_definition_parts_paths_are_under_export_path(
         item_def, export_path["path"]
     )
-    os.makedirs(export_path["path"], exist_ok=True)
 
     fab_ui.print_grey(f"Bulk-exporting '{args.from_path}' → '{export_path['path']}'...")
     utils_export.export_json_parts(
@@ -89,7 +88,10 @@ def print_bulk_export_summary(
             f"{item_type} ({count})"
             for item_type, count in unsupported_types_count.items()
         ]
-        output_format_message += f". Skipped {unsupported_count} items due to unsupported item types: {', '.join(unsupported_types)}"
+        output_format_message += (
+            f". Skipped {unsupported_count} items due to unsupported item types: "
+            f"{', '.join(unsupported_types)}"
+        )
     fab_ui.print_output_format(
         args=args,
         data=[
@@ -138,12 +140,12 @@ def _strip_parent_folders_from_definition_paths(item_def: dict, from_path: str) 
     # Remove ".Folder" suffix from each segment since definitionParts paths use plain folder names
     segments = parent_dir.split("/")
     segments = [seg.removesuffix(".Folder") for seg in segments]
-    prefix = "/" + "/".join(segments)
+    prefix = "/" + "/".join(segments) + "/"
 
     for part in item_def.get("definitionParts", []):
         path = part.get("path", "")
         if path.startswith(prefix):
-            part["path"] = path[len(prefix) :]
+            part["path"] = "/" + path[len(prefix) :]
         else:
             raise FabricCLIError(
                 BulkExportErrors.path_mismatch(),

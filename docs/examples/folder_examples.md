@@ -112,7 +112,7 @@ fab rm ws1.Workspace/fd1.Folder
 
 ### Bulk-Export Folder Items
 
-!!! info "When you bulk-export item definitions, the sensitivity labels are not part of the definitions"
+!!! info "When you execute the `bulk-export` command, the sensitivity labels are not part of the exported definitions"
 
 Bulk-export all supported items from a folder preserving folder structure and item bindings. See [bulk-export command](../commands/fs/bulk_export.md) for full details and supported item types.
 

@@ -3,6 +3,7 @@
 
 from argparse import Namespace
 from copy import deepcopy
+import json
 
 from fabric_cli.core.hiearchy.fab_folder import Folder
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -38,8 +39,9 @@ def bulk_export_folder(context: Folder, args: Namespace) -> None:
     exported_item_ids = [item.id for item in items_support["supported_items"]]
     payload = bulk_export_utils.create_bulk_export_payload(exported_item_ids)
     response = item_api.bulk_export_definitions(args, payload)
+    exported_definitions = json.loads(response.text)
     bulk_export_utils.export_definition_parts_to_storage(
-        args, context.full_name, response
+        args, context.full_name, exported_definitions
     )
     bulk_export_utils.print_bulk_export_summary(args, items_support)
 

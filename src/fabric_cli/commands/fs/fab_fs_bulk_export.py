@@ -22,21 +22,19 @@ from fabric_cli.utils import fab_ui, fab_util
 def exec_command(args: Namespace, context: FabricElement) -> None:
     args.output = fab_util.process_nargs(args.output)
 
-    if isinstance(context, Workspace):
-        _validate_bulk_export_arguments(args)
-        if not _confirm_export_preconditions(args):
-            return
-        bulk_export_workspace(context, args)
-    elif isinstance(context, Folder):
-        _validate_bulk_export_arguments(args)
-        if not _confirm_export_preconditions(args):
-            return
-        bulk_export_folder(context, args)
-    elif isinstance(context, Item):
+    if not isinstance(context, (Workspace, Folder)):
         raise FabricCLIError(
             BulkExportErrors.invalid_target(context.full_name),
             fab_constant.ERROR_INVALID_OPERATION,
         )
+
+    _validate_bulk_export_arguments(args)
+    if not _confirm_export_preconditions(args):
+        return
+    if isinstance(context, Workspace):
+        bulk_export_workspace(context, args)
+    elif isinstance(context, Folder):
+        bulk_export_folder(context, args)
 
 
 def _validate_bulk_export_arguments(args: Namespace) -> None:
@@ -57,7 +55,14 @@ def _confirm_export_preconditions(args: Namespace) -> bool:
     """Validate export preconditions and prompt for confirmations. Returns True if all confirmed or --force is set."""
     export_path_warning = False
     export_path = fab_storage.get_export_path(args.output)
-    if export_path["type"] == "local" and os.path.isdir(export_path["path"]):
+    if (export_path["type"] != "local") or (
+        export_path["type"] == "local" and not os.path.isdir(export_path["path"])
+    ):
+        raise FabricCLIError(
+            BulkExportErrors.invalid_export_path(export_path["path"]),
+            fab_constant.ERROR_INVALID_OPERATION,
+        )
+    if os.path.isdir(export_path["path"]):
         is_export_path_empty = True
         with os.scandir(export_path["path"]) as entries:
             is_export_path_empty = not any(entries)
@@ -69,21 +74,16 @@ def _confirm_export_preconditions(args: Namespace) -> bool:
                     return False
             else:
                 export_path_warning = True
-    elif export_path["type"] == "local":
-        os.makedirs(export_path["path"], exist_ok=True)
     else:
-        raise FabricCLIError(
-            BulkExportErrors.invalid_export_path(export_path["path"]),
-            fab_constant.ERROR_INVALID_OPERATION,
-        )
+        os.makedirs(export_path["path"], exist_ok=True)
 
     if args.force:
         fab_ui.print_warning(
-            "Item definition is exported without its sensitivity label and its data"
+            "Item definitions are exported without their sensitivity labels"
         )
         if export_path_warning:
             fab_ui.print_warning("Exporting to a non-empty output folder")
         return True
     return fab_ui.prompt_confirm(
-        "Item definition is exported without its sensitivity label. Are you sure?"
+        "Item definitions are exported without their sensitivity labels. Are you sure?"
     )
