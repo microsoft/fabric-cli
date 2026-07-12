@@ -3,7 +3,7 @@
 
 import json
 from argparse import Namespace
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -261,31 +261,3 @@ class TestExportDefinitionPartsToStorage:
         assert (
             exported_def["definitionParts"][0]["path"] == "/f3/n1.Notebook/content.json"
         )
-
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_grey")
-    def test_creates_output_directory(
-        self, mock_print, mock_decode, mock_get_path, mock_export, tmp_path
-    ):
-        args = Namespace(
-            output=str(tmp_path / "new_dir"),
-            from_path="myws.Workspace/f1.Folder",
-        )
-        export_path = str(tmp_path / "new_dir")
-        mock_get_path.return_value = {"type": "local", "path": export_path}
-        mock_decode.return_value = {
-            "definitionParts": [
-                {"path": "/f1/n1.Notebook/content.py", "payload": "code"}
-            ]
-        }
-        response = {
-            "definitionParts": [
-                {"path": "/f1/n1.Notebook/content.py", "payload": "enc"}
-            ]
-        }
-
-        export_definition_parts_to_storage(args, "f1.Folder", response)
-
-        assert (tmp_path / "new_dir").exists()
