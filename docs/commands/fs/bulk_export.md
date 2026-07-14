@@ -85,8 +85,11 @@ The exported output mirrors the workspace folder structure:
 
 ```
 <output_path>/
+├── notebook1.Notebook/
+│   ├── .platform
+│   └── notebook-content.ipynb
 ├── Folder1/
-│   ├── notebook1.Notebook/
+│   ├── notebook2.Notebook/
 │   │   ├── .platform
 │   │   └── notebook-content.ipynb
 │   └── report1.Report/

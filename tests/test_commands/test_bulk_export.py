@@ -341,3 +341,83 @@ class TestBulkExport:
         assert len(files) == 2
         assert any(file.suffix == ".py" for file in files)
         assert any(file.name == ".platform" for file in files)
+
+    def test_bulk_export_and_deploy_round_trip(
+        self, cli_executor, workspace_factory, folder_factory, item_factory, tmp_path
+    ):
+        # Setup - create a workspace
+        origin_ws = workspace_factory()
+        dest_ws = workspace_factory()
+        # Setup - create a notebook and folder with a data pipeline in the workspace
+        folder = folder_factory(path=origin_ws.full_path)
+        notebook = item_factory(ItemType.NOTEBOOK, path=origin_ws.full_path)
+        data_pipeline = item_factory(ItemType.DATA_PIPELINE, path=folder.full_path)
+
+        repository_dir = tmp_path / "repo"
+        repository_dir.mkdir(parents=True, exist_ok=True)
+
+        repository_dir_post_deploy = tmp_path / "post_deploy_repo"
+        repository_dir_post_deploy.mkdir(parents=True, exist_ok=True)
+
+        # Execute bulk-export command
+        cli_executor.exec_command(
+            f"bulk-export {origin_ws.full_path} --output {str(repository_dir)} --force --recursive"
+        )
+
+        # Execute deploy command on the exported artifacts to the destination workspace
+        config_file = _create_config_file(
+            tmp_path,
+            workspace_name=dest_ws.display_name,
+            repository_dir=repository_dir,
+        )
+
+        cli_executor.exec_command(f"deploy --config {str(config_file)} --force")
+
+        # bulk-export the destination workspace to verify the artifacts are deployed correctly
+        cli_executor.exec_command(
+            f"bulk-export {dest_ws.full_path} --output {str(repository_dir_post_deploy)} --force --recursive"
+        )
+        # Assert - the exported notebook, and data pipeline should exist in the destination workspace
+        exported_notebook_path = (
+            repository_dir_post_deploy / f"{notebook.display_name}.Notebook"
+        )
+        assert exported_notebook_path.is_dir()
+        exported_data_pipeline_path = (
+            repository_dir_post_deploy
+            / f"{folder.display_name}"
+            / f"{data_pipeline.display_name}.DataPipeline"
+        )
+        assert exported_data_pipeline_path.is_dir()
+
+
+def _create_config_file(
+    tmp_path,
+    *,
+    workspace_name,
+    repository_dir,
+):
+    """Helper function for creating deploy configuration files with specified parameters.
+
+    Args:
+        tmp_path: Temporary path for file creation
+        workspace_name: Name of the workspace
+        repository_dir: Path to the repository directory
+
+    Returns:
+        Path to the created configuration file
+    """
+    config_path = tmp_path / "config.yml"
+
+    config_data = {
+        "core": {
+            "workspace": workspace_name,
+            "repository_directory": str(repository_dir),
+        },
+    }
+
+    import yaml
+
+    with open(config_path, "w") as f:
+        yaml.dump(config_data, f, default_flow_style=False)
+
+    return config_path
