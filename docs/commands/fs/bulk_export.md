@@ -60,7 +60,7 @@ On success, the command prints a summary with the number of exported and skipped
 Exported 15 items to '/tmp'. Skipped 1 items due to unsupported item types: Dashboard (1)
 ```
 
-When using `--output-format json`, the output includes structured data:
+When using `--output_format json`, the output includes structured data:
 
 ```json
 {

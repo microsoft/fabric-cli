@@ -50,14 +50,6 @@ def export_definition_parts_to_storage(
     artifact_name: str,
     exported_definitions: dict,
 ) -> None:
-    # Response contains definitionParts array; extract the single item
-    item_definitions = exported_definitions.get("definitionParts", [])
-    if not item_definitions:
-        raise FabricCLIError(
-            BulkExportErrors.no_definition_returned(artifact_name),
-            fab_constant.ERROR_INVALID_DEFINITION_PAYLOAD,
-        )
-
     item_def = utils_export.decode_payload(exported_definitions)
     _strip_parent_folders_from_definition_paths(item_def, args.from_path)
 
