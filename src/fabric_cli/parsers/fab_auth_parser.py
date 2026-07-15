@@ -30,6 +30,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "$ auth login\n",
         "# command_line mode",
         "$ fab auth login\n",
+        "# command_line mode using Azure CLI auth",
+        "$ fab auth login --azure-cli\n",
+        "# command_line mode using Azure CLI auth with specific tenant",
+        "$ fab auth login --azure-cli --tenant <tenant_id>\n",
         "# command_line mode using service principal auth",
         "$ fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>\n",
         "# command_line mode using system assigned managed identity auth",
@@ -83,6 +87,13 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         metavar="",
         required=False,
         help="Federated token that can be used for OIDC token exchange. Optional, only for service principal auth",
+    )
+    login_parser.add_argument(
+        "--azure-cli",
+        required=False,
+        action="store_true",
+        dest="azure_cli",
+        help="Use Azure CLI authentication (reuse existing 'az login' session)",
     )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"

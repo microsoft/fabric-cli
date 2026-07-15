@@ -16,6 +16,7 @@ from fabric_cli.utils import fab_ui, fab_version_check
 def init(args: Namespace) -> Any:
     auth_options = [
         "Interactive with a web browser",
+        "Azure CLI (reuse existing 'az login' session)",
         "Service principal authentication with secret",
         "Service principal authentication with certificate",
         "Service principal authentication with federated credential",
@@ -27,7 +28,15 @@ def init(args: Namespace) -> Any:
     # Clean up stale context files when logging in
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
-    if args.identity:
+    if getattr(args, "azure_cli", False):
+        FabAuth().set_access_mode("azure_cli", args.tenant)
+        FabAuth().set_azure_cli(args.tenant)
+        FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+        FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+        FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+        Context().context = FabAuth().get_tenant()
+
+    elif args.identity:
         FabAuth().set_access_mode("managed_identity")
         FabAuth().set_managed_identity(args.username)
         FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
@@ -69,6 +78,13 @@ def init(args: Namespace) -> Any:
         try:
             if selected_auth == "Interactive with a web browser":
                 FabAuth().set_access_mode("user", args.tenant)
+                FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+                FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+                FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                Context().context = FabAuth().get_tenant()
+            elif selected_auth.startswith("Azure CLI"):
+                FabAuth().set_access_mode("azure_cli", args.tenant)
+                FabAuth().set_azure_cli(args.tenant)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
@@ -275,6 +291,7 @@ def status(args: Namespace) -> None:
 
     auth_data = {
         "logged_in": is_logged_in,
+        "auth_source": auth.get_identity_type() or "N/A",
         "account": upn,
         "principal_id": oid,
         "tenant_id": tid,

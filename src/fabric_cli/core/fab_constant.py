@@ -63,7 +63,7 @@ FAB_AUTHORITY = "fab_authority"
 
 AUTH_KEYS = {
     FAB_TENANT_ID: [],
-    IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
+    IDENTITY_TYPE: ["user", "service_principal", "managed_identity", "azure_cli"],
 }
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
