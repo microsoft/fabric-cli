@@ -362,8 +362,6 @@ def register_bulk_export_parser(subparsers: _SubParsersAction) -> None:
     bulk_export_parser.add_argument(
         "-o",
         "--output",
-        nargs="+",
-        metavar="",
         required=True,
         help="Output path for bulk-export",
     )
@@ -371,7 +369,7 @@ def register_bulk_export_parser(subparsers: _SubParsersAction) -> None:
         "--recursive",
         required=False,
         action="store_true",
-        help="Recursively bulk-export folder contents",
+        help="Recursively export folder contents. Required for workspace and folder targets",
     )
     bulk_export_parser.add_argument(
         "-f",

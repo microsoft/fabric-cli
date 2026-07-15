@@ -30,7 +30,7 @@ def bulk_export_workspace(context: Workspace, args: Namespace) -> None:
         )
 
     # bulk export can be called with no items collected and create_bulk_export_payload will handle it as "export all", so we don't need to pre-collect items here like we do for folders. Just call bulk export directly with the workspace ID and let the API determine what to export based on the from_path.
-    payload = bulk_export_utils.create_bulk_export_payload(items_ids=[])
+    payload = bulk_export_utils.create_bulk_export_payload(item_ids=[])
     response = item_api.bulk_export_definitions(args, payload)
     exported_definitions = json.loads(response.text)
 

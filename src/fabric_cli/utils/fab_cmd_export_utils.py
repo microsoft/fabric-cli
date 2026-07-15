@@ -10,11 +10,11 @@ from fabric_cli.utils import fab_storage as utils_storage
 
 def decode_payload(item_def: dict) -> dict:
     # Check if item_def has the required structure
-    parts = []
-    if "definition" in item_def and "parts" in item_def["definition"]:
-        parts = item_def["definition"]["parts"]
-    elif "definitionParts" in item_def:
-        parts = item_def["definitionParts"]
+    parts = (
+        item_def["definition"]["parts"]
+        if "definition" in item_def and "parts" in item_def["definition"]
+        else item_def.get("definitionParts", [])
+    )
 
     for part in parts:
         # Check if the part has a payload that needs decoding

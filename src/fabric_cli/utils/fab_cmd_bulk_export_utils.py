@@ -25,13 +25,12 @@ def is_command_supported(element: Item) -> bool:
     return element.check_command_support(Command.FS_BULKEXPORT)
 
 
-def create_bulk_export_payload(items_ids: list[str]) -> str:
-    if not items_ids:
-        # If no specific item IDs are provided, we can choose to export all items or handle it as needed
-        # For this example, we'll return an empty payload which the API can interpret as "export all"
+def create_bulk_export_payload(item_ids: list[str]) -> str:
+    if not item_ids:
+        # If no specific item IDs are provided, the API will export all items
         return json.dumps({"items": [], "mode": "All"})
     payload_items = []
-    for item_id in items_ids:
+    for item_id in item_ids:
         item_dict = {
             "id": item_id,
         }
