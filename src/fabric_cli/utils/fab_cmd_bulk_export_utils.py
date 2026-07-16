@@ -98,6 +98,7 @@ def print_bulk_export_summary(
                 "output": args.output,
             }
         ],
+        show_key_value_list=True,
         message=output_format_message,
     )
 
