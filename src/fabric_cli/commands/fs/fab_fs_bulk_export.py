@@ -13,7 +13,7 @@ from fabric_cli.commands.fs.bulk_export.fab_fs_bulk_export_workspace import (
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_folder import Folder
-from fabric_cli.core.hiearchy.fab_hiearchy import FabricElement, Item, Workspace
+from fabric_cli.core.hiearchy.fab_hiearchy import FabricElement, Workspace
 from fabric_cli.errors.bulk_export import BulkExportErrors
 from fabric_cli.utils import fab_storage
 from fabric_cli.utils import fab_ui, fab_util

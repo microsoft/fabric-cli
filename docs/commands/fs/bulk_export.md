@@ -23,7 +23,7 @@ The `bulk-export` command exports all supported items from a workspace or folder
 
 **Supported Item Types:**
 
-`CopyJob`, `CosmosDBDatabase`, `Dataflow`, `DataPipeline`, `DigitalTwinBuilder`, `Environment`, `Eventhouse`, `Eventstream`, `GraphQLApi`, `GraphQuerySet`, `KQLDashboard`, `KQLDatabase`, `KQLQueryset`, `Lakehouse`, `Map`, `MirroredDatabase`, `MLExperiment`, `MLModel`, `MountedDataFactory`, `Notebook`, `Reflex`, `Report`, `SemanticModel`, `SparkJobDefinition`, `SQLDatabase`, `UserDataFunction`, `VariableLibrary`
+`CopyJob`, `CosmosDBDatabase`, `Dataflow`, `DataPipeline`, `DigitalTwinBuilder`, `DigitalTwinBuilderFlow`, `Environment`, `Eventhouse`, `Eventstream`, `GraphQLApi`, `GraphQuerySet`, `KQLDashboard`, `KQLDatabase`, `KQLQueryset`, `Lakehouse`, `Map`, `MirroredDatabase`, `MLExperiment`, `MLModel`, `MountedDataFactory`, `Notebook`, `Reflex`, `Report`, `SemanticModel`, `SparkJobDefinition`, `SQLDatabase`, `UserDataFunction`, `VariableLibrary`
 
 Unsupported item types are automatically skipped and reported in the output summary.
 
