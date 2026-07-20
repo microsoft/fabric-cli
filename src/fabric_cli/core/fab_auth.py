@@ -418,6 +418,52 @@ class FabAuth:
             }
         )
 
+    def set_azure_cli(self, tenant_id=None):
+        """Configure Azure CLI as the authentication source."""
+        self._set_auth_properties(
+            {
+                con.IDENTITY_TYPE: "azure_cli",
+            }
+        )
+        if tenant_id:
+            self.set_tenant(tenant_id)
+
+    def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
+        """Acquire a token using Azure CLI's AzureCliCredential."""
+        try:
+            from azure.identity import AzureCliCredential, CredentialUnavailableError
+        except ImportError:
+            raise FabricCLIError(
+                "Azure CLI auth requires the 'azure-identity' package. "
+                "Install it with: pip install azure-identity",
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        tenant_id = self.get_tenant_id()
+        try:
+            credential = AzureCliCredential(tenant_id=tenant_id) if tenant_id else AzureCliCredential()
+            # AzureCliCredential.get_token expects scopes as positional args
+            azure_token = credential.get_token(scope[0])
+            return {
+                "access_token": azure_token.token,
+                "expires_on": azure_token.expires_on,
+            }
+        except CredentialUnavailableError:
+            raise FabricCLIError(
+                "Azure CLI is not installed or not logged in. "
+                "Run 'az login' to authenticate, then retry.",
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except Exception as e:
+            # Sanitize: never include token content in error messages
+            error_msg = str(e)
+            if "accessToken" in error_msg or "token" in error_msg.lower():
+                error_msg = "Azure CLI token acquisition failed. Run 'az account get-access-token' manually to diagnose."
+            raise FabricCLIError(
+                f"Azure CLI authentication failed: {error_msg}",
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))
 
@@ -480,6 +526,8 @@ class FabAuth:
                         ErrorMessages.Auth.managed_identity_token_failed(),
                         status_code=con.ERROR_AUTHENTICATION_FAILED,
                     )
+            elif identity_type == "azure_cli":
+                token = self._acquire_token_from_azure_cli(scope)
             elif env_var_token:
                 token = {
                     "access_token": env_var_token,
