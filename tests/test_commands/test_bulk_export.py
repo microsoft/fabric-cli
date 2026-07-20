@@ -101,7 +101,7 @@ class TestBulkExport:
             BulkExportErrors.empty_target(workspace.name),
         )
 
-    def test_bulk_export_invalid_ouput_path_fail(
+    def test_bulk_export_invalid_output_path_fail(
         self, workspace, cli_executor, assert_fabric_cli_error, tmp_path
     ):
         # Execute command with invalid output path
