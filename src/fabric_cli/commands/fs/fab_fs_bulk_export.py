@@ -62,20 +62,18 @@ def _confirm_export_preconditions(args: Namespace) -> bool:
             BulkExportErrors.invalid_export_path(export_path["path"]),
             fab_constant.ERROR_INVALID_OPERATION,
         )
-    if os.path.isdir(export_path["path"]):
-        is_export_path_empty = True
-        with os.scandir(export_path["path"]) as entries:
-            is_export_path_empty = not any(entries)
-        if not is_export_path_empty:
-            if not args.force:
-                if not fab_ui.prompt_confirm(
-                    f"Output folder '{export_path['path']}' is not empty. Do you want to proceed?"
-                ):
-                    return False
-            else:
-                export_path_warning = True
-    else:
-        os.makedirs(export_path["path"], exist_ok=True)
+
+    is_export_path_empty = True
+    with os.scandir(export_path["path"]) as entries:
+        is_export_path_empty = not any(entries)
+    if not is_export_path_empty:
+        if not args.force:
+            if not fab_ui.prompt_confirm(
+                f"Output folder '{export_path['path']}' is not empty. Do you want to proceed?"
+            ):
+                return False
+        else:
+            export_path_warning = True
 
     if args.force:
         fab_ui.print_warning(

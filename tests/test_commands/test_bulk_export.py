@@ -6,7 +6,9 @@ from unittest.mock import patch
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_types import ItemType
+from fabric_cli.errors import ErrorMessages
 from fabric_cli.errors.bulk_export import BulkExportErrors
+from tests.test_commands.utils import cli_path_join
 
 
 class TestBulkExport:
@@ -97,6 +99,40 @@ class TestBulkExport:
         assert_fabric_cli_error(
             constant.ERROR_INVALID_OPERATION,
             BulkExportErrors.empty_target(workspace.name),
+        )
+
+    def test_bulk_export_invalid_ouput_path_fail(
+        self, workspace, cli_executor, assert_fabric_cli_error, tmp_path
+    ):
+        # Execute command with invalid output path
+        invalid_output_path = tmp_path / "non_existent_dir" / "output"
+        cli_executor.exec_command(
+            f"bulk-export {workspace.full_path} --output {str(invalid_output_path)} --force --recursive"
+        )
+
+        # Assert - should fail with error indicating invalid export path
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_PATH,
+            ErrorMessages.Common.no_such_file_or_directory(),
+        )
+
+    def test_bulk_export_non_local_output_path_fail(
+        self, workspace, item_factory, cli_executor, assert_fabric_cli_error
+    ):
+        # Setup
+        lakehouse = item_factory(ItemType.LAKEHOUSE)
+        lakehouse_onelake_full_path = cli_path_join(lakehouse.full_path, "Files")
+
+        cli_executor.exec_command(
+            f"bulk-export {workspace.full_path} --output {lakehouse_onelake_full_path} --force --recursive"
+        )
+
+        # Assert - should fail with error indicating invalid export path
+        assert_fabric_cli_error(
+            constant.ERROR_INVALID_OPERATION,
+            BulkExportErrors.invalid_export_path(
+                lakehouse_onelake_full_path.strip("/")
+            ),
         )
 
     def test_bulk_export_no_exportable_items_fail(
