@@ -281,7 +281,6 @@ def _process_json_response(parsed_json, ctxt_cmd):
     if parsed_json and isinstance(parsed_json, dict):
         # process responses according to the command context
 
-        # process bulk-export response to only log the itemDefinitionsIndex and definitionParts key
         if (
             ctxt_cmd == "bulk-export"
             and "itemDefinitionsIndex" in parsed_json
@@ -293,7 +292,7 @@ def _process_json_response(parsed_json, ctxt_cmd):
             )
         ):
             return {
-                k: ("definitionParts" if k == "definitionParts" else v)
+                k: ("redacted_from_log" if k == "definitionParts" else v)
                 for k, v in parsed_json.items()
             }
 
@@ -311,7 +310,10 @@ def _process_json_response(parsed_json, ctxt_cmd):
                 k: v for k, v in parsed_json["definition"].items() if k != "parts"
             }
             definition["parts"] = [
-                {k: ("payload" if k == "payload" else v) for k, v in part.items()}
+                {
+                    k: ("redacted_from_log" if k == "payload" else v)
+                    for k, v in part.items()
+                }
                 for part in parsed_json["definition"]["parts"]
             ]
             return {"definition": definition}

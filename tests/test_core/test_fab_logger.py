@@ -197,7 +197,7 @@ def test_log_debug_http_response_bulk_export(monkeypatch):
         )
 
     logged_messages = [call.args[0] for call in mock_debug.call_args_list]
-    expected_json = '{"itemDefinitionsIndex":{"item1":"index1"},"definitionParts":"definitionParts"}'
+    expected_json = '{"itemDefinitionsIndex":{"item1":"index1"},"definitionParts":"redacted_from_log"}'
     assert any(expected_json in msg for msg in logged_messages)
 
 
@@ -251,8 +251,8 @@ def test_log_debug_http_response_export(monkeypatch):
     logged_messages = [call.args[0] for call in mock_debug.call_args_list]
     expected_json = (
         '{"definition":{"format":"ipynb","parts":'
-        '[{"path":"notebook.ipynb","payload":"payload","payloadType":"base64"},'
-        '{"path":"meta.json","payload":"payload","payloadType":"base64"}]}}'
+        '[{"path":"notebook.ipynb","payload":"redacted_from_log","payloadType":"base64"},'
+        '{"path":"meta.json","payload":"redacted_from_log","payloadType":"base64"}]}}'
     )
     assert any(expected_json in msg for msg in logged_messages)
 
