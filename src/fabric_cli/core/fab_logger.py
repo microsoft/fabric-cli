@@ -265,6 +265,9 @@ def user_log_dir(app_name):
     return log_dir
 
 
+_ITEM_DEFINITION_PART_KEYS = {"path", "payload", "payloadType"}
+
+
 def _parse_json_into_single_line(json_text, ctxt_cmd):
     try:
         parsed_json = _process_json_response(json.loads(json_text), ctxt_cmd)
@@ -283,16 +286,26 @@ def _process_json_response(parsed_json, ctxt_cmd):
             ctxt_cmd == "bulk-export"
             and "itemDefinitionsIndex" in parsed_json
             and "definitionParts" in parsed_json
+            and isinstance(parsed_json["definitionParts"], list)
+            and all(
+                isinstance(part, dict) and _ITEM_DEFINITION_PART_KEYS <= part.keys()
+                for part in parsed_json["definitionParts"]
+            )
         ):
             return {
-                "itemDefinitionsIndex": parsed_json["itemDefinitionsIndex"],
-                "definitionParts": "definitionParts",
+                k: ("definitionParts" if k == "definitionParts" else v)
+                for k, v in parsed_json.items()
             }
 
         if (
             ctxt_cmd == "export"
             and "definition" in parsed_json
             and "parts" in parsed_json["definition"]
+            and isinstance(parsed_json["definition"]["parts"], list)
+            and all(
+                isinstance(part, dict) and _ITEM_DEFINITION_PART_KEYS <= part.keys()
+                for part in parsed_json["definition"]["parts"]
+            )
         ):
             definition = {
                 k: v for k, v in parsed_json["definition"].items() if k != "parts"

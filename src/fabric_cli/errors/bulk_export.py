@@ -22,10 +22,6 @@ class BulkExportErrors:
         return "No exportable items found. All items have unsupported types"
 
     @staticmethod
-    def no_definition_returned(artifact_name: str) -> str:
-        return f"No definition returned for '{artifact_name}'"
-
-    @staticmethod
     def invalid_export_path(path: str) -> str:
         return f"Export path '{path}' is not a valid directory"
 

@@ -182,7 +182,7 @@ def test_log_debug_http_response_bulk_export(monkeypatch):
                 {
                     "path": "item_path",
                     "payload": "item_payload",
-                    "payload_type": "base64",
+                    "payloadType": "base64",
                 }
             ],
         }
@@ -225,8 +225,16 @@ def test_log_debug_http_response_export(monkeypatch):
             "definition": {
                 "format": "ipynb",
                 "parts": [
-                    {"path": "notebook.ipynb", "payload": "base64encodedcontent"},
-                    {"path": "meta.json", "payload": "anotherpayload"},
+                    {
+                        "path": "notebook.ipynb",
+                        "payload": "base64encodedcontent",
+                        "payloadType": "base64",
+                    },
+                    {
+                        "path": "meta.json",
+                        "payload": "anotherpayload",
+                        "payloadType": "base64",
+                    },
                 ],
             }
         }
@@ -243,8 +251,8 @@ def test_log_debug_http_response_export(monkeypatch):
     logged_messages = [call.args[0] for call in mock_debug.call_args_list]
     expected_json = (
         '{"definition":{"format":"ipynb","parts":'
-        '[{"path":"notebook.ipynb","payload":"payload"},'
-        '{"path":"meta.json","payload":"payload"}]}}'
+        '[{"path":"notebook.ipynb","payload":"payload","payloadType":"base64"},'
+        '{"path":"meta.json","payload":"payload","payloadType":"base64"}]}}'
     )
     assert any(expected_json in msg for msg in logged_messages)
 
