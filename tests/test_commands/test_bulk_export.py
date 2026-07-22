@@ -13,7 +13,7 @@ from tests.test_commands.utils import cli_path_join
 
 class TestBulkExport:
 
-    def test_bulk_export_item_fail(
+    def test_bulk_export_item_failure(
         self, item_factory, cli_executor, assert_fabric_cli_error, tmp_path
     ):
         # Setup
@@ -30,7 +30,7 @@ class TestBulkExport:
             BulkExportErrors.invalid_target(item.name),
         )
 
-    def test_bulk_export_workspace_folder_without_recursive_fail(
+    def test_bulk_export_workspace_folder_without_recursive_failure(
         self,
         folder_factory,
         item_factory,
@@ -42,7 +42,6 @@ class TestBulkExport:
         folder = folder_factory()
         _ = item_factory(ItemType.NOTEBOOK, path=folder.full_path)
 
-        # Execute command with --preserve_binding but without --recursive (which is required for workspace/folder)
         cli_executor.exec_command(
             f"bulk-export {folder.full_path} --output {str(tmp_path)} --force"
         )
@@ -53,13 +52,12 @@ class TestBulkExport:
             BulkExportErrors.recursive_flag_required(),
         )
 
-    def test_bulk_export_workspace_without_recursive_fail(
+    def test_bulk_export_workspace_without_recursive_failure(
         self, workspace, item_factory, cli_executor, assert_fabric_cli_error, tmp_path
     ):
         # Setup
         _ = item_factory(ItemType.NOTEBOOK, path=workspace.full_path)
 
-        # Execute command with --preserve_binding but without --recursive (which is required for workspace)
         cli_executor.exec_command(
             f"bulk-export {workspace.full_path} --output {str(tmp_path)} --force"
         )
@@ -70,7 +68,7 @@ class TestBulkExport:
             BulkExportErrors.recursive_flag_required(),
         )
 
-    def test_bulk_export_empty_folder_fail(
+    def test_bulk_export_empty_folder_failure(
         self, cli_executor, folder_factory, assert_fabric_cli_error, tmp_path
     ):
         # Setup
@@ -87,7 +85,7 @@ class TestBulkExport:
             BulkExportErrors.empty_target(folder.name),
         )
 
-    def test_bulk_export_empty_workspace_fail(
+    def test_bulk_export_empty_workspace_failure(
         self, cli_executor, workspace, assert_fabric_cli_error, tmp_path
     ):
         # Execute command with --recursive on empty workspace
@@ -101,7 +99,7 @@ class TestBulkExport:
             BulkExportErrors.empty_target(workspace.name),
         )
 
-    def test_bulk_export_invalid_output_path_fail(
+    def test_bulk_export_invalid_output_path_failure(
         self, workspace, cli_executor, assert_fabric_cli_error, tmp_path
     ):
         # Execute command with invalid output path
@@ -116,7 +114,7 @@ class TestBulkExport:
             ErrorMessages.Common.no_such_file_or_directory(),
         )
 
-    def test_bulk_export_non_local_output_path_fail(
+    def test_bulk_export_non_local_output_path_failure(
         self, workspace, item_factory, cli_executor, assert_fabric_cli_error
     ):
         # Setup
@@ -135,7 +133,7 @@ class TestBulkExport:
             ),
         )
 
-    def test_bulk_export_no_exportable_items_fail(
+    def test_bulk_export_no_exportable_items_failure(
         self,
         folder_factory,
         item_factory,
@@ -191,6 +189,7 @@ class TestBulkExport:
         cli_executor,
         tmp_path,
         mock_print_warning,
+        mock_print_output_format,
     ):
         # Setup - create workspace/folder/item structure
         folder1 = folder_factory()
@@ -198,21 +197,23 @@ class TestBulkExport:
         _ = item_factory(ItemType.NOTEBOOK, path=folder1.full_path)
         notebook2 = item_factory(ItemType.NOTEBOOK, path=folder2.full_path)
 
-        with patch("fabric_cli.utils.fab_ui.print_output_format") as mock_print_output:
-            # Execute bulk-export on top-level folder with --recursive
-            cli_executor.exec_command(
-                f"bulk-export {folder2.full_path} --output {str(tmp_path)} --recursive --force"
-            )
+        # Reset mock
+        mock_print_output_format.reset_mock()
 
-            # Assert - should print warning about sensitivity labels and confirm export completion
-            mock_print_warning.assert_called_once_with(
-                "Item definitions are exported without their sensitivity labels"
-            )
-            mock_print_output.assert_called_once()
-            call_kwargs = mock_print_output.call_args
-            assert "Exported 1 items" in call_kwargs.kwargs.get(
-                "message", call_kwargs[1].get("message", "")
-            )
+        # Execute bulk-export on top-level folder with --recursive
+        cli_executor.exec_command(
+            f"bulk-export {folder2.full_path} --output {str(tmp_path)} --recursive --force"
+        )
+
+        # Assert - should print warning about sensitivity labels and confirm export completion
+        mock_print_warning.assert_called_once_with(
+            "Item definitions are exported without their sensitivity labels"
+        )
+        mock_print_output_format.assert_called_once()
+        call_kwargs = mock_print_output_format.call_args
+        assert "Exported 1 items" in call_kwargs.kwargs.get(
+            "message", call_kwargs[1].get("message", "")
+        )
 
         # Assert
         export_path = (
@@ -232,6 +233,7 @@ class TestBulkExport:
         workspace,
         tmp_path,
         mock_print_warning,
+        mock_print_output_format,
     ):
         # Setup
         folder1 = folder_factory(path=workspace.full_path)
@@ -241,41 +243,39 @@ class TestBulkExport:
 
         # Reset mock
         mock_print_warning.reset_mock()
+        mock_print_output_format.reset_mock()
 
-        with patch("fabric_cli.utils.fab_ui.print_output_format") as mock_print_output:
-            # Execute command
-            cli_executor.exec_command(
-                f"bulk-export {workspace.full_path} --output {str(tmp_path)} --force --recursive"
-            )
+        # Execute command
+        cli_executor.exec_command(
+            f"bulk-export {workspace.full_path} --output {str(tmp_path)} --force --recursive"
+        )
 
-            # Assert
-            export_path1 = (
-                tmp_path / folder1.display_name / f"{notebook1.display_name}.Notebook"
-            )
-            export_path2 = (
-                tmp_path
-                / folder1.display_name
-                / folder2.display_name
-                / f"{notebook2.display_name}.Notebook"
-            )
-            assert export_path1.is_dir()
-            assert export_path2.is_dir()
-            files1 = list(export_path1.iterdir())
-            files2 = list(export_path2.iterdir())
-            assert len(files1) == 2
-            assert len(files2) == 2
-            assert any(file.suffix == ".py" for file in files1)
-            assert any(file.suffix == ".py" for file in files2)
-            assert any(file.name == ".platform" for file in files1)
-            assert any(file.name == ".platform" for file in files2)
-            mock_print_output.assert_called_once()
-            call_kwargs = mock_print_output.call_args
-            message = call_kwargs.kwargs.get(
-                "message", call_kwargs[1].get("message", "")
-            )
-            assert "Exported 2 items" in message
-            assert "Skipped" not in message
-            mock_print_warning.assert_called_once()
+        # Assert
+        export_path1 = (
+            tmp_path / folder1.display_name / f"{notebook1.display_name}.Notebook"
+        )
+        export_path2 = (
+            tmp_path
+            / folder1.display_name
+            / folder2.display_name
+            / f"{notebook2.display_name}.Notebook"
+        )
+        assert export_path1.is_dir()
+        assert export_path2.is_dir()
+        files1 = list(export_path1.iterdir())
+        files2 = list(export_path2.iterdir())
+        assert len(files1) == 2
+        assert len(files2) == 2
+        assert any(file.suffix == ".py" for file in files1)
+        assert any(file.suffix == ".py" for file in files2)
+        assert any(file.name == ".platform" for file in files1)
+        assert any(file.name == ".platform" for file in files2)
+        mock_print_output_format.assert_called_once()
+        call_kwargs = mock_print_output_format.call_args
+        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        assert "Exported 2 items" in message
+        assert "Skipped" not in message
+        mock_print_warning.assert_called_once()
 
     def test_bulk_export_workspace_with_unsupported_items_success(
         self,
@@ -283,38 +283,39 @@ class TestBulkExport:
         workspace,
         item_factory,
         tmp_path,
+        mock_print_output_format,
     ):
         # unsupported items are items that are not supported by the bulk-export command, but user has required permissions
         # Setup - create a workspace with both supported and unsupported items
         notebook = item_factory(ItemType.NOTEBOOK, path=workspace.full_path)
         _ = item_factory(ItemType.ENVIRONMENT, path=workspace.full_path)
 
-        with patch("fabric_cli.utils.fab_ui.print_output_format") as mock_print_output:
-            # Execute command
-            with patch(
-                "fabric_cli.utils.fab_cmd_bulk_export_utils.is_command_supported"
-            ) as side_effect_mock:
-                # Mock is_command_supported to return False for ENVIRONMENT item to simulate unsupported item type
-                def is_command_supported_side_effect(element):
-                    if element.item_type == ItemType.ENVIRONMENT:
-                        raise FabricCLIError()
-                    return True
+        # Reset mock
+        mock_print_output_format.reset_mock()
 
-                side_effect_mock.side_effect = is_command_supported_side_effect
-                cli_executor.exec_command(
-                    f"bulk-export {workspace.full_path} --output {str(tmp_path)} --force --recursive"
-                )
+        # Execute command
+        with patch(
+            "fabric_cli.utils.fab_cmd_bulk_export_utils.is_command_supported"
+        ) as side_effect_mock:
+            # Mock is_command_supported to return False for ENVIRONMENT item to simulate unsupported item type
+            def is_command_supported_side_effect(element):
+                if element.item_type == ItemType.ENVIRONMENT:
+                    raise FabricCLIError()
+                return True
 
-            # Assert - should print summary with exported and skipped counts
-            mock_print_output.assert_called_once()
-            call_kwargs = mock_print_output.call_args
-            message = call_kwargs.kwargs.get(
-                "message", call_kwargs[1].get("message", "")
+            side_effect_mock.side_effect = is_command_supported_side_effect
+            cli_executor.exec_command(
+                f"bulk-export {workspace.full_path} --output {str(tmp_path)} --force --recursive"
             )
-            assert "Exported 1 items" in message
-            assert "Skipped 1 items due to unsupported item types" in message
-            # Unsupported item type should be mentioned in the message
-            assert "Environment (1)" in message
+
+        # Assert - should print summary with exported and skipped counts
+        mock_print_output_format.assert_called_once()
+        call_kwargs = mock_print_output_format.call_args
+        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        assert "Exported 1 items" in message
+        assert "Skipped 1 items due to unsupported item types" in message
+        # Unsupported item type should be mentioned in the message
+        assert "Environment (1)" in message
 
         # Assert - only the supported notebook should be exported
         export_path = tmp_path / f"{notebook.display_name}.Notebook"
@@ -331,6 +332,7 @@ class TestBulkExport:
         folder_factory,
         item_factory,
         tmp_path,
+        mock_print_output_format,
     ):
         # unsupported items are items that are not supported by the bulk-export command, but user has required permissions
         # Setup - create a folder with both supported and unsupported items
@@ -338,35 +340,35 @@ class TestBulkExport:
         notebook = item_factory(ItemType.NOTEBOOK, path=folder.full_path)
         _ = item_factory(ItemType.ENVIRONMENT, path=folder.full_path)
 
-        with patch("fabric_cli.utils.fab_ui.print_output_format") as mock_print_output:
-            # Execute command
-            with patch(
-                "fabric_cli.utils.fab_cmd_bulk_export_utils.is_command_supported"
-            ) as side_effect_mock:
-                # Mock is_command_supported to return False for ENVIRONMENT item to simulate unsupported item type
-                def is_command_supported_side_effect(element):
-                    if element.item_type == ItemType.ENVIRONMENT:
-                        raise FabricCLIError()
-                    return True
+        # Reset mock
+        mock_print_output_format.reset_mock()
 
-                side_effect_mock.side_effect = is_command_supported_side_effect
-                cli_executor.exec_command(
-                    f"bulk-export {folder.full_path} --output {str(tmp_path)} --force --recursive"
-                )
+        # Execute command
+        with patch(
+            "fabric_cli.utils.fab_cmd_bulk_export_utils.is_command_supported"
+        ) as side_effect_mock:
+            # Mock is_command_supported to return False for ENVIRONMENT item to simulate unsupported item type
+            def is_command_supported_side_effect(element):
+                if element.item_type == ItemType.ENVIRONMENT:
+                    raise FabricCLIError()
+                return True
 
-            # Assert - should print summary with exported and skipped counts
-            mock_print_output.assert_called_once()
-            call_kwargs = mock_print_output.call_args
-            message = call_kwargs.kwargs.get(
-                "message", call_kwargs[1].get("message", "")
+            side_effect_mock.side_effect = is_command_supported_side_effect
+            cli_executor.exec_command(
+                f"bulk-export {folder.full_path} --output {str(tmp_path)} --force --recursive"
             )
-            assert "Exported 1 items" in message
-            assert "Skipped 1 items due to unsupported item types" in message
-            # Unsupported item type should be mentioned in the message
-            assert "Environment (1)" in message
-            data = call_kwargs.kwargs.get("data", call_kwargs[1].get("data", []))
-            assert data[0]["exported"] == 1
-            assert data[0]["skipped"] == 1
+
+        # Assert - should print summary with exported and skipped counts
+        mock_print_output_format.assert_called_once()
+        call_kwargs = mock_print_output_format.call_args
+        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        assert "Exported 1 items" in message
+        assert "Skipped 1 items due to unsupported item types" in message
+        # Unsupported item type should be mentioned in the message
+        assert "Environment (1)" in message
+        data = call_kwargs.kwargs.get("data", call_kwargs[1].get("data", []))
+        assert data[0]["exported"] == 1
+        assert data[0]["skipped"] == 1
 
         # Assert - only the supported notebook should be exported
         export_path = (
