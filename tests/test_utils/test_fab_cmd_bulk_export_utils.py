@@ -33,13 +33,6 @@ class TestCreateBulkExportPayload:
         assert len(result["items"]) == 3
         assert result["items"] == [{"id": "id-1"}, {"id": "id-2"}, {"id": "id-3"}]
 
-    def test_returns_valid_json_string(self):
-        payload = create_bulk_export_payload(["abc"])
-        assert isinstance(payload, str)
-        parsed = json.loads(payload)
-        assert "items" in parsed
-        assert "mode" in parsed
-
     def test_preserves_item_id_values(self):
         guid = "00000000-0000-0000-0000-000000000000"
         result = json.loads(create_bulk_export_payload([guid]))
@@ -146,21 +139,37 @@ class TestPrintBulkExportSummary:
 
 
 class TestExportDefinitionPartsToStorage:
+    @pytest.fixture(autouse=True)
+    def setup_mocks(self):
+        with (
+            patch(
+                "fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts"
+            ) as mock_export,
+            patch(
+                "fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path"
+            ) as mock_get_path,
+            patch(
+                "fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload"
+            ) as mock_decode,
+            patch(
+                "fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_grey"
+            ) as mock_print,
+        ):
+            self.mock_export = mock_export
+            self.mock_get_path = mock_get_path
+            self.mock_decode = mock_decode
+            self.mock_print = mock_print
+            yield
+
     @pytest.fixture
     def base_args(self, tmp_path):
         output_dir = str(tmp_path / "export_output")
         return Namespace(output=output_dir, from_path="myws.Workspace")
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_grey")
-    def test_workspace_export_no_parent_folders(
-        self, mock_print, mock_decode, mock_get_path, mock_export, base_args, tmp_path
-    ):
+    def test_workspace_export_no_parent_folders(self, base_args, tmp_path):
         export_path = str(tmp_path / "export_output")
-        mock_get_path.return_value = {"type": "local", "path": export_path}
-        mock_decode.return_value = {
+        self.mock_get_path.return_value = {"type": "local", "path": export_path}
+        self.mock_decode.return_value = {
             "definitionParts": [
                 {"path": "/n1.Notebook/notebook-content.py", "payload": "content"}
             ]
@@ -173,29 +182,23 @@ class TestExportDefinitionPartsToStorage:
 
         export_definition_parts_to_storage(base_args, "ws1.Workspace", response)
 
-        mock_decode.assert_called_once_with(response)
-        mock_get_path.assert_called_once_with(base_args.output)
-        mock_export.assert_called_once_with(
+        self.mock_decode.assert_called_once_with(response)
+        self.mock_get_path.assert_called_once_with(base_args.output)
+        self.mock_export.assert_called_once_with(
             base_args,
-            mock_decode.return_value,
+            self.mock_decode.return_value,
             {"type": "local", "path": export_path},
             definition_parts="definitionParts",
         )
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_grey")
-    def test_nested_folder_strips_parent_prefix(
-        self, mock_print, mock_decode, mock_get_path, mock_export, tmp_path
-    ):
+    def test_nested_folder_strips_parent_prefix(self, tmp_path):
         args = Namespace(
             output=str(tmp_path / "out"),
             from_path="myws.Workspace/f1.Folder/f2.Folder",
         )
         export_path = str(tmp_path / "out")
-        mock_get_path.return_value = {"type": "local", "path": export_path}
-        mock_decode.return_value = {
+        self.mock_get_path.return_value = {"type": "local", "path": export_path}
+        self.mock_decode.return_value = {
             "definitionParts": [
                 {
                     "path": "/f1/f2/n1.Notebook/notebook-content.py",
@@ -220,25 +223,19 @@ class TestExportDefinitionPartsToStorage:
         export_definition_parts_to_storage(args, "f2.Folder", response)
 
         # After stripping, paths should have the /f1 prefix removed
-        exported_def = mock_export.call_args.args[1]
+        exported_def = self.mock_export.call_args.args[1]
         for part in exported_def["definitionParts"]:
             assert not part["path"].startswith("/f1/")
             assert part["path"].startswith("/f2/")
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload")
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_grey")
-    def test_deeply_nested_folders_strips_all_parent_segments(
-        self, mock_print, mock_decode, mock_get_path, mock_export, tmp_path
-    ):
+    def test_deeply_nested_folders_strips_all_parent_segments(self, tmp_path):
         args = Namespace(
             output=str(tmp_path / "out"),
             from_path="myws.Workspace/f1.Folder/f2.Folder/f3.Folder",
         )
         export_path = str(tmp_path / "out")
-        mock_get_path.return_value = {"type": "local", "path": export_path}
-        mock_decode.return_value = {
+        self.mock_get_path.return_value = {"type": "local", "path": export_path}
+        self.mock_decode.return_value = {
             "definitionParts": [
                 {
                     "path": "/f1/f2/f3/n1.Notebook/content.json",
@@ -257,7 +254,7 @@ class TestExportDefinitionPartsToStorage:
 
         export_definition_parts_to_storage(args, "f3.Folder", response)
 
-        exported_def = mock_export.call_args.args[1]
+        exported_def = self.mock_export.call_args.args[1]
         assert (
             exported_def["definitionParts"][0]["path"] == "/f3/n1.Notebook/content.json"
         )

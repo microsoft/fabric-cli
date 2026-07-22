@@ -1158,12 +1158,6 @@ def mock_print_grey():
 
 
 @pytest.fixture
-def mock_print_output_format():
-    with patch("fabric_cli.utils.fab_ui.print_output_format") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_fab_ui_print_error():
     with patch("fabric_cli.utils.fab_ui.print_output_error") as mock:
         yield mock

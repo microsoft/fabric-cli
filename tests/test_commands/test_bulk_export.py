@@ -189,7 +189,7 @@ class TestBulkExport:
         cli_executor,
         tmp_path,
         mock_print_warning,
-        mock_print_output_format,
+        mock_print_done,
     ):
         # Setup - create workspace/folder/item structure
         folder1 = folder_factory()
@@ -198,7 +198,7 @@ class TestBulkExport:
         notebook2 = item_factory(ItemType.NOTEBOOK, path=folder2.full_path)
 
         # Reset mock
-        mock_print_output_format.reset_mock()
+        mock_print_done.reset_mock()
 
         # Execute bulk-export on top-level folder with --recursive
         cli_executor.exec_command(
@@ -209,21 +209,14 @@ class TestBulkExport:
         mock_print_warning.assert_called_once_with(
             "Item definitions are exported without their sensitivity labels"
         )
-        mock_print_output_format.assert_called_once()
-        call_kwargs = mock_print_output_format.call_args
-        assert "Exported 1 items" in call_kwargs.kwargs.get(
-            "message", call_kwargs[1].get("message", "")
-        )
+        mock_print_done.assert_called_once()
+        assert "Exported 1 items" in mock_print_done.call_args[0][0]
 
         # Assert
         export_path = (
             tmp_path / folder2.display_name / f"{notebook2.display_name}.Notebook"
         )
-        assert export_path.is_dir()
-        files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.suffix == ".py" for file in files)
-        assert any(file.name == ".platform" for file in files)
+        _assert_exported_notebook(export_path)
 
     def test_bulk_export_workspace_with_folders_structure_success(
         self,
@@ -233,7 +226,7 @@ class TestBulkExport:
         workspace,
         tmp_path,
         mock_print_warning,
-        mock_print_output_format,
+        mock_print_done,
     ):
         # Setup
         folder1 = folder_factory(path=workspace.full_path)
@@ -243,7 +236,7 @@ class TestBulkExport:
 
         # Reset mock
         mock_print_warning.reset_mock()
-        mock_print_output_format.reset_mock()
+        mock_print_done.reset_mock()
 
         # Execute command
         cli_executor.exec_command(
@@ -260,19 +253,10 @@ class TestBulkExport:
             / folder2.display_name
             / f"{notebook2.display_name}.Notebook"
         )
-        assert export_path1.is_dir()
-        assert export_path2.is_dir()
-        files1 = list(export_path1.iterdir())
-        files2 = list(export_path2.iterdir())
-        assert len(files1) == 2
-        assert len(files2) == 2
-        assert any(file.suffix == ".py" for file in files1)
-        assert any(file.suffix == ".py" for file in files2)
-        assert any(file.name == ".platform" for file in files1)
-        assert any(file.name == ".platform" for file in files2)
-        mock_print_output_format.assert_called_once()
-        call_kwargs = mock_print_output_format.call_args
-        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        _assert_exported_notebook(export_path1)
+        _assert_exported_notebook(export_path2)
+        mock_print_done.assert_called_once()
+        message = mock_print_done.call_args[0][0]
         assert "Exported 2 items" in message
         assert "Skipped" not in message
         mock_print_warning.assert_called_once()
@@ -283,7 +267,7 @@ class TestBulkExport:
         workspace,
         item_factory,
         tmp_path,
-        mock_print_output_format,
+        mock_print_done,
     ):
         # unsupported items are items that are not supported by the bulk-export command, but user has required permissions
         # Setup - create a workspace with both supported and unsupported items
@@ -291,7 +275,7 @@ class TestBulkExport:
         _ = item_factory(ItemType.ENVIRONMENT, path=workspace.full_path)
 
         # Reset mock
-        mock_print_output_format.reset_mock()
+        mock_print_done.reset_mock()
 
         # Execute command
         with patch(
@@ -309,9 +293,8 @@ class TestBulkExport:
             )
 
         # Assert - should print summary with exported and skipped counts
-        mock_print_output_format.assert_called_once()
-        call_kwargs = mock_print_output_format.call_args
-        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        mock_print_done.assert_called_once()
+        message = mock_print_done.call_args[0][0]
         assert "Exported 1 items" in message
         assert "Skipped 1 items due to unsupported item types" in message
         # Unsupported item type should be mentioned in the message
@@ -319,11 +302,7 @@ class TestBulkExport:
 
         # Assert - only the supported notebook should be exported
         export_path = tmp_path / f"{notebook.display_name}.Notebook"
-        assert export_path.is_dir()
-        files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.suffix == ".py" for file in files)
-        assert any(file.name == ".platform" for file in files)
+        _assert_exported_notebook(export_path)
 
     def test_bulk_export_folder_with_unsupported_items_success(
         self,
@@ -332,7 +311,7 @@ class TestBulkExport:
         folder_factory,
         item_factory,
         tmp_path,
-        mock_print_output_format,
+        mock_print_done,
     ):
         # unsupported items are items that are not supported by the bulk-export command, but user has required permissions
         # Setup - create a folder with both supported and unsupported items
@@ -341,7 +320,7 @@ class TestBulkExport:
         _ = item_factory(ItemType.ENVIRONMENT, path=folder.full_path)
 
         # Reset mock
-        mock_print_output_format.reset_mock()
+        mock_print_done.reset_mock()
 
         # Execute command
         with patch(
@@ -359,26 +338,18 @@ class TestBulkExport:
             )
 
         # Assert - should print summary with exported and skipped counts
-        mock_print_output_format.assert_called_once()
-        call_kwargs = mock_print_output_format.call_args
-        message = call_kwargs.kwargs.get("message", call_kwargs[1].get("message", ""))
+        mock_print_done.assert_called_once()
+        message = mock_print_done.call_args[0][0]
         assert "Exported 1 items" in message
         assert "Skipped 1 items due to unsupported item types" in message
         # Unsupported item type should be mentioned in the message
         assert "Environment (1)" in message
-        data = call_kwargs.kwargs.get("data", call_kwargs[1].get("data", []))
-        assert data[0]["exported"] == 1
-        assert data[0]["skipped"] == 1
 
         # Assert - only the supported notebook should be exported
         export_path = (
             tmp_path / folder.display_name / f"{notebook.display_name}.Notebook"
         )
-        assert export_path.is_dir()
-        files = list(export_path.iterdir())
-        assert len(files) == 2
-        assert any(file.suffix == ".py" for file in files)
-        assert any(file.name == ".platform" for file in files)
+        _assert_exported_notebook(export_path)
 
     def test_bulk_export_and_deploy_round_trip(
         self, cli_executor, workspace_factory, folder_factory, item_factory, tmp_path
@@ -459,3 +430,11 @@ def _create_config_file(
         yaml.dump(config_data, f, default_flow_style=False)
 
     return config_path
+
+
+def _assert_exported_notebook(export_path):
+    assert export_path.is_dir()
+    files = list(export_path.iterdir())
+    assert len(files) == 2
+    assert any(file.suffix == ".py" for file in files)
+    assert any(file.name == ".platform" for file in files)
