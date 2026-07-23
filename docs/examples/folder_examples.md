@@ -120,7 +120,7 @@ Bulk-export all supported items from a folder preserving folder structure and it
 
 Export a folder and all its sub-folders to a local directory.
 
-```py
+```
 fab bulk-export ws1.Workspace/fd1.Folder -o /tmp --recursive
 ```
 

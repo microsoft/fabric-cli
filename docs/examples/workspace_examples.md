@@ -268,7 +268,7 @@ Bulk-export all supported items from a workspace preserving folder structure and
 
 #### Bulk-Export Workspace to Local Directory
 
-```py
+```
 fab bulk-export ws1.Workspace -o /tmp --recursive
 ```
 
