@@ -310,6 +310,41 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
         assert "ErrorCode" == excinfo.value.status_code
 
 
+@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
+def test_do_request_429_without_retry_after_header_retries_with_default_interval(
+    mock_get_token,
+):
+    """A 429 response missing the Retry-After header should fall back to the default
+    polling interval and retry instead of raising an unexpected KeyError."""
+
+    class DummyResponse:
+        def __init__(self, status_code, headers=None, text=""):
+            self.status_code = status_code
+            self.text = text
+            self.content = text.encode()
+            self.headers = headers if headers is not None else {}
+
+    # First response: throttled (429) with NO Retry-After header.
+    # Second response: success (200), so the retry loop can complete.
+    throttled = DummyResponse(429)
+    success = DummyResponse(200, text="{}")
+
+    dummy_args = Namespace()
+    dummy_args.uri = f"workspaces/{str(uuid.uuid4())}/items"
+    dummy_args.method = "get"
+    dummy_args.audience = None
+
+    with (
+        patch("requests.Session.request", side_effect=[throttled, success]),
+        patch("fabric_cli.client.fab_api_client.time.sleep") as mock_sleep,
+    ):
+        response = do_request(dummy_args, hostname="custom.hostname.com")
+
+    assert response.status_code == 200
+    # Retried using the default polling interval (10s) rather than raising.
+    mock_sleep.assert_called_once_with(10)
+
+
 @pytest.mark.parametrize(
     "host_app_env, host_app_version_env, expected_suffix",
     [

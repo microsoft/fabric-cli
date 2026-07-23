@@ -192,7 +192,7 @@ def do_request(
                         fab_constant.ERROR_NOT_FOUND,
                     )
                 case 429:
-                    retry_after = int(response.headers["Retry-After"])
+                    retry_after = get_polling_interval(response.headers)
                     utils_ui.print_info(
                         f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
                     )
