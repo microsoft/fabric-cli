@@ -10,6 +10,9 @@ The `bulk-export` command exports all supported items from a workspace or folder
     - **Workspace export**: Only items that the caller has both read and write permissions for are exported.
     - **Folder export**: The caller must have read and write permissions for all folder items.
 
+!!! note "Beta API"
+    This command relies on the Fabric [bulk export item definitions API](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/bulk-export-item-definitions(beta)), which is currently in beta.
+
 !!! note "Differences from `export`"
     - **Folder structure**: `bulk-export` preserves the workspace folder hierarchy in the output. `export` exports items flat.
     - **Item bindings**: `bulk-export` preserves item logical IDs, enabling round-trip import/update. `export` uses nil UUIDs.

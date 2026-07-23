@@ -13,6 +13,7 @@ from logging.handlers import RotatingFileHandler
 import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
+from fabric_cli.core.fab_logger_response import process_response
 from fabric_cli.utils.fab_secure_io import (
     create_restricted_dir,
     get_restricted_file_opener,
@@ -265,57 +266,10 @@ def user_log_dir(app_name):
     return log_dir
 
 
-_ITEM_DEFINITION_PART_KEYS = {"path", "payload", "payloadType"}
-
-
 def _parse_json_into_single_line(json_text, ctxt_cmd):
     try:
-        parsed_json = _process_json_response(json.loads(json_text), ctxt_cmd)
+        parsed_json = process_response(json.loads(json_text), ctxt_cmd)
         compact_json = json.dumps(parsed_json, separators=(",", ":"))
         return compact_json
     except json.JSONDecodeError:
         return "Failed to parse JSON response"
-
-
-def _process_json_response(parsed_json, ctxt_cmd):
-    if parsed_json and isinstance(parsed_json, dict):
-        # process responses according to the command context
-
-        if (
-            ctxt_cmd == "bulk-export"
-            and "itemDefinitionsIndex" in parsed_json
-            and "definitionParts" in parsed_json
-            and isinstance(parsed_json["definitionParts"], list)
-            and all(
-                isinstance(part, dict) and _ITEM_DEFINITION_PART_KEYS <= part.keys()
-                for part in parsed_json["definitionParts"]
-            )
-        ):
-            return {
-                k: ("redacted_from_log" if k == "definitionParts" else v)
-                for k, v in parsed_json.items()
-            }
-
-        if (
-            ctxt_cmd == "export"
-            and "definition" in parsed_json
-            and "parts" in parsed_json["definition"]
-            and isinstance(parsed_json["definition"]["parts"], list)
-            and all(
-                isinstance(part, dict) and _ITEM_DEFINITION_PART_KEYS <= part.keys()
-                for part in parsed_json["definition"]["parts"]
-            )
-        ):
-            definition = {
-                k: v for k, v in parsed_json["definition"].items() if k != "parts"
-            }
-            definition["parts"] = [
-                {
-                    k: ("redacted_from_log" if k == "payload" else v)
-                    for k, v in part.items()
-                }
-                for part in parsed_json["definition"]["parts"]
-            ]
-            return {"definition": definition}
-
-    return parsed_json
