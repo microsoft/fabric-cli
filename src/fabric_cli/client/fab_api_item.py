@@ -109,6 +109,15 @@ def get_item_definition(args: Namespace) -> ApiResponse:
     return fabric_api.do_request(args)
 
 
+def bulk_export_definitions(args: Namespace, payload: str) -> ApiResponse:
+    """https://learn.microsoft.com/en-us/rest/api/fabric/core/items/bulk-export-item-definitions"""
+    args.uri = f"workspaces/{args.ws_id}/items/bulkExportDefinitions?beta=true"
+    args.method = "post"
+    args.wait = True
+
+    return fabric_api.do_request(args, data=payload)
+
+
 def update_item_definition(
     args: Namespace, payload: str, item_uri: Optional[bool] = False
 ) -> ApiResponse:

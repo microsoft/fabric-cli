@@ -156,7 +156,11 @@ def do_request(
             start_time = time.time()
             response = session.request(method=method, url=url, **request_params)
             fab_logger.log_debug_http_response(
-                response.status_code, response.headers, response.text, start_time
+                response.status_code,
+                response.headers,
+                response.text,
+                start_time,
+                ctxt_cmd,
             )
 
             api_error_code = response.headers.get(

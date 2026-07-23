@@ -19,8 +19,7 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable(
-        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -182,6 +181,7 @@ COMMAND_FS_EXISTS_DESCRIPTION = "Check if a workspace, item, or file exists."
 COMMAND_FS_PWD_DESCRIPTION = "Print the current working directory."
 COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
+COMMAND_FS_BULKEXPORT_DESCRIPTION = "Export a workspace or folder in bulk while preserving folder structure and item bindings."
 COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
 COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
 COMMAND_FS_DEPLOY_DESCRIPTION = "Deploy items using a configuration file."
