@@ -50,7 +50,11 @@ class TestPrintBulkExportSummary:
     def base_args(self):
         return Namespace(output="/tmp/export")
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_output_format")
+    @pytest.fixture
+    def mock_print(self):
+        with patch("fabric_cli.utils.fab_ui.print_output_format") as mock:
+            yield mock
+
     def test_all_supported_no_unsupported(self, mock_print, base_args):
         items_support = {
             "supported_items": [
@@ -71,7 +75,6 @@ class TestPrintBulkExportSummary:
         assert data["output"] == "/tmp/export"
         assert "Skipped" not in call_kwargs.kwargs["message"]
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_output_format")
     def test_with_unsupported_items_includes_skip_message(self, mock_print, base_args):
         items_support = {
             "supported_items": [_make_mock_item("Notebook")],
@@ -94,7 +97,6 @@ class TestPrintBulkExportSummary:
         assert data["exported"] == 1
         assert data["skipped"] == 3
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_output_format")
     def test_empty_supported_and_unsupported(self, mock_print, base_args):
         items_support = {
             "supported_items": [],
@@ -108,7 +110,6 @@ class TestPrintBulkExportSummary:
         assert data["exported"] == 0
         assert data["skipped"] == 0
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_output_format")
     def test_exported_types_grouped_correctly(self, mock_print, base_args):
         items_support = {
             "supported_items": [
@@ -125,7 +126,6 @@ class TestPrintBulkExportSummary:
         assert data["exported_types"] == {"Notebook": 2, "Report": 1}
         assert data["skipped_types"] == {}
 
-    @patch("fabric_cli.utils.fab_cmd_bulk_export_utils.fab_ui.print_output_format")
     def test_message_includes_output_path(self, mock_print, base_args):
         items_support = {
             "supported_items": [_make_mock_item("Notebook")],
