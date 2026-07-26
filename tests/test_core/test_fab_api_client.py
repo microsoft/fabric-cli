@@ -8,7 +8,6 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.client.fab_api_client import (
-    _get_host_app,
     _transform_workspace_url_for_private_link_if_needed,
     do_request,
 )
@@ -308,94 +307,6 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
             do_request(dummy_args, hostname="custom.hostname.com")
         assert "Some Error Message" == excinfo.value.message
         assert "ErrorCode" == excinfo.value.status_code
-
-
-@pytest.mark.parametrize(
-    "host_app_env, host_app_version_env, expected_suffix",
-    [
-        (
-            "Fabric-AzureDevops-Extension",
-            None,
-            " host-app/fabric-azuredevops-extension",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.2.0",
-            " host-app/fabric-azuredevops-extension/1.2.0",
-        ),
-        (
-            "fabric-azuredevops-extension",
-            "1.2.0",
-            " host-app/fabric-azuredevops-extension/1.2.0",
-        ),
-        ("Invalid-App", "1.0.0", ""),
-        ("", None, ""),
-        (None, None, ""),
-        # Invalid version format - host app is still included but version is silently dropped
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.2.0.4",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.2.a",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "a.b.c",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1",  # valid format
-            " host-app/fabric-azuredevops-extension/1",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.2",  # valid format
-            " host-app/fabric-azuredevops-extension/1.2",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.0.0",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.0.0-rc.1",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-rc.1",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.0.0-alpha",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-alpha",
-        ),
-        (
-            "Fabric-AzureDevops-Extension",
-            "1.0.0-beta",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-beta",
-        ),
-    ],
-)
-def test_get_host_app(host_app_env, host_app_version_env, expected_suffix, monkeypatch):
-    """Test the _get_host_app helper function."""
-    if host_app_env is not None:
-        monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
-    else:
-        monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
-
-    if host_app_version_env is not None:
-        monkeypatch.setenv(
-            fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, host_app_version_env
-        )
-    else:
-        monkeypatch.delenv(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, raising=False)
-
-    result = _get_host_app()
-
-    assert result == expected_suffix
 
 
 @pytest.fixture()

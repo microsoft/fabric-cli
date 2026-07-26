@@ -11,6 +11,7 @@ from fabric_cli.core import fab_logger
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_msal_bridge import create_fabric_token_credential
 from fabric_cli.utils import fab_ui
+from fabric_cli.utils.fab_user_agent import build_user_agent, resolve_library_user_agent
 from fabric_cli.utils.fab_util import get_dict_from_params
 
 
@@ -39,6 +40,16 @@ def deploy_with_config_file(args: Namespace) -> None:
                 except json.JSONDecodeError:
                     # If it's not a valid JSON string, keep it as is
                     pass
+
+        # Attribute CLI-triggered deployments in telemetry via the User-Agent.
+        cicd_user_agent = resolve_library_user_agent(
+            "fabric-cicd", "ms-fabric-cicd")
+        deploy_parameters["user_agent"] = (
+            f"{cicd_user_agent},{build_user_agent(args.command_path)}"
+            if cicd_user_agent
+            else build_user_agent(args.command_path)
+        )
+
         result = deploy_with_config(
             config_file_path=deploy_config_file,
             environment=args.target_env,
@@ -52,5 +63,5 @@ def deploy_with_config_file(args: Namespace) -> None:
 
     except Exception as e:
         raise FabricCLIError(
-            f"Deployment failed: {str(e)}",
-            fab_constant.ERROR_IN_DEPLOYMENT)
+            f"Deployment failed: {str(e)}", fab_constant.ERROR_IN_DEPLOYMENT
+        )

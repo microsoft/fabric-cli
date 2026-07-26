@@ -3,7 +3,8 @@
 
 import os
 import platform
-from unittest.mock import patch
+from argparse import Namespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
@@ -314,3 +315,92 @@ class TestDeploy:
         mock_print_done.assert_called()
         assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
+
+    def _run_deploy_with_config_file(self, deploy_with_config, params=None):
+        """Invoke deploy_with_config_file with fabric-cicd symbols patched (no network)."""
+        from fabric_cli.commands.fs.deploy import (
+            fab_fs_deploy_config_file as deploy_mod,
+        )
+
+        args = Namespace(
+            config="config.yml",
+            target_env="dev",
+            command_path="deploy",
+            params=params if params is not None else [],
+        )
+
+        with (
+            patch.object(deploy_mod, "deploy_with_config", deploy_with_config),
+            patch.object(
+                deploy_mod, "create_fabric_token_credential", MagicMock()),
+            patch.object(deploy_mod, "append_feature_flag", MagicMock()),
+            patch.object(deploy_mod, "disable_file_logging", MagicMock()),
+            patch.object(
+                deploy_mod, "configure_external_file_logging", MagicMock()),
+            patch.object(
+                deploy_mod.fab_state_config, "get_config", return_value="false"
+            ),
+            patch.object(deploy_mod.fab_ui,
+                         "print_output_format", MagicMock()),
+        ):
+            deploy_mod.deploy_with_config_file(args)
+
+    def test_deploy_passes_user_agent_with_cicd_version_prefix(self):
+        """CLI passes the fabric-cicd-allowlisted user_agent: 'ms-fabric-cicd/<ver>,<cli UA>'."""
+        from fabric_cli.utils.fab_user_agent import (
+            build_user_agent,
+            resolve_library_user_agent,
+        )
+
+        captured = {}
+
+        def fake_deploy_with_config(
+            *,
+            config_file_path,
+            token_credential,
+            environment="N/A",
+            config_override=None,
+            user_agent=None,
+        ):
+            captured["user_agent"] = user_agent
+            return MagicMock(message="Deployment completed successfully")
+
+        self._run_deploy_with_config_file(fake_deploy_with_config)
+
+        cicd_user_agent = resolve_library_user_agent(
+            "fabric-cicd", "ms-fabric-cicd")
+        assert (
+            captured["user_agent"]
+            == f"{cicd_user_agent},{build_user_agent('deploy')}"
+        )
+
+    def test_deploy_user_agent_cannot_be_spoofed_via_params(self):
+        """A user-supplied user_agent (via -P) is overridden by the CLI-controlled value."""
+        from fabric_cli.utils.fab_user_agent import (
+            build_user_agent,
+            resolve_library_user_agent,
+        )
+
+        captured = {}
+
+        def fake_deploy_with_config(
+            *,
+            config_file_path,
+            token_credential,
+            environment="N/A",
+            config_override=None,
+            user_agent=None,
+        ):
+            captured["user_agent"] = user_agent
+            return MagicMock(message="Deployment completed successfully")
+
+        self._run_deploy_with_config_file(
+            fake_deploy_with_config, params=["user_agent=spoofed"]
+        )
+
+        cicd_user_agent = resolve_library_user_agent(
+            "fabric-cicd", "ms-fabric-cicd")
+        assert (
+            captured["user_agent"]
+            == f"{cicd_user_agent},{build_user_agent('deploy')}"
+        )
