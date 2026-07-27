@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import inspect
 import json
 from argparse import Namespace
 
@@ -45,13 +46,18 @@ def deploy_with_config_file(args: Namespace) -> None:
                     pass
 
         # Attribute CLI-triggered deployments in telemetry via the User-Agent.
-        cicd_user_agent = resolve_library_user_agent(
-            "fabric-cicd", "ms-fabric-cicd")
-        deploy_parameters["user_agent"] = (
-            f"{cicd_user_agent},{build_user_agent(args.command_path)}"
-            if cicd_user_agent
-            else build_user_agent(args.command_path)
-        )
+        # Only fabric-cicd builds that accept a `user_agent` argument support
+        # this;
+        if "user_agent" in inspect.signature(deploy_with_config).parameters:
+            cicd_user_agent = resolve_library_user_agent(
+                "fabric-cicd", "ms-fabric-cicd")
+            deploy_parameters["user_agent"] = (
+                f"{cicd_user_agent},{build_user_agent(args.command_path)}"
+                if cicd_user_agent
+                else build_user_agent(args.command_path)
+            )
+        else:
+            deploy_parameters.pop("user_agent", None)
 
         result = deploy_with_config(
             config_file_path=deploy_config_file,
