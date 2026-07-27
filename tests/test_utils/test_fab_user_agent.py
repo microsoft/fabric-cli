@@ -68,7 +68,7 @@ def test_resolve_library_user_agent_none_when_package_missing():
     """resolve_library_user_agent returns None when metadata is missing."""
     with patch(
         "fabric_cli.utils.fab_user_agent.importlib.metadata.version",
-        side_effect=importlib.metadata.PackageNotFoundError,
+        side_effect=importlib.metadata.PackageNotFoundError("missing-package"),
     ):
         result = resolve_library_user_agent("missing-package", "ms-missing")
 
