@@ -7,7 +7,10 @@ from tests.test_commands.api_processors.utils import load_response_json_body
 
 
 class WorkspaceAPIProcessor(BaseAPIProcessor):
-    WORKSPACE_URI = "https://api.fabric.microsoft.com/v1/workspaces"
+    WORKSPACE_URI = [
+        "https://api.fabric.microsoft.com/v1/workspaces",
+        "https://api.powerbi.com/v1/workspaces",
+    ]
 
     def __init__(self, generated_name_mapping):
         self.generated_name_mapping = generated_name_mapping
@@ -19,7 +22,7 @@ class WorkspaceAPIProcessor(BaseAPIProcessor):
         uri = request.uri
 
         # Handle list workspaces
-        if uri.lower() == self.WORKSPACE_URI.lower():
+        if uri.lower() in self.WORKSPACE_URI:
             method = request.method
             if method == "GET":
                 """https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces/list-workspaces?tabs=HTTP"""

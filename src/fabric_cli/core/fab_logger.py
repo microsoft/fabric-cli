@@ -13,6 +13,7 @@ from logging.handlers import RotatingFileHandler
 import fabric_cli.core.fab_constant as fab_constant
 import fabric_cli.core.fab_state_config as fab_state_config
 import fabric_cli.utils.fab_ui as utils_ui
+from fabric_cli.core.fab_logger_response import process_response
 from fabric_cli.utils.fab_secure_io import (
     create_restricted_dir,
     get_restricted_file_opener,
@@ -94,7 +95,7 @@ def log_debug_http_request(
     logger.debug("")
 
 
-def log_debug_http_response(status_code, headers, response_text, start_time):
+def log_debug_http_response(status_code, headers, response_text, start_time, ctxt_cmd):
     """Logs a http response debug message if FAB_DEBUG is enabled."""
     if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) != "true":
         return
@@ -130,7 +131,7 @@ def log_debug_http_response(status_code, headers, response_text, start_time):
     else:
         content_type = headers.get("Content-Type", "")
         if "application/json" in content_type:
-            logger.debug("    " + _parse_json_into_single_line(response_text))
+            logger.debug("    " + _parse_json_into_single_line(response_text, ctxt_cmd))
         else:
             # If not JSON, log as plain text
             logger.debug("    " + response_text)
@@ -265,9 +266,9 @@ def user_log_dir(app_name):
     return log_dir
 
 
-def _parse_json_into_single_line(json_text):
+def _parse_json_into_single_line(json_text, ctxt_cmd):
     try:
-        parsed_json = json.loads(json_text)
+        parsed_json = process_response(json.loads(json_text), ctxt_cmd)
         compact_json = json.dumps(parsed_json, separators=(",", ":"))
         return compact_json
     except json.JSONDecodeError:

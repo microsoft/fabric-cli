@@ -13,6 +13,7 @@ from fabric_cli.commands.fs import fab_fs_cd as fs_cd
 from fabric_cli.commands.fs import fab_fs_cp as fs_cp
 from fabric_cli.commands.fs import fab_fs_exists as fs_exists
 from fabric_cli.commands.fs import fab_fs_export as fs_export
+from fabric_cli.commands.fs import fab_fs_bulk_export as fs_bulk_export
 from fabric_cli.commands.fs import fab_fs_get as fs_get
 from fabric_cli.commands.fs import fab_fs_import as fs_import
 from fabric_cli.commands.fs import fab_fs_deploy as fs_deploy
@@ -127,6 +128,14 @@ def export_command(args: Namespace) -> None:
     _check_command_line_support(args.fab_mode, context, (args.force or args.all))
     context.check_command_support(Command.FS_EXPORT)
     fs_export.exec_command(args, context)
+
+
+@handle_exceptions()
+@set_command_context()
+def bulk_export_command(args: Namespace) -> None:
+    context = handle_context.get_command_context(args.path)
+    context.check_command_support(Command.FS_BULKEXPORT)
+    fs_bulk_export.exec_command(args, context)
 
 
 @handle_exceptions()

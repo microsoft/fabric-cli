@@ -50,6 +50,25 @@ The deployment to the Fabric workspaces is executed via the Fabric REST APIs.
 
 ---
 
+### Bulk Publish (Experimental)
+
+By default, `deploy` publishes items **one at a time**. You can optionally enable
+**bulk publish**, which deploys all items in a **single bulk import API call**.
+
+Enable it with the `--bulk_publish` flag:
+
+```bash
+fab deploy --config config.yml --target_env dev --bulk_publish
+```
+
+Notes:
+
+- This feature is **experimental** in the underlying [`fabric-cicd`](https://microsoft.github.io/fabric-cicd/latest/how_to/optional_feature/) library and uses its bulk import (beta) API. It may change or fail; omit the `--bulk_publish` flag to use the standard per-item publish behavior.
+- It is **disabled by default**, so existing deployments keep the standard per-item publish behavior.
+- When enabled, the CLI turns on the required `enable_experimental_features` and `enable_bulk_publish` fabric-cicd feature flags for you.
+
+---
+
 ### Configuration Behavior
 
 - The configuration file controls what is published and unpublished.

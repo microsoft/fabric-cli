@@ -308,7 +308,6 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
         assert "Some Error Message" == excinfo.value.message
         assert "ErrorCode" == excinfo.value.status_code
 
-
 @pytest.fixture()
 def setup_default_private_links(mock_fab_set_state_config):
     mock_fab_set_state_config(fab_constant.FAB_WS_PRIVATE_LINKS_ENABLED, "true")
@@ -327,12 +326,12 @@ def setup_default_private_links(mock_fab_set_state_config):
         (
             "Fabric-AzureDevops-Extension",
             None,
-            " host-app/fabric-azuredevops-extension",
+            " fabric-azuredevops-extension",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.2.0",
-            " host-app/fabric-azuredevops-extension/1.2.0",
+            " fabric-azuredevops-extension/1.2.0",
         ),
         # Invalid app name - host-app suffix is omitted entirely from User-Agent
         ("Invalid-App", "1.0.0", ""),
