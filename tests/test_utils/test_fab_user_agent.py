@@ -49,7 +49,7 @@ def test_build_user_agent_appends_host_app_suffix(
     assert result == (
         f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} "
         f"(create; Linux/5.4.0; Python/3.11.5)"
-        f" host-app/fabric-azuredevops-extension/1.2.0"
+        f" fabric-azuredevops-extension/1.2.0"
     )
 
 
@@ -68,7 +68,7 @@ def test_resolve_library_user_agent_none_when_package_missing():
     """resolve_library_user_agent returns None when metadata is missing."""
     with patch(
         "fabric_cli.utils.fab_user_agent.importlib.metadata.version",
-        side_effect=importlib.metadata.PackageNotFoundError("missing-package"),
+        side_effect=importlib.metadata.PackageNotFoundError,
     ):
         result = resolve_library_user_agent("missing-package", "ms-missing")
 
@@ -81,17 +81,17 @@ def test_resolve_library_user_agent_none_when_package_missing():
         (
             "Fabric-AzureDevops-Extension",
             None,
-            " host-app/fabric-azuredevops-extension",
+            " fabric-azuredevops-extension",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.2.0",
-            " host-app/fabric-azuredevops-extension/1.2.0",
+            " fabric-azuredevops-extension/1.2.0",
         ),
         (
             "fabric-azuredevops-extension",
             "1.2.0",
-            " host-app/fabric-azuredevops-extension/1.2.0",
+            " fabric-azuredevops-extension/1.2.0",
         ),
         ("Invalid-App", "1.0.0", ""),
         ("", None, ""),
@@ -100,47 +100,47 @@ def test_resolve_library_user_agent_none_when_package_missing():
         (
             "Fabric-AzureDevops-Extension",
             "1.2.0.4",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
+            " fabric-azuredevops-extension",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.2.a",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
+            " fabric-azuredevops-extension",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "a.b.c",  # Invalid format
-            " host-app/fabric-azuredevops-extension",
+            " fabric-azuredevops-extension",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1",  # valid format
-            " host-app/fabric-azuredevops-extension/1",
+            " fabric-azuredevops-extension/1",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.2",  # valid format
-            " host-app/fabric-azuredevops-extension/1.2",
+            " fabric-azuredevops-extension/1.2",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.0.0",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0",
+            " fabric-azuredevops-extension/1.0.0",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.0.0-rc.1",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-rc.1",
+            " fabric-azuredevops-extension/1.0.0-rc.1",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.0.0-alpha",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-alpha",
+            " fabric-azuredevops-extension/1.0.0-alpha",
         ),
         (
             "Fabric-AzureDevops-Extension",
             "1.0.0-beta",  # valid format
-            " host-app/fabric-azuredevops-extension/1.0.0-beta",
+            " fabric-azuredevops-extension/1.0.0-beta",
         ),
     ],
 )

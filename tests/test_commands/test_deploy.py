@@ -385,62 +385,73 @@ class TestDeploy:
         ):
             deploy_mod.deploy_with_config_file(args)
 
-    def test_deploy_passes_user_agent_with_cicd_version_prefix(self):
+    _CICD_UNPATCHED = object()
+
+    def _capture_deploy_user_agent(self, params=None, cicd_user_agent=_CICD_UNPATCHED):
+        """Run deploy_with_config_file and return the user_agent passed to fabric-cicd.
+
+        When ``cicd_user_agent`` is provided, ``resolve_library_user_agent`` is
+        patched to return it (use ``None`` to simulate fabric-cicd not installed).
+        """
+        from fabric_cli.commands.fs.deploy import (
+            fab_fs_deploy_config_file as deploy_mod,
+        )
+
+        captured = {}
+
+        def fake_deploy_with_config(
+            *,
+            config_file_path,
+            token_credential,
+            environment="N/A",
+            config_override=None,
+            user_agent=None,
+        ):
+            captured["user_agent"] = user_agent
+            return MagicMock(message="Deployment completed successfully")
+
+        if cicd_user_agent is self._CICD_UNPATCHED:
+            self._run_deploy_with_config_file(fake_deploy_with_config, params=params)
+        else:
+            with patch.object(
+                deploy_mod,
+                "resolve_library_user_agent",
+                return_value=cicd_user_agent,
+            ):
+                self._run_deploy_with_config_file(
+                    fake_deploy_with_config, params=params
+                )
+
+        return captured["user_agent"]
+
+    def test_deploy_passes_user_agent_with_cicd_version_prefix_success(self):
         """CLI passes the fabric-cicd-allowlisted user_agent: 'ms-fabric-cicd/<ver>,<cli UA>'."""
         from fabric_cli.utils.fab_user_agent import (
             build_user_agent,
             resolve_library_user_agent,
         )
 
-        captured = {}
+        user_agent = self._capture_deploy_user_agent()
 
-        def fake_deploy_with_config(
-            *,
-            config_file_path,
-            token_credential,
-            environment="N/A",
-            config_override=None,
-            user_agent=None,
-        ):
-            captured["user_agent"] = user_agent
-            return MagicMock(message="Deployment completed successfully")
+        cicd_user_agent = resolve_library_user_agent("fabric-cicd", "ms-fabric-cicd")
+        assert user_agent == f"{cicd_user_agent},{build_user_agent('deploy')}"
 
-        self._run_deploy_with_config_file(fake_deploy_with_config)
+    def test_deploy_user_agent_without_cicd_version_success(self):
+        """When fabric-cicd version is unresolved, the CLI UA is passed without a prefix."""
+        from fabric_cli.utils.fab_user_agent import build_user_agent
 
-        cicd_user_agent = resolve_library_user_agent(
-            "fabric-cicd", "ms-fabric-cicd")
-        assert (
-            captured["user_agent"]
-            == f"{cicd_user_agent},{build_user_agent('deploy')}"
-        )
+        user_agent = self._capture_deploy_user_agent(cicd_user_agent=None)
 
-    def test_deploy_user_agent_cannot_be_spoofed_via_params(self):
+        assert user_agent == build_user_agent("deploy")
+
+    def test_deploy_user_agent_cannot_be_spoofed_via_params_success(self):
         """A user-supplied user_agent (via -P) is overridden by the CLI-controlled value."""
         from fabric_cli.utils.fab_user_agent import (
             build_user_agent,
             resolve_library_user_agent,
         )
 
-        captured = {}
+        user_agent = self._capture_deploy_user_agent(params=["user_agent=spoofed"])
 
-        def fake_deploy_with_config(
-            *,
-            config_file_path,
-            token_credential,
-            environment="N/A",
-            config_override=None,
-            user_agent=None,
-        ):
-            captured["user_agent"] = user_agent
-            return MagicMock(message="Deployment completed successfully")
-
-        self._run_deploy_with_config_file(
-            fake_deploy_with_config, params=["user_agent=spoofed"]
-        )
-
-        cicd_user_agent = resolve_library_user_agent(
-            "fabric-cicd", "ms-fabric-cicd")
-        assert (
-            captured["user_agent"]
-            == f"{cicd_user_agent},{build_user_agent('deploy')}"
-        )
+        cicd_user_agent = resolve_library_user_agent("fabric-cicd", "ms-fabric-cicd")
+        assert user_agent == f"{cicd_user_agent},{build_user_agent('deploy')}"
