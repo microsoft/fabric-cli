@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.client.fab_api_client import (
+    _get_host_app,
     _transform_workspace_url_for_private_link_if_needed,
     do_request,
 )
@@ -307,6 +308,130 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
             do_request(dummy_args, hostname="custom.hostname.com")
         assert "Some Error Message" == excinfo.value.message
         assert "ErrorCode" == excinfo.value.status_code
+
+
+@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
+def test_do_request_429_without_retry_after_header_retries_with_default_interval(
+    mock_get_token,
+):
+    """A 429 response missing the Retry-After header should fall back to the default
+    polling interval and retry instead of raising an unexpected KeyError."""
+
+    class DummyResponse:
+        def __init__(self, status_code, headers=None, text=""):
+            self.status_code = status_code
+            self.text = text
+            self.content = text.encode()
+            self.headers = headers if headers is not None else {}
+
+    # First response: throttled (429) with NO Retry-After header.
+    # Second response: success (200), so the retry loop can complete.
+    throttled = DummyResponse(429)
+    success = DummyResponse(200, text="{}")
+
+    dummy_args = Namespace()
+    dummy_args.uri = f"workspaces/{str(uuid.uuid4())}/items"
+    dummy_args.method = "get"
+    dummy_args.audience = None
+
+    with (
+        patch("requests.Session.request", side_effect=[throttled, success]),
+        patch("fabric_cli.client.fab_api_client.time.sleep") as mock_sleep,
+    ):
+        response = do_request(dummy_args, hostname="custom.hostname.com")
+
+    assert response.status_code == 200
+    # Retried using the default polling interval (10s) rather than raising.
+    mock_sleep.assert_called_once_with(10)
+
+
+@pytest.mark.parametrize(
+    "host_app_env, host_app_version_env, expected_suffix",
+    [
+        (
+            "Fabric-AzureDevops-Extension",
+            None,
+            " fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2.0",
+            " fabric-azuredevops-extension/1.2.0",
+        ),
+        (
+            "fabric-azuredevops-extension",
+            "1.2.0",
+            " fabric-azuredevops-extension/1.2.0",
+        ),
+        ("Invalid-App", "1.0.0", ""),
+        ("", None, ""),
+        (None, None, ""),
+        # Invalid version format - host app is still included but version is silently dropped
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2.0.4",  # Invalid format
+            " fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2.a",  # Invalid format
+            " fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "a.b.c",  # Invalid format
+            " fabric-azuredevops-extension",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1",  # valid format
+            " fabric-azuredevops-extension/1",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.2",  # valid format
+            " fabric-azuredevops-extension/1.2",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0",  # valid format
+            " fabric-azuredevops-extension/1.0.0",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-rc.1",  # valid format
+            " fabric-azuredevops-extension/1.0.0-rc.1",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-alpha",  # valid format
+            " fabric-azuredevops-extension/1.0.0-alpha",
+        ),
+        (
+            "Fabric-AzureDevops-Extension",
+            "1.0.0-beta",  # valid format
+            " fabric-azuredevops-extension/1.0.0-beta",
+        ),
+    ],
+)
+def test_get_host_app(host_app_env, host_app_version_env, expected_suffix, monkeypatch):
+    """Test the _get_host_app helper function."""
+    if host_app_env is not None:
+        monkeypatch.setenv(fab_constant.FAB_HOST_APP_ENV_VAR, host_app_env)
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_ENV_VAR, raising=False)
+
+    if host_app_version_env is not None:
+        monkeypatch.setenv(
+            fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, host_app_version_env
+        )
+    else:
+        monkeypatch.delenv(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR, raising=False)
+
+    result = _get_host_app()
+
+    assert result == expected_suffix
+
 
 @pytest.fixture()
 def setup_default_private_links(mock_fab_set_state_config):

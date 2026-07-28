@@ -385,18 +385,8 @@ class TestDeploy:
         ):
             deploy_mod.deploy_with_config_file(args)
 
-    _CICD_UNPATCHED = object()
-
-    def _capture_deploy_user_agent(self, params=None, cicd_user_agent=_CICD_UNPATCHED):
-        """Run deploy_with_config_file and return the user_agent passed to fabric-cicd.
-
-        When ``cicd_user_agent`` is provided, ``resolve_library_user_agent`` is
-        patched to return it (use ``None`` to simulate fabric-cicd not installed).
-        """
-        from fabric_cli.commands.fs.deploy import (
-            fab_fs_deploy_config_file as deploy_mod,
-        )
-
+    def _capture_deploy_host_app(self, params=None):
+        """Run deploy_with_config_file and return the host_app passed to fabric-cicd."""
         captured = {}
 
         def fake_deploy_with_config(
@@ -405,53 +395,28 @@ class TestDeploy:
             token_credential,
             environment="N/A",
             config_override=None,
-            user_agent=None,
+            host_app=None,
         ):
-            captured["user_agent"] = user_agent
+            captured["host_app"] = host_app
             return MagicMock(message="Deployment completed successfully")
 
-        if cicd_user_agent is self._CICD_UNPATCHED:
-            self._run_deploy_with_config_file(fake_deploy_with_config, params=params)
-        else:
-            with patch.object(
-                deploy_mod,
-                "resolve_library_user_agent",
-                return_value=cicd_user_agent,
-            ):
-                self._run_deploy_with_config_file(
-                    fake_deploy_with_config, params=params
-                )
+        self._run_deploy_with_config_file(
+            fake_deploy_with_config, params=params)
 
-        return captured["user_agent"]
+        return captured["host_app"]
 
-    def test_deploy_passes_user_agent_with_cicd_version_prefix_success(self):
-        """CLI passes the fabric-cicd-allowlisted user_agent: 'ms-fabric-cicd/<ver>,<cli UA>'."""
-        from fabric_cli.utils.fab_user_agent import (
-            build_user_agent,
-            resolve_library_user_agent,
-        )
+    def test_deploy_passes_host_app_success(self):
+        """CLI passes host_app as 'ms-fabric-cli/<version>'."""
+        from fabric_cli.core import fab_constant
 
-        user_agent = self._capture_deploy_user_agent()
+        host_app = self._capture_deploy_host_app()
 
-        cicd_user_agent = resolve_library_user_agent("fabric-cicd", "ms-fabric-cicd")
-        assert user_agent == f"{cicd_user_agent},{build_user_agent('deploy')}"
+        assert host_app == f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION}"
 
-    def test_deploy_user_agent_without_cicd_version_success(self):
-        """When fabric-cicd version is unresolved, the CLI UA is passed without a prefix."""
-        from fabric_cli.utils.fab_user_agent import build_user_agent
+    def test_deploy_host_app_cannot_be_spoofed_via_params_success(self):
+        """A user-supplied host_app (via -P) is overridden by the CLI-controlled value."""
+        from fabric_cli.core import fab_constant
 
-        user_agent = self._capture_deploy_user_agent(cicd_user_agent=None)
+        host_app = self._capture_deploy_host_app(params=["host_app=spoofed"])
 
-        assert user_agent == build_user_agent("deploy")
-
-    def test_deploy_user_agent_cannot_be_spoofed_via_params_success(self):
-        """A user-supplied user_agent (via -P) is overridden by the CLI-controlled value."""
-        from fabric_cli.utils.fab_user_agent import (
-            build_user_agent,
-            resolve_library_user_agent,
-        )
-
-        user_agent = self._capture_deploy_user_agent(params=["user_agent=spoofed"])
-
-        cicd_user_agent = resolve_library_user_agent("fabric-cicd", "ms-fabric-cicd")
-        assert user_agent == f"{cicd_user_agent},{build_user_agent('deploy')}"
+        assert host_app == f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION}"
