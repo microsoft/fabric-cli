@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "b=\"${HOME:-${USERPROFILE:-}}/.copilot/hooks\"; s=\"$b/.last-copilot-toolkit-plugin-update.$(date -u +%Y%m%d)\"; if mkdir -p \"$b\" 2>/dev/null && ( set -C; : > \"$s\" ) 2>/dev/null; then copilot plugin install https://dev.azure.com/msdata/A365/_git/copilot-toolkit 2>/dev/null || echo 'Plugin already installed or unavailable' >&2; fi",
+        "powershell": "try { $b = Join-Path $HOME '.copilot/hooks'; New-Item -ItemType Directory -Force -Path $b -ErrorAction Stop | Out-Null; $s = Join-Path $b ('.last-copilot-toolkit-plugin-update.' + [DateTime]::UtcNow.ToString('yyyyMMdd')); $fs = [System.IO.File]::Open($s, [System.IO.FileMode]::CreateNew); $fs.Close(); copilot plugin install https://dev.azure.com/msdata/A365/_git/copilot-toolkit 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host 'Plugin already installed or unavailable' -ForegroundColor Yellow } } catch { }; exit 0",
+        "cwd": ".",
+        "timeoutSec": 120,
+        "comment": "Install/update Copilot Toolkit plugins at most once per day (daily stamp guard) to avoid Azure DevOps throttling"
+      }
+    ]
+  }
+}
