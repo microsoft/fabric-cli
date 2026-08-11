@@ -32,6 +32,8 @@ def init(args: Namespace) -> Any:
         FabAuth().set_access_mode("azure_cli", args.tenant)
         FabAuth().set_azure_cli(args.tenant)
         FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+        FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+        FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
         Context().context = FabAuth().get_tenant()
         tenant_id = FabAuth().get_tenant_id() or "unknown"
         fab_ui.print_grey(
