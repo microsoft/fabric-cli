@@ -332,13 +332,42 @@ Before delivering, determine whether the change affects other pages. Ask the use
 
 Include cross-reference updates in your delivery — either as completed edits or as a list of recommended follow-up changes.
 
-### 5. Deliver
+### 5. Build and preview locally
+
+After editing documentation, build the site locally to catch broken links, invalid navigation entries, and formatting issues before delivery.
+
+1. Install MkDocs with the Material theme and section index plugin:
+
+   ```bash
+   pip install mkdocs-material mkdocs-section-index
+   ```
+
+2. Build the static site to validate the configuration:
+
+   ```bash
+   mkdocs build
+   ```
+
+   This creates a `site/` directory with the built documentation. Do not commit or push this directory — it is gitignored.
+
+Run these commands from the repository root, where `mkdocs.yml` is located. Report any build warnings or errors and fix them before delivering.
+
+**Do not run `mkdocs serve` yourself.** It starts a long-running development server that blocks the terminal until it is stopped, which stalls the task. Use `mkdocs build` for validation. Instead, hand off the preview command to the person updating the docs so they can run it interactively:
+
+```bash
+mkdocs serve
+```
+
+By default, the served site is available at `http://localhost:8000/fabric-cli`.
+
+### 6. Deliver
 
 Provide:
 
 1. The documentation content.
 2. A one to three sentence note on which Fabric domains and terminology were relevant.
 3. A list of cross-reference impacts found in step 4, with recommended actions.
+4. Confirmation that the site builds cleanly with `mkdocs build` and a note on how to preview it with `mkdocs serve`.
 
 ---
 

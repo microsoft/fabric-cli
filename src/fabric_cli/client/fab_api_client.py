@@ -156,7 +156,11 @@ def do_request(
             start_time = time.time()
             response = session.request(method=method, url=url, **request_params)
             fab_logger.log_debug_http_response(
-                response.status_code, response.headers, response.text, start_time
+                response.status_code,
+                response.headers,
+                response.text,
+                start_time,
+                ctxt_cmd,
             )
 
             api_error_code = response.headers.get(
@@ -188,7 +192,7 @@ def do_request(
                         fab_constant.ERROR_NOT_FOUND,
                     )
                 case 429:
-                    retry_after = int(response.headers["Retry-After"])
+                    retry_after = get_polling_interval(response.headers)
                     utils_ui.print_info(
                         f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
                     )
@@ -297,7 +301,7 @@ def _build_user_agent(ctxt_cmd: str) -> str:
     """Build the User-Agent header for API requests.
 
     Example:
-        ms-fabric-cli/1.0.0 (create; Windows/10; Python/3.10.2) host-app/ado/2.0.0
+        ms-fabric-cli/1.0.0 (create; Windows/10; Python/3.10.2) ado/2.0.0
     """
     user_agent = (
         f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION} "
@@ -332,7 +336,7 @@ def _get_host_app() -> str:
     if not host_app_name:
         return ""
 
-    host_app = f" host-app/{host_app_name.lower()}"
+    host_app = f" {host_app_name.lower()}"
 
     # Check for optional version
     host_app_version = os.environ.get(fab_constant.FAB_HOST_APP_VERSION_ENV_VAR)

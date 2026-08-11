@@ -201,6 +201,7 @@ def create_parser_and_subparsers():
     fs_parser.register_pwd_parser(subparsers)  # pwd
     fs_parser.register_open_parser(subparsers)  # open
     fs_parser.register_export_parser(subparsers)  # export
+    fs_parser.register_bulk_export_parser(subparsers)  # bulk-export
     fs_parser.register_import_parser(subparsers)  # import
     fs_parser.register_deploy_parser(subparsers)  # deploy
     fs_parser.register_set_parser(subparsers)  # set
