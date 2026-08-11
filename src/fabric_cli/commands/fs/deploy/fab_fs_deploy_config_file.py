@@ -42,6 +42,11 @@ def deploy_with_config_file(args: Namespace) -> None:
                 except json.JSONDecodeError:
                     # If it's not a valid JSON string, keep it as is
                     pass
+
+        deploy_parameters["host_app"] = (
+            f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION}"
+        )
+
         result = deploy_with_config(
             config_file_path=deploy_config_file,
             environment=args.target_env,

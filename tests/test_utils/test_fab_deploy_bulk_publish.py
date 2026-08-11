@@ -27,6 +27,7 @@ class TestDeployBulkPublish:
             target_env="dev",
             params=None,
             bulk_publish=bulk_publish,
+            command_path="deploy",
         )
 
         with (
