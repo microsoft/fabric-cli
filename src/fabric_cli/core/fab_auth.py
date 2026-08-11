@@ -52,6 +52,9 @@ class FabAuth:
         self._auth_info = {}
         # In-memory token cache for Azure CLI tokens (avoids repeated subprocess calls)
         self._azure_cli_token_cache: dict[str, dict] = {}
+        # Cached tenant ID from az account show (avoids repeated subprocess calls)
+        self._cached_az_tenant: Optional[str] = None
+        self._cached_az_tenant_time: float = 0.0
 
         # Load the auth info and environment variables
         self._load_auth()
@@ -425,6 +428,7 @@ class FabAuth:
 
         If tenant_id is not provided, auto-captures the current tenant
         from Azure CLI's active session via 'az account show'.
+        Always forces a fresh query (bypasses cache) since this is a login action.
         """
         self._set_auth_properties(
             {
@@ -434,26 +438,28 @@ class FabAuth:
         if tenant_id:
             self.set_tenant(tenant_id)
         else:
-            # Auto-capture tenant from active az session
-            captured_tenant = self._get_azure_cli_tenant()
+            # Force refresh at login to avoid stale cached tenant
+            captured_tenant = self._get_azure_cli_tenant(force_refresh=True)
             if captured_tenant:
                 self.set_tenant(captured_tenant)
 
-    def _get_azure_cli_tenant(self) -> Optional[str]:
+    def _get_azure_cli_tenant(self, force_refresh: bool = False) -> Optional[str]:
         """Query Azure CLI for the current tenant ID via 'az account show'.
 
-        Caches the result for 30 seconds to avoid repeated subprocess calls
-        during multi-scope login flows.
+        Caches the result for 10 seconds to avoid repeated subprocess calls
+        during multi-scope token acquisition flows.
+
+        Args:
+            force_refresh: If True, bypass the cache and query az directly.
         """
         import subprocess
         import time
 
-        # Return cached result if fresh (within 30s)
+        # Return cached result if fresh (within 10s) and not forced
         if (
-            hasattr(self, "_cached_az_tenant")
+            not force_refresh
             and self._cached_az_tenant is not None
-            and hasattr(self, "_cached_az_tenant_time")
-            and time.time() - self._cached_az_tenant_time < 30
+            and time.monotonic() - self._cached_az_tenant_time < 10
         ):
             return self._cached_az_tenant
 
@@ -466,7 +472,7 @@ class FabAuth:
             )
             if result.returncode == 0 and result.stdout.strip():
                 self._cached_az_tenant = result.stdout.strip()
-                self._cached_az_tenant_time = time.time()
+                self._cached_az_tenant_time = time.monotonic()
                 return self._cached_az_tenant
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             pass
@@ -679,6 +685,11 @@ class FabAuth:
         self._auth_info = {}
 
         self.app = None
+
+        # Clear Azure CLI caches
+        self._azure_cli_token_cache.clear()
+        self._cached_az_tenant = None
+        self._cached_az_tenant_time = 0.0
 
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)

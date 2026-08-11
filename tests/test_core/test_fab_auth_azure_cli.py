@@ -24,8 +24,8 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     # Clear singleton caches between tests
     auth = FabAuth()
     auth._azure_cli_token_cache.clear()
-    if hasattr(auth, "_cached_az_tenant"):
-        auth._cached_az_tenant = None
+    auth._cached_az_tenant = None
+    auth._cached_az_tenant_time = 0.0
     return str(tmp_path)
 
 
@@ -461,3 +461,44 @@ class TestAzureCliScopeHandling:
         mock_credential.get_token.assert_called_once_with(
             "https://management.azure.com/.default"
         )
+
+
+class TestAzureCliCacheInvalidation:
+    """Test cache invalidation on logout and forced refresh at login."""
+
+    @patch("subprocess.run")
+    def test_logout_clears_tenant_cache(self, mock_run, temp_dir_fixture):
+        """logout() should clear the cached tenant."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="cached-tenant\n"
+        )
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        assert auth._cached_az_tenant == "cached-tenant"
+
+        auth.logout()
+        assert auth._cached_az_tenant is None
+        assert auth._cached_az_tenant_time == 0.0
+        assert auth._azure_cli_token_cache == {}
+
+    @patch("subprocess.run")
+    def test_login_forces_fresh_tenant_query(self, mock_run, temp_dir_fixture):
+        """set_azure_cli should bypass cache and query az fresh."""
+        # First call returns tenant-A
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="tenant-A\n"
+        )
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        assert auth.get_tenant_id() == "tenant-A"
+
+        # Simulate user switching az tenant, then re-logging in
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="tenant-B\n"
+        )
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()  # Should force refresh, get tenant-B
+        assert auth.get_tenant_id() == "tenant-B"
