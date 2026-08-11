@@ -21,6 +21,11 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     monkeypatch.delenv("FAB_TOKEN", raising=False)
     monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
     monkeypatch.delenv("FAB_TOKEN_AZURE", raising=False)
+    # Clear singleton caches between tests
+    auth = FabAuth()
+    auth._azure_cli_token_cache.clear()
+    if hasattr(auth, "_cached_az_tenant"):
+        auth._cached_az_tenant = None
     return str(tmp_path)
 
 

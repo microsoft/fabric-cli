@@ -440,8 +440,22 @@ class FabAuth:
                 self.set_tenant(captured_tenant)
 
     def _get_azure_cli_tenant(self) -> Optional[str]:
-        """Query Azure CLI for the current tenant ID via 'az account show'."""
+        """Query Azure CLI for the current tenant ID via 'az account show'.
+
+        Caches the result for 30 seconds to avoid repeated subprocess calls
+        during multi-scope login flows.
+        """
         import subprocess
+        import time
+
+        # Return cached result if fresh (within 30s)
+        if (
+            hasattr(self, "_cached_az_tenant")
+            and self._cached_az_tenant is not None
+            and hasattr(self, "_cached_az_tenant_time")
+            and time.time() - self._cached_az_tenant_time < 30
+        ):
+            return self._cached_az_tenant
 
         try:
             result = subprocess.run(
@@ -451,7 +465,9 @@ class FabAuth:
                 timeout=10,
             )
             if result.returncode == 0 and result.stdout.strip():
-                return result.stdout.strip()
+                self._cached_az_tenant = result.stdout.strip()
+                self._cached_az_tenant_time = time.time()
+                return self._cached_az_tenant
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             pass
         return None
