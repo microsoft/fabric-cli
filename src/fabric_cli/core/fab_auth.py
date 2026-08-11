@@ -50,6 +50,8 @@ class FabAuth:
         # Reset the auth info
         self.app: msal.ClientApplication = None
         self._auth_info = {}
+        # In-memory token cache for Azure CLI tokens (avoids repeated subprocess calls)
+        self._azure_cli_token_cache: dict[str, dict] = {}
 
         # Load the auth info and environment variables
         self._load_auth()
@@ -419,7 +421,11 @@ class FabAuth:
         )
 
     def set_azure_cli(self, tenant_id=None):
-        """Configure Azure CLI as the authentication source."""
+        """Configure Azure CLI as the authentication source.
+
+        If tenant_id is not provided, auto-captures the current tenant
+        from Azure CLI's active session via 'az account show'.
+        """
         self._set_auth_properties(
             {
                 con.IDENTITY_TYPE: "azure_cli",
@@ -427,6 +433,37 @@ class FabAuth:
         )
         if tenant_id:
             self.set_tenant(tenant_id)
+        else:
+            # Auto-capture tenant from active az session
+            captured_tenant = self._get_azure_cli_tenant()
+            if captured_tenant:
+                self.set_tenant(captured_tenant)
+
+    def _get_azure_cli_tenant(self) -> Optional[str]:
+        """Query Azure CLI for the current tenant ID via 'az account show'."""
+        import subprocess
+
+        try:
+            result = subprocess.run(
+                ["az", "account", "show", "--query", "tenantId", "-o", "tsv"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+            pass
+        return None
+
+    # Sensitive patterns for error message sanitization
+    _SENSITIVE_PATTERNS = [
+        "accessToken",
+        "eyJ",
+        "Bearer",
+        "refresh_token",
+        "Authorization",
+    ]
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential."""
@@ -439,15 +476,35 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        tenant_id = self.get_tenant_id()
+        # Tenant drift check: compare stored tenant against current az session
+        stored_tenant = self.get_tenant_id()
+        if stored_tenant:
+            current_tenant = self._get_azure_cli_tenant()
+            if current_tenant and current_tenant != stored_tenant:
+                raise FabricCLIError(
+                    f"Tenant mismatch: Fabric CLI is pinned to tenant '{stored_tenant}' "
+                    f"but Azure CLI is now logged into tenant '{current_tenant}'. "
+                    "Run 'fab auth login --azure-cli' to re-authenticate.",
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
+        # Check in-memory cache first
+        cache_key = scope[0] if scope else ""
+        cached = self._get_cached_azure_cli_token(cache_key)
+        if cached:
+            return cached
+
         try:
-            credential = AzureCliCredential(tenant_id=tenant_id) if tenant_id else AzureCliCredential()
+            credential = AzureCliCredential(tenant_id=stored_tenant) if stored_tenant else AzureCliCredential()
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = credential.get_token(scope[0])
-            return {
+            token_result = {
                 "access_token": azure_token.token,
                 "expires_on": azure_token.expires_on,
             }
+            # Cache the token
+            self._cache_azure_cli_token(cache_key, token_result)
+            return token_result
         except CredentialUnavailableError:
             raise FabricCLIError(
                 "Azure CLI is not installed or not logged in. "
@@ -457,12 +514,25 @@ class FabAuth:
         except Exception as e:
             # Sanitize: never include token content in error messages
             error_msg = str(e)
-            if "accessToken" in error_msg or "token" in error_msg.lower():
+            if any(p.lower() in error_msg.lower() for p in self._SENSITIVE_PATTERNS):
                 error_msg = "Azure CLI token acquisition failed. Run 'az account get-access-token' manually to diagnose."
             raise FabricCLIError(
                 f"Azure CLI authentication failed: {error_msg}",
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
+
+    def _get_cached_azure_cli_token(self, cache_key: str) -> Optional[dict]:
+        """Return cached token if it exists and is not near expiry (60s buffer)."""
+        import time
+
+        cached = self._azure_cli_token_cache.get(cache_key)
+        if cached and cached.get("expires_on", 0) > time.time() + 60:
+            return cached
+        return None
+
+    def _cache_azure_cli_token(self, cache_key: str, token: dict) -> None:
+        """Cache a token by audience key."""
+        self._azure_cli_token_cache[cache_key] = token
 
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))

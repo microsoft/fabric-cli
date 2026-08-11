@@ -35,6 +35,10 @@ def init(args: Namespace) -> Any:
         FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
         FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
         Context().context = FabAuth().get_tenant()
+        tenant_id = FabAuth().get_tenant_id() or "unknown"
+        fab_ui.print_grey(
+            f"✓ Authenticated via Azure CLI (tenant: {tenant_id})"
+        )
 
     elif args.identity:
         FabAuth().set_access_mode("managed_identity")
@@ -282,16 +286,21 @@ def status(args: Namespace) -> None:
 
     # Check login status
     is_logged_in = fabric_secret != "N/A"
+    identity_type = auth.get_identity_type() or "N/A"
     login_status = (
         "✓ Logged in to app.fabric.microsoft.com"
         if is_logged_in
         else "✗ Not logged in to app.fabric.microsoft.com"
     )
     fab_ui.print_grey(login_status)
+    if identity_type == "azure_cli" and is_logged_in:
+        fab_ui.print_grey(
+            f"  Auth mode: Azure CLI (tenant: {tid})"
+        )
 
     auth_data = {
         "logged_in": is_logged_in,
-        "auth_source": auth.get_identity_type() or "N/A",
+        "auth_source": identity_type,
         "account": upn,
         "principal_id": oid,
         "tenant_id": tid,
