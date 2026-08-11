@@ -3,6 +3,8 @@
 
 import json
 import os
+import subprocess
+import time
 import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
@@ -26,6 +28,9 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
+
+
+_AZURE_CLI_TENANT_CACHE_TTL_SECONDS = 10
 
 
 def singleton(class_):
@@ -430,11 +435,7 @@ class FabAuth:
         from Azure CLI's active session via 'az account show'.
         Always forces a fresh query (bypasses cache) since this is a login action.
         """
-        self._set_auth_properties(
-            {
-                con.IDENTITY_TYPE: "azure_cli",
-            }
-        )
+        # Set tenant first — set_tenant() may call logout() which clears auth info
         if tenant_id:
             self.set_tenant(tenant_id)
         else:
@@ -442,24 +443,27 @@ class FabAuth:
             captured_tenant = self._get_azure_cli_tenant(force_refresh=True)
             if captured_tenant:
                 self.set_tenant(captured_tenant)
+        # Set identity_type after tenant to survive any logout triggered by tenant change
+        self._set_auth_properties(
+            {
+                con.IDENTITY_TYPE: "azure_cli",
+            }
+        )
 
     def _get_azure_cli_tenant(self, force_refresh: bool = False) -> Optional[str]:
         """Query Azure CLI for the current tenant ID via 'az account show'.
 
-        Caches the result for 10 seconds to avoid repeated subprocess calls
+        Caches the result to avoid repeated subprocess calls
         during multi-scope token acquisition flows.
 
         Args:
             force_refresh: If True, bypass the cache and query az directly.
         """
-        import subprocess
-        import time
-
-        # Return cached result if fresh (within 10s) and not forced
+        # Return cached result if fresh and not forced
         if (
             not force_refresh
             and self._cached_az_tenant is not None
-            and time.monotonic() - self._cached_az_tenant_time < 10
+            and time.monotonic() - self._cached_az_tenant_time < _AZURE_CLI_TENANT_CACHE_TTL_SECONDS
         ):
             return self._cached_az_tenant
 
@@ -517,7 +521,11 @@ class FabAuth:
             return cached
 
         try:
-            credential = AzureCliCredential(tenant_id=stored_tenant) if stored_tenant else AzureCliCredential()
+            credential = (
+                AzureCliCredential(tenant_id=stored_tenant)
+                if stored_tenant
+                else AzureCliCredential()
+            )
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = credential.get_token(scope[0])
             token_result = {
@@ -545,8 +553,6 @@ class FabAuth:
 
     def _get_cached_azure_cli_token(self, cache_key: str) -> Optional[dict]:
         """Return cached token if it exists and is not near expiry (60s buffer)."""
-        import time
-
         cached = self._azure_cli_token_cache.get(cache_key)
         if cached and cached.get("expires_on", 0) > time.time() + 60:
             return cached

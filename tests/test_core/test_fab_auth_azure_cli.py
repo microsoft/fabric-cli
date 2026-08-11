@@ -26,6 +26,7 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._azure_cli_token_cache.clear()
     auth._cached_az_tenant = None
     auth._cached_az_tenant_time = 0.0
+    auth._auth_info = {}
     return str(tmp_path)
 
 
@@ -501,4 +502,56 @@ class TestAzureCliCacheInvalidation:
         )
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli()  # Should force refresh, get tenant-B
+        assert auth.get_tenant_id() == "tenant-B"
+
+    @patch("azure.identity.AzureCliCredential")
+    @patch("subprocess.run")
+    def test_single_subprocess_across_three_login_scopes(
+        self, mock_run, mock_credential_class, temp_dir_fixture
+    ):
+        """Login should call az account show only once across 3 scope validations."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="login-tenant\n"
+        )
+
+        mock_token = MagicMock()
+        mock_token.token = "login-token"
+        mock_token.expires_on = int(time.time()) + 3600
+
+        mock_credential = MagicMock()
+        mock_credential.get_token.return_value = mock_token
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()  # 1 subprocess call (force_refresh)
+
+        # 3 scope validations — each calls drift check, but cache should hit
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        auth._acquire_token_from_azure_cli(con.SCOPE_ONELAKE_DEFAULT)
+        auth._acquire_token_from_azure_cli(con.SCOPE_AZURE_DEFAULT)
+
+        # az account show called once at login, cached for drift checks
+        assert mock_run.call_count == 1
+
+    @patch("subprocess.run")
+    def test_identity_type_preserved_after_tenant_change(
+        self, mock_run, temp_dir_fixture
+    ):
+        """identity_type should remain azure_cli after tenant changes."""
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="tenant-A\n"
+        )
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        assert auth.get_identity_type() == "azure_cli"
+
+        # Re-login with different tenant
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout="tenant-B\n"
+        )
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        assert auth.get_identity_type() == "azure_cli"
         assert auth.get_tenant_id() == "tenant-B"
