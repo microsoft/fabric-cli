@@ -93,6 +93,10 @@ def init(args: Namespace) -> Any:
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
                 FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
                 Context().context = FabAuth().get_tenant()
+                tenant_id = FabAuth().get_tenant_id() or "unknown"
+                fab_ui.print_grey(
+                    f"✓ Authenticated via Azure CLI (tenant: {tenant_id})"
+                )
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
                     "Ensure tenant setting is enabled for Service Principal auth"
