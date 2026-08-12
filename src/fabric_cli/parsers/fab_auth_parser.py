@@ -93,7 +93,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         action="store_true",
         dest="azure_cli",
-        help="Use Azure CLI authentication (existing 'az login' session)",
+        help="Azure CLI authentication, must have an existing 'az login' session. Optional, only for Azure CLI auth",
     )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"
