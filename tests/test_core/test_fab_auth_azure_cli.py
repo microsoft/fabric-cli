@@ -119,7 +119,7 @@ class TestAzureCliIdentityType:
 class TestAzureCliTokenAcquisition:
     """Test token acquisition via AzureCliCredential."""
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_acquire_token_dispatches_to_azure_cli(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -144,7 +144,7 @@ class TestAzureCliTokenAcquisition:
             "https://api.fabric.microsoft.com/.default"
         )
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_acquire_token_from_azure_cli_success(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -168,7 +168,7 @@ class TestAzureCliTokenAcquisition:
             "https://api.fabric.microsoft.com/.default"
         )
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_acquire_token_from_azure_cli_with_tenant(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -190,12 +190,12 @@ class TestAzureCliTokenAcquisition:
 
         mock_credential_class.assert_called_once_with(tenant_id="my-tenant-id")
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_acquire_token_from_azure_cli_credential_unavailable(
         self, mock_credential_class, temp_dir_fixture
     ):
         """Should raise FabricCLIError when Azure CLI is not logged in."""
-        from azure.identity import CredentialUnavailableError
+        from fabric_cli.core.fab_auth import CredentialUnavailableError
 
         mock_credential = MagicMock()
         mock_credential.get_token.side_effect = CredentialUnavailableError(
@@ -212,28 +212,7 @@ class TestAzureCliTokenAcquisition:
 
         assert "not installed or not logged in" in str(exc_info.value)
 
-    @patch(
-        "azure.identity.AzureCliCredential",
-        side_effect=ImportError("No module named 'azure.identity'"),
-    )
-    def test_acquire_token_from_azure_cli_missing_package(
-        self, mock_import, temp_dir_fixture
-    ):
-        """Should raise FabricCLIError when azure-identity is not installed."""
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-
-        # Need to actually test the import failure path
-        with patch.dict("sys.modules", {"azure.identity": None}):
-            with patch(
-                "builtins.__import__", side_effect=ImportError("no azure.identity")
-            ):
-                with pytest.raises(FabricCLIError) as exc_info:
-                    auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-
-                assert "azure-identity" in str(exc_info.value)
-
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_sdk_exception_surfaces_message(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -252,7 +231,7 @@ class TestAzureCliTokenAcquisition:
 
         assert "Tenant not found" in str(exc_info.value)
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_unknown_exception_returns_safe_message(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -277,7 +256,7 @@ class TestAzureCliTokenAcquisition:
 class TestAzureCliTenantDrift:
     """Test tenant drift detection during token acquisition."""
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     @patch("subprocess.run")
     def test_tenant_drift_blocks_token_acquisition(
         self, mock_run, mock_credential_class, temp_dir_fixture
@@ -298,7 +277,7 @@ class TestAzureCliTenantDrift:
         assert "Tenant mismatch" in str(exc_info.value)
         assert "original-tenant" in str(exc_info.value)
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     @patch("subprocess.run")
     def test_tenant_match_allows_token_acquisition(
         self, mock_run, mock_credential_class, temp_dir_fixture
@@ -327,7 +306,7 @@ class TestAzureCliTenantDrift:
 class TestAzureCliTokenCache:
     """Test in-memory token caching for Azure CLI tokens."""
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_cached_token_avoids_subprocess(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -352,7 +331,7 @@ class TestAzureCliTokenCache:
         # get_token should only be called once (second call uses cache)
         mock_credential.get_token.assert_called_once()
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_expired_cache_triggers_refresh(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -378,7 +357,7 @@ class TestAzureCliTokenCache:
         assert result["access_token"] == "fresh-token"
         mock_credential.get_token.assert_called_once()
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_different_scopes_cached_separately(
         self, mock_credential_class, temp_dir_fixture
     ):
@@ -412,7 +391,7 @@ class TestAzureCliTokenCache:
 class TestAzureCliScopeHandling:
     """Test that different scopes are correctly passed to Azure CLI."""
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_onelake_scope(self, mock_credential_class, temp_dir_fixture):
         """OneLake scope should be passed correctly."""
         mock_token = MagicMock()
@@ -433,7 +412,7 @@ class TestAzureCliScopeHandling:
             "https://storage.azure.com/.default"
         )
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_azure_management_scope(self, mock_credential_class, temp_dir_fixture):
         """Azure management scope should be passed correctly."""
         mock_token = MagicMock()
@@ -495,7 +474,7 @@ class TestAzureCliCacheInvalidation:
         auth.set_azure_cli()  # Should force refresh, get tenant-B
         assert auth.get_tenant_id() == "tenant-B"
 
-    @patch("azure.identity.AzureCliCredential")
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     @patch("subprocess.run")
     def test_single_subprocess_across_three_login_scopes(
         self, mock_run, mock_credential_class, temp_dir_fixture

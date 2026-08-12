@@ -121,13 +121,6 @@ class AuthErrors:
         return "This operation is only supported with user authentication"
 
     @staticmethod
-    def azure_cli_missing_azure_identity() -> str:
-        return (
-            "Azure CLI auth requires the 'azure-identity' package. "
-            "Install it with: pip install azure-identity"
-        )
-
-    @staticmethod
     def azure_cli_tenant_mismatch(stored_tenant: str, current_tenant: str) -> str:
         return (
             f"Tenant mismatch: Fabric CLI is pinned to tenant '{stored_tenant}' "

@@ -9,6 +9,7 @@ import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
 
+from azure.identity import AzureCliCredential, CredentialUnavailableError
 import jwt
 import msal
 import requests
@@ -484,14 +485,6 @@ class FabAuth:
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential."""
-        try:
-            from azure.identity import AzureCliCredential, CredentialUnavailableError
-        except ImportError:
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_missing_azure_identity(),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-
         # Tenant drift check: compare stored tenant against current az session
         stored_tenant = self.get_tenant_id()
         if stored_tenant:
