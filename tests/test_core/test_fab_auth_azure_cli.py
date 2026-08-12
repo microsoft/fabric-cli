@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
 import subprocess
 import time
 from unittest.mock import MagicMock, patch
@@ -40,8 +39,8 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._auth_info = {}
     auth.app = None
     # Update file paths to use the test's tmp_path
-    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
-    auth.cache_file = os.path.join(str(tmp_path), "cache.bin")
+    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
+    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
     return str(tmp_path)
 
 
