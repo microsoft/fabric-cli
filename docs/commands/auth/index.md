@@ -8,11 +8,11 @@ Not resource-specific; applies to CLI authentication context.
 
 ## Available Commands
 
-| Command        | Description                | Usage                                                                 |
-|----------------|---------------------------|-----------------------------------------------------------------------|
-| `auth login`   | Log in to Fabric CLI      | `auth login [parameters]`                                                |
-| `auth logout`  | Log out of current session| `auth logout`                                                         |
-| `auth status`  | Show authentication status| `auth status`                                                         |
+| Command | Description | Usage |
+| --- | --- | --- |
+| `auth login` | Log in to Fabric CLI | `auth login [parameters]` |
+| `auth logout` | Log out of current session | `auth logout` |
+| `auth status` | Show authentication status | `auth status` |
 
 ---
 
@@ -22,8 +22,26 @@ Authenticate with Fabric CLI.
 
 **Usage:**
 
+#### Interactive login
 ```
-fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>] [--certificate </path/to/certificate.[pem|p12|pfx]>] [--tenant <tenant_id>]
+fab auth login
+```
+
+#### Azure CLI
+```
+fab auth login --azure-cli [--tenant <tenant_id>]
+```
+
+#### Service principal
+```
+fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>           # Service principal with secret
+
+fab auth login -u <client_id> --certificate <path> --tenant <tenant_id>         # Service principal with certificate
+```
+
+#### Workload identity
+```
+fab auth login -u <client_id> --federated-token <token> --tenant <tenant_id>    # Workload identity
 ```
 
 **Parameters:**
@@ -32,7 +50,8 @@ fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>]
 - `-p, --password`: Client secret for service principal. Optional.
 - `--federated-token`: Federated token for workload identity. Optional.
 - `--certificate`: Path to certificate file. Optional.
-- `--tenant`: Tenant ID. Optional.
+- `--azure-cli`: Use an existing Azure CLI login session as the token provider. Requires Azure CLI to be installed and logged in (`az login`). Optional.
+- `--tenant`: Tenant ID. Optional. When used with `--azure-cli`, pins Fabric CLI to the specified tenant.
 
 ---
 
