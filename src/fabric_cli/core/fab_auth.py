@@ -3,6 +3,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import time
 import uuid
@@ -473,8 +474,11 @@ class FabAuth:
             return self._cached_az_tenant
 
         try:
+            az_path = shutil.which("az")
+            if not az_path:
+                return None
             result = subprocess.run(
-                ["az", "account", "show", "--query", "tenantId", "-o", "tsv"],
+                [az_path, "account", "show", "--query", "tenantId", "-o", "tsv"],
                 capture_output=True,
                 text=True,
                 timeout=10,

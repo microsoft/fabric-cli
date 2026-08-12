@@ -19,6 +19,8 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
+    # Ensure shutil.which("az") resolves in tests (Windows uses az.cmd)
+    monkeypatch.setattr("shutil.which", lambda cmd: f"/usr/bin/{cmd}" if cmd == "az" else None)
     # Clear env vars that would interfere with auth
     for var in (
         "FAB_TOKEN",
@@ -84,7 +86,7 @@ class TestAzureCliIdentityType:
         auth.set_azure_cli()
         assert auth.get_tenant_id() == "auto-captured-tenant-id"
         mock_run.assert_called_once_with(
-            ["az", "account", "show", "--query", "tenantId", "-o", "tsv"],
+            ["/usr/bin/az", "account", "show", "--query", "tenantId", "-o", "tsv"],
             capture_output=True,
             text=True,
             timeout=10,
@@ -595,9 +597,9 @@ class TestAzureCliTenantDiscoveryFailures:
         auth._cached_az_tenant_time = 0.0
         assert auth._get_azure_cli_tenant(force_refresh=True) is None
 
-    @patch("subprocess.run", side_effect=FileNotFoundError("az not found"))
-    def test_az_not_installed_returns_none(self, mock_run, temp_dir_fixture):
+    def test_az_not_installed_returns_none(self, monkeypatch, temp_dir_fixture):
         """Should return None when az CLI is not installed."""
+        monkeypatch.setattr("shutil.which", lambda cmd: None)
         auth = FabAuth()
         auth._cached_az_tenant = None
         auth._cached_az_tenant_time = 0.0
