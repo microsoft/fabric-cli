@@ -31,6 +31,7 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
 _AZURE_CLI_TENANT_CACHE_TTL_SECONDS = 10
+_AZURE_CLI_TOKEN_REFRESH_BUFFER_SECONDS = 60
 
 
 def singleton(class_):
@@ -535,9 +536,13 @@ class FabAuth:
             )
 
     def _get_cached_azure_cli_token(self, cache_key: str) -> Optional[dict]:
-        """Return cached token if it exists and is not near expiry (60s buffer)."""
+        """Return cached token if it exists and is not near expiry."""
         cached = self._azure_cli_token_cache.get(cache_key)
-        if cached and cached.get("expires_on", 0) > time.time() + 60:
+        if (
+            cached
+            and cached.get("expires_on", 0)
+            > time.time() + _AZURE_CLI_TOKEN_REFRESH_BUFFER_SECONDS
+        ):
             return cached
         return None
 
