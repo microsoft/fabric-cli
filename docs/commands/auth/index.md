@@ -23,7 +23,7 @@ Authenticate with Fabric CLI.
 **Usage:**
 
 ```
-fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>] [--certificate </path/to/certificate.[pem|p12|pfx]>] [--tenant <tenant_id>]
+fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>] [--certificate </path/to/certificate.[pem|p12|pfx]>] [--azure-cli] [--tenant <tenant_id>]
 ```
 
 **Parameters:**
@@ -32,7 +32,8 @@ fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>]
 - `-p, --password`: Client secret for service principal. Optional.
 - `--federated-token`: Federated token for workload identity. Optional.
 - `--certificate`: Path to certificate file. Optional.
-- `--tenant`: Tenant ID. Optional.
+- `--azure-cli`: Use an existing Azure CLI login session as the token provider. Requires Azure CLI to be installed and logged in (`az login`). Optional.
+- `--tenant`: Tenant ID. Optional. When used with `--azure-cli`, pins Fabric CLI to the specified tenant.
 
 ---
 
