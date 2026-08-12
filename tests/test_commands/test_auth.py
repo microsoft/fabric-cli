@@ -971,6 +971,7 @@ def prepare_auth_args(args=None):
                 "identity",
                 "certificate",
                 "federated_token",
+                "azure_cli",
             ]
         }
     )
