@@ -9,10 +9,10 @@ import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
 
-from azure.identity import AzureCliCredential, CredentialUnavailableError
 import jwt
 import msal
 import requests
+from azure.identity import AzureCliCredential, CredentialUnavailableError
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -491,7 +491,9 @@ class FabAuth:
             current_tenant = self._get_azure_cli_tenant()
             if current_tenant and current_tenant != stored_tenant:
                 raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_tenant_mismatch(stored_tenant, current_tenant),
+                    ErrorMessages.Auth.azure_cli_tenant_mismatch(
+                        stored_tenant, current_tenant
+                    ),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
@@ -522,8 +524,7 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         except Exception as e:
-            # Allowlist: SDK exceptions are pre-sanitized by azure-identity;
-            # unknown exceptions get a safe generic message.
+            # Allowlist: SDK exceptions are pre-sanitized by azure-identity; unknown exceptions get a safe generic message
             if type(e).__name__ in ("ClientAuthenticationError", "HttpResponseError"):
                 error_msg = str(e)
             else:
