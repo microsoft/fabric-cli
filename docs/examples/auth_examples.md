@@ -25,6 +25,36 @@ fab auth login
 ```
 
 
+### Azure CLI Authentication
+
+Reuse an existing Azure CLI session instead of requiring a separate Fabric CLI login. Useful when tools or scripts already have `az login` done (e.g., in development environments or CI/CD pipelines with Azure CLI pre-authenticated).
+
+!!! info "Requires Azure CLI to be installed and logged in (`az login`)"
+
+#### Log in using Azure CLI in interactive mode
+
+```
+fab auth login
+? How would you like to authenticate Fabric CLI? Azure CLI authentication
+```
+
+#### Log in using Azure CLI directly from command line
+
+```
+fab auth login --azure-cli
+```
+
+#### Log in using Azure CLI with a specific tenant
+
+```
+fab auth login --azure-cli --tenant <tenant_id>
+```
+
+!!! note "Tenant behavior"
+    - If `--tenant` is not specified, Fabric CLI captures and records the tenant from the current Azure CLI session at login time.
+    - Throughout the `fab` session, the Azure CLI's active tenant is checked against the recorded tenant. If you switch tenants in Azure CLI (e.g., `az login --tenant <other>`), Fabric CLI will raise a tenant mismatch error and require you to re-authenticate, e.g., `fab auth login --azure-cli`.
+
+
 ### Service Principal Authentication
 
 !!! info "Requires 'Allow service principals to use Fabric APIs' tenant switch to be enabled in the admin portal"
@@ -81,37 +111,6 @@ Log in using service principal with federated credential directly
 fab auth login -u <client_id> --federated-token <token> --tenant <tenant_id>
 ```
 
-### Azure CLI Authentication
-
-Reuse an existing Azure CLI session instead of requiring a separate Fabric CLI login. Useful when tools or scripts already have `az login` done (e.g., in development environments or CI/CD pipelines with Azure CLI pre-authenticated).
-
-!!! info "Requires Azure CLI to be installed and logged in (`az login`)"
-
-#### Log in using Azure CLI in interactive mode
-
-```
-fab auth login
-? How would you like to authenticate Fabric CLI? Azure CLI authentication
-```
-
-#### Log in using Azure CLI directly from command line
-
-```
-fab auth login --azure-cli
-```
-
-#### Log in using Azure CLI with a specific tenant
-
-```
-fab auth login --azure-cli --tenant <tenant_id>
-```
-
-!!! note "Tenant behavior"
-    - If `--tenant` is not specified, Fabric CLI records the tenant from your current Azure CLI session at login time.
-    - On each subsequent command, Fabric CLI checks that Azure CLI's active tenant still matches the recorded tenant. If you switch tenants in Azure CLI (e.g., `az login --tenant <other>`), Fabric CLI will report a tenant mismatch error and ask you to re-run `fab auth login --azure-cli`.
-    - This prevents accidentally operating against the wrong tenant after an `az login` switch.
-
----
 
 ### Managed Identity Authentication
 

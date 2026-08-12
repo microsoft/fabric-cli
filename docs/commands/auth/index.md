@@ -8,11 +8,11 @@ Not resource-specific; applies to CLI authentication context.
 
 ## Available Commands
 
-| Command        | Description                | Usage                                                                 |
-|----------------|---------------------------|-----------------------------------------------------------------------|
-| `auth login`   | Log in to Fabric CLI      | `auth login [parameters]`                                                |
-| `auth logout`  | Log out of current session| `auth logout`                                                         |
-| `auth status`  | Show authentication status| `auth status`                                                         |
+| Command | Description | Usage |
+| --- | --- | --- |
+| `auth login` | Log in to Fabric CLI | `auth login [parameters]` |
+| `auth logout` | Log out of current session | `auth logout` |
+| `auth status` | Show authentication status | `auth status` |
 
 ---
 
@@ -22,8 +22,28 @@ Authenticate with Fabric CLI.
 
 **Usage:**
 
+#### Interactive login
 ```
-fab auth login [-u <client_id>] [-p <client_secret>] [--federated-token <token>] [--certificate </path/to/certificate.[pem|p12|pfx]>] [--azure-cli] [--tenant <tenant_id>]
+fab auth login
+```
+
+#### Azure CLI
+```
+fab auth login --azure-cli [--tenant <tenant_id>]
+```
+
+#### Service principal
+```
+# Service principal with secret
+fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>
+
+# Service principal with certificate
+fab auth login -u <client_id> --certificate <path> --tenant <tenant_id>
+```
+
+#### Workload identity
+```
+fab auth login -u <client_id> --federated-token <token> --tenant <tenant_id>
 ```
 
 **Parameters:**
