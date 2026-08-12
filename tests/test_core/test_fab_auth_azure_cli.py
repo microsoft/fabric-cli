@@ -234,13 +234,32 @@ class TestAzureCliTokenAcquisition:
                 assert "azure-identity" in str(exc_info.value)
 
     @patch("azure.identity.AzureCliCredential")
-    def test_acquire_token_sanitizes_error_messages(
+    def test_sdk_exception_surfaces_message(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """Error messages should never contain token content."""
+        """SDK exceptions (pre-sanitized by azure-identity) surface their message."""
         mock_credential = MagicMock()
-        mock_credential.get_token.side_effect = Exception(
-            "Failed with accessToken: eyJ0eXAi..."
+        error = type("ClientAuthenticationError", (Exception,), {})("Tenant not found")
+        mock_credential.get_token.side_effect = error
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth._azure_cli_token_cache.clear()
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+
+        assert "Tenant not found" in str(exc_info.value)
+
+    @patch("azure.identity.AzureCliCredential")
+    def test_unknown_exception_returns_safe_message(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Non-SDK exceptions should always return a safe generic message."""
+        mock_credential = MagicMock()
+        mock_credential.get_token.side_effect = RuntimeError(
+            "accessToken: eyJ0eXAi..."
         )
         mock_credential_class.return_value = mock_credential
 
@@ -251,35 +270,7 @@ class TestAzureCliTokenAcquisition:
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-        # Should not contain the raw token
         assert "eyJ0eXAi" not in str(exc_info.value)
-        assert "manually to diagnose" in str(exc_info.value)
-
-    @pytest.mark.parametrize(
-        "error_msg",
-        [
-            "Error with Bearer token xyz",
-            "refresh_token expired",
-            "Authorization header invalid",
-            "eyJhbGciOiJSUzI1NiIsInR5cCI6",
-        ],
-    )
-    @patch("azure.identity.AzureCliCredential")
-    def test_acquire_token_sanitizes_expanded_patterns(
-        self, mock_credential_class, error_msg, temp_dir_fixture
-    ):
-        """All sensitive patterns should be sanitized from error messages."""
-        mock_credential = MagicMock()
-        mock_credential.get_token.side_effect = Exception(error_msg)
-        mock_credential_class.return_value = mock_credential
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-
         assert "manually to diagnose" in str(exc_info.value)
 
 

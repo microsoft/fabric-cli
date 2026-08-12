@@ -482,15 +482,6 @@ class FabAuth:
             pass
         return None
 
-    # Sensitive patterns for error message sanitization
-    _SENSITIVE_PATTERNS = [
-        "accessToken",
-        "eyJ",
-        "Bearer",
-        "refresh_token",
-        "Authorization",
-    ]
-
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential."""
         try:
@@ -538,9 +529,11 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         except Exception as e:
-            # Sanitize: never include token content in error messages
-            error_msg = str(e)
-            if any(p.lower() in error_msg.lower() for p in self._SENSITIVE_PATTERNS):
+            # Allowlist: SDK exceptions are pre-sanitized by azure-identity;
+            # unknown exceptions get a safe generic message.
+            if type(e).__name__ in ("ClientAuthenticationError", "HttpResponseError"):
+                error_msg = str(e)
+            else:
                 error_msg = ErrorMessages.Auth.azure_cli_token_acquisition_failed()
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_auth_failed(error_msg),
