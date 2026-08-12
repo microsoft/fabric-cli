@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
 import subprocess
 import time
 from unittest.mock import MagicMock, patch
@@ -10,6 +11,7 @@ import pytest
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.errors import ErrorMessages
 
 
 @pytest.fixture(autouse=True)
@@ -28,6 +30,9 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._cached_az_tenant = None
     auth._cached_az_tenant_time = 0.0
     auth._auth_info = {}
+    # Update file paths to use the test's tmp_path
+    auth.auth_file = os.path.join(str(tmp_path), "auth.json")
+    auth.cache_file = os.path.join(str(tmp_path), "cache.bin")
     return str(tmp_path)
 
 
@@ -50,7 +55,7 @@ class TestAzureCliIdentityType:
         """set_azure_cli should configure identity_type to azure_cli."""
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
+        auth.set_azure_cli(tenant_id="test-tenant")
         assert auth.get_identity_type() == "azure_cli"
 
     def test_set_azure_cli_with_tenant(self, temp_dir_fixture):
@@ -181,7 +186,7 @@ class TestAzureCliTokenAcquisition:
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-        assert "not installed or not logged in" in str(exc_info.value)
+        assert ErrorMessages.Auth.azure_cli_not_available() in str(exc_info.value)
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_sdk_exception_surfaces_message(
@@ -245,8 +250,7 @@ class TestAzureCliTenantDrift:
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-        assert "Tenant mismatch" in str(exc_info.value)
-        assert "original-tenant" in str(exc_info.value)
+        assert ErrorMessages.Auth.azure_cli_tenant_mismatch("original-tenant", "different-tenant") in str(exc_info.value)
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     @patch("subprocess.run")

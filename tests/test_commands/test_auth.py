@@ -955,9 +955,10 @@ class TestAuthAzureCli:
     def test_init_with_azure_cli_flag(self, mock_fab_auth, mock_fab_context):
         """fab auth login --azure-cli should set azure_cli mode."""
         args = prepare_auth_args({"azure_cli": True})
+        mock_set_azure_cli = MagicMock()
 
         with patch.object(
-            mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+            mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
         ):
             result = fab_auth.init(args)
 
@@ -965,6 +966,7 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", None
         )
+        mock_set_azure_cli.assert_called_once_with(None)
         assert result is True
 
     def test_init_with_azure_cli_flag_and_tenant(
@@ -972,9 +974,10 @@ class TestAuthAzureCli:
     ):
         """fab auth login --azure-cli --tenant should pass tenant."""
         args = prepare_auth_args({"azure_cli": True, "tenant": "my-tenant"})
+        mock_set_azure_cli = MagicMock()
 
         with patch.object(
-            mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+            mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
         ):
             result = fab_auth.init(args)
 
@@ -982,18 +985,21 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", "my-tenant"
         )
+        mock_set_azure_cli.assert_called_once_with("my-tenant")
         assert result is True
 
     def test_init_with_interactive_azure_cli_selection(
         self, mock_fab_auth, mock_fab_context
     ):
         """Interactive menu Azure CLI selection should set azure_cli mode."""
+        mock_set_azure_cli = MagicMock()
+
         with patch(
             "fabric_cli.utils.fab_ui.prompt_select_item",
             return_value="Azure CLI (existing 'az login' session)",
         ):
             with patch.object(
-                mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+                mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
             ):
                 args = prepare_auth_args()
                 result = fab_auth.init(args)
@@ -1002,6 +1008,9 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", None
         )
+        mock_set_azure_cli.assert_called_once_with(None)
+        assert_get_access_token(mock_fab_auth_instance)
+        assert_fab_context(mock_fab_context)
         assert result is True
 
 
