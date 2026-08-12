@@ -949,6 +949,62 @@ class TestAuth:
             assert_prompt_cancelled(capsys)
 
 
+class TestAuthAzureCli:
+    """Command-level tests for Azure CLI auth paths."""
+
+    def test_init_with_azure_cli_flag(self, mock_fab_auth, mock_fab_context):
+        """fab auth login --azure-cli should set azure_cli mode."""
+        args = prepare_auth_args({"azure_cli": True})
+
+        with patch.object(
+            mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+        ):
+            result = fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with(
+            "azure_cli", None
+        )
+        assert result is True
+
+    def test_init_with_azure_cli_flag_and_tenant(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """fab auth login --azure-cli --tenant should pass tenant."""
+        args = prepare_auth_args({"azure_cli": True, "tenant": "my-tenant"})
+
+        with patch.object(
+            mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+        ):
+            result = fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with(
+            "azure_cli", "my-tenant"
+        )
+        assert result is True
+
+    def test_init_with_interactive_azure_cli_selection(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """Interactive menu Azure CLI selection should set azure_cli mode."""
+        with patch(
+            "fabric_cli.utils.fab_ui.prompt_select_item",
+            return_value="Azure CLI (existing 'az login' session)",
+        ):
+            with patch.object(
+                mock_fab_auth["instance"], "set_azure_cli", MagicMock()
+            ):
+                args = prepare_auth_args()
+                result = fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with(
+            "azure_cli", None
+        )
+        assert result is True
+
+
 # Helpers
 
 

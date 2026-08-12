@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import subprocess
 import time
 from unittest.mock import MagicMock, patch
 
@@ -30,16 +31,6 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     return str(tmp_path)
 
 
-@pytest.fixture
-def auth_instance(temp_dir_fixture):
-    """Get a fresh FabAuth instance."""
-    # Clear singleton for test isolation
-    FabAuth.__wrapped__ = None  # type: ignore
-    from fabric_cli.core import fab_auth as fab_auth_module
-
-    if FabAuth in fab_auth_module.singleton.__wrapped__:  # type: ignore
-        del fab_auth_module.singleton.__wrapped__[FabAuth]  # type: ignore
-    return FabAuth()
 
 
 class TestAzureCliIdentityType:
@@ -287,10 +278,10 @@ class TestAzureCliTokenCache:
     """Test in-memory token caching for Azure CLI tokens."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_cached_token_avoids_subprocess(
+    def test_cached_token_avoids_repeated_credential_calls(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """Second call with same scope should use cache, not subprocess."""
+        """Second call with same scope should use cache, not call get_token again."""
         mock_token = MagicMock()
         mock_token.token = "cached-token"
         mock_token.expires_on = int(time.time()) + 3600
@@ -505,3 +496,81 @@ class TestAzureCliCacheInvalidation:
         auth.set_azure_cli()
         assert auth.get_identity_type() == "azure_cli"
         assert auth.get_tenant_id() == "tenant-B"
+
+
+class TestAzureCliTenantDiscoveryFailures:
+    """Test _get_azure_cli_tenant failure paths."""
+
+    @patch("subprocess.run")
+    def test_nonzero_return_code_returns_none(self, mock_run, temp_dir_fixture):
+        """Should return None when az account show fails."""
+        mock_run.return_value = MagicMock(returncode=1, stdout="")
+        auth = FabAuth()
+        auth._cached_az_tenant = None
+        auth._cached_az_tenant_time = 0.0
+        assert auth._get_azure_cli_tenant(force_refresh=True) is None
+
+    @patch("subprocess.run")
+    def test_empty_stdout_returns_none(self, mock_run, temp_dir_fixture):
+        """Should return None when az returns empty stdout."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="   \n")
+        auth = FabAuth()
+        auth._cached_az_tenant = None
+        auth._cached_az_tenant_time = 0.0
+        assert auth._get_azure_cli_tenant(force_refresh=True) is None
+
+    @patch("subprocess.run", side_effect=subprocess.TimeoutExpired("az", 10))
+    def test_timeout_returns_none(self, mock_run, temp_dir_fixture):
+        """Should return None on subprocess timeout."""
+        auth = FabAuth()
+        auth._cached_az_tenant = None
+        auth._cached_az_tenant_time = 0.0
+        assert auth._get_azure_cli_tenant(force_refresh=True) is None
+
+    @patch("subprocess.run", side_effect=FileNotFoundError("az not found"))
+    def test_az_not_installed_returns_none(self, mock_run, temp_dir_fixture):
+        """Should return None when az CLI is not installed."""
+        auth = FabAuth()
+        auth._cached_az_tenant = None
+        auth._cached_az_tenant_time = 0.0
+        assert auth._get_azure_cli_tenant(force_refresh=True) is None
+
+    @patch("subprocess.run")
+    def test_cache_hit_before_ttl_expiry(self, mock_run, temp_dir_fixture):
+        """Should return cached tenant without calling subprocess."""
+        auth = FabAuth()
+        auth._cached_az_tenant = "cached-tenant"
+        auth._cached_az_tenant_time = time.monotonic()  # Just cached now
+        result = auth._get_azure_cli_tenant()
+        assert result == "cached-tenant"
+        mock_run.assert_not_called()
+
+    @patch("subprocess.run")
+    def test_cache_miss_after_ttl_expiry(self, mock_run, temp_dir_fixture):
+        """Should call subprocess after TTL expires."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="new-tenant\n")
+        auth = FabAuth()
+        auth._cached_az_tenant = "old-tenant"
+        auth._cached_az_tenant_time = time.monotonic() - 30
+        result = auth._get_azure_cli_tenant()
+        assert result == "new-tenant"
+        mock_run.assert_called_once()
+
+    @patch("subprocess.run")
+    def test_error_status_code_on_credential_unavailable(
+        self, mock_run, temp_dir_fixture
+    ):
+        """CredentialUnavailableError should produce correct status code."""
+        from fabric_cli.core.fab_auth import CredentialUnavailableError
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth._azure_cli_token_cache.clear()
+
+        with patch("fabric_cli.core.fab_auth.AzureCliCredential") as mock_cred:
+            mock_instance = MagicMock()
+            mock_instance.get_token.side_effect = CredentialUnavailableError("nope")
+            mock_cred.return_value = mock_instance
+            with pytest.raises(FabricCLIError) as exc_info:
+                auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+            assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
