@@ -42,26 +42,6 @@ def auth_instance(temp_dir_fixture):
     return FabAuth()
 
 
-@pytest.fixture
-def fresh_auth(temp_dir_fixture, monkeypatch):
-    """Get a fresh FabAuth instance with singleton cleared."""
-    # Reset singleton instances dict
-    import fabric_cli.core.fab_auth as auth_module
-
-    # Access the closure variable of the singleton decorator
-    singleton_instances = auth_module.singleton.__code__.co_consts  # noqa
-    # Simpler approach: just patch the module-level reference
-    monkeypatch.setattr(
-        "fabric_cli.core.fab_auth.FabAuth.__init__.__globals__",
-        {},
-        raising=False,
-    )
-    # Re-instantiate
-    auth = FabAuth.__new__(FabAuth)
-    auth.__init__()
-    return auth
-
-
 class TestAzureCliIdentityType:
     """Test that azure_cli is a valid identity type."""
 
