@@ -119,3 +119,36 @@ class AuthErrors:
     @staticmethod
     def only_supported_with_user_authentication() -> str:
         return "This operation is only supported with user authentication"
+
+    @staticmethod
+    def azure_cli_missing_azure_identity() -> str:
+        return (
+            "Azure CLI auth requires the 'azure-identity' package. "
+            "Install it with: pip install azure-identity"
+        )
+
+    @staticmethod
+    def azure_cli_tenant_mismatch(stored_tenant: str, current_tenant: str) -> str:
+        return (
+            f"Tenant mismatch: Fabric CLI is pinned to tenant '{stored_tenant}' "
+            f"but Azure CLI is now logged into tenant '{current_tenant}'. "
+            "Run 'fab auth login --azure-cli' to re-authenticate."
+        )
+
+    @staticmethod
+    def azure_cli_not_available() -> str:
+        return (
+            "Azure CLI is not installed or not logged in. "
+            "Run 'az login' to authenticate, then retry."
+        )
+
+    @staticmethod
+    def azure_cli_auth_failed(error_msg: str) -> str:
+        return f"Azure CLI authentication failed: {error_msg}"
+
+    @staticmethod
+    def azure_cli_token_acquisition_failed() -> str:
+        return (
+            "Azure CLI token acquisition failed. "
+            "Run 'az account get-access-token' manually to diagnose."
+        )

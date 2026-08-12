@@ -497,8 +497,7 @@ class FabAuth:
             from azure.identity import AzureCliCredential, CredentialUnavailableError
         except ImportError:
             raise FabricCLIError(
-                "Azure CLI auth requires the 'azure-identity' package. "
-                "Install it with: pip install azure-identity",
+                ErrorMessages.Auth.azure_cli_missing_azure_identity(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
@@ -508,9 +507,7 @@ class FabAuth:
             current_tenant = self._get_azure_cli_tenant()
             if current_tenant and current_tenant != stored_tenant:
                 raise FabricCLIError(
-                    f"Tenant mismatch: Fabric CLI is pinned to tenant '{stored_tenant}' "
-                    f"but Azure CLI is now logged into tenant '{current_tenant}'. "
-                    "Run 'fab auth login --azure-cli' to re-authenticate.",
+                    ErrorMessages.Auth.azure_cli_tenant_mismatch(stored_tenant, current_tenant),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
@@ -537,17 +534,16 @@ class FabAuth:
             return token_result
         except CredentialUnavailableError:
             raise FabricCLIError(
-                "Azure CLI is not installed or not logged in. "
-                "Run 'az login' to authenticate, then retry.",
+                ErrorMessages.Auth.azure_cli_not_available(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
         except Exception as e:
             # Sanitize: never include token content in error messages
             error_msg = str(e)
             if any(p.lower() in error_msg.lower() for p in self._SENSITIVE_PATTERNS):
-                error_msg = "Azure CLI token acquisition failed. Run 'az account get-access-token' manually to diagnose."
+                error_msg = ErrorMessages.Auth.azure_cli_token_acquisition_failed()
             raise FabricCLIError(
-                f"Azure CLI authentication failed: {error_msg}",
+                ErrorMessages.Auth.azure_cli_auth_failed(error_msg),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
