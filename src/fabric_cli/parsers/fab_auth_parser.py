@@ -93,11 +93,11 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         action="store_true",
         dest="azure_cli",
-        help="Use Azure CLI authentication (reuse existing 'az login' session)",
+        help="Use Azure CLI authentication (existing 'az login' session)",
     )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"
-    login_parser.set_defaults(func=lazy_command(_auth_module_path, 'init'))
+    login_parser.set_defaults(func=lazy_command(_auth_module_path, "init"))
 
     # Subcommand for 'logout'
     logout_examples = [
@@ -115,7 +115,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     logout_parser.usage = f"{utils_error_parser.get_usage_prog(logout_parser)}"
-    logout_parser.set_defaults(func=lazy_command(_auth_module_path, 'logout'))
+    logout_parser.set_defaults(func=lazy_command(_auth_module_path, "logout"))
 
     # Subcommand for 'status'
     status_examples = [
@@ -132,7 +132,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     status_parser.usage = f"{utils_error_parser.get_usage_prog(status_parser)}"
-    status_parser.set_defaults(func=lazy_command(_auth_module_path, 'status'))
+    status_parser.set_defaults(func=lazy_command(_auth_module_path, "status"))
 
 
 def show_help(args: Namespace) -> None:

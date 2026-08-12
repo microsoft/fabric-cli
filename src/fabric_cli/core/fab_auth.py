@@ -29,7 +29,6 @@ from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
-
 _AZURE_CLI_TENANT_CACHE_TTL_SECONDS = 10
 
 
@@ -55,9 +54,9 @@ class FabAuth:
         # Reset the auth info
         self.app: msal.ClientApplication = None
         self._auth_info = {}
-        # In-memory token cache for Azure CLI tokens (avoids repeated subprocess calls)
+        # In-memory token cache for Azure CLI tokens
         self._azure_cli_token_cache: dict[str, dict] = {}
-        # Cached tenant ID from az account show (avoids repeated subprocess calls)
+        # Cached tenant ID from az account show
         self._cached_az_tenant: Optional[str] = None
         self._cached_az_tenant_time: float = 0.0
 
@@ -463,7 +462,8 @@ class FabAuth:
         if (
             not force_refresh
             and self._cached_az_tenant is not None
-            and time.monotonic() - self._cached_az_tenant_time < _AZURE_CLI_TENANT_CACHE_TTL_SECONDS
+            and time.monotonic() - self._cached_az_tenant_time
+            < _AZURE_CLI_TENANT_CACHE_TTL_SECONDS
         ):
             return self._cached_az_tenant
 
