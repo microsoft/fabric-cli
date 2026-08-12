@@ -20,7 +20,10 @@ def temp_dir_fixture(monkeypatch, tmp_path):
         "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
     # Ensure shutil.which("az") resolves in tests (Windows uses az.cmd)
-    monkeypatch.setattr("shutil.which", lambda cmd: f"/usr/bin/{cmd}" if cmd == "az" else None)
+    monkeypatch.setattr(
+         "shutil.which",
+         lambda cmd: f"/usr/bin/{cmd}" if cmd == "az" else None,
+     )
     # Clear env vars that would interfere with auth
     for var in (
         "FAB_TOKEN",
