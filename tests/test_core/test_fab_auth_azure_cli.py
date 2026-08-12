@@ -38,7 +38,7 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._cached_az_tenant = None
     auth._cached_az_tenant_time = 0.0
     auth._auth_info = {}
-    auth._msal_app = None
+    auth.app = None
     # Update file paths to use the test's tmp_path
     auth.auth_file = os.path.join(str(tmp_path), "auth.json")
     auth.cache_file = os.path.join(str(tmp_path), "cache.bin")
@@ -84,15 +84,18 @@ class TestAzureCliIdentityType:
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli()
         assert auth.get_tenant_id() == "auto-captured-tenant-id"
+        mock_run.assert_called_once_with(
+            ["az", "account", "show", "--query", "tenantId", "-o", "tsv"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
     @patch("subprocess.run")
     def test_set_azure_cli_explicit_tenant_overrides_auto(
         self, mock_run, temp_dir_fixture
     ):
         """Explicit tenant_id should be used even if az has a different one."""
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout="az-tenant\n"
-        )
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="explicit-tenant")
@@ -195,6 +198,7 @@ class TestAzureCliTokenAcquisition:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
         assert ErrorMessages.Auth.azure_cli_not_available() in str(exc_info.value)
+        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_sdk_exception_surfaces_message(
@@ -236,25 +240,6 @@ class TestAzureCliTokenAcquisition:
         assert "eyJ0eXAi" not in str(exc_info.value)
         assert "manually to diagnose" in str(exc_info.value)
 
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_error_status_code_on_credential_unavailable(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """CredentialUnavailableError should produce correct status code."""
-        from fabric_cli.core.fab_auth import CredentialUnavailableError
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
-
-        mock_instance = MagicMock()
-        mock_instance.get_token.side_effect = CredentialUnavailableError("nope")
-        mock_credential_class.return_value = mock_instance
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-
 
 class TestAzureCliTenantDrift:
     """Test tenant drift detection during token acquisition."""
@@ -277,7 +262,10 @@ class TestAzureCliTenantDrift:
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-        assert ErrorMessages.Auth.azure_cli_tenant_mismatch("original-tenant", "different-tenant") in str(exc_info.value)
+        expected_msg = ErrorMessages.Auth.azure_cli_tenant_mismatch(
+            "original-tenant", "different-tenant"
+        )
+        assert expected_msg in str(exc_info.value)
         mock_credential_class.assert_not_called()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
@@ -358,6 +346,32 @@ class TestAzureCliTokenCache:
 
         result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert result["access_token"] == "fresh-token"
+        mock_credential.get_token.assert_called_once()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_near_expiry_within_buffer_triggers_refresh(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Token valid but expiring within 60s buffer should trigger refresh."""
+        mock_token = MagicMock()
+        mock_token.token = "refreshed-token"
+        mock_token.expires_on = int(time.time()) + 3600
+
+        mock_credential = MagicMock()
+        mock_credential.get_token.return_value = mock_token
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth._azure_cli_token_cache.clear()
+        # Token expires in 30s — still valid but within 60s buffer
+        auth._azure_cli_token_cache[con.SCOPE_FABRIC_DEFAULT[0]] = {
+            "access_token": "almost-expired-token",
+            "expires_on": int(time.time()) + 30,
+        }
+
+        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert result["access_token"] == "refreshed-token"
         mock_credential.get_token.assert_called_once()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
