@@ -436,6 +436,9 @@ class FabAuth:
         from Azure CLI's active session via 'az account show'.
         Always forces a fresh query (bypasses cache) since this is a login action.
         """
+        # Clear token cache on every login to prevent stale tokens from a
+        # previous tenant (or no-tenant) session from being reused.
+        self._azure_cli_token_cache.clear()
         # Set tenant first — set_tenant() may call logout() which clears auth info
         if tenant_id:
             self.set_tenant(tenant_id)

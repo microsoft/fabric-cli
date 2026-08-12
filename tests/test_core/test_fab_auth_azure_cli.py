@@ -542,6 +542,29 @@ class TestAzureCliCacheInvalidation:
         assert auth.get_identity_type() == "azure_cli"
         assert auth.get_tenant_id() == "tenant-B"
 
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_login_clears_token_cache_from_no_tenant_state(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """set_azure_cli should clear token cache even when transitioning from no tenant."""
+        mock_token = MagicMock()
+        mock_token.token = "stale-token"
+        mock_token.expires_on = int(time.time()) + 3600
+
+        mock_credential = MagicMock()
+        mock_credential.get_token.return_value = mock_token
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        # Acquire a token with no tenant stored
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert auth._azure_cli_token_cache.get(con.SCOPE_FABRIC_DEFAULT[0]) is not None
+
+        # Login with explicit tenant — cache must be cleared
+        auth.set_azure_cli(tenant_id="new-tenant")
+        assert auth._azure_cli_token_cache.get(con.SCOPE_FABRIC_DEFAULT[0]) is None
+
 
 class TestAzureCliTenantDiscoveryFailures:
     """Test _get_azure_cli_tenant failure paths."""
