@@ -631,7 +631,7 @@ class TestAzureCliTenantDiscoveryFailures:
 
 
 class TestNonAzureCliIsolation:
-    """Verify non-azure-cli identity types never invoke AzureCliCredential."""
+    """Verify each auth method uses only its own credential path — no overlap."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_user_identity_does_not_invoke_azure_cli(
@@ -671,3 +671,28 @@ class TestNonAzureCliIsolation:
         result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
         assert result["access_token"] == "spn-token"
         mock_credential_class.assert_not_called()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_azure_cli_does_not_invoke_msal_app(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """When identity_type is 'azure_cli', MSAL app methods must not be called."""
+        mock_token = MagicMock()
+        mock_token.token = "az-cli-token"
+        mock_token.expires_on = int(time.time()) + 3600
+
+        mock_credential = MagicMock()
+        mock_credential.get_token.return_value = mock_token
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+
+        mock_app = MagicMock()
+        auth.app = mock_app
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
+        assert result["access_token"] == "az-cli-token"
+        mock_app.acquire_token_silent.assert_not_called()
+        mock_app.acquire_token_interactive.assert_not_called()
+        mock_app.acquire_token_for_client.assert_not_called()
