@@ -533,7 +533,12 @@ class FabAuth:
             )
         except Exception as e:
             # Allowlist: SDK exceptions are pre-sanitized by azure-identity; unknown exceptions get a safe generic message
-            if type(e).__name__ in ("ClientAuthenticationError", "HttpResponseError"):
+            if type(e).__name__ in (
+                "ClientAuthenticationError",
+                "HttpResponseError",
+                "ServiceRequestError",
+                "ServiceResponseError",
+            ):
                 error_msg = str(e)
             else:
                 error_msg = ErrorMessages.Auth.azure_cli_token_acquisition_failed()
