@@ -628,3 +628,46 @@ class TestAzureCliTenantDiscoveryFailures:
         result = auth._get_azure_cli_tenant()
         assert result == "new-tenant"
         mock_run.assert_called_once()
+
+
+class TestNonAzureCliIsolation:
+    """Verify non-azure-cli identity types never invoke AzureCliCredential."""
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_user_identity_does_not_invoke_azure_cli(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """When identity_type is 'user', AzureCliCredential must not be instantiated."""
+        auth = FabAuth()
+        auth.set_access_mode("user")
+
+        mock_app = MagicMock()
+        mock_app.get_accounts.return_value = [{"username": "test@contoso.com"}]
+        mock_app.acquire_token_silent.return_value = {
+            "access_token": "msal-user-token",
+            "expires_on": str(int(time.time()) + 3600),
+        }
+        auth.app = mock_app
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
+        assert result["access_token"] == "msal-user-token"
+        mock_credential_class.assert_not_called()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_service_principal_does_not_invoke_azure_cli(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """When identity_type is 'service_principal', AzureCliCredential must not be instantiated."""
+        auth = FabAuth()
+        auth.set_access_mode("service_principal")
+
+        mock_app = MagicMock()
+        mock_app.acquire_token_for_client.return_value = {
+            "access_token": "spn-token",
+            "expires_on": str(int(time.time()) + 3600),
+        }
+        auth.app = mock_app
+
+        result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
+        assert result["access_token"] == "spn-token"
+        mock_credential_class.assert_not_called()
