@@ -23,7 +23,6 @@ from fabric_cli.utils.fab_util import get_dict_from_params
 def deploy_with_config_file(args: Namespace) -> None:
     """deploy fabric items to a workspace using a configuration file and target environment - delegates to CICD library."""
 
-    bulk_publish_enabled = getattr(args, "bulk_publish", False)
     try:
         if fab_state_config.get_config(fab_constant.FAB_DEBUG_ENABLED) == "true":
             cli_logger = fab_logger.get_logger()
@@ -68,6 +67,7 @@ def deploy_with_config_file(args: Namespace) -> None:
             f"Deployment failed: {str(e)}", fab_constant.ERROR_IN_DEPLOYMENT
         )
     finally:
+        bulk_publish_enabled = getattr(args, "bulk_publish", False)
         if bulk_publish_enabled:
             _remove_bulk_publish_feature_flags()
 
