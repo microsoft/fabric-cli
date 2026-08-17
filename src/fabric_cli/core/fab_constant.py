@@ -56,6 +56,7 @@ FAB_SPN_FEDERATED_TOKEN = "fab_spn_federated_token"
 FAB_TENANT_ID = "fab_tenant_id"
 
 FAB_REFRESH_TOKEN = "fab_refresh_token"
+FAB_AZURE_CLI_PRINCIPAL_ID = "fab_azure_cli_principal_id"
 IDENTITY_TYPE = "identity_type"
 FAB_AUTH_MODE = "fab_auth_mode"  # Kept for backward compatibility
 FAB_AUTHORITY = "fab_authority"

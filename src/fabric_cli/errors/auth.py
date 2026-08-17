@@ -129,6 +129,13 @@ class AuthErrors:
         )
 
     @staticmethod
+    def azure_cli_principal_mismatch() -> str:
+        return (
+            "Azure CLI identity has changed since 'fab auth login --azure-cli' was run. "
+            "Run 'fab auth login --azure-cli' to re-authenticate with the current identity."
+        )
+
+    @staticmethod
     def azure_cli_not_available() -> str:
         return (
             "Azure CLI is not installed or not logged in. "

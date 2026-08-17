@@ -59,9 +59,9 @@ class FabAuth:
         self._auth_info = {}
         # In-memory token cache for Azure CLI tokens
         self._azure_cli_token_cache: dict[str, dict] = {}
-        # Cached tenant ID from az account show
-        self._cached_az_tenant: Optional[str] = None
-        self._cached_az_tenant_time: float = 0.0
+        # Cached az account show result (tenant + principal in one call)
+        self._cached_az_account: Optional[dict] = None
+        self._cached_az_account_time: float = 0.0
 
         # Load the auth info and environment variables
         self._load_auth()
@@ -440,56 +440,70 @@ class FabAuth:
         # Clear token cache on every login to prevent stale tokens from a
         # previous tenant (or no-tenant) session from being reused.
         self._azure_cli_token_cache.clear()
+        # Query Azure CLI account once for both tenant and principal
+        account = self._get_azure_cli_account(force_refresh=True)
         # Set tenant first — set_tenant() may call logout() which clears auth info
         if tenant_id:
             self.set_tenant(tenant_id)
-        else:
-            # Force refresh at login to avoid stale cached tenant
-            captured_tenant = self._get_azure_cli_tenant(force_refresh=True)
-            if captured_tenant:
-                self.set_tenant(captured_tenant)
+        elif account and account.get("tenant_id"):
+            self.set_tenant(account["tenant_id"])
         # Set identity_type after tenant to survive any logout triggered by tenant change
-        self._set_auth_properties(
-            {
-                con.IDENTITY_TYPE: "azure_cli",
-            }
-        )
+        auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
+        # Store principal for drift detection (no PII exposed in errors)
+        if account and account.get("principal_name"):
+            auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = account["principal_name"]
+        self._set_auth_properties(auth_props)
 
-    def _get_azure_cli_tenant(self, force_refresh: bool = False) -> Optional[str]:
-        """Query Azure CLI for the current tenant ID via 'az account show'.
+    def _get_azure_cli_account(self, force_refresh: bool = False) -> Optional[dict]:
+        """Query Azure CLI account info (tenant + principal) in a single subprocess call.
 
-        Caches the result to avoid repeated subprocess calls
-        during multi-scope token acquisition flows.
+        Returns a dict with 'tenant_id' and 'principal_name' keys, or None
+        if Azure CLI is unavailable. Caches the result to avoid repeated
+        subprocess calls during multi-scope token acquisition flows.
 
         Args:
             force_refresh: If True, bypass the cache and query az directly.
         """
-        # Return cached result if fresh and not forced
         if (
             not force_refresh
-            and self._cached_az_tenant is not None
-            and time.monotonic() - self._cached_az_tenant_time
+            and self._cached_az_account is not None
+            and time.monotonic() - self._cached_az_account_time
             < _AZURE_CLI_TENANT_CACHE_TTL_SECONDS
         ):
-            return self._cached_az_tenant
+            return self._cached_az_account
 
         try:
             az_path = shutil.which("az")
             if not az_path:
                 return None
             result = subprocess.run(
-                [az_path, "account", "show", "--query", "tenantId", "-o", "tsv"],
+                [az_path, "account", "show", "--query", "{tenantId:tenantId,userName:user.name}", "-o", "json"],
                 capture_output=True,
                 text=True,
                 timeout=10,
             )
             if result.returncode == 0 and result.stdout.strip():
-                self._cached_az_tenant = result.stdout.strip()
-                self._cached_az_tenant_time = time.monotonic()
-                return self._cached_az_tenant
-        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+                data = json.loads(result.stdout.strip())
+                account_info = {
+                    "tenant_id": data.get("tenantId"),
+                    "principal_name": data.get("userName"),
+                }
+                self._cached_az_account = account_info
+                self._cached_az_account_time = time.monotonic()
+                return self._cached_az_account
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError):
             pass
         return None
+
+    def _get_azure_cli_tenant(self, force_refresh: bool = False) -> Optional[str]:
+        """Get the current Azure CLI tenant ID (thin wrapper over _get_azure_cli_account)."""
+        account = self._get_azure_cli_account(force_refresh=force_refresh)
+        return account.get("tenant_id") if account else None
+
+    def _get_azure_cli_principal(self, force_refresh: bool = False) -> Optional[str]:
+        """Get the current Azure CLI principal name (thin wrapper over _get_azure_cli_account)."""
+        account = self._get_azure_cli_account(force_refresh=force_refresh)
+        return account.get("principal_name") if account else None
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential."""
@@ -502,6 +516,16 @@ class FabAuth:
                     ErrorMessages.Auth.azure_cli_tenant_mismatch(
                         stored_tenant, current_tenant
                     ),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
+        # Principal drift check: detect identity change within same tenant
+        stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
+        if stored_principal:
+            current_principal = self._get_azure_cli_principal()
+            if current_principal and current_principal != stored_principal:
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_principal_mismatch(),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
@@ -694,8 +718,8 @@ class FabAuth:
 
         # Clear Azure CLI caches
         self._azure_cli_token_cache.clear()
-        self._cached_az_tenant = None
-        self._cached_az_tenant_time = 0.0
+        self._cached_az_account = None
+        self._cached_az_account_time = 0.0
 
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)
