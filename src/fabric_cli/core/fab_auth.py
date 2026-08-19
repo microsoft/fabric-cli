@@ -3,9 +3,7 @@
 
 import json
 import os
-import shutil
-import subprocess
-import time
+import base64
 import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
@@ -30,8 +28,6 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
-
-_AZURE_CLI_TENANT_CACHE_TTL_SECONDS = 10
 
 
 def singleton(class_):
@@ -58,9 +54,6 @@ class FabAuth:
         self._auth_info = {}
         # Singleton AzureCliCredential instance (like self.app for MSAL)
         self._azure_cli_credential: Optional[AzureCliCredential] = None
-        # Cached az account show result (tenant + principal in one call)
-        self._cached_az_account: Optional[dict] = None
-        self._cached_az_account_time: float = 0.0
 
         # Load the auth info and environment variables
         self._load_auth()
@@ -432,100 +425,70 @@ class FabAuth:
     def set_azure_cli(self, tenant_id=None):
         """Configure Azure CLI as the authentication source.
 
-        If tenant_id is not provided, auto-captures the current tenant
-        from Azure CLI's active session via 'az account show'.
-        Always forces a fresh query (bypasses cache) since this is a login action.
+        Acquires a probe token from Azure CLI to discover and store
+        the tenant ID and principal OID from the actual JWT claims.
+        If tenant_id is provided, pins to that tenant; otherwise
+        auto-discovers from the token.
         """
         # Clear credential to force recreation with the correct tenant
         self._azure_cli_credential = None
-        # Query Azure CLI account once for both tenant and principal
-        account = self._get_azure_cli_account(force_refresh=True)
-        # Set tenant first — set_tenant() may call logout() which clears auth info
-        if tenant_id:
-            self.set_tenant(tenant_id)
-        elif account and account.get("tenant_id"):
-            self.set_tenant(account["tenant_id"])
+
+        # Acquire a probe token to discover identity from JWT claims
+        try:
+            probe_credential = (
+                AzureCliCredential(tenant_id=tenant_id)
+                if tenant_id
+                else AzureCliCredential()
+            )
+            probe_token = probe_credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
+            claims = self._decode_jwt_claims(probe_token.token)
+        except CredentialUnavailableError:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_not_available(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Set tenant from explicit param or JWT tid claim
+        resolved_tenant = tenant_id or claims.get("tid")
+        if resolved_tenant:
+            self.set_tenant(resolved_tenant)
+
         # Set identity_type after tenant to survive any logout triggered by tenant change
         auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
-        # Store principal for drift detection (no PII exposed in errors)
-        if account and account.get("principal_name"):
-            auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = account["principal_name"]
+        # Store OID for drift detection (immutable, no PII)
+        if claims.get("oid"):
+            auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
         self._set_auth_properties(auth_props)
 
-    def _get_azure_cli_account(self, force_refresh: bool = False) -> Optional[dict]:
-        """Query Azure CLI account info (tenant + principal) in a single subprocess call.
+    @staticmethod
+    def _decode_jwt_claims(token: str) -> dict:
+        """Decode JWT payload claims without signature validation.
 
-        Returns a dict with 'tenant_id' and 'principal_name' keys, or None
-        if Azure CLI is unavailable. Caches the result to avoid repeated
-        subprocess calls during multi-scope token acquisition flows.
-
-        Args:
-            force_refresh: If True, bypass the cache and query az directly.
+        Used to extract identity claims (tid, oid) from tokens
+        returned by AzureCliCredential. Signature validation is
+        unnecessary here — the token was just returned by the
+        Azure CLI SDK over a local subprocess call.
         """
-        if (
-            not force_refresh
-            and self._cached_az_account is not None
-            and time.monotonic() - self._cached_az_account_time
-            < _AZURE_CLI_TENANT_CACHE_TTL_SECONDS
-        ):
-            return self._cached_az_account
-
         try:
-            az_path = shutil.which("az")
-            if not az_path:
-                return None
-            result = subprocess.run(
-                [az_path, "account", "show", "--query", "{tenantId:tenantId,userName:user.name}", "-o", "json"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                data = json.loads(result.stdout.strip())
-                account_info = {
-                    "tenant_id": data.get("tenantId"),
-                    "principal_name": data.get("userName"),
-                }
-                self._cached_az_account = account_info
-                self._cached_az_account_time = time.monotonic()
-                return self._cached_az_account
-        except (subprocess.TimeoutExpired, FileNotFoundError, OSError, ValueError):
-            pass
-        return None
-
-    def _get_azure_cli_tenant(self, force_refresh: bool = False) -> Optional[str]:
-        """Get the current Azure CLI tenant ID (thin wrapper over _get_azure_cli_account)."""
-        account = self._get_azure_cli_account(force_refresh=force_refresh)
-        return account.get("tenant_id") if account else None
-
-    def _get_azure_cli_principal(self, force_refresh: bool = False) -> Optional[str]:
-        """Get the current Azure CLI principal name (thin wrapper over _get_azure_cli_account)."""
-        account = self._get_azure_cli_account(force_refresh=force_refresh)
-        return account.get("principal_name") if account else None
+            parts = token.split(".")
+            if len(parts) < 2:
+                return {}
+            # Add padding for base64url decoding
+            payload = parts[1]
+            payload += "=" * (4 - len(payload) % 4)
+            decoded = base64.urlsafe_b64decode(payload)
+            return json.loads(decoded)
+        except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+            return {}
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
-        """Acquire a token using Azure CLI's AzureCliCredential."""
-        # Tenant drift check: compare stored tenant against current az session
-        stored_tenant = self.get_tenant_id()
-        if stored_tenant:
-            current_tenant = self._get_azure_cli_tenant()
-            if current_tenant and current_tenant != stored_tenant:
-                raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_tenant_mismatch(
-                        stored_tenant, current_tenant
-                    ),
-                    status_code=con.ERROR_AUTHENTICATION_FAILED,
-                )
+        """Acquire a token using Azure CLI's AzureCliCredential.
 
-        # Principal drift check: detect identity change within same tenant
-        stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
-        if stored_principal:
-            current_principal = self._get_azure_cli_principal()
-            if current_principal and current_principal != stored_principal:
-                raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_principal_mismatch(),
-                    status_code=con.ERROR_AUTHENTICATION_FAILED,
-                )
+        After acquiring the token, decodes JWT claims and verifies
+        that tid and oid match the stored values from login to detect
+        identity drift (e.g., user ran 'az login' as a different user).
+        """
+        stored_tenant = self.get_tenant_id()
 
         try:
             # Create singleton credential if not yet initialized
@@ -537,6 +500,29 @@ class FabAuth:
                 )
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = self._azure_cli_credential.get_token(scope[0])
+
+            # Post-acquisition drift detection from actual token claims
+            claims = self._decode_jwt_claims(azure_token.token)
+
+            # Tenant drift check
+            if stored_tenant and claims.get("tid"):
+                if claims["tid"] != stored_tenant:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.azure_cli_tenant_mismatch(
+                            stored_tenant, claims["tid"]
+                        ),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
+
+            # Principal drift check (OID-based)
+            stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
+            if stored_principal and claims.get("oid"):
+                if claims["oid"] != stored_principal:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.azure_cli_principal_mismatch(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
+
             token_result = {
                 "access_token": azure_token.token,
                 "expires_on": azure_token.expires_on,
@@ -547,6 +533,8 @@ class FabAuth:
                 ErrorMessages.Auth.azure_cli_not_available(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
+        except FabricCLIError:
+            raise
         except Exception as e:
             # Allowlist: SDK exceptions are pre-sanitized by azure-identity; unknown exceptions get a safe generic message
             if type(e).__name__ in (
@@ -695,8 +683,6 @@ class FabAuth:
 
         # Clear Azure CLI state
         self._azure_cli_credential = None
-        self._cached_az_account = None
-        self._cached_az_account_time = 0.0
 
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)
