@@ -39,13 +39,13 @@ hide:
 ### ✨ New Functionality
 
 * Add new `fab find` command for searching the OneLake catalog across workspaces by [nschachter](https://github.com/nschachter)
-* Promote VariableLibrary from portal-only to full API support, enabling `create`, `get`, `set`, `rm`, `ls`, `export`, `import`, `cp`, and `mv` commands via the Variable Library REST APIs by [itsnotaboutthecell](https://github.com/itsnotaboutthecell)
+* Promote VariableLibrary from portal-only to full API support, enabling create, get, set, rm, ls, export, import, cp, and mv commands via the Variable Library REST APIs by [itsnotaboutthecell](https://github.com/itsnotaboutthecell)
 * adds hard flag to rm command (permanent delete) by [v-alexmoraru](https://github.com/v-alexmoraru)
 * supports lakehouse import & export by [v-alexmoraru](https://github.com/v-alexmoraru)
 
 ### 🔧 Bug Fix
 
-* fix correct "caracters" typo in error message by [alonyeshurun](https://github.com/alonyeshurun)
+* Fix "caracters" typo in error message by [alonyeshurun](https://github.com/alonyeshurun)
 * Remove hardcoded description when create/import items by [aviatco](https://github.com/aviatco)
 
 ### ⚡ Additional Optimizations
