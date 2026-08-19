@@ -129,6 +129,13 @@ class AuthErrors:
         )
 
     @staticmethod
+    def azure_cli_environment_mismatch() -> str:
+        return (
+            "Azure CLI cloud environment has changed since 'fab auth login --azure-cli' was run. "
+            "Run 'fab auth login --azure-cli' to re-authenticate in the current environment."
+        )
+
+    @staticmethod
     def azure_cli_principal_mismatch() -> str:
         return (
             "Azure CLI identity has changed since 'fab auth login --azure-cli' was run. "

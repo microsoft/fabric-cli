@@ -14,17 +14,19 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
 
 
-def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid", **extra_claims) -> str:
+def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid",
+              iss: str = "https://sts.windows.net/test-tenant/", **extra_claims) -> str:
     """Create a fake JWT with specified claims (no signature validation needed)."""
     header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
-    claims = {"tid": tid, "oid": oid, **extra_claims}
+    claims = {"tid": tid, "oid": oid, "iss": iss, **extra_claims}
     payload = base64.urlsafe_b64encode(_json.dumps(claims).encode()).rstrip(b"=").decode()
     return f"{header}.{payload}.fakesig"
 
 
-def _mock_credential_with_jwt(mock_class, tid="test-tenant", oid="test-oid", **extra):
+def _mock_credential_with_jwt(mock_class, tid="test-tenant", oid="test-oid",
+                               iss="https://sts.windows.net/test-tenant/", **extra):
     """Set up a mock AzureCliCredential that returns a JWT with given claims."""
-    token_str = _make_jwt(tid=tid, oid=oid, **extra)
+    token_str = _make_jwt(tid=tid, oid=oid, iss=iss, **extra)
     mock_token = MagicMock()
     mock_token.token = token_str
     mock_token.expires_on = int(time.time()) + 3600
@@ -280,6 +282,53 @@ class TestAzureCliTenantDrift:
         assert "access_token" in result
 
 
+class TestAzureCliEnvironmentDrift:
+    """Test cloud environment drift detection via JWT iss claim."""
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_environment_drift_blocks_token_acquisition(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Should block when token issuer differs from stored environment."""
+        # Login in Azure Public
+        _mock_credential_with_jwt(
+            mock_credential_class, tid="t1", oid="u1",
+            iss="https://sts.windows.net/t1/"
+        )
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        auth._azure_cli_credential = None
+
+        # Now credential returns token from Azure Government
+        _mock_credential_with_jwt(
+            mock_credential_class, tid="t1", oid="u1",
+            iss="https://sts.microsoftonline.us/t1/"
+        )
+
+        with pytest.raises(FabricCLIError) as exc_info:
+            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+
+        assert "environment has changed" in str(exc_info.value)
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_same_environment_allows_token_acquisition(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Should allow when token issuer matches stored environment."""
+        _mock_credential_with_jwt(
+            mock_credential_class, tid="t1", oid="u1",
+            iss="https://sts.windows.net/t1/"
+        )
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        auth._azure_cli_credential = None
+
+        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert "access_token" in result
+
+
 class TestAzureCliPrincipalDrift:
     """Test principal (identity) drift detection via JWT OID claims."""
 
@@ -462,14 +511,16 @@ class TestAzureCliLoginLogoutLifecycle:
         assert auth.get_tenant_id() == "discovered-tenant"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_stores_oid_for_drift_detection(self, mock_credential_class, temp_dir_fixture):
-        """set_azure_cli should store OID from JWT for drift detection."""
-        _mock_credential_with_jwt(mock_credential_class, tid="t1", oid="user-oid-123")
+    def test_login_stores_oid_and_issuer_for_drift_detection(self, mock_credential_class, temp_dir_fixture):
+        """set_azure_cli should store OID and issuer from JWT for drift detection."""
+        _mock_credential_with_jwt(mock_credential_class, tid="t1", oid="user-oid-123",
+                                   iss="https://sts.windows.net/t1/")
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli()
         assert auth._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID) == "user-oid-123"
+        assert auth._auth_info.get(con.FAB_AZURE_CLI_ISSUER) == "https://sts.windows.net/t1/"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_re_login_updates_tenant_and_oid(self, mock_credential_class, temp_dir_fixture):

@@ -455,16 +455,18 @@ class FabAuth:
 
         # Set identity_type after tenant to survive any logout triggered by tenant change
         auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
-        # Store OID for drift detection (immutable, no PII)
+        # Store OID and issuer for drift detection (immutable, no PII)
         if claims.get("oid"):
             auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
+        if claims.get("iss"):
+            auth_props[con.FAB_AZURE_CLI_ISSUER] = claims["iss"]
         self._set_auth_properties(auth_props)
 
     @staticmethod
     def _decode_jwt_claims(token: str) -> dict:
         """Decode JWT payload claims without signature validation.
 
-        Used to extract identity claims (tid, oid) from tokens
+        Used to extract identity claims (iss, tid, oid) from tokens
         returned by AzureCliCredential. Signature validation is
         unnecessary here — the token was just returned by the
         Azure CLI SDK over a local subprocess call.
@@ -485,8 +487,8 @@ class FabAuth:
         """Acquire a token using Azure CLI's AzureCliCredential.
 
         After acquiring the token, decodes JWT claims and verifies
-        that tid and oid match the stored values from login to detect
-        identity drift (e.g., user ran 'az login' as a different user).
+        that iss, tid, and oid match the stored values from login to detect
+        identity or environment drift.
         """
         stored_tenant = self.get_tenant_id()
 
@@ -503,6 +505,15 @@ class FabAuth:
 
             # Post-acquisition drift detection from actual token claims
             claims = self._decode_jwt_claims(azure_token.token)
+
+            # Environment drift check (issuer encodes cloud: public vs sovereign)
+            stored_issuer = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
+            if stored_issuer and claims.get("iss"):
+                if claims["iss"] != stored_issuer:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.azure_cli_environment_mismatch(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
 
             # Tenant drift check
             if stored_tenant and claims.get("tid"):

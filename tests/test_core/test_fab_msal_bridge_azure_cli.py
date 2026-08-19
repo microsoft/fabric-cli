@@ -18,7 +18,7 @@ from fabric_cli.core.fab_msal_bridge import MsalTokenCredential
 def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
     """Create a fake JWT with specified claims."""
     header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
-    claims = {"tid": tid, "oid": oid}
+    claims = {"tid": tid, "oid": oid, "iss": f"https://sts.windows.net/{tid}/"}
     payload = base64.urlsafe_b64encode(_json.dumps(claims).encode()).rstrip(b"=").decode()
     return f"{header}.{payload}.fakesig"
 
