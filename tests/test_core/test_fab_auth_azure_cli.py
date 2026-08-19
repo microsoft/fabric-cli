@@ -45,7 +45,7 @@ def temp_dir_fixture(monkeypatch, tmp_path):
         monkeypatch.delenv(var, raising=False)
     # Clear singleton caches between tests
     auth = FabAuth()
-    auth._azure_cli_token_cache.clear()
+    auth._azure_cli_credential = None
     auth._cached_az_account = None
     auth._cached_az_account_time = 0.0
     auth._auth_info = {}
@@ -137,7 +137,7 @@ class TestAzureCliTokenAcquisition:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         # Clear cache for clean test
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
 
@@ -161,7 +161,7 @@ class TestAzureCliTokenAcquisition:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
@@ -186,7 +186,7 @@ class TestAzureCliTokenAcquisition:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="my-tenant-id")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
@@ -207,7 +207,7 @@ class TestAzureCliTokenAcquisition:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -227,7 +227,7 @@ class TestAzureCliTokenAcquisition:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -247,7 +247,7 @@ class TestAzureCliTokenAcquisition:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -272,7 +272,7 @@ class TestAzureCliTenantDrift:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="original-tenant")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         with pytest.raises(FabricCLIError) as exc_info:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -303,7 +303,7 @@ class TestAzureCliTenantDrift:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="same-tenant")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert result["access_token"] == "valid-token"
@@ -325,7 +325,7 @@ class TestAzureCliPrincipalDrift:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="same-tenant")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         # Now az is logged in as bob (same tenant)
         mock_run.return_value = MagicMock(
@@ -361,7 +361,7 @@ class TestAzureCliPrincipalDrift:
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli(tenant_id="same-tenant")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
         auth._cached_az_account = None  # Force re-query
 
         result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -388,22 +388,22 @@ class TestAzureCliPrincipalDrift:
         # Manually set identity without principal (simulate old auth file)
         auth._set_auth_properties({con.IDENTITY_TYPE: "azure_cli"})
         auth.set_tenant("same-tenant")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert result["access_token"] == "valid-token"
 
 
-class TestAzureCliTokenCache:
-    """Test in-memory token caching for Azure CLI tokens."""
+class TestAzureCliSingletonCredential:
+    """Test singleton AzureCliCredential lifecycle."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_cached_token_avoids_repeated_credential_calls(
+    def test_singleton_credential_reused_across_calls(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """Second call with same scope should use cache, not call get_token again."""
+        """Repeated calls should reuse the same AzureCliCredential instance."""
         mock_token = MagicMock()
-        mock_token.token = "cached-token"
+        mock_token.token = "reused-token"
         mock_token.expires_on = int(time.time()) + 3600
 
         mock_credential = MagicMock()
@@ -412,73 +412,21 @@ class TestAzureCliTokenCache:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
-        result1 = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        result2 = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-        assert result1["access_token"] == "cached-token"
-        assert result2["access_token"] == "cached-token"
-        # get_token should only be called once (second call uses cache)
-        mock_credential.get_token.assert_called_once()
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_expired_cache_triggers_refresh(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Expired cached token should trigger a new credential token request."""
-        mock_token = MagicMock()
-        mock_token.token = "fresh-token"
-        mock_token.expires_on = int(time.time()) + 3600
-
-        mock_credential = MagicMock()
-        mock_credential.get_token.return_value = mock_token
-        mock_credential_class.return_value = mock_credential
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        # Pre-populate cache with expired token
-        auth._azure_cli_token_cache.clear()
-        auth._azure_cli_token_cache[con.SCOPE_FABRIC_DEFAULT[0]] = {
-            "access_token": "old-token",
-            "expires_on": int(time.time()) - 10,  # already expired
-        }
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert result["access_token"] == "fresh-token"
-        mock_credential.get_token.assert_called_once()
+        # AzureCliCredential constructor called only once (singleton)
+        mock_credential_class.assert_called_once()
+        # get_token called twice (no in-memory cache)
+        assert mock_credential.get_token.call_count == 2
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_near_expiry_within_buffer_triggers_refresh(
+    def test_different_scopes_use_same_credential(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """Token valid but expiring within 60s buffer should trigger refresh."""
-        mock_token = MagicMock()
-        mock_token.token = "refreshed-token"
-        mock_token.expires_on = int(time.time()) + 3600
-
-        mock_credential = MagicMock()
-        mock_credential.get_token.return_value = mock_token
-        mock_credential_class.return_value = mock_credential
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
-        # Token expires in 30s — still valid but within 60s buffer
-        auth._azure_cli_token_cache[con.SCOPE_FABRIC_DEFAULT[0]] = {
-            "access_token": "almost-expired-token",
-            "expires_on": int(time.time()) + 30,
-        }
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert result["access_token"] == "refreshed-token"
-        mock_credential.get_token.assert_called_once()
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_different_scopes_cached_separately(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Different scopes should have separate cache entries."""
+        """Different scopes should use the same singleton credential instance."""
         call_count = 0
 
         def make_token(*args):
@@ -495,14 +443,39 @@ class TestAzureCliTokenCache:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         r1 = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         r2 = auth._acquire_token_from_azure_cli(con.SCOPE_ONELAKE_DEFAULT)
 
         assert r1["access_token"] == "token-1"
         assert r2["access_token"] == "token-2"
+        # Same credential instance for both scopes
+        mock_credential_class.assert_called_once()
         assert mock_credential.get_token.call_count == 2
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_login_clears_credential(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """set_azure_cli should clear and recreate the credential instance."""
+        mock_token = MagicMock()
+        mock_token.token = "token"
+        mock_token.expires_on = int(time.time()) + 3600
+
+        mock_credential = MagicMock()
+        mock_credential.get_token.return_value = mock_token
+        mock_credential_class.return_value = mock_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        # Acquire a token — creates singleton credential
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert auth._azure_cli_credential is not None
+
+        # Login with explicit tenant — credential must be cleared
+        auth.set_azure_cli(tenant_id="new-tenant")
+        assert auth._azure_cli_credential is None
 
 
 class TestAzureCliScopeHandling:
@@ -521,7 +494,7 @@ class TestAzureCliScopeHandling:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         auth._acquire_token_from_azure_cli(con.SCOPE_ONELAKE_DEFAULT)
 
@@ -542,7 +515,7 @@ class TestAzureCliScopeHandling:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth._azure_cli_token_cache.clear()
+        auth._azure_cli_credential = None
 
         auth._acquire_token_from_azure_cli(con.SCOPE_AZURE_DEFAULT)
 
@@ -570,7 +543,7 @@ class TestAzureCliCacheInvalidation:
         auth.logout()
         assert auth._cached_az_account is None
         assert auth._cached_az_account_time == 0.0
-        assert auth._azure_cli_token_cache == {}
+        assert auth._azure_cli_credential is None
 
     @patch("subprocess.run")
     def test_login_forces_fresh_tenant_query(self, mock_run, temp_dir_fixture):
@@ -645,12 +618,12 @@ class TestAzureCliCacheInvalidation:
         assert auth.get_tenant_id() == "tenant-B"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_clears_token_cache_from_no_tenant_state(
+    def test_login_clears_credential_on_tenant_change(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """set_azure_cli should clear token cache even when transitioning from no tenant."""
+        """set_azure_cli should clear credential when transitioning tenants."""
         mock_token = MagicMock()
-        mock_token.token = "stale-token"
+        mock_token.token = "token"
         mock_token.expires_on = int(time.time()) + 3600
 
         mock_credential = MagicMock()
@@ -661,11 +634,11 @@ class TestAzureCliCacheInvalidation:
         auth.set_access_mode("azure_cli")
         # Acquire a token with no tenant stored
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert auth._azure_cli_token_cache.get(con.SCOPE_FABRIC_DEFAULT[0]) is not None
+        assert auth._azure_cli_credential is not None
 
-        # Login with explicit tenant — cache must be cleared
+        # Login with explicit tenant — credential must be cleared for recreation
         auth.set_azure_cli(tenant_id="new-tenant")
-        assert auth._azure_cli_token_cache.get(con.SCOPE_FABRIC_DEFAULT[0]) is None
+        assert auth._azure_cli_credential is None
 
 
 class TestAzureCliTenantDiscoveryFailures:

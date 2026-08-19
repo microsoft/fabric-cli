@@ -32,7 +32,6 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
 _AZURE_CLI_TENANT_CACHE_TTL_SECONDS = 10
-_AZURE_CLI_TOKEN_REFRESH_BUFFER_SECONDS = 60
 
 
 def singleton(class_):
@@ -57,8 +56,8 @@ class FabAuth:
         # Reset the auth info
         self.app: msal.ClientApplication = None
         self._auth_info = {}
-        # In-memory token cache for Azure CLI tokens
-        self._azure_cli_token_cache: dict[str, dict] = {}
+        # Singleton AzureCliCredential instance (like self.app for MSAL)
+        self._azure_cli_credential: Optional[AzureCliCredential] = None
         # Cached az account show result (tenant + principal in one call)
         self._cached_az_account: Optional[dict] = None
         self._cached_az_account_time: float = 0.0
@@ -437,9 +436,8 @@ class FabAuth:
         from Azure CLI's active session via 'az account show'.
         Always forces a fresh query (bypasses cache) since this is a login action.
         """
-        # Clear token cache on every login to prevent stale tokens from a
-        # previous tenant (or no-tenant) session from being reused.
-        self._azure_cli_token_cache.clear()
+        # Clear credential to force recreation with the correct tenant
+        self._azure_cli_credential = None
         # Query Azure CLI account once for both tenant and principal
         account = self._get_azure_cli_account(force_refresh=True)
         # Set tenant first — set_tenant() may call logout() which clears auth info
@@ -529,26 +527,20 @@ class FabAuth:
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
-        # Check in-memory cache first
-        cache_key = scope[0] if scope else ""
-        cached = self._get_cached_azure_cli_token(cache_key)
-        if cached:
-            return cached
-
         try:
-            credential = (
-                AzureCliCredential(tenant_id=stored_tenant)
-                if stored_tenant
-                else AzureCliCredential()
-            )
+            # Create singleton credential if not yet initialized
+            if self._azure_cli_credential is None:
+                self._azure_cli_credential = (
+                    AzureCliCredential(tenant_id=stored_tenant)
+                    if stored_tenant
+                    else AzureCliCredential()
+                )
             # AzureCliCredential.get_token expects scopes as positional args
-            azure_token = credential.get_token(scope[0])
+            azure_token = self._azure_cli_credential.get_token(scope[0])
             token_result = {
                 "access_token": azure_token.token,
                 "expires_on": azure_token.expires_on,
             }
-            # Cache the token
-            self._cache_azure_cli_token(cache_key, token_result)
             return token_result
         except CredentialUnavailableError:
             raise FabricCLIError(
@@ -570,21 +562,6 @@ class FabAuth:
                 ErrorMessages.Auth.azure_cli_auth_failed(error_msg),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
-
-    def _get_cached_azure_cli_token(self, cache_key: str) -> Optional[dict]:
-        """Return cached token if it exists and is not near expiry."""
-        cached = self._azure_cli_token_cache.get(cache_key)
-        if (
-            cached
-            and cached.get("expires_on", 0)
-            > time.time() + _AZURE_CLI_TOKEN_REFRESH_BUFFER_SECONDS
-        ):
-            return cached
-        return None
-
-    def _cache_azure_cli_token(self, cache_key: str, token: dict) -> None:
-        """Cache a token by audience key."""
-        self._azure_cli_token_cache[cache_key] = token
 
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))
@@ -716,8 +693,8 @@ class FabAuth:
 
         self.app = None
 
-        # Clear Azure CLI caches
-        self._azure_cli_token_cache.clear()
+        # Clear Azure CLI state
+        self._azure_cli_credential = None
         self._cached_az_account = None
         self._cached_az_account_time = 0.0
 
