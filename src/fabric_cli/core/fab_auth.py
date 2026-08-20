@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import json
-import os
 import base64
 import binascii
+import json
+import os
 import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
@@ -351,7 +351,7 @@ class FabAuth:
             if current_tenant_id is not None and current_tenant_id != tenant_id:
                 fab_logger.log_warning(
                     f"Tenant ID already set to {current_tenant_id}."
-                    + f" Logout done and Tenant ID set to {tenant_id}."
+                    + f" Logout done and Tenant ID set to {tenant_id}"
                 )
                 self.logout()
 
@@ -448,11 +448,7 @@ class FabAuth:
             )
 
         # Fail-closed: refuse to persist if identity claims are missing
-        if (
-            not claims.get("iss")
-            or not claims.get("tid")
-            or not claims.get("oid")
-        ):
+        if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_token_missing_claims(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
@@ -520,11 +516,7 @@ class FabAuth:
             claims = self._decode_jwt_claims(azure_token.token)
 
             # Fail-closed: reject tokens with missing identity claims
-            if (
-                not claims.get("iss")
-                or not claims.get("tid")
-                or not claims.get("oid")
-            ):
+            if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
                 raise FabricCLIError(
                     ErrorMessages.Auth.azure_cli_token_missing_claims(),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
@@ -556,9 +548,9 @@ class FabAuth:
             stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
             if stored_principal and claims["oid"] != stored_principal:
                 raise FabricCLIError(
-                        ErrorMessages.Auth.azure_cli_principal_mismatch(),
-                        status_code=con.ERROR_AUTHENTICATION_FAILED,
-                    )
+                    ErrorMessages.Auth.azure_cli_principal_mismatch(),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
 
             token_result = {
                 "access_token": azure_token.token,
