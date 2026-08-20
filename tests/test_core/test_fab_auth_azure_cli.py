@@ -259,7 +259,7 @@ class TestAzureCliTokenAcquisition:
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
         assert "eyJ0eXAi" not in str(exc_info.value)
-        assert "manually to diagnose" in str(exc_info.value)
+        assert "Unable to get a token from Azure CLI" in str(exc_info.value)
 
 
 class TestAzureCliTenantDrift:
@@ -637,7 +637,7 @@ class TestFailClosedOnMissingClaims:
         mock_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = mock_token
         auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="missing identity claims"):
+        with pytest.raises(FabricCLIError, match="Unable to validate"):
             auth.set_azure_cli()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
@@ -653,7 +653,7 @@ class TestFailClosedOnMissingClaims:
         mock_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = mock_token
         auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="missing identity claims"):
+        with pytest.raises(FabricCLIError, match="Unable to validate"):
             auth.set_azure_cli()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
@@ -664,7 +664,7 @@ class TestFailClosedOnMissingClaims:
         mock_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = mock_token
         auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="missing identity claims"):
+        with pytest.raises(FabricCLIError, match="Unable to validate"):
             auth.set_azure_cli()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
@@ -680,7 +680,7 @@ class TestFailClosedOnMissingClaims:
         bad_token.token = "not-a-jwt"
         bad_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = bad_token
-        with pytest.raises(FabricCLIError, match="missing identity claims"):
+        with pytest.raises(FabricCLIError, match="Unable to validate"):
             auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
 
 
