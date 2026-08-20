@@ -966,7 +966,7 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", None
         )
-        mock_set_azure_cli.assert_called_once_with(None)
+        mock_set_azure_cli.assert_called_once_with(tenant_id=None)
         assert result is True
 
     def test_init_with_azure_cli_flag_and_tenant(
@@ -985,7 +985,7 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", "my-tenant"
         )
-        mock_set_azure_cli.assert_called_once_with("my-tenant")
+        mock_set_azure_cli.assert_called_once_with(tenant_id="my-tenant")
         assert result is True
 
     def test_init_with_interactive_azure_cli_selection(
@@ -1008,7 +1008,7 @@ class TestAuthAzureCli:
         mock_fab_auth_instance.set_access_mode.assert_called_with(
             "azure_cli", None
         )
-        mock_set_azure_cli.assert_called_once_with(None)
+        mock_set_azure_cli.assert_called_once_with(tenant_id=None)
         assert_get_access_token(mock_fab_auth_instance)
         assert_fab_context(mock_fab_context)
         assert result is True

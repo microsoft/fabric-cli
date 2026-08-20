@@ -226,55 +226,68 @@ def logout(args: Namespace) -> None:
 def status(args: Namespace) -> None:
     auth = FabAuth()
     tenant_id = auth.get_tenant_id()
+    identity_type = auth.get_identity_type() or "N/A"
 
-    def __get_token_info(scope):
-        try:
-            token = auth.get_access_token(scope, interactive_renew=False)
-        except FabricCLIError as e:
-            if e.status_code in [
-                fab_constant.ERROR_UNAUTHORIZED,
-                fab_constant.ERROR_AUTHENTICATION_FAILED,
-            ]:
-                return {}
-            else:
-                raise e
-        if isinstance(token, str):
-            token = token.encode()  # Ensure bytes type
-        return _get_token_info_from_bearer_token(token) if token else {}
+    # Suppress noisy Azure SDK stderr logging during status checks
+    # (AzureCliCredential logs "Please run 'az login'" before raising)
+    import logging
 
-    token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
+    azure_logger = logging.getLogger("azure.identity")
+    original_level = azure_logger.level
+    azure_logger.setLevel(logging.CRITICAL)
 
-    upn = token_info.get("upn") or "N/A"
-    oid = token_info.get("oid") or "N/A"
-    tid = token_info.get("tid", tenant_id) or "N/A"
-    appid = token_info.get("appid") or "N/A"
+    try:
 
-    def __mask_token(scope):
-        try:
-            token = auth.get_access_token(scope, interactive_renew=False)
-        except FabricCLIError as e:
-            if e.status_code in [
-                fab_constant.ERROR_UNAUTHORIZED,
-                fab_constant.ERROR_AUTHENTICATION_FAILED,
-            ]:
-                return "N/A"
-            else:
-                raise e
-        if isinstance(token, str):
-            token = token.encode()  # Ensure bytes type
-        return (
-            token[:4].decode() + "************************************"
-            if token
-            else "N/A"
-        )
+        def __get_token_info(scope):
+            try:
+                token = auth.get_access_token(scope, interactive_renew=False)
+            except FabricCLIError as e:
+                if e.status_code in [
+                    fab_constant.ERROR_UNAUTHORIZED,
+                    fab_constant.ERROR_AUTHENTICATION_FAILED,
+                ]:
+                    return {}
+                else:
+                    raise e
+            if isinstance(token, str):
+                token = token.encode()  # Ensure bytes type
+            return _get_token_info_from_bearer_token(token) if token else {}
 
-    fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
-    storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
-    azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
+        token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
+
+        upn = token_info.get("upn") or "N/A"
+        oid = token_info.get("oid") or "N/A"
+        tid = token_info.get("tid", tenant_id) or "N/A"
+        appid = token_info.get("appid") or "N/A"
+
+        def __mask_token(scope):
+            try:
+                token = auth.get_access_token(scope, interactive_renew=False)
+            except FabricCLIError as e:
+                if e.status_code in [
+                    fab_constant.ERROR_UNAUTHORIZED,
+                    fab_constant.ERROR_AUTHENTICATION_FAILED,
+                ]:
+                    return "N/A"
+                else:
+                    raise e
+            if isinstance(token, str):
+                token = token.encode()  # Ensure bytes type
+            return (
+                token[:4].decode() + "************************************"
+                if token
+                else "N/A"
+            )
+
+        fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
+        storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
+        azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
+
+    finally:
+        azure_logger.setLevel(original_level)
 
     # Check login status
     is_logged_in = fabric_secret != "N/A"
-    identity_type = auth.get_identity_type() or "N/A"
     login_status = (
         "✓ Logged in to app.fabric.microsoft.com"
         if is_logged_in
@@ -283,6 +296,11 @@ def status(args: Namespace) -> None:
     fab_ui.print_grey(login_status)
     if identity_type == "azure_cli" and is_logged_in:
         fab_ui.print_grey(f"  Auth mode: Azure CLI (tenant: {tid})")
+    elif identity_type == "azure_cli" and not is_logged_in:
+        fab_ui.print_grey(
+            "  Azure CLI session expired or logged out. "
+            "Run 'az login' then 'fab auth login --azure-cli' to re-authenticate."
+        )
 
     auth_data = {
         "logged_in": is_logged_in,
