@@ -123,9 +123,8 @@ class AuthErrors:
     @staticmethod
     def azure_cli_tenant_mismatch(stored_tenant: str, current_tenant: str) -> str:
         return (
-            f"Tenant mismatch: Fabric CLI is pinned to tenant '{stored_tenant}' "
-            f"but Azure CLI is now logged into tenant '{current_tenant}'. "
-            "Run 'fab auth login --azure-cli' to re-authenticate."
+            f"Azure CLI tenant changed from '{stored_tenant}' to '{current_tenant}'. "
+            "Run 'fab auth login --azure-cli' to re-authenticate with the current tenant"
         )
 
     @staticmethod
@@ -133,31 +132,29 @@ class AuthErrors:
         requested_tenant: str, cli_tenant: str
     ) -> str:
         return (
-            f"Requested tenant '{requested_tenant}' does not match the Azure CLI "
-            f"session tenant '{cli_tenant}'. In Azure CLI auth mode, Fabric CLI "
-            "inherits the Azure CLI context. To switch tenants, run "
-            f"'az login --tenant {requested_tenant}' first, then retry."
+            f"Tenant '{requested_tenant}' does not match the Azure CLI tenant "
+            f"'{cli_tenant}'. Run 'az login --tenant {requested_tenant}' first"
         )
 
     @staticmethod
     def azure_cli_environment_mismatch() -> str:
         return (
-            "Azure CLI cloud environment has changed since 'fab auth login --azure-cli' was run. "
-            "Run 'fab auth login --azure-cli' to re-authenticate in the current environment."
+            "Azure CLI cloud environment has changed. "
+            "Run 'fab auth login --azure-cli' to re-authenticate in the current environment"
         )
 
     @staticmethod
     def azure_cli_principal_mismatch() -> str:
         return (
-            "Azure CLI identity has changed since 'fab auth login --azure-cli' was run. "
-            "Run 'fab auth login --azure-cli' to re-authenticate with the current identity."
+            "Azure CLI identity has changed. "
+            "Run 'fab auth login --azure-cli' to re-authenticate with the current identity"
         )
 
     @staticmethod
     def azure_cli_not_available() -> str:
         return (
             "Azure CLI is not installed or not logged in. "
-            "Run 'az login' to authenticate, then retry."
+            "Run 'az login' to authenticate, then retry"
         )
 
     @staticmethod
@@ -167,14 +164,13 @@ class AuthErrors:
     @staticmethod
     def azure_cli_token_missing_claims() -> str:
         return (
-            "Azure CLI returned a token with missing identity claims (iss, tid, or oid). "
-            "Run 'az account get-access-token --resource https://api.fabric.microsoft.com' "
-            "manually to diagnose."
+            "Unable to validate the Azure CLI identity. "
+            "Run 'az login' to authenticate, then retry"
         )
 
     @staticmethod
     def azure_cli_token_acquisition_failed() -> str:
         return (
-            "Azure CLI token acquisition failed. "
-            "Run 'az account get-access-token' manually to diagnose."
+            "Unable to get a token from Azure CLI. "
+            "Run 'az login' to authenticate, then retry"
         )
