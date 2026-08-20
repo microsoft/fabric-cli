@@ -4,6 +4,7 @@
 import json
 import os
 import base64
+import binascii
 import uuid
 from binascii import hexlify
 from typing import Any, NamedTuple, Optional
@@ -491,12 +492,12 @@ class FabAuth:
             parts = token.split(".")
             if len(parts) < 2:
                 return {}
-            # Add padding for base64url decoding
+            # Add padding for base64url decoding (avoid adding 4 when already aligned)
             payload = parts[1]
-            payload += "=" * (4 - len(payload) % 4)
+            payload += "=" * ((-len(payload)) % 4)
             decoded = base64.urlsafe_b64decode(payload)
             return json.loads(decoded)
-        except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        except (ValueError, json.JSONDecodeError, UnicodeDecodeError, binascii.Error):
             return {}
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
