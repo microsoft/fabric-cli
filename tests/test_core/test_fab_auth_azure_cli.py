@@ -599,6 +599,69 @@ class TestJwtClaimsDecoding:
         assert claims["upn"] == "user@contoso.com"
 
 
+class TestFailClosedOnMissingClaims:
+    """Verify tokens with missing identity claims are rejected, not silently used."""
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_login_rejects_token_missing_oid(self, mock_class, temp_dir_fixture):
+        """set_azure_cli should fail if probe token lacks oid."""
+        header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(
+            _json.dumps({"tid": "t1", "iss": "https://sts.windows.net/t1/"}).encode()
+        ).rstrip(b"=").decode()
+        token_str = f"{header}.{payload}.fakesig"
+        mock_token = MagicMock()
+        mock_token.token = token_str
+        mock_token.expires_on = int(time.time()) + 3600
+        mock_class.return_value.get_token.return_value = mock_token
+        auth = FabAuth()
+        with pytest.raises(FabricCLIError, match="missing identity claims"):
+            auth.set_azure_cli()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_login_rejects_token_missing_tid(self, mock_class, temp_dir_fixture):
+        """set_azure_cli should fail if probe token lacks tid."""
+        header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(
+            _json.dumps({"oid": "o1", "iss": "https://sts.windows.net/t1/"}).encode()
+        ).rstrip(b"=").decode()
+        token_str = f"{header}.{payload}.fakesig"
+        mock_token = MagicMock()
+        mock_token.token = token_str
+        mock_token.expires_on = int(time.time()) + 3600
+        mock_class.return_value.get_token.return_value = mock_token
+        auth = FabAuth()
+        with pytest.raises(FabricCLIError, match="missing identity claims"):
+            auth.set_azure_cli()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_login_rejects_malformed_token(self, mock_class, temp_dir_fixture):
+        """set_azure_cli should fail if probe token is not a valid JWT."""
+        mock_token = MagicMock()
+        mock_token.token = "not-a-jwt"
+        mock_token.expires_on = int(time.time()) + 3600
+        mock_class.return_value.get_token.return_value = mock_token
+        auth = FabAuth()
+        with pytest.raises(FabricCLIError, match="missing identity claims"):
+            auth.set_azure_cli()
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_acquisition_rejects_token_missing_claims(self, mock_class, temp_dir_fixture):
+        """Token acquisition should fail if returned token lacks identity claims."""
+        # Login with good token
+        _mock_credential_with_jwt(mock_class)
+        auth = FabAuth()
+        auth.set_azure_cli()
+
+        # Now return a bad token on next call
+        bad_token = MagicMock()
+        bad_token.token = "not-a-jwt"
+        bad_token.expires_on = int(time.time()) + 3600
+        mock_class.return_value.get_token.return_value = bad_token
+        with pytest.raises(FabricCLIError, match="missing identity claims"):
+            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
+
+
 class TestNonAzureCliIsolation:
     """Verify each auth method uses only its own credential path — no overlap."""
 

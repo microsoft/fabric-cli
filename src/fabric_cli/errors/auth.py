@@ -154,6 +154,14 @@ class AuthErrors:
         return f"Azure CLI authentication failed: {error_msg}"
 
     @staticmethod
+    def azure_cli_token_missing_claims() -> str:
+        return (
+            "Azure CLI returned a token with missing identity claims (iss, tid, or oid). "
+            "Run 'az account get-access-token --resource https://api.fabric.microsoft.com' "
+            "manually to diagnose."
+        )
+
+    @staticmethod
     def azure_cli_token_acquisition_failed() -> str:
         return (
             "Azure CLI token acquisition failed. "

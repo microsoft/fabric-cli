@@ -448,18 +448,27 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
+        # Fail-closed: refuse to persist if identity claims are missing
+        if (
+            not claims.get("iss")
+            or not claims.get("tid")
+            or not claims.get("oid")
+        ):
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_token_missing_claims(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
         # Set tenant from explicit param or JWT tid claim
-        resolved_tenant = tenant_id or claims.get("tid")
+        resolved_tenant = tenant_id or claims["tid"]
         if resolved_tenant:
             self.set_tenant(resolved_tenant)
 
         # Set identity_type after tenant to survive any logout triggered by tenant change
         auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
         # Store OID and issuer for drift detection (immutable, no PII)
-        if claims.get("oid"):
-            auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
-        if claims.get("iss"):
-            auth_props[con.FAB_AZURE_CLI_ISSUER] = claims["iss"]
+        auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
+        auth_props[con.FAB_AZURE_CLI_ISSUER] = claims["iss"]
         self._set_auth_properties(auth_props)
 
     @staticmethod
@@ -506,30 +515,38 @@ class FabAuth:
             # Post-acquisition drift detection from actual token claims
             claims = self._decode_jwt_claims(azure_token.token)
 
+            # Fail-closed: reject tokens with missing identity claims
+            if (
+                not claims.get("iss")
+                or not claims.get("tid")
+                or not claims.get("oid")
+            ):
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_token_missing_claims(),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
             # Environment drift check (issuer encodes cloud: public vs sovereign)
             stored_issuer = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
-            if stored_issuer and claims.get("iss"):
-                if claims["iss"] != stored_issuer:
-                    raise FabricCLIError(
+            if stored_issuer and claims["iss"] != stored_issuer:
+                raise FabricCLIError(
                         ErrorMessages.Auth.azure_cli_environment_mismatch(),
                         status_code=con.ERROR_AUTHENTICATION_FAILED,
                     )
 
             # Tenant drift check
-            if stored_tenant and claims.get("tid"):
-                if claims["tid"] != stored_tenant:
-                    raise FabricCLIError(
-                        ErrorMessages.Auth.azure_cli_tenant_mismatch(
-                            stored_tenant, claims["tid"]
-                        ),
-                        status_code=con.ERROR_AUTHENTICATION_FAILED,
-                    )
+            if stored_tenant and claims["tid"] != stored_tenant:
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_tenant_mismatch(
+                        stored_tenant, claims["tid"]
+                    ),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
 
             # Principal drift check (OID-based)
             stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
-            if stored_principal and claims.get("oid"):
-                if claims["oid"] != stored_principal:
-                    raise FabricCLIError(
+            if stored_principal and claims["oid"] != stored_principal:
+                raise FabricCLIError(
                         ErrorMessages.Auth.azure_cli_principal_mismatch(),
                         status_code=con.ERROR_AUTHENTICATION_FAILED,
                     )
