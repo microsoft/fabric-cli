@@ -129,6 +129,17 @@ class AuthErrors:
         )
 
     @staticmethod
+    def azure_cli_tenant_override_mismatch(
+        requested_tenant: str, cli_tenant: str
+    ) -> str:
+        return (
+            f"Requested tenant '{requested_tenant}' does not match the Azure CLI "
+            f"session tenant '{cli_tenant}'. In Azure CLI auth mode, Fabric CLI "
+            "inherits the Azure CLI context. To switch tenants, run "
+            f"'az login --tenant {requested_tenant}' first, then retry."
+        )
+
+    @staticmethod
     def azure_cli_environment_mismatch() -> str:
         return (
             "Azure CLI cloud environment has changed since 'fab auth login --azure-cli' was run. "

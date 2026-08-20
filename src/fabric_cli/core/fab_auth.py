@@ -422,14 +422,15 @@ class FabAuth:
             }
         )
 
-    def set_azure_cli(self):
+    def set_azure_cli(self, tenant_id=None):
         """Configure Azure CLI as the authentication source.
 
         Acquires a probe token from Azure CLI to discover and store
         the tenant ID and principal OID from the actual JWT claims.
-        Fabric CLI strictly inherits the Azure CLI auth context —
-        tenant override is not supported; use 'az login --tenant'
-        to switch tenants.
+        Fabric CLI strictly inherits the Azure CLI auth context.
+        If tenant_id is provided, it is validated against the Azure CLI
+        context — a mismatch raises an error directing the user to
+        switch tenants via 'az login --tenant'.
         """
         # Clear credential to force recreation
         self._azure_cli_credential = None
@@ -453,6 +454,15 @@ class FabAuth:
         ):
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_token_missing_claims(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Validate explicit tenant against Azure CLI context
+        if tenant_id and tenant_id != claims["tid"]:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_tenant_override_mismatch(
+                    tenant_id, claims["tid"]
+                ),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 

@@ -118,6 +118,28 @@ class TestAzureCliIdentityType:
         auth.set_azure_cli()
         assert auth.get_tenant_id() == "jwt-tenant"
 
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_set_azure_cli_matching_tenant_param_accepted(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Explicit tenant that matches Azure CLI context should succeed."""
+        _mock_credential_with_jwt(mock_credential_class, tid="my-tenant")
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli(tenant_id="my-tenant")
+        assert auth.get_tenant_id() == "my-tenant"
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_set_azure_cli_mismatched_tenant_param_rejected(
+        self, mock_credential_class, temp_dir_fixture
+    ):
+        """Explicit tenant that differs from Azure CLI context should error."""
+        _mock_credential_with_jwt(mock_credential_class, tid="cli-tenant")
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        with pytest.raises(FabricCLIError, match="does not match"):
+            auth.set_azure_cli(tenant_id="other-tenant")
+
 
 class TestAzureCliTokenAcquisition:
     """Test token acquisition via AzureCliCredential."""
