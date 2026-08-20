@@ -30,7 +30,7 @@ def init(args: Namespace) -> Any:
 
     if getattr(args, "azure_cli", False):
         FabAuth().set_access_mode("azure_cli", args.tenant)
-        FabAuth().set_azure_cli(args.tenant)
+        FabAuth().set_azure_cli()
         _acquire_default_access_tokens(FabAuth())
         Context().context = FabAuth().get_tenant()
         tenant_id = FabAuth().get_tenant_id() or "unknown"
@@ -78,7 +78,7 @@ def init(args: Namespace) -> Any:
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Azure CLI"):
                 FabAuth().set_access_mode("azure_cli", args.tenant)
-                FabAuth().set_azure_cli(args.tenant)
+                FabAuth().set_azure_cli()
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
                 tenant_id = FabAuth().get_tenant_id() or "unknown"

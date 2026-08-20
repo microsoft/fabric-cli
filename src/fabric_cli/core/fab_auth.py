@@ -422,24 +422,21 @@ class FabAuth:
             }
         )
 
-    def set_azure_cli(self, tenant_id=None):
+    def set_azure_cli(self):
         """Configure Azure CLI as the authentication source.
 
         Acquires a probe token from Azure CLI to discover and store
         the tenant ID and principal OID from the actual JWT claims.
-        If tenant_id is provided, pins to that tenant; otherwise
-        auto-discovers from the token.
+        Fabric CLI strictly inherits the Azure CLI auth context —
+        tenant override is not supported; use 'az login --tenant'
+        to switch tenants.
         """
-        # Clear credential to force recreation with the correct tenant
+        # Clear credential to force recreation
         self._azure_cli_credential = None
 
         # Acquire a probe token to discover identity from JWT claims
         try:
-            probe_credential = (
-                AzureCliCredential(tenant_id=tenant_id)
-                if tenant_id
-                else AzureCliCredential()
-            )
+            probe_credential = AzureCliCredential()
             probe_token = probe_credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
             claims = self._decode_jwt_claims(probe_token.token)
         except CredentialUnavailableError:
@@ -459,10 +456,8 @@ class FabAuth:
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        # Set tenant from explicit param or JWT tid claim
-        resolved_tenant = tenant_id or claims["tid"]
-        if resolved_tenant:
-            self.set_tenant(resolved_tenant)
+        # Tenant is always inherited from Azure CLI — no override
+        self.set_tenant(claims["tid"])
 
         # Set identity_type after tenant to survive any logout triggered by tenant change
         auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
@@ -502,13 +497,9 @@ class FabAuth:
         stored_tenant = self.get_tenant_id()
 
         try:
-            # Create singleton credential if not yet initialized
+            # Create singleton credential — no tenant pinning, inherit Azure CLI context
             if self._azure_cli_credential is None:
-                self._azure_cli_credential = (
-                    AzureCliCredential(tenant_id=stored_tenant)
-                    if stored_tenant
-                    else AzureCliCredential()
-                )
+                self._azure_cli_credential = AzureCliCredential()
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = self._azure_cli_credential.get_token(scope[0])
 
