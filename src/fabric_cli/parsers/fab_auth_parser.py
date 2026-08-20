@@ -30,6 +30,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "$ auth login\n",
         "# command_line mode",
         "$ fab auth login\n",
+        "# command_line mode using Azure CLI auth",
+        "$ fab auth login --azure-cli\n",
+        "# command_line mode using Azure CLI auth with specific tenant",
+        "$ fab auth login --azure-cli --tenant <tenant_id>\n",
         "# command_line mode using service principal auth",
         "$ fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>\n",
         "# command_line mode using system assigned managed identity auth",
@@ -84,9 +88,16 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         required=False,
         help="Federated token that can be used for OIDC token exchange. Optional, only for service principal auth",
     )
+    login_parser.add_argument(
+        "--azure-cli",
+        required=False,
+        action="store_true",
+        dest="azure_cli",
+        help="Azure CLI authentication, must have an existing 'az login' session. Optional, only for Azure CLI auth",
+    )
 
     login_parser.usage = f"{utils_error_parser.get_usage_prog(login_parser)}"
-    login_parser.set_defaults(func=lazy_command(_auth_module_path, 'init'))
+    login_parser.set_defaults(func=lazy_command(_auth_module_path, "init"))
 
     # Subcommand for 'logout'
     logout_examples = [
@@ -104,7 +115,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     logout_parser.usage = f"{utils_error_parser.get_usage_prog(logout_parser)}"
-    logout_parser.set_defaults(func=lazy_command(_auth_module_path, 'logout'))
+    logout_parser.set_defaults(func=lazy_command(_auth_module_path, "logout"))
 
     # Subcommand for 'status'
     status_examples = [
@@ -121,7 +132,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     status_parser.usage = f"{utils_error_parser.get_usage_prog(status_parser)}"
-    status_parser.set_defaults(func=lazy_command(_auth_module_path, 'status'))
+    status_parser.set_defaults(func=lazy_command(_auth_module_path, "status"))
 
 
 def show_help(args: Namespace) -> None:

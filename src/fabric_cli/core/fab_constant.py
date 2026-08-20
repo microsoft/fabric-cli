@@ -56,13 +56,15 @@ FAB_SPN_FEDERATED_TOKEN = "fab_spn_federated_token"
 FAB_TENANT_ID = "fab_tenant_id"
 
 FAB_REFRESH_TOKEN = "fab_refresh_token"
+FAB_AZURE_CLI_PRINCIPAL_ID = "fab_azure_cli_principal_id"
+FAB_AZURE_CLI_ISSUER = "fab_azure_cli_issuer"
 IDENTITY_TYPE = "identity_type"
 FAB_AUTH_MODE = "fab_auth_mode"  # Kept for backward compatibility
 FAB_AUTHORITY = "fab_authority"
 
 AUTH_KEYS = {
     FAB_TENANT_ID: [],
-    IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
+    IDENTITY_TYPE: ["user", "service_principal", "managed_identity", "azure_cli"],
 }
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"

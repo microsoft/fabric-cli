@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import base64
+import binascii
 import json
 import os
 import uuid
@@ -10,6 +12,7 @@ from typing import Any, NamedTuple, Optional
 import jwt
 import msal
 import requests
+from azure.identity import AzureCliCredential, CredentialUnavailableError
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -50,6 +53,8 @@ class FabAuth:
         # Reset the auth info
         self.app: msal.ClientApplication = None
         self._auth_info = {}
+        # Singleton AzureCliCredential instance (like self.app for MSAL)
+        self._azure_cli_credential: Optional[AzureCliCredential] = None
 
         # Load the auth info and environment variables
         self._load_auth()
@@ -346,7 +351,7 @@ class FabAuth:
             if current_tenant_id is not None and current_tenant_id != tenant_id:
                 fab_logger.log_warning(
                     f"Tenant ID already set to {current_tenant_id}."
-                    + f" Logout done and Tenant ID set to {tenant_id}."
+                    + f" Logout done and Tenant ID set to {tenant_id}"
                 )
                 self.logout()
 
@@ -418,6 +423,163 @@ class FabAuth:
             }
         )
 
+    def set_azure_cli(self, tenant_id=None):
+        """Configure Azure CLI as the authentication source.
+
+        Acquires a probe token from Azure CLI to discover and store
+        the tenant ID and principal OID from the actual JWT claims.
+        Fabric CLI strictly inherits the Azure CLI auth context.
+        If tenant_id is provided, it is validated against the Azure CLI
+        context — a mismatch raises an error directing the user to
+        switch tenants via 'az login --tenant'.
+        """
+        # Clear credential to force recreation
+        self._azure_cli_credential = None
+
+        # Acquire a probe token to discover identity from JWT claims
+        try:
+            probe_credential = AzureCliCredential()
+            probe_token = probe_credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
+            claims = self._decode_jwt_claims(probe_token.token)
+        except CredentialUnavailableError:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_not_available(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Fail-closed: refuse to persist if identity claims are missing
+        if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_token_missing_claims(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Validate explicit tenant against Azure CLI context
+        if tenant_id and tenant_id != claims["tid"]:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_tenant_override_mismatch(
+                    tenant_id, claims["tid"]
+                ),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Tenant is always inherited from Azure CLI — no override
+        self.set_tenant(claims["tid"])
+
+        # Set identity_type after tenant to survive any logout triggered by tenant change
+        auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
+        # Store OID and issuer host for drift detection (immutable, no PII)
+        auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
+        from urllib.parse import urlparse
+
+        auth_props[con.FAB_AZURE_CLI_ISSUER] = urlparse(claims["iss"]).hostname
+        self._set_auth_properties(auth_props)
+
+    @staticmethod
+    def _decode_jwt_claims(token: str) -> dict:
+        """Decode JWT payload claims without signature validation.
+
+        Used to extract identity claims (iss, tid, oid) from tokens
+        returned by AzureCliCredential. Signature validation is
+        unnecessary here — the token was just returned by the
+        Azure CLI SDK over a local subprocess call.
+        """
+        try:
+            parts = token.split(".")
+            if len(parts) < 2:
+                return {}
+            # Add padding for base64url decoding (avoid adding 4 when already aligned)
+            payload = parts[1]
+            payload += "=" * ((-len(payload)) % 4)
+            decoded = base64.urlsafe_b64decode(payload)
+            return json.loads(decoded)
+        except (ValueError, json.JSONDecodeError, UnicodeDecodeError, binascii.Error):
+            return {}
+
+    def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
+        """Acquire a token using Azure CLI's AzureCliCredential.
+
+        After acquiring the token, decodes JWT claims and verifies
+        that iss, tid, and oid match the stored values from login to detect
+        identity or environment drift.
+        """
+        stored_tenant = self.get_tenant_id()
+
+        try:
+            # Create singleton credential — no tenant pinning, inherit Azure CLI context
+            if self._azure_cli_credential is None:
+                self._azure_cli_credential = AzureCliCredential()
+            # AzureCliCredential.get_token expects scopes as positional args
+            azure_token = self._azure_cli_credential.get_token(scope[0])
+
+            # Post-acquisition drift detection from actual token claims
+            claims = self._decode_jwt_claims(azure_token.token)
+
+            # Fail-closed: reject tokens with missing identity claims
+            if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_token_missing_claims(),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
+            # Tenant drift check (most common drift scenario)
+            if stored_tenant and claims["tid"] != stored_tenant:
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_tenant_mismatch(
+                        stored_tenant, claims["tid"]
+                    ),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
+            # Environment drift check (issuer host encodes cloud: public vs sovereign)
+            # Stored value is already a hostname; extract host from current token's iss
+            stored_issuer_host = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
+            if stored_issuer_host:
+                from urllib.parse import urlparse
+
+                current_host = urlparse(claims["iss"]).hostname
+                if stored_issuer_host != current_host:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.azure_cli_environment_mismatch(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
+
+            # Principal drift check (OID-based)
+            stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
+            if stored_principal and claims["oid"] != stored_principal:
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_principal_mismatch(),
+                    status_code=con.ERROR_AUTHENTICATION_FAILED,
+                )
+
+            token_result = {
+                "access_token": azure_token.token,
+                "expires_on": azure_token.expires_on,
+            }
+            return token_result
+        except CredentialUnavailableError:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_not_available(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except FabricCLIError:
+            raise
+        except Exception as e:
+            # Allowlist: SDK exceptions are pre-sanitized by azure-identity; unknown exceptions get a safe generic message
+            if type(e).__name__ in (
+                "ClientAuthenticationError",
+                "HttpResponseError",
+                "ServiceRequestError",
+                "ServiceResponseError",
+            ):
+                error_msg = str(e)
+            else:
+                error_msg = ErrorMessages.Auth.azure_cli_token_acquisition_failed()
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(error_msg),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))
 
@@ -480,6 +642,8 @@ class FabAuth:
                         ErrorMessages.Auth.managed_identity_token_failed(),
                         status_code=con.ERROR_AUTHENTICATION_FAILED,
                     )
+            elif identity_type == "azure_cli":
+                token = self._acquire_token_from_azure_cli(scope)
             elif env_var_token:
                 token = {
                     "access_token": env_var_token,
@@ -545,6 +709,9 @@ class FabAuth:
         self._auth_info = {}
 
         self.app = None
+
+        # Clear Azure CLI state
+        self._azure_cli_credential = None
 
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)
