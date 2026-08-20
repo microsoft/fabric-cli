@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import logging
 from argparse import Namespace
 from typing import Any, Optional
 
@@ -228,10 +229,7 @@ def status(args: Namespace) -> None:
     tenant_id = auth.get_tenant_id()
     identity_type = auth.get_identity_type() or "N/A"
 
-    # Suppress noisy Azure SDK stderr logging during status checks
-    # (AzureCliCredential logs "Please run 'az login'" before raising)
-    import logging
-
+    # Suppress noisy Azure SDK logging during status checks
     azure_logger = logging.getLogger("azure.identity")
     original_level = azure_logger.level
     azure_logger.setLevel(logging.CRITICAL)
@@ -299,7 +297,7 @@ def status(args: Namespace) -> None:
     elif identity_type == "azure_cli" and not is_logged_in:
         fab_ui.print_grey(
             "  Azure CLI session expired or logged out. "
-            "Run 'az login' then 'fab auth login --azure-cli' to re-authenticate."
+            "Run 'az login' then 'fab auth login --azure-cli' to re-authenticate"
         )
 
     auth_data = {
