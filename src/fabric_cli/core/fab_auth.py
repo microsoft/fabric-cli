@@ -471,9 +471,11 @@ class FabAuth:
 
         # Set identity_type after tenant to survive any logout triggered by tenant change
         auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
-        # Store OID and issuer for drift detection (immutable, no PII)
+        # Store OID and issuer host for drift detection (immutable, no PII)
         auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
-        auth_props[con.FAB_AZURE_CLI_ISSUER] = claims["iss"]
+        from urllib.parse import urlparse
+
+        auth_props[con.FAB_AZURE_CLI_ISSUER] = urlparse(claims["iss"]).hostname
         self._set_auth_properties(auth_props)
 
     @staticmethod
@@ -527,15 +529,7 @@ class FabAuth:
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
 
-            # Environment drift check (issuer encodes cloud: public vs sovereign)
-            stored_issuer = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
-            if stored_issuer and claims["iss"] != stored_issuer:
-                raise FabricCLIError(
-                        ErrorMessages.Auth.azure_cli_environment_mismatch(),
-                        status_code=con.ERROR_AUTHENTICATION_FAILED,
-                    )
-
-            # Tenant drift check
+            # Tenant drift check (most common drift scenario)
             if stored_tenant and claims["tid"] != stored_tenant:
                 raise FabricCLIError(
                     ErrorMessages.Auth.azure_cli_tenant_mismatch(
@@ -543,6 +537,19 @@ class FabAuth:
                     ),
                     status_code=con.ERROR_AUTHENTICATION_FAILED,
                 )
+
+            # Environment drift check (issuer host encodes cloud: public vs sovereign)
+            # Stored value is already a hostname; extract host from current token's iss
+            stored_issuer_host = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
+            if stored_issuer_host:
+                from urllib.parse import urlparse
+
+                current_host = urlparse(claims["iss"]).hostname
+                if stored_issuer_host != current_host:
+                    raise FabricCLIError(
+                        ErrorMessages.Auth.azure_cli_environment_mismatch(),
+                        status_code=con.ERROR_AUTHENTICATION_FAILED,
+                    )
 
             # Principal drift check (OID-based)
             stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)

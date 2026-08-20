@@ -542,7 +542,7 @@ class TestAzureCliLoginLogoutLifecycle:
         auth.set_access_mode("azure_cli")
         auth.set_azure_cli()
         assert auth._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID) == "user-oid-123"
-        assert auth._auth_info.get(con.FAB_AZURE_CLI_ISSUER) == "https://sts.windows.net/t1/"
+        assert auth._auth_info.get(con.FAB_AZURE_CLI_ISSUER) == "sts.windows.net"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_re_login_updates_tenant_and_oid(self, mock_credential_class, temp_dir_fixture):
