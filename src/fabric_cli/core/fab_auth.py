@@ -11,6 +11,12 @@ from typing import Any, NamedTuple, Optional
 import jwt
 import msal
 import requests
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ServiceRequestError,
+    ServiceResponseError,
+)
 from azure.identity import AzureCliCredential, CredentialUnavailableError
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -552,19 +558,23 @@ class FabAuth:
             )
         except FabricCLIError:
             raise
-        except Exception as e:
-            # Allowlist: SDK exceptions are pre-sanitized by azure-identity; unknown exceptions get a safe generic message
-            if type(e).__name__ in (
-                "ClientAuthenticationError",
-                "HttpResponseError",
-                "ServiceRequestError",
-                "ServiceResponseError",
-            ):
-                error_msg = str(e)
-            else:
-                error_msg = ErrorMessages.Auth.azure_cli_token_acquisition_failed()
+        except (
+            ClientAuthenticationError,
+            HttpResponseError,
+            ServiceRequestError,
+            ServiceResponseError,
+        ) as e:
+            # Azure SDK exceptions are pre-sanitized; safe to include their message
             raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_auth_failed(error_msg),
+                ErrorMessages.Auth.azure_cli_auth_failed(str(e)),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except Exception:
+            # Unknown exceptions get a safe generic message — never leak raw details
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(
+                    ErrorMessages.Auth.azure_cli_token_acquisition_failed()
+                ),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
 

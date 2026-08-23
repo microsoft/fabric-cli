@@ -251,9 +251,10 @@ class TestAzureCliTokenAcquisition:
         self, mock_credential_class, temp_dir_fixture
     ):
         """SDK exceptions (pre-sanitized by azure-identity) surface their message."""
+        from azure.core.exceptions import ClientAuthenticationError
+
         mock_credential = MagicMock()
-        error = type("ClientAuthenticationError", (Exception,), {})("Tenant not found")
-        mock_credential.get_token.side_effect = error
+        mock_credential.get_token.side_effect = ClientAuthenticationError("Tenant not found")
         mock_credential_class.return_value = mock_credential
 
         auth = FabAuth()
