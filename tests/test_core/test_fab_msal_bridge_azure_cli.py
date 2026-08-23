@@ -12,7 +12,9 @@ import pytest
 
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_msal_bridge import MsalTokenCredential
+from fabric_cli.errors import ErrorMessages
 
 
 def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
@@ -35,6 +37,27 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth = FabAuth()
     auth._azure_cli_credential = None
     auth._auth_info = {}
+
+    # Bypass JWKS signature validation — fake JWTs have no valid signature
+    def _test_decode_jwt_token(self, token, expected_audience=None):
+        parts = token.split(".")
+        if len(parts) < 2:
+            raise FabricCLIError(
+                ErrorMessages.Auth.jwt_decode_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+        payload = parts[1]
+        payload += "=" * ((-len(payload)) % 4)
+        try:
+            decoded = base64.urlsafe_b64decode(payload)
+            return _json.loads(decoded)
+        except Exception:
+            raise FabricCLIError(
+                ErrorMessages.Auth.jwt_decode_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, expected_audience=None: _test_decode_jwt_token(auth, token, expected_audience))
 
 
 class TestMsalBridgeAzureCli:
