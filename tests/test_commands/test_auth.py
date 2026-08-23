@@ -1013,6 +1013,52 @@ class TestAuthAzureCli:
         assert_fab_context(mock_fab_context)
         assert result is True
 
+    def test_failed_azure_cli_probe_rolls_back_auth_state(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """If set_azure_cli fails on mode switch, logout should clean up partial state."""
+        args = prepare_auth_args({"azure_cli": True})
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_set_azure_cli = MagicMock(
+            side_effect=FabricCLIError("probe failed", "auth_error")
+        )
+
+        with patch.object(
+            mock_fab_auth_instance, "get_identity_type", return_value="user"
+        ), patch.object(
+            mock_fab_auth_instance, "set_azure_cli", mock_set_azure_cli
+        ):
+            with pytest.raises(FabricCLIError, match="probe failed"):
+                fab_auth.init(args)
+
+        # set_access_mode was called (cleanup of old state)
+        mock_fab_auth_instance.set_access_mode.assert_called_with(
+            "azure_cli", None
+        )
+        # logout was called to roll back partial state
+        mock_fab_auth_instance.logout.assert_called()
+
+    def test_failed_azure_cli_re_login_preserves_session(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """If re-login on same azure_cli mode fails, old session should be preserved."""
+        args = prepare_auth_args({"azure_cli": True})
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_set_azure_cli = MagicMock(
+            side_effect=FabricCLIError("probe failed", "auth_error")
+        )
+
+        with patch.object(
+            mock_fab_auth_instance, "get_identity_type", return_value="azure_cli"
+        ), patch.object(
+            mock_fab_auth_instance, "set_azure_cli", mock_set_azure_cli
+        ):
+            with pytest.raises(FabricCLIError, match="probe failed"):
+                fab_auth.init(args)
+
+        # logout should NOT be called — preserve existing azure_cli session
+        mock_fab_auth_instance.logout.assert_not_called()
+
 
 # Helpers
 

@@ -28,8 +28,14 @@ def init(args: Namespace) -> Any:
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
     if getattr(args, "azure_cli", False):
+        previous_mode = FabAuth().get_identity_type()
         FabAuth().set_access_mode("azure_cli", args.tenant)
-        FabAuth().set_azure_cli(tenant_id=args.tenant)
+        try:
+            FabAuth().set_azure_cli(tenant_id=args.tenant)
+        except Exception:
+            if previous_mode != "azure_cli":
+                FabAuth().logout()
+            raise
         _acquire_default_access_tokens(FabAuth())
         Context().context = FabAuth().get_tenant()
         tenant_id = FabAuth().get_tenant_id() or "unknown"
@@ -76,8 +82,14 @@ def init(args: Namespace) -> Any:
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Azure CLI"):
+                previous_mode = FabAuth().get_identity_type()
                 FabAuth().set_access_mode("azure_cli", args.tenant)
-                FabAuth().set_azure_cli(tenant_id=args.tenant)
+                try:
+                    FabAuth().set_azure_cli(tenant_id=args.tenant)
+                except Exception:
+                    if previous_mode != "azure_cli":
+                        FabAuth().logout()
+                    raise
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
                 tenant_id = FabAuth().get_tenant_id() or "unknown"
