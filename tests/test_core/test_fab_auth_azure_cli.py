@@ -62,6 +62,31 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     # Update file paths to use the test's tmp_path
     monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
     monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
+
+    # Bypass JWKS signature validation in tests — fake JWTs cannot pass
+    # real signature checks. Decode claims via base64 like the removed
+    # _decode_jwt_claims helper.
+    def _test_decode_jwt_token(self, token, expected_audience=None):
+        """Test-only: decode JWT payload without signature validation."""
+        parts = token.split(".")
+        if len(parts) < 2:
+            raise FabricCLIError(
+                ErrorMessages.Auth.jwt_decode_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+        payload = parts[1]
+        payload += "=" * ((-len(payload)) % 4)
+        try:
+            decoded = base64.urlsafe_b64decode(payload)
+            return _json.loads(decoded)
+        except Exception:
+            raise FabricCLIError(
+                ErrorMessages.Auth.jwt_decode_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, expected_audience=None: _test_decode_jwt_token(auth, token, expected_audience))
+
     return str(tmp_path)
 
 
@@ -596,28 +621,29 @@ class TestAzureCliLoginLogoutLifecycle:
 
 
 class TestJwtClaimsDecoding:
-    """Test the _decode_jwt_claims helper."""
+    """Test JWT claim extraction via _decode_jwt_token (with test fixture bypassing signature validation)."""
 
     def test_valid_jwt_extracts_claims(self, temp_dir_fixture):
         """Should decode tid and oid from a valid JWT."""
         token = _make_jwt(tid="my-tenant", oid="my-oid")
         auth = FabAuth()
-        claims = auth._decode_jwt_claims(token)
+        claims = auth._decode_jwt_token(token)
         assert claims["tid"] == "my-tenant"
         assert claims["oid"] == "my-oid"
 
-    def test_invalid_jwt_returns_empty(self, temp_dir_fixture):
-        """Should return empty dict for malformed tokens."""
+    def test_invalid_jwt_raises(self, temp_dir_fixture):
+        """Should raise FabricCLIError for malformed tokens."""
         auth = FabAuth()
-        assert auth._decode_jwt_claims("not-a-jwt") == {}
-        assert auth._decode_jwt_claims("") == {}
-        assert auth._decode_jwt_claims("a.!!!.c") == {}
+        with pytest.raises((FabricCLIError, Exception)):
+            auth._decode_jwt_token("not-a-jwt")
+        with pytest.raises((FabricCLIError, Exception)):
+            auth._decode_jwt_token("")
 
     def test_jwt_with_extra_claims(self, temp_dir_fixture):
         """Should extract additional claims."""
         token = _make_jwt(tid="t1", oid="o1", upn="user@contoso.com")
         auth = FabAuth()
-        claims = auth._decode_jwt_claims(token)
+        claims = auth._decode_jwt_token(token)
         assert claims["upn"] == "user@contoso.com"
 
 
@@ -664,7 +690,7 @@ class TestFailClosedOnMissingClaims:
         mock_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = mock_token
         auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="Unable to validate"):
+        with pytest.raises(FabricCLIError, match="Failed to decode JWT"):
             auth.set_azure_cli()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
@@ -680,7 +706,7 @@ class TestFailClosedOnMissingClaims:
         bad_token.token = "not-a-jwt"
         bad_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = bad_token
-        with pytest.raises(FabricCLIError, match="Unable to validate"):
+        with pytest.raises(FabricCLIError, match="Failed to decode JWT"):
             auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
 
 

@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import base64
-import binascii
 import json
 import os
 import uuid
@@ -440,7 +439,7 @@ class FabAuth:
         try:
             probe_credential = AzureCliCredential()
             probe_token = probe_credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
-            claims = self._decode_jwt_claims(probe_token.token)
+            claims = self._decode_jwt_token(probe_token.token)
         except CredentialUnavailableError:
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_not_available(),
@@ -475,27 +474,6 @@ class FabAuth:
         auth_props[con.FAB_AZURE_CLI_ISSUER] = urlparse(claims["iss"]).hostname
         self._set_auth_properties(auth_props)
 
-    @staticmethod
-    def _decode_jwt_claims(token: str) -> dict:
-        """Decode JWT payload claims without signature validation.
-
-        Used to extract identity claims (iss, tid, oid) from tokens
-        returned by AzureCliCredential. Signature validation is
-        unnecessary here — the token was just returned by the
-        Azure CLI SDK over a local subprocess call.
-        """
-        try:
-            parts = token.split(".")
-            if len(parts) < 2:
-                return {}
-            # Add padding for base64url decoding (avoid adding 4 when already aligned)
-            payload = parts[1]
-            payload += "=" * ((-len(payload)) % 4)
-            decoded = base64.urlsafe_b64decode(payload)
-            return json.loads(decoded)
-        except (ValueError, json.JSONDecodeError, UnicodeDecodeError, binascii.Error):
-            return {}
-
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential.
 
@@ -513,7 +491,7 @@ class FabAuth:
             azure_token = self._azure_cli_credential.get_token(scope[0])
 
             # Post-acquisition drift detection from actual token claims
-            claims = self._decode_jwt_claims(azure_token.token)
+            claims = self._decode_jwt_token(azure_token.token)
 
             # Fail-closed: reject tokens with missing identity claims
             if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
