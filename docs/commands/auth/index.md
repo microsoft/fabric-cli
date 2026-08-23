@@ -53,7 +53,7 @@ fab auth login -u <client_id> --federated-token <token> --tenant <tenant_id>
 - `--federated-token`: Federated token for workload identity. Optional.
 - `--certificate`: Path to certificate file. Optional.
 - `--azure-cli`: Use an existing Azure CLI login session as the token provider. Requires Azure CLI to be installed and logged in (`az login`). Optional.
-- `--tenant`: Tenant ID. Optional. When used with `--azure-cli`, pins Fabric CLI to the specified tenant.
+- `--tenant`: Tenant ID. Optional. When used with `--azure-cli`, validates that the Azure CLI session matches this tenant (does not override it).
 
 ---
 

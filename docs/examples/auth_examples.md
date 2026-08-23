@@ -44,15 +44,17 @@ fab auth login
 fab auth login --azure-cli
 ```
 
-#### Log in using Azure CLI with a specific tenant
+#### Log in using Azure CLI with tenant flag
 
 ```
 fab auth login --azure-cli --tenant <tenant_id>
 ```
 
 !!! note "Tenant behavior"
-    - If `--tenant` is not specified, Fabric CLI captures and records the tenant from the current Azure CLI session at login time.
-    - Throughout the `fab` session, the Azure CLI's active tenant is checked against the recorded tenant. If you switch tenants in Azure CLI (e.g., `az login --tenant <other>`), Fabric CLI will raise a tenant mismatch error and require you to re-authenticate, e.g., `fab auth login --azure-cli`.
+    Fabric CLI always inherits the tenant from the active Azure CLI session — the `--tenant` flag validates that it matches the expected tenant but does not override it. To use a different tenant, first run `az login --tenant <tenant_id>`, then re-run `fab auth login --azure-cli`.
+
+    - If `--tenant` is not specified, Fabric CLI records the tenant from the current Azure CLI session at login time.
+    - If the Azure CLI tenant changes during a `fab` session (e.g., via `az login --tenant <other>`), Fabric CLI will require re-authentication via `fab auth login --azure-cli`.
 
 
 ### Service Principal Authentication
