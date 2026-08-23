@@ -243,7 +243,7 @@ def status(args: Namespace) -> None:
                 fab_constant.ERROR_UNAUTHORIZED,
                 fab_constant.ERROR_AUTHENTICATION_FAILED,
             ]:
-                return {}
+                return {"_error": str(e)}
             else:
                 raise e
         if isinstance(token, str):
@@ -251,6 +251,7 @@ def status(args: Namespace) -> None:
         return _get_token_info_from_bearer_token(token) if token else {}
 
     token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
+    auth_error = token_info.pop("_error", None)
 
     upn = token_info.get("upn") or "N/A"
     oid = token_info.get("oid") or "N/A"
@@ -291,10 +292,15 @@ def status(args: Namespace) -> None:
     if identity_type == "azure_cli" and is_logged_in:
         fab_ui.print_grey(f"  Auth mode: Azure CLI (tenant: {tid})")
     elif identity_type == "azure_cli" and not is_logged_in:
-        fab_ui.print_grey(
-            "  Azure CLI session expired or logged out. "
-            "Run 'az login' then 'fab auth login --azure-cli' to re-authenticate"
-        )
+        # Distinguish drift errors from session expiry
+        drift_keywords = ["changed", "mismatch"]
+        if auth_error and any(kw in auth_error.lower() for kw in drift_keywords):
+            fab_ui.print_grey(f"  ⚠ {auth_error}")
+        else:
+            fab_ui.print_grey(
+                "  Azure CLI session expired or logged out. "
+                "Run 'az login' then 'fab auth login --azure-cli' to re-authenticate"
+            )
 
     auth_data = {
         "logged_in": is_logged_in,
