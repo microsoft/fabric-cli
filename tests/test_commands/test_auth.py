@@ -1038,10 +1038,10 @@ class TestAuthAzureCli:
         # logout was called to roll back partial state
         mock_fab_auth_instance.logout.assert_called()
 
-    def test_failed_azure_cli_re_login_preserves_session(
+    def test_failed_azure_cli_re_login_cleans_up(
         self, mock_fab_auth, mock_fab_context
     ):
-        """If re-login on same azure_cli mode fails, old session should be preserved."""
+        """If re-login on same azure_cli mode fails, logout is called (consistent with MSAL)."""
         args = prepare_auth_args({"azure_cli": True})
         mock_fab_auth_instance = mock_fab_auth.get("instance")
         mock_set_azure_cli = MagicMock(
@@ -1049,15 +1049,13 @@ class TestAuthAzureCli:
         )
 
         with patch.object(
-            mock_fab_auth_instance, "get_identity_type", return_value="azure_cli"
-        ), patch.object(
             mock_fab_auth_instance, "set_azure_cli", mock_set_azure_cli
         ):
             with pytest.raises(FabricCLIError, match="probe failed"):
                 fab_auth.init(args)
 
-        # logout should NOT be called — preserve existing azure_cli session
-        mock_fab_auth_instance.logout.assert_not_called()
+        # logout IS called — consistent with MSAL re-login behavior
+        mock_fab_auth_instance.logout.assert_called()
 
 
 # Helpers
