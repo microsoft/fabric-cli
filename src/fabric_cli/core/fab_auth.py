@@ -461,6 +461,23 @@ class FabAuth:
                 ErrorMessages.Auth.azure_cli_not_available(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
+        except (
+            ClientAuthenticationError,
+            HttpResponseError,
+            ServiceRequestError,
+            ServiceResponseError,
+        ) as e:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(str(e)),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except Exception:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(
+                    ErrorMessages.Auth.azure_cli_token_acquisition_failed()
+                ),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
 
         # Fail-closed: refuse to persist if identity claims are missing
         if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):

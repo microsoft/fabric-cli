@@ -691,7 +691,7 @@ class TestFailClosedOnMissingClaims:
         mock_token.expires_on = int(time.time()) + 3600
         mock_class.return_value.get_token.return_value = mock_token
         auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="Failed to decode JWT"):
+        with pytest.raises(FabricCLIError, match="Azure CLI authentication failed"):
             auth.set_azure_cli()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
