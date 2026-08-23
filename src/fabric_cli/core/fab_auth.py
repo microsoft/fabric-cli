@@ -21,6 +21,16 @@ from msal_extensions import (
     build_encrypted_persistence,
 )
 
+import logging
+
+# Suppress Azure SDK loggers globally — they can emit tokens and
+# sensitive subprocess output at DEBUG level.  We never want these
+# reaching the console, debug file, or any handler attached by a
+# hosting process.
+for _azure_ns in ("azure.identity", "azure.core"):
+    logging.getLogger(_azure_ns).setLevel(logging.CRITICAL)
+    logging.getLogger(_azure_ns).propagate = False
+
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core import fab_logger
 from fabric_cli.core import fab_state_config as config

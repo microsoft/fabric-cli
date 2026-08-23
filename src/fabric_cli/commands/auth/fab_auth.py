@@ -1,7 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
-import logging
 from argparse import Namespace
 from typing import Any, Optional
 
@@ -229,60 +227,50 @@ def status(args: Namespace) -> None:
     tenant_id = auth.get_tenant_id()
     identity_type = auth.get_identity_type() or "N/A"
 
-    # Suppress noisy Azure SDK logging during status checks
-    azure_logger = logging.getLogger("azure.identity")
-    original_level = azure_logger.level
-    azure_logger.setLevel(logging.CRITICAL)
+    def __get_token_info(scope):
+        try:
+            token = auth.get_access_token(scope, interactive_renew=False)
+        except FabricCLIError as e:
+            if e.status_code in [
+                fab_constant.ERROR_UNAUTHORIZED,
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ]:
+                return {}
+            else:
+                raise e
+        if isinstance(token, str):
+            token = token.encode()  # Ensure bytes type
+        return _get_token_info_from_bearer_token(token) if token else {}
 
-    try:
+    token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
 
-        def __get_token_info(scope):
-            try:
-                token = auth.get_access_token(scope, interactive_renew=False)
-            except FabricCLIError as e:
-                if e.status_code in [
-                    fab_constant.ERROR_UNAUTHORIZED,
-                    fab_constant.ERROR_AUTHENTICATION_FAILED,
-                ]:
-                    return {}
-                else:
-                    raise e
-            if isinstance(token, str):
-                token = token.encode()  # Ensure bytes type
-            return _get_token_info_from_bearer_token(token) if token else {}
+    upn = token_info.get("upn") or "N/A"
+    oid = token_info.get("oid") or "N/A"
+    tid = token_info.get("tid", tenant_id) or "N/A"
+    appid = token_info.get("appid") or "N/A"
 
-        token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
+    def __mask_token(scope):
+        try:
+            token = auth.get_access_token(scope, interactive_renew=False)
+        except FabricCLIError as e:
+            if e.status_code in [
+                fab_constant.ERROR_UNAUTHORIZED,
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ]:
+                return "N/A"
+            else:
+                raise e
+        if isinstance(token, str):
+            token = token.encode()  # Ensure bytes type
+        return (
+            token[:4].decode() + "************************************"
+            if token
+            else "N/A"
+        )
 
-        upn = token_info.get("upn") or "N/A"
-        oid = token_info.get("oid") or "N/A"
-        tid = token_info.get("tid", tenant_id) or "N/A"
-        appid = token_info.get("appid") or "N/A"
-
-        def __mask_token(scope):
-            try:
-                token = auth.get_access_token(scope, interactive_renew=False)
-            except FabricCLIError as e:
-                if e.status_code in [
-                    fab_constant.ERROR_UNAUTHORIZED,
-                    fab_constant.ERROR_AUTHENTICATION_FAILED,
-                ]:
-                    return "N/A"
-                else:
-                    raise e
-            if isinstance(token, str):
-                token = token.encode()  # Ensure bytes type
-            return (
-                token[:4].decode() + "************************************"
-                if token
-                else "N/A"
-            )
-
-        fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
-        storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
-        azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
-
-    finally:
-        azure_logger.setLevel(original_level)
+    fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
+    storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
+    azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
 
     # Check login status
     is_logged_in = fabric_secret != "N/A"
