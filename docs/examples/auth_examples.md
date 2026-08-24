@@ -35,8 +35,7 @@ Reuse an _existing_ Azure CLI session instead of requiring a separate Fabric CLI
 
 ```
 fab auth login
-? How would you like to authenticate Fabric CLI? 
-    > Azure CLI (existing 'az login' session)
+? How would you like to authenticate Fabric CLI? Azure CLI (existing 'az login' session)
 ```
 
 #### Log in using Azure CLI directly from command line
