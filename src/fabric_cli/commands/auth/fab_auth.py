@@ -28,14 +28,7 @@ def init(args: Namespace) -> Any:
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
     if getattr(args, "azure_cli", False):
-        FabAuth().set_access_mode("azure_cli", args.tenant)
-        try:
-            FabAuth().set_azure_cli(tenant_id=args.tenant)
-        except Exception:
-            FabAuth().logout()
-            raise
-        _acquire_default_access_tokens(FabAuth())
-        Context().context = FabAuth().get_tenant()
+        _login_with_azure_cli(args.tenant)
 
     elif args.identity:
         FabAuth().set_access_mode("managed_identity")
@@ -78,15 +71,7 @@ def init(args: Namespace) -> Any:
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Azure CLI"):
-                FabAuth().set_access_mode("azure_cli", args.tenant)
-                try:
-                    FabAuth().set_azure_cli(tenant_id=args.tenant)
-                except Exception:
-                    FabAuth().logout()
-                    raise
-                _acquire_default_access_tokens(FabAuth())
-                Context().context = FabAuth().get_tenant()
-
+                _login_with_azure_cli(args.tenant)
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
                     "Ensure tenant setting is enabled for Service Principal auth"
@@ -144,8 +129,7 @@ def init(args: Namespace) -> Any:
                     )
                 elif selected_auth == "Service principal authentication with secret":
                     cert_path = None
-                    client_secret = fab_ui.prompt_password(
-                        "Enter client secret:")
+                    client_secret = fab_ui.prompt_password("Enter client secret:")
                     if client_secret is None:  # User pressed CTRL+C
                         return
 
@@ -165,8 +149,7 @@ def init(args: Namespace) -> Any:
                 ):
                     cert_path = None
                     client_secret = None
-                    federated_token = fab_ui.prompt_password(
-                        "Enter federated token:")
+                    federated_token = fab_ui.prompt_password("Enter federated token:")
                     if federated_token is None:  # User pressed CTRL+C
                         return
 
@@ -215,6 +198,20 @@ def init(args: Namespace) -> Any:
     fab_version_check.check_and_notify_update()
 
     return True
+
+
+def _login_with_azure_cli(tenant_id: Optional[str]) -> None:
+    auth = FabAuth()
+    auth.set_access_mode("azure_cli", tenant_id)
+
+    try:
+        auth.set_azure_cli(tenant_id=tenant_id)
+    except Exception:
+        auth.logout()
+        raise
+
+    _acquire_default_access_tokens(auth)
+    Context().context = auth.get_tenant()
 
 
 def logout(args: Namespace) -> None:
