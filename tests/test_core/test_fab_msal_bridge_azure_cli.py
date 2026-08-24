@@ -9,6 +9,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+from azure.core.exceptions import ClientAuthenticationError
 
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
@@ -21,7 +22,8 @@ def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
     """Create a fake JWT with specified claims."""
     header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
     claims = {"tid": tid, "oid": oid, "iss": f"https://sts.windows.net/{tid}/"}
-    payload = base64.urlsafe_b64encode(_json.dumps(claims).encode()).rstrip(b"=").decode()
+    payload = base64.urlsafe_b64encode(
+        _json.dumps(claims).encode()).rstrip(b"=").decode()
     return f"{header}.{payload}.fakesig"
 
 
@@ -29,7 +31,8 @@ def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
 def temp_dir_fixture(monkeypatch, tmp_path):
     """Isolate FabAuth singleton for bridge tests."""
     monkeypatch.setattr(
-        "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
+        "fabric_cli.core.fab_state_config.config_location", lambda: str(
+            tmp_path)
     )
     monkeypatch.delenv("FAB_TOKEN", raising=False)
     monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
@@ -57,7 +60,8 @@ def temp_dir_fixture(monkeypatch, tmp_path):
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, expected_audience=None: _test_decode_jwt_token(auth, token, expected_audience))
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token,
+                        expected_audience=None: _test_decode_jwt_token(auth, token, expected_audience))
 
 
 class TestMsalBridgeAzureCli:
@@ -89,11 +93,39 @@ class TestMsalBridgeAzureCli:
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_bridge_rejects_invalid_scope(self, mock_credential_class):
         """MsalTokenCredential should reject scopes not in the allowlist."""
-        from azure.core.exceptions import ClientAuthenticationError
-
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
 
         credential = MsalTokenCredential(auth)
         with pytest.raises(ClientAuthenticationError):
             credential.get_token("https://evil.example.com/.default")
+
+    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
+    def test_bridge_rejects_azure_cli_tenant_drift(self, mock_credential_class):
+        original_token = MagicMock(
+            token=_make_jwt(tid="original-tenant", oid="test-oid"),
+            expires_on=int(time.time()) + 3600,
+        )
+        drifted_token = MagicMock(
+            token=_make_jwt(tid="different-tenant", oid="test-oid"),
+            expires_on=int(time.time()) + 3600,
+        )
+
+        azure_credential = MagicMock()
+        azure_credential.get_token.side_effect = [
+            original_token,
+            drifted_token,
+        ]
+        mock_credential_class.return_value = azure_credential
+
+        auth = FabAuth()
+        auth.set_access_mode("azure_cli")
+        auth.set_azure_cli()
+        auth._azure_cli_credential = None
+
+        credential = MsalTokenCredential(auth)
+
+        with pytest.raises(ClientAuthenticationError) as exc_info:
+            credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
+
+        assert "tenant" in str(exc_info.value).lower()
