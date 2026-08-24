@@ -121,35 +121,6 @@ class AuthErrors:
         return "This operation is only supported with user authentication"
 
     @staticmethod
-    def azure_cli_tenant_mismatch(stored_tenant: str, current_tenant: str) -> str:
-        return (
-            f"Azure CLI tenant changed from '{stored_tenant}' to '{current_tenant}'. "
-            "Run 'fab auth login --azure-cli' to re-authenticate with the current tenant"
-        )
-
-    @staticmethod
-    def azure_cli_tenant_override_mismatch(
-        requested_tenant: str, cli_tenant: str
-    ) -> str:
-        return (
-            f"Tenant '{requested_tenant}' does not match the Azure CLI tenant "
-            f"'{cli_tenant}'. Run 'az login --tenant {requested_tenant}' first"
-        )
-
-    @staticmethod
-    def azure_cli_environment_mismatch() -> str:
-        return (
-            "Azure CLI cloud environment has changed. "
-            "Run 'fab auth login --azure-cli' to re-authenticate in the current environment"
-        )
-
-    @staticmethod
-    def azure_cli_principal_mismatch() -> str:
-        return (
-            "Azure CLI identity has changed. "
-            "Run 'fab auth login --azure-cli' to re-authenticate with the current identity"
-        )
-
     @staticmethod
     def azure_cli_not_available() -> str:
         return (
@@ -160,13 +131,6 @@ class AuthErrors:
     @staticmethod
     def azure_cli_auth_failed(error_msg: str) -> str:
         return f"Azure CLI authentication failed: {error_msg}"
-
-    @staticmethod
-    def azure_cli_token_missing_claims() -> str:
-        return (
-            "Unable to validate the Azure CLI identity. "
-            "Run 'az login' to authenticate, then retry"
-        )
 
     @staticmethod
     def azure_cli_token_acquisition_failed() -> str:

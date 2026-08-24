@@ -103,67 +103,31 @@ class TestAzureCliIdentityType:
         auth.set_access_mode("azure_cli")
         assert auth.get_identity_type() == "azure_cli"
 
-    def test_set_azure_cli_sets_identity_type(self, temp_dir_fixture):
-        """set_azure_cli should configure identity_type to azure_cli."""
-        with patch("fabric_cli.core.fab_auth.AzureCliCredential") as mock_class:
-            _mock_credential_with_jwt(mock_class, tid="test-tenant")
-            auth = FabAuth()
-            auth.set_access_mode("azure_cli")
-            auth.set_azure_cli()
-            assert auth.get_identity_type() == "azure_cli"
-
-    def test_set_azure_cli_stores_jwt_tenant(self, temp_dir_fixture):
-        """set_azure_cli should store the tenant from the JWT tid claim."""
-        with patch("fabric_cli.core.fab_auth.AzureCliCredential") as mock_class:
-            _mock_credential_with_jwt(mock_class, tid="test-tenant-id")
-            auth = FabAuth()
-            auth.set_access_mode("azure_cli")
-            auth.set_azure_cli()
-            assert auth.get_tenant_id() == "test-tenant-id"
-
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_set_azure_cli_auto_captures_tenant(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """set_azure_cli without tenant_id should auto-capture from JWT claims."""
-        _mock_credential_with_jwt(mock_credential_class, tid="auto-captured-tenant-id")
+    def test_first_token_acquisition_stores_tenant(self, mock_credential_class, temp_dir_fixture):
+        """First token acquisition should discover and store tenant from JWT."""
+        _mock_credential_with_jwt(mock_credential_class, tid="discovered-tenant")
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_tenant_id() == "auto-captured-tenant-id"
+        auth._azure_cli_credential = None
+
+        assert auth.get_tenant_id() is None
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert auth.get_tenant_id() == "discovered-tenant"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_set_azure_cli_tenant_always_from_jwt(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Tenant is always inherited from the Azure CLI JWT, never overridden."""
-        _mock_credential_with_jwt(mock_credential_class, tid="jwt-tenant")
+    def test_tenant_not_overwritten_on_subsequent_calls(self, mock_credential_class, temp_dir_fixture):
+        """Subsequent token calls should not re-decode JWT for tenant."""
+        _mock_credential_with_jwt(mock_credential_class, tid="original-tenant")
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_tenant_id() == "jwt-tenant"
+        auth._azure_cli_credential = None
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
 
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_set_azure_cli_matching_tenant_param_accepted(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Explicit tenant that matches Azure CLI context should succeed."""
-        _mock_credential_with_jwt(mock_credential_class, tid="my-tenant")
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli(tenant_id="my-tenant")
-        assert auth.get_tenant_id() == "my-tenant"
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_set_azure_cli_mismatched_tenant_param_rejected(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Explicit tenant that differs from Azure CLI context should error."""
-        _mock_credential_with_jwt(mock_credential_class, tid="cli-tenant")
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        with pytest.raises(FabricCLIError, match="does not match"):
-            auth.set_azure_cli(tenant_id="other-tenant")
+        # Change mock to return different tenant — should not overwrite
+        _mock_credential_with_jwt(mock_credential_class, tid="new-tenant")
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert auth.get_tenant_id() == "original-tenant"
 
 
 class TestAzureCliTokenAcquisition:
@@ -214,7 +178,6 @@ class TestAzureCliTokenAcquisition:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
         auth._azure_cli_credential = None
 
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -288,153 +251,6 @@ class TestAzureCliTokenAcquisition:
         assert "Unable to get a token from Azure CLI" in str(exc_info.value)
 
 
-class TestAzureCliTenantDrift:
-    """Test tenant drift detection via JWT claims."""
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_tenant_drift_blocks_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should block when token tid differs from stored tenant."""
-        # Login with original-tenant
-        _mock_credential_with_jwt(mock_credential_class, tid="original-tenant", oid="user1")
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        # Now credential returns token for different-tenant
-        _mock_credential_with_jwt(mock_credential_class, tid="different-tenant", oid="user1")
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-
-        expected_msg = ErrorMessages.Auth.azure_cli_tenant_mismatch(
-            "original-tenant", "different-tenant"
-        )
-        assert expected_msg in str(exc_info.value)
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_tenant_match_allows_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should allow when token tid matches stored tenant."""
-        _mock_credential_with_jwt(mock_credential_class, tid="same-tenant", oid="user1")
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert "access_token" in result
-
-
-class TestAzureCliEnvironmentDrift:
-    """Test cloud environment drift detection via JWT iss claim."""
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_environment_drift_blocks_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should block when token issuer differs from stored environment."""
-        # Login in Azure Public
-        _mock_credential_with_jwt(
-            mock_credential_class, tid="t1", oid="u1",
-            iss="https://sts.windows.net/t1/"
-        )
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        # Now credential returns token from Azure Government
-        _mock_credential_with_jwt(
-            mock_credential_class, tid="t1", oid="u1",
-            iss="https://sts.microsoftonline.us/t1/"
-        )
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-
-        assert "environment has changed" in str(exc_info.value)
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_same_environment_allows_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should allow when token issuer matches stored environment."""
-        _mock_credential_with_jwt(
-            mock_credential_class, tid="t1", oid="u1",
-            iss="https://sts.windows.net/t1/"
-        )
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert "access_token" in result
-
-
-class TestAzureCliPrincipalDrift:
-    """Test principal (identity) drift detection via JWT OID claims."""
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_principal_drift_blocks_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should block when token oid differs from stored principal."""
-        # Login as alice (oid=alice-oid)
-        _mock_credential_with_jwt(mock_credential_class, tid="same-tenant", oid="alice-oid")
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        # Now credential returns token for bob (oid=bob-oid, same tenant)
-        _mock_credential_with_jwt(mock_credential_class, tid="same-tenant", oid="bob-oid")
-
-        with pytest.raises(FabricCLIError) as exc_info:
-            auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-
-        # Error message must NOT contain PII (no OIDs exposed)
-        assert "alice" not in str(exc_info.value)
-        assert "bob" not in str(exc_info.value)
-        assert "identity has changed" in str(exc_info.value)
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_principal_match_allows_token_acquisition(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """Should allow when token oid matches stored principal."""
-        _mock_credential_with_jwt(mock_credential_class, tid="same-tenant", oid="alice-oid")
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert "access_token" in result
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_no_stored_principal_skips_drift_check(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """If no principal was stored at login, drift check is skipped."""
-        _mock_credential_with_jwt(mock_credential_class, tid="same-tenant", oid="anyone-oid")
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        # Manually set identity without principal (simulate old auth file)
-        auth._set_auth_properties({con.IDENTITY_TYPE: "azure_cli"})
-        auth.set_tenant("same-tenant")
-        auth._azure_cli_credential = None
-
-        result = auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert "access_token" in result
-
 
 class TestAzureCliSingletonCredential:
     """Test singleton AzureCliCredential lifecycle."""
@@ -477,10 +293,10 @@ class TestAzureCliSingletonCredential:
         assert mock_credential_class.return_value.get_token.call_count == 2
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_clears_credential(
+    def test_logout_clears_credential(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """set_azure_cli should clear and recreate the credential instance."""
+        """logout() should clear the credential instance."""
         _mock_credential_with_jwt(mock_credential_class)
 
         auth = FabAuth()
@@ -489,8 +305,7 @@ class TestAzureCliSingletonCredential:
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert auth._azure_cli_credential is not None
 
-        # Login with explicit tenant — credential must be cleared
-        auth.set_azure_cli()
+        auth.logout()
         assert auth._azure_cli_credential is None
 
 
@@ -538,8 +353,6 @@ class TestAzureCliLoginLogoutLifecycle:
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth._azure_cli_credential is None  # cleared after login probe
 
         # Acquire token to set credential
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
@@ -549,76 +362,31 @@ class TestAzureCliLoginLogoutLifecycle:
         assert auth._azure_cli_credential is None
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_discovers_tenant_from_jwt(self, mock_credential_class, temp_dir_fixture):
-        """set_azure_cli should discover tenant from probe token JWT claims."""
+    def test_first_acquisition_discovers_tenant(self, mock_credential_class, temp_dir_fixture):
+        """First token acquisition should discover tenant from JWT claims."""
         _mock_credential_with_jwt(mock_credential_class, tid="discovered-tenant")
 
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
+        auth._azure_cli_credential = None
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert auth.get_tenant_id() == "discovered-tenant"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_stores_oid_and_issuer_for_drift_detection(self, mock_credential_class, temp_dir_fixture):
-        """set_azure_cli should store OID and issuer from JWT for drift detection."""
-        _mock_credential_with_jwt(mock_credential_class, tid="t1", oid="user-oid-123",
-                                   iss="https://sts.windows.net/t1/")
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID) == "user-oid-123"
-        assert auth._auth_info.get(con.FAB_AZURE_CLI_ISSUER) == "sts.windows.net"
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_re_login_updates_tenant_and_oid(self, mock_credential_class, temp_dir_fixture):
-        """Re-login should update tenant and OID from new probe token."""
-        _mock_credential_with_jwt(mock_credential_class, tid="tenant-A", oid="oid-A")
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_tenant_id() == "tenant-A"
-
-        # Re-login with different identity
-        _mock_credential_with_jwt(mock_credential_class, tid="tenant-B", oid="oid-B")
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_tenant_id() == "tenant-B"
-        assert auth._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID) == "oid-B"
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_identity_type_preserved_after_tenant_change(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """identity_type should remain azure_cli after tenant changes."""
+    def test_re_login_resets_state(self, mock_credential_class, temp_dir_fixture):
+        """Re-login (set_access_mode again) should reset state."""
         _mock_credential_with_jwt(mock_credential_class, tid="tenant-A")
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_identity_type() == "azure_cli"
+        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        assert auth.get_tenant_id() == "tenant-A"
 
+        # Re-login — set_access_mode("azure_cli") when already azure_cli does NOT logout
+        # but a different tenant in next token will not overwrite
         _mock_credential_with_jwt(mock_credential_class, tid="tenant-B")
         auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        assert auth.get_identity_type() == "azure_cli"
-        assert auth.get_tenant_id() == "tenant-B"
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_clears_credential_on_tenant_change(
-        self, mock_credential_class, temp_dir_fixture
-    ):
-        """set_azure_cli should clear credential when transitioning tenants."""
-        _mock_credential_with_jwt(mock_credential_class)
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        # Acquire a token to set credential
-        auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
-        assert auth._azure_cli_credential is not None
-
-        # Login with explicit tenant — credential must be cleared for recreation
-        auth.set_azure_cli()
-        assert auth._azure_cli_credential is None
+        # Tenant is still A because it was already set
+        assert auth.get_tenant_id() == "tenant-A"
 
 
 class TestJwtClaimsDecoding:
@@ -647,68 +415,6 @@ class TestJwtClaimsDecoding:
         claims = auth._decode_jwt_token(token)
         assert claims["upn"] == "user@contoso.com"
 
-
-class TestFailClosedOnMissingClaims:
-    """Verify tokens with missing identity claims are rejected, not silently used."""
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_rejects_token_missing_oid(self, mock_class, temp_dir_fixture):
-        """set_azure_cli should fail if probe token lacks oid."""
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(
-            _json.dumps({"tid": "t1", "iss": "https://sts.windows.net/t1/"}).encode()
-        ).rstrip(b"=").decode()
-        token_str = f"{header}.{payload}.fakesig"
-        mock_token = MagicMock()
-        mock_token.token = token_str
-        mock_token.expires_on = int(time.time()) + 3600
-        mock_class.return_value.get_token.return_value = mock_token
-        auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="Unable to validate"):
-            auth.set_azure_cli()
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_rejects_token_missing_tid(self, mock_class, temp_dir_fixture):
-        """set_azure_cli should fail if probe token lacks tid."""
-        header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(
-            _json.dumps({"oid": "o1", "iss": "https://sts.windows.net/t1/"}).encode()
-        ).rstrip(b"=").decode()
-        token_str = f"{header}.{payload}.fakesig"
-        mock_token = MagicMock()
-        mock_token.token = token_str
-        mock_token.expires_on = int(time.time()) + 3600
-        mock_class.return_value.get_token.return_value = mock_token
-        auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="Unable to validate"):
-            auth.set_azure_cli()
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_login_rejects_malformed_token(self, mock_class, temp_dir_fixture):
-        """set_azure_cli should fail if probe token is not a valid JWT."""
-        mock_token = MagicMock()
-        mock_token.token = "not-a-jwt"
-        mock_token.expires_on = int(time.time()) + 3600
-        mock_class.return_value.get_token.return_value = mock_token
-        auth = FabAuth()
-        with pytest.raises(FabricCLIError, match="Azure CLI authentication failed"):
-            auth.set_azure_cli()
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_acquisition_rejects_token_missing_claims(self, mock_class, temp_dir_fixture):
-        """Token acquisition should fail if returned token lacks identity claims."""
-        # Login with good token
-        _mock_credential_with_jwt(mock_class)
-        auth = FabAuth()
-        auth.set_azure_cli()
-
-        # Now return a bad token on next call
-        bad_token = MagicMock()
-        bad_token.token = "not-a-jwt"
-        bad_token.expires_on = int(time.time()) + 3600
-        mock_class.return_value.get_token.return_value = bad_token
-        with pytest.raises(FabricCLIError, match="Failed to decode JWT"):
-            auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
 
 
 class TestNonAzureCliIsolation:

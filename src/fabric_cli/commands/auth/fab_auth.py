@@ -28,7 +28,11 @@ def init(args: Namespace) -> Any:
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
     if getattr(args, "azure_cli", False):
-        _login_with_azure_cli(args.tenant)
+        FabAuth().set_access_mode("azure_cli")
+        _acquire_default_access_tokens(FabAuth())
+        Context().context = FabAuth().get_tenant()
+        tenant_id = FabAuth().get_tenant_id() or "unknown"
+        fab_ui.print_grey(f"✓ Authenticated via Azure CLI (tenant: {tenant_id})")
 
     elif args.identity:
         FabAuth().set_access_mode("managed_identity")
@@ -71,7 +75,13 @@ def init(args: Namespace) -> Any:
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Azure CLI"):
-                _login_with_azure_cli(args.tenant)
+                FabAuth().set_access_mode("azure_cli")
+                _acquire_default_access_tokens(FabAuth())
+                Context().context = FabAuth().get_tenant()
+                tenant_id = FabAuth().get_tenant_id() or "unknown"
+                fab_ui.print_grey(
+                    f"✓ Authenticated via Azure CLI (tenant: {tenant_id})"
+                )
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
                     "Ensure tenant setting is enabled for Service Principal auth"
@@ -199,19 +209,6 @@ def init(args: Namespace) -> Any:
 
     return True
 
-
-def _login_with_azure_cli(tenant_id: Optional[str]) -> None:
-    auth = FabAuth()
-    auth.set_access_mode("azure_cli", tenant_id)
-
-    try:
-        auth.set_azure_cli(tenant_id=tenant_id)
-    except Exception:
-        auth.logout()
-        raise
-
-    _acquire_default_access_tokens(auth)
-    Context().context = auth.get_tenant()
 
 
 def logout(args: Namespace) -> None:

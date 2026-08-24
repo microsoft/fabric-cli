@@ -99,33 +99,3 @@ class TestMsalBridgeAzureCli:
         credential = MsalTokenCredential(auth)
         with pytest.raises(ClientAuthenticationError):
             credential.get_token("https://evil.example.com/.default")
-
-    @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_bridge_rejects_azure_cli_tenant_drift(self, mock_credential_class):
-        original_token = MagicMock(
-            token=_make_jwt(tid="original-tenant", oid="test-oid"),
-            expires_on=int(time.time()) + 3600,
-        )
-        drifted_token = MagicMock(
-            token=_make_jwt(tid="different-tenant", oid="test-oid"),
-            expires_on=int(time.time()) + 3600,
-        )
-
-        azure_credential = MagicMock()
-        azure_credential.get_token.side_effect = [
-            original_token,
-            drifted_token,
-        ]
-        mock_credential_class.return_value = azure_credential
-
-        auth = FabAuth()
-        auth.set_access_mode("azure_cli")
-        auth.set_azure_cli()
-        auth._azure_cli_credential = None
-
-        credential = MsalTokenCredential(auth)
-
-        with pytest.raises(ClientAuthenticationError) as exc_info:
-            credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
-
-        assert "tenant" in str(exc_info.value).lower()

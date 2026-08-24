@@ -32,8 +32,6 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "$ fab auth login\n",
         "# command_line mode using Azure CLI auth",
         "$ fab auth login --azure-cli\n",
-        "# command_line mode using Azure CLI auth with specific tenant",
-        "$ fab auth login --azure-cli --tenant <tenant_id>\n",
         "# command_line mode using service principal auth",
         "$ fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>\n",
         "# command_line mode using system assigned managed identity auth",

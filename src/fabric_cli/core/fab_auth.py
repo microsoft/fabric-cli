@@ -438,130 +438,24 @@ class FabAuth:
             }
         )
 
-    def set_azure_cli(self, tenant_id=None):
-        """Configure Azure CLI as the authentication source.
-
-        Acquires a probe token from Azure CLI to discover and store
-        the tenant ID and principal OID from the actual JWT claims.
-        Fabric CLI strictly inherits the Azure CLI auth context.
-        If tenant_id is provided, it is validated against the Azure CLI
-        context — a mismatch raises an error directing the user to
-        switch tenants via 'az login --tenant'.
-        """
-        # Clear credential to force recreation
-        self._azure_cli_credential = None
-
-        # Acquire a probe token to discover identity from JWT claims
-        try:
-            probe_credential = AzureCliCredential()
-            probe_token = probe_credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
-            claims = self._decode_jwt_token(probe_token.token)
-        except CredentialUnavailableError:
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_not_available(),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-        except (
-            ClientAuthenticationError,
-            HttpResponseError,
-            ServiceRequestError,
-            ServiceResponseError,
-        ) as e:
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_auth_failed(str(e)),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-        except Exception:
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_auth_failed(
-                    ErrorMessages.Auth.azure_cli_token_acquisition_failed()
-                ),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-
-        # Fail-closed: refuse to persist if identity claims are missing
-        if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_token_missing_claims(),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-
-        # Validate explicit tenant against Azure CLI context
-        if tenant_id and tenant_id != claims["tid"]:
-            raise FabricCLIError(
-                ErrorMessages.Auth.azure_cli_tenant_override_mismatch(
-                    tenant_id, claims["tid"]
-                ),
-                status_code=con.ERROR_AUTHENTICATION_FAILED,
-            )
-
-        # Tenant is always inherited from Azure CLI — no override
-        self.set_tenant(claims["tid"])
-
-        # Set identity_type after tenant to survive any logout triggered by tenant change
-        auth_props: dict = {con.IDENTITY_TYPE: "azure_cli"}
-        # Store OID and issuer host for drift detection (immutable, no PII)
-        auth_props[con.FAB_AZURE_CLI_PRINCIPAL_ID] = claims["oid"]
-        from urllib.parse import urlparse
-
-        auth_props[con.FAB_AZURE_CLI_ISSUER] = urlparse(claims["iss"]).hostname
-        self._set_auth_properties(auth_props)
-
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
         """Acquire a token using Azure CLI's AzureCliCredential.
 
-        After acquiring the token, decodes JWT claims and verifies
-        that iss, tid, and oid match the stored values from login to detect
-        identity or environment drift.
+        On first successful acquisition, stores the tenant_id from the token
+        claims for use by other CLI components (context, status).
         """
-        stored_tenant = self.get_tenant_id()
-
         try:
-            # Create singleton credential — no tenant pinning, inherit Azure CLI context
+            # Create singleton credential — inherit Azure CLI context
             if self._azure_cli_credential is None:
                 self._azure_cli_credential = AzureCliCredential()
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = self._azure_cli_credential.get_token(scope[0])
 
-            # Post-acquisition drift detection from actual token claims
-            claims = self._decode_jwt_token(azure_token.token)
-
-            # Fail-closed: reject tokens with missing identity claims
-            if not claims.get("iss") or not claims.get("tid") or not claims.get("oid"):
-                raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_token_missing_claims(),
-                    status_code=con.ERROR_AUTHENTICATION_FAILED,
-                )
-
-            # Tenant drift check (most common drift scenario)
-            if stored_tenant and claims["tid"] != stored_tenant:
-                raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_tenant_mismatch(
-                        stored_tenant, claims["tid"]
-                    ),
-                    status_code=con.ERROR_AUTHENTICATION_FAILED,
-                )
-
-            # Environment drift check (issuer host encodes cloud: public vs sovereign)
-            # Stored value is already a hostname; extract host from current token's iss
-            stored_issuer_host = self._auth_info.get(con.FAB_AZURE_CLI_ISSUER)
-            if stored_issuer_host:
-                from urllib.parse import urlparse
-
-                current_host = urlparse(claims["iss"]).hostname
-                if stored_issuer_host != current_host:
-                    raise FabricCLIError(
-                        ErrorMessages.Auth.azure_cli_environment_mismatch(),
-                        status_code=con.ERROR_AUTHENTICATION_FAILED,
-                    )
-
-            # Principal drift check (OID-based)
-            stored_principal = self._auth_info.get(con.FAB_AZURE_CLI_PRINCIPAL_ID)
-            if stored_principal and claims["oid"] != stored_principal:
-                raise FabricCLIError(
-                    ErrorMessages.Auth.azure_cli_principal_mismatch(),
-                    status_code=con.ERROR_AUTHENTICATION_FAILED,
-                )
+            # Store tenant_id from first successful token if not already set
+            if not self.get_tenant_id():
+                claims = self._decode_jwt_token(azure_token.token)
+                if claims.get("tid"):
+                    self.set_tenant(claims["tid"])
 
             token_result = {
                 "access_token": azure_token.token,

@@ -975,107 +975,60 @@ class TestAuthAzureCli:
     def test_init_with_azure_cli_flag(self, mock_fab_auth, mock_fab_context):
         """fab auth login --azure-cli should set azure_cli mode."""
         args = prepare_auth_args({"azure_cli": True})
-        mock_set_azure_cli = MagicMock()
 
-        with patch.object(
-            mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
-        ):
-            result = fab_auth.init(args)
+        result = fab_auth.init(args)
 
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_fab_auth_instance.set_access_mode.assert_called_with(
-            "azure_cli", None
-        )
-        mock_set_azure_cli.assert_called_once_with(tenant_id=None)
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+        assert_get_access_token(mock_fab_auth_instance)
         assert result is True
 
-    def test_init_with_azure_cli_flag_and_tenant(
+    def test_init_with_azure_cli_flag_ignores_tenant(
         self, mock_fab_auth, mock_fab_context
     ):
-        """fab auth login --azure-cli --tenant should pass tenant."""
+        """fab auth login --azure-cli --tenant should ignore tenant (not supported)."""
         args = prepare_auth_args({"azure_cli": True, "tenant": "my-tenant"})
-        mock_set_azure_cli = MagicMock()
 
-        with patch.object(
-            mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
-        ):
-            result = fab_auth.init(args)
+        result = fab_auth.init(args)
 
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_fab_auth_instance.set_access_mode.assert_called_with(
-            "azure_cli", "my-tenant"
-        )
-        mock_set_azure_cli.assert_called_once_with(tenant_id="my-tenant")
+        # set_access_mode called without tenant for azure_cli
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+        assert_get_access_token(mock_fab_auth_instance)
         assert result is True
 
     def test_init_with_interactive_azure_cli_selection(
         self, mock_fab_auth, mock_fab_context
     ):
         """Interactive menu Azure CLI selection should set azure_cli mode."""
-        mock_set_azure_cli = MagicMock()
-
         with patch(
             "fabric_cli.utils.fab_ui.prompt_select_item",
             return_value="Azure CLI (existing 'az login' session)",
         ):
-            with patch.object(
-                mock_fab_auth["instance"], "set_azure_cli", mock_set_azure_cli
-            ):
-                args = prepare_auth_args()
-                result = fab_auth.init(args)
+            args = prepare_auth_args()
+            result = fab_auth.init(args)
 
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_fab_auth_instance.set_access_mode.assert_called_with(
-            "azure_cli", None
-        )
-        mock_set_azure_cli.assert_called_once_with(tenant_id=None)
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
         assert_get_access_token(mock_fab_auth_instance)
         assert_fab_context(mock_fab_context)
         assert result is True
 
-    def test_failed_azure_cli_probe_rolls_back_auth_state(
+    def test_failed_azure_cli_token_acquisition_raises(
         self, mock_fab_auth, mock_fab_context
     ):
-        """If set_azure_cli fails on mode switch, logout should clean up partial state."""
+        """If token acquisition fails, error propagates (no rollback, consistent with MSAL)."""
         args = prepare_auth_args({"azure_cli": True})
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_set_azure_cli = MagicMock(
-            side_effect=FabricCLIError("probe failed", "auth_error")
+        mock_fab_auth_instance.get_access_token.side_effect = FabricCLIError(
+            "Azure CLI is not installed or not logged in",
+            "auth_error",
         )
 
-        with patch.object(
-            mock_fab_auth_instance, "get_identity_type", return_value="user"
-        ), patch.object(
-            mock_fab_auth_instance, "set_azure_cli", mock_set_azure_cli
-        ):
-            with pytest.raises(FabricCLIError, match="probe failed"):
-                fab_auth.init(args)
+        with pytest.raises(FabricCLIError, match="not installed or not logged in"):
+            fab_auth.init(args)
 
-        # set_access_mode was called (cleanup of old state)
-        mock_fab_auth_instance.set_access_mode.assert_called_with(
-            "azure_cli", None
-        )
-        # logout was called to roll back partial state
-        mock_fab_auth_instance.logout.assert_called()
-
-    def test_failed_azure_cli_re_login_cleans_up(
-        self, mock_fab_auth, mock_fab_context
-    ):
-        """If re-login on same azure_cli mode fails, logout is called (consistent with MSAL)."""
-        args = prepare_auth_args({"azure_cli": True})
-        mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_set_azure_cli = MagicMock(
-            side_effect=FabricCLIError("probe failed", "auth_error")
-        )
-
-        with patch.object(
-            mock_fab_auth_instance, "set_azure_cli", mock_set_azure_cli
-        ):
-            with pytest.raises(FabricCLIError, match="probe failed"):
-                fab_auth.init(args)
-
-        # logout IS called — consistent with MSAL re-login behavior
-        mock_fab_auth_instance.logout.assert_called()
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
 
 
 # Helpers
