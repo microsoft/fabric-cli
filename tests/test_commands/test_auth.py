@@ -914,45 +914,32 @@ class TestAuth:
 
         mock_print_done.assert_called_once()
 
-    def test_auth_status_includes_azure_cli_source(
-        self, mock_fab_auth, capsys
-    ):
+    def test_auth_status(self, mock_fab_auth, capsys):
         # Arrange
         args = argparse.Namespace(
             command="auth",
             auth_subcommand="status",
             output_format="text",
         )
-        mock_fab_auth_instance = mock_fab_auth["instance"]
 
-        with (
-            patch.object(
-                mock_fab_auth_instance,
-                "get_identity_type",
-                return_value="azure_cli",
-            ),
-            patch(
-                "fabric_cli.commands.auth.fab_auth."
-                "_get_token_info_from_bearer_token",
-                return_value={
-                    "appid": "mocked_appid",
-                    "upn": "mocked_upn",
-                    "oid": "mocked_oid",
-                    "tid": "mocked_token_tenant_id",
-                },
-            ),
+        with patch(
+            "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+            return_value={
+                "appid": "mocked_appid",
+                "upn": "mocked_upn",
+                "oid": "mocked_oid",
+                "tid": "mocked_tenant_id",
+            },
         ):
             # Act
             fab_auth.status(args)
 
         # Assert
         captured = capsys.readouterr()
-
         assert "Logged In: True" in captured.out
-        assert "Auth Source: azure_cli" in captured.out
         assert "Account: mocked_upn" in captured.out
         assert "Principal ID: mocked_oid" in captured.out
-        assert "Tenant ID: mocked_token_tenant_id" in captured.out
+        assert "Tenant ID: mocked_tenant_id" in captured.out
         assert "App ID: mocked_appid" in captured.out
         assert (
             "Token Fabric PowerBI: mock************************************"

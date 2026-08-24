@@ -230,7 +230,6 @@ def logout(args: Namespace) -> None:
 def status(args: Namespace) -> None:
     auth = FabAuth()
     tenant_id = auth.get_tenant_id()
-    identity_type = auth.get_identity_type() or "N/A"
 
     def __get_token_info(scope):
         try:
@@ -288,7 +287,6 @@ def status(args: Namespace) -> None:
 
     auth_data = {
         "logged_in": is_logged_in,
-        "auth_source": identity_type,
         "account": upn,
         "principal_id": oid,
         "tenant_id": tid,
