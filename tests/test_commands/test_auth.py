@@ -933,6 +933,52 @@ class TestAuth:
         assert "Token Storage: mock************************************" in captured.out
         assert "Token Azure: mock************************************" in captured.out
 
+    def test_auth_status_azure_cli_session_available(self, mock_fab_auth, capsys):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+
+        with (
+            patch.object(auth, "get_identity_type", return_value="azure_cli"),
+            patch(
+                "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+                return_value={"tid": "mocked_tenant_id"},
+            ),
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Azure CLI session available" in captured.err
+        assert "Authentication Mode: Azure CLI" in captured.out
+        assert "Azure CLI Session: Available" in captured.out
+        assert "Logged In: True" in captured.out
+
+    def test_auth_status_azure_cli_session_unavailable(self, mock_fab_auth, capsys):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+        auth.get_access_token.side_effect = FabricCLIError(
+            ErrorMessages.Auth.azure_cli_not_available(),
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
+
+        with patch.object(auth, "get_identity_type", return_value="azure_cli"):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Azure CLI session unavailable" in captured.err
+        assert "Fabric CLI remains configured" in captured.err
+        assert "tenant ID below is the last known tenant" in captured.err
+        assert "Authentication Mode: Azure CLI" in captured.out
+        assert "Azure CLI Session: Unavailable" in captured.out
+        assert "Logged In: False" in captured.out
+
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys
     ):

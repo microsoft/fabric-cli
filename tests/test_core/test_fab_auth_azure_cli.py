@@ -10,8 +10,10 @@ import pytest
 
 from fabric_cli.core import fab_constant as con
 from fabric_cli.core.fab_auth import FabAuth
+from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.errors import ErrorMessages
+from fabric_cli.utils import fab_mem_store
 
 
 def _make_jwt(
@@ -70,6 +72,9 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth._azure_cli_credential = None
     auth._auth_info = {}
     auth.app = None
+    context = Context()
+    context._context = None
+    monkeypatch.setattr(context, "_context_file", str(tmp_path / "context.json"))
     # Update file paths to use the test's tmp_path
     monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
     monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
@@ -138,7 +143,7 @@ class TestAzureCliIdentityType:
     def test_tenant_updated_on_subsequent_calls(
         self, mock_credential_class, temp_dir_fixture
     ):
-        """Subsequent token calls should synchronize the current Azure CLI tenant."""
+        """A changed Azure CLI tenant should reset context and cached resources."""
         mock_credential, _ = _mock_credential_with_jwt(
             mock_credential_class, tid="original-tenant"
         )
@@ -146,6 +151,10 @@ class TestAzureCliIdentityType:
         auth.set_access_mode("azure_cli")
         auth._azure_cli_credential = None
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
+        fab_mem_store._get_workspaces_from_cache.cache.update({"key": "value"})
+        fab_mem_store._get_workspace_folders_from_cache.cache.update(
+            {"key": "value"}
+        )
 
         new_token = MagicMock()
         new_token.token = _make_jwt(tid="new-tenant")
@@ -155,6 +164,9 @@ class TestAzureCliIdentityType:
         auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert auth.get_tenant_id() == "new-tenant"
         assert auth.get_identity_type() == "azure_cli"
+        assert Context().get_tenant_id() == "new-tenant"
+        assert fab_mem_store._get_workspaces_from_cache.cache.currsize == 0
+        assert fab_mem_store._get_workspace_folders_from_cache.cache.currsize == 0
         mock_credential_class.assert_called_once()
         assert mock_credential.get_token.call_count == 2
 

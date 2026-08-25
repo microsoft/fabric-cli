@@ -427,10 +427,10 @@ class FabAuth:
         )
 
     def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
-        """Acquire a token using Azure CLI's AzureCliCredential.
+        """Acquire a token using the current Azure CLI authentication context.
 
-        On first successful acquisition, stores the tenant_id from the token
-        claims for use by other CLI components (context, status).
+        Synchronizes Fabric CLI's tenant, resource caches, and command context
+        with the tenant claim in the acquired token.
         """
         try:
             # Create singleton credential — inherit Azure CLI context
@@ -439,15 +439,10 @@ class FabAuth:
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = self._azure_cli_credential.get_token(scope[0])
 
-            # Always update tenant_id from the token — Azure CLI is a
-            # delegation model so the az session can change independently.
-            # Write tenant_id directly (not via set_tenant) to avoid the
-            # logout that set_tenant triggers on tenant change, which would
-            # wipe identity_type and break the session.
             claims = self._decode_jwt_token(azure_token.token)
             tid = claims.get("tid")
             if tid and tid != self.get_tenant_id():
-                self._set_auth_properties({con.FAB_TENANT_ID: tid})
+                self._synchronize_azure_cli_tenant(tid)
 
             token_result = {
                 "access_token": azure_token.token,
@@ -480,6 +475,15 @@ class FabAuth:
                 ),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
             )
+
+    def _synchronize_azure_cli_tenant(self, tenant_id: str) -> None:
+        """Synchronize state when the active Azure CLI tenant changes."""
+        from fabric_cli.core.fab_context import Context
+        from fabric_cli.utils import fab_mem_store
+
+        self._set_auth_properties({con.FAB_TENANT_ID: tenant_id})
+        fab_mem_store.clear_caches()
+        Context().context = self.get_tenant()
 
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))

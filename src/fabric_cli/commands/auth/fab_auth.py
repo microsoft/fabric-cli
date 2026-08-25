@@ -216,6 +216,7 @@ def logout(args: Namespace) -> None:
 
 def status(args: Namespace) -> None:
     auth = FabAuth()
+    identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 
     def __get_token_info(scope):
@@ -272,16 +273,26 @@ def status(args: Namespace) -> None:
     )
     fab_ui.print_grey(login_status)
 
-    auth_data = {
-        "logged_in": is_logged_in,
-        "account": upn,
-        "principal_id": oid,
-        "tenant_id": tid,
-        "app_id": appid,
-        "token_fabric_powerbi": fabric_secret,
-        "token_storage": storage_secret,
-        "token_azure": azure_secret,
-    }
+    auth_data = {}
+    if identity_type == "azure_cli":
+        auth_data.update(
+            {
+                "authentication_mode": "Azure CLI",
+                "azure_cli_session": "Available" if is_logged_in else "Unavailable",
+            }
+        )
+    auth_data.update(
+        {
+            "logged_in": is_logged_in,
+            "account": upn,
+            "principal_id": oid,
+            "tenant_id": tid,
+            "app_id": appid,
+            "token_fabric_powerbi": fabric_secret,
+            "token_storage": storage_secret,
+            "token_azure": azure_secret,
+        }
+    )
     fab_ui.print_output_format(args, data=auth_data, show_key_value_list=True)
 
 
