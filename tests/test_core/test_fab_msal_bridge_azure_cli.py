@@ -22,8 +22,9 @@ def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
     """Create a fake JWT with specified claims."""
     header = base64.urlsafe_b64encode(b'{"alg":"none"}').rstrip(b"=").decode()
     claims = {"tid": tid, "oid": oid, "iss": f"https://sts.windows.net/{tid}/"}
-    payload = base64.urlsafe_b64encode(
-        _json.dumps(claims).encode()).rstrip(b"=").decode()
+    payload = (
+        base64.urlsafe_b64encode(_json.dumps(claims).encode()).rstrip(b"=").decode()
+    )
     return f"{header}.{payload}.fakesig"
 
 
@@ -31,8 +32,7 @@ def _make_jwt(tid: str = "test-tenant", oid: str = "test-oid") -> str:
 def temp_dir_fixture(monkeypatch, tmp_path):
     """Isolate FabAuth singleton for bridge tests."""
     monkeypatch.setattr(
-        "fabric_cli.core.fab_state_config.config_location", lambda: str(
-            tmp_path)
+        "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
     monkeypatch.delenv("FAB_TOKEN", raising=False)
     monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
@@ -60,17 +60,20 @@ def temp_dir_fixture(monkeypatch, tmp_path):
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token,
-                        expected_audience=None: _test_decode_jwt_token(auth, token, expected_audience))
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None: _test_decode_jwt_token(
+            auth, token, expected_audience
+        ),
+    )
 
 
 class TestMsalBridgeAzureCli:
     """Verify MsalTokenCredential works when identity_type is azure_cli."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_bridge_returns_access_token_for_azure_cli(
-        self, mock_credential_class
-    ):
+    def test_bridge_returns_access_token_for_azure_cli(self, mock_credential_class):
         """MsalTokenCredential.get_token should return an AccessToken via Azure CLI."""
         token_str = _make_jwt()
         mock_token = MagicMock()

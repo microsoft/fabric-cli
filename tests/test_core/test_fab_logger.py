@@ -316,6 +316,44 @@ def test_get_logger():
     assert logger.log_file_path is not None
 
 
+def test_suppress_azure_sdk_logging_suppresses_azure_sdk_records() -> None:
+    azure_loggers = [
+        logging.getLogger("azure.identity"),
+        logging.getLogger("azure.core"),
+    ]
+    original_states = [
+        (list(azure_logger.handlers), azure_logger.propagate)
+        for azure_logger in azure_loggers
+    ]
+    root_logger = logging.getLogger()
+    emitted_records = []
+
+    class _CaptureHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            emitted_records.append(record)
+
+    capture_handler = _CaptureHandler()
+    root_logger.addHandler(capture_handler)
+
+    try:
+        logger.suppress_azure_sdk_logging()
+
+        logging.getLogger("azure.identity._internal.decorators").warning(
+            "Azure identity warning"
+        )
+        logging.getLogger("azure.core.pipeline").critical("Azure core error")
+        logging.getLogger("unrelated.library").warning("Unrelated warning")
+
+        assert [record.getMessage() for record in emitted_records] == [
+            "Unrelated warning"
+        ]
+    finally:
+        root_logger.removeHandler(capture_handler)
+        for azure_logger, (handlers, propagate) in zip(azure_loggers, original_states):
+            azure_logger.handlers = handlers
+            azure_logger.propagate = propagate
+
+
 def test_get_log_file_path(monkeypatch):
     monkeypatch.setattr(platform, "system", lambda: "Windows")
     assert_log_file_path("\\AppData\\Local")

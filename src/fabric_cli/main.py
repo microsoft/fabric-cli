@@ -14,6 +14,8 @@ from fabric_cli.utils import fab_ui
 
 
 def main():
+    fab_logger.suppress_azure_sdk_logging()
+
     parser, subparsers = get_global_parser_and_subparsers()
 
     argcomplete.autocomplete(parser, default_completer=None)
@@ -22,7 +24,7 @@ def main():
 
     try:
         fab_state_config.init_defaults()
-        
+
         if args.command == "auth" and args.auth_command == None:
             auth_parser.show_help(args)
             return

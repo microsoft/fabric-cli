@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import json
-import logging
 import os
 import uuid
 from binascii import hexlify
@@ -34,11 +33,6 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
-
-# Prevent Azure SDK logs from exposing tokens or subprocess output in console or file logs
-for _azure_ns in ("azure.identity", "azure.core"):
-    logging.getLogger(_azure_ns).setLevel(logging.CRITICAL)
-    logging.getLogger(_azure_ns).propagate = False
 
 
 def singleton(class_):
