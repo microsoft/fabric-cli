@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Run Semantic PR Validation
         id: validation
-        uses: actions/github-script@v6
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const prTitle = context.payload.pull_request.title;
@@ -33,7 +33,7 @@ jobs:
             }
       - name: Handle Invalid Title
         if: failure()
-        uses: actions/github-script@v6
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const commentMarker = '<!-- semantic-pr-comment -->';
@@ -95,7 +95,7 @@ jobs:
             });
       - name: Handle Valid Title
         if: success()
-        uses: actions/github-script@v6
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { data: labels } = await github.rest.issues.listLabelsOnIssue({
