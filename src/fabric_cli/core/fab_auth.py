@@ -453,10 +453,13 @@ class FabAuth:
 
             # Always update tenant_id from the token — Azure CLI is a
             # delegation model so the az session can change independently.
+            # Write tenant_id directly (not via set_tenant) to avoid the
+            # logout that set_tenant triggers on tenant change, which would
+            # wipe identity_type and break the session.
             claims = self._decode_jwt_token(azure_token.token)
             tid = claims.get("tid")
             if tid and tid != self.get_tenant_id():
-                self.set_tenant(tid)
+                self._set_auth_properties({con.FAB_TENANT_ID: tid})
 
             token_result = {
                 "access_token": azure_token.token,
