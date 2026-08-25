@@ -440,6 +440,7 @@ class FabAuth:
             # AzureCliCredential.get_token expects scopes as positional args
             azure_token = self._azure_cli_credential.get_token(scope[0])
 
+            # Keep tenant-scoped context and caches aligned with Azure CLI
             claims = self._decode_jwt_token(azure_token.token)
             tid = claims.get("tid")
             if tid and tid != self.get_tenant_id():

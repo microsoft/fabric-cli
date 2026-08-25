@@ -23,6 +23,8 @@ def init(args: Namespace) -> Any:
         "Managed identity authentication",
     ]
 
+    _validate_auth_args(args)
+
     utils_mem_store.clear_caches()
 
     # Clean up stale context files when logging in
@@ -39,7 +41,7 @@ def init(args: Namespace) -> Any:
         _acquire_default_access_tokens(FabAuth())
         Context().context = FabAuth().get_tenant()
 
-    elif any([args.username, args.password]):
+    elif any([args.username, args.password, args.certificate, args.federated_token]):
         if not (
             all([args.username, args.tenant])
             and any([args.password, args.certificate, args.federated_token])
@@ -298,6 +300,49 @@ def status(args: Namespace) -> None:
 
 
 # Utils
+def _validate_auth_args(args: Namespace) -> None:
+    auth_args = {
+        "azure_cli": "--azure-cli",
+        "identity": "--identity",
+        "username": "--username",
+        "password": "--password",
+        "tenant": "--tenant",
+        "certificate": "--certificate",
+        "federated_token": "--federated-token",
+    }
+    specified_args = [
+        attribute for attribute in auth_args if getattr(args, attribute, None)
+    ]
+
+    incompatible: list[str] = []
+    if "azure_cli" in specified_args:
+        incompatible = specified_args if len(specified_args) > 1 else []
+    elif "identity" in specified_args:
+        incompatible = [
+            attribute
+            for attribute in specified_args
+            if attribute not in {"identity", "username"}
+        ]
+        if incompatible:
+            incompatible.insert(0, "identity")
+    elif "federated_token" in specified_args:
+        incompatible = [
+            attribute
+            for attribute in specified_args
+            if attribute in {"password", "certificate"}
+        ]
+        if incompatible:
+            incompatible.append("federated_token")
+
+    if incompatible:
+        raise FabricCLIError(
+            ErrorMessages.Auth.incompatible_authentication_arguments(
+                [auth_args[attribute] for attribute in incompatible]
+            ),
+            fab_constant.ERROR_INVALID_INPUT,
+        )
+
+
 def _get_token_info_from_bearer_token(bearer_token: str) -> Optional[dict[str, str]]:
     return FabAuth()._get_claims_from_token(
         bearer_token, ["upn", "oid", "tid", "appid"]

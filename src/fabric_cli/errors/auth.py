@@ -121,7 +121,6 @@ class AuthErrors:
         return "This operation is only supported with user authentication"
 
     @staticmethod
-    @staticmethod
     def azure_cli_not_available() -> str:
         return (
             "Azure CLI is not installed or not logged in. "
@@ -138,3 +137,7 @@ class AuthErrors:
             "Unable to get a token from Azure CLI. "
             "Run 'az login' to authenticate, then retry"
         )
+
+    @staticmethod
+    def incompatible_authentication_arguments(arguments: list[str]) -> str:
+        return f"Authentication arguments cannot be combined: {', '.join(arguments)}"
