@@ -10,12 +10,6 @@ from typing import Any, NamedTuple, Optional
 import jwt
 import msal
 import requests
-from azure.core.exceptions import (
-    ClientAuthenticationError,
-    HttpResponseError,
-    ServiceRequestError,
-    ServiceResponseError,
-)
 from azure.identity import AzureCliCredential, CredentialUnavailableError
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -432,6 +426,13 @@ class FabAuth:
         Synchronizes Fabric CLI's tenant, resource caches, and command context
         with the tenant claim in the acquired token.
         """
+        from azure.core.exceptions import (
+            ClientAuthenticationError,
+            HttpResponseError,
+            ServiceRequestError,
+            ServiceResponseError,
+        )
+
         try:
             # Create singleton credential — inherit Azure CLI context
             if self._azure_cli_credential is None:
@@ -661,7 +662,7 @@ class FabAuth:
 
     def _fetch_public_key_from_aad(self, token):
         jwks_url = f"{self._get_authority_url()}/discovery/v2.0/keys"
-        jwks = requests.get(jwks_url).json()
+        jwks = requests.get(jwks_url, timeout=con.AAD_JWKS_TIMEOUT_SECONDS).json()
         unverified_header = jwt.get_unverified_header(token)
         public_keys = {}
         for jwk in jwks["keys"]:

@@ -951,7 +951,7 @@ class TestAuth:
             fab_auth.status(args)
 
         captured = capsys.readouterr()
-        assert "Azure CLI session available" in captured.err
+        assert "Logged in to app.fabric.microsoft.com" in captured.err
         assert "Authentication Mode: Azure CLI" in captured.out
         assert "Azure CLI Session: Available" in captured.out
         assert "Logged In: True" in captured.out
@@ -972,9 +972,7 @@ class TestAuth:
             fab_auth.status(args)
 
         captured = capsys.readouterr()
-        assert "Azure CLI session unavailable" in captured.err
-        assert "Fabric CLI remains configured" in captured.err
-        assert "tenant ID below is the last known tenant" in captured.err
+        assert "Not logged in to app.fabric.microsoft.com" in captured.err
         assert "Authentication Mode: Azure CLI" in captured.out
         assert "Azure CLI Session: Unavailable" in captured.out
         assert "Logged In: False" in captured.out

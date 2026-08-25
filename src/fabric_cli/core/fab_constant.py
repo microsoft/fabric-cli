@@ -101,6 +101,9 @@ FAB_CHECK_UPDATES = "check_cli_version_updates"
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
 VERSION_CHECK_TIMEOUT_SECONDS = 3
 
+# Authentication request settings
+AAD_JWKS_TIMEOUT_SECONDS = 10
+
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
     FAB_CONTEXT_PERSISTENCE_ENABLED: ["false", "true"],
