@@ -31,8 +31,7 @@ class TestAuth:
 
             # Assert
             mock_fab_auth_instance = mock_fab_auth.get("instance")
-            mock_fab_auth_instance.set_access_mode.assert_called_with(
-                "user", None)
+            mock_fab_auth_instance.set_access_mode.assert_called_with("user", None)
             assert_get_access_token(mock_fab_auth_instance)
             assert result is True
 
@@ -83,8 +82,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with secret",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch("fabric_cli.utils.fab_ui.prompt_password", return_value=""),
         ):
             args = prepare_auth_args()
@@ -128,8 +126,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with secret",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password", side_effect=cancelled_prompt
             ),
@@ -163,8 +160,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with secret",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password", return_value="mock_password"
             ),
@@ -209,8 +205,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with federated credential",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_federated_token",
@@ -256,8 +251,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with federated credential",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="",
@@ -303,8 +297,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with federated credential",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 side_effect=cancelled_prompt,
@@ -341,8 +334,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -394,8 +386,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=cancelled_prompt),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=cancelled_prompt),
         ):
             args = prepare_auth_args()
 
@@ -426,8 +417,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -473,8 +463,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -511,8 +500,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -560,8 +548,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -600,8 +587,7 @@ class TestAuth:
                 "fabric_cli.utils.fab_ui.prompt_select_item",
                 return_value="Service principal authentication with certificate",
             ),
-            patch("fabric_cli.utils.fab_ui.prompt_ask",
-                  side_effect=mock_prompt_ask),
+            patch("fabric_cli.utils.fab_ui.prompt_ask", side_effect=mock_prompt_ask),
             patch(
                 "fabric_cli.utils.fab_ui.prompt_password",
                 return_value="mocked_cert_password",
@@ -721,8 +707,7 @@ class TestAuth:
 
         # Assert
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        mock_fab_auth_instance.set_access_mode.assert_called_with(
-            "managed_identity")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("managed_identity")
         mock_fab_auth_instance.set_managed_identity.assert_called_with(None)
         assert_get_access_token(mock_fab_auth_instance)
 
@@ -983,17 +968,29 @@ class TestAuthAzureCli:
         assert_get_access_token(mock_fab_auth_instance)
         assert result is True
 
-    def test_init_with_azure_cli_flag_ignores_tenant(
-        self, mock_fab_auth, mock_fab_context
+    @pytest.mark.parametrize(
+        "other_auth_arg",
+        [
+            pytest.param({"tenant": "my-tenant"}, id="tenant"),
+            pytest.param({"identity": True}, id="identity"),
+            pytest.param({"username": "client-id"}, id="username"),
+            pytest.param({"password": "client-secret"}, id="password"),
+            pytest.param({"certificate": "certificate.pem"}, id="certificate"),
+            pytest.param({"federated_token": "federated-token"}, id="federated-token"),
+        ],
+    )
+    def test_init_with_azure_cli_flag_ignores_other_auth_args(
+        self, mock_fab_auth, mock_fab_context, other_auth_arg
     ):
-        """fab auth login --azure-cli --tenant should ignore tenant (not supported)."""
-        args = prepare_auth_args({"azure_cli": True, "tenant": "my-tenant"})
+        """Arguments for other auth modes should not affect Azure CLI auth."""
+        args = prepare_auth_args({"azure_cli": True, **other_auth_arg})
 
         result = fab_auth.init(args)
 
         mock_fab_auth_instance = mock_fab_auth.get("instance")
-        # set_access_mode called without tenant for azure_cli
         mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+        mock_fab_auth_instance.set_managed_identity.assert_not_called()
+        mock_fab_auth_instance.set_spn.assert_not_called()
         assert_get_access_token(mock_fab_auth_instance)
         assert result is True
 

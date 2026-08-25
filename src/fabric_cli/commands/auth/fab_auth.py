@@ -204,7 +204,6 @@ def init(args: Namespace) -> Any:
     return True
 
 
-
 def logout(args: Namespace) -> None:
     FabAuth().logout()
 
