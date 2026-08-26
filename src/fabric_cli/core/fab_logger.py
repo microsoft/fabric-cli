@@ -282,3 +282,6 @@ def suppress_azure_sdk_logging() -> None:
         azure_logger.handlers.clear()
         azure_logger.addHandler(logging.NullHandler())
         azure_logger.propagate = False
+
+
+suppress_azure_sdk_logging()

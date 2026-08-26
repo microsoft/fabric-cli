@@ -1014,7 +1014,7 @@ class TestAuth:
 class TestAuthAzureCli:
     """Command-level tests for Azure CLI auth paths."""
 
-    def test_init_with_azure_cli_flag(self, mock_fab_auth, mock_fab_context):
+    def test_init_with_azure_cli_flag_success(self, mock_fab_auth, mock_fab_context):
         """fab auth login --azure-cli should set azure_cli mode."""
         args = prepare_auth_args({"azure_cli": True})
 
@@ -1044,7 +1044,7 @@ class TestAuthAzureCli:
             ),
         ],
     )
-    def test_init_with_azure_cli_flag_rejects_other_auth_args(
+    def test_init_with_azure_cli_flag_rejects_other_auth_args_failure(
         self, mock_fab_auth, other_auth_arg, expected_flag
     ):
         """Azure CLI auth cannot be combined with another auth mode."""
@@ -1054,11 +1054,14 @@ class TestAuthAzureCli:
             fab_auth.init(args)
 
         assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "--azure-cli" in ex.value.message
-        assert expected_flag in ex.value.message
+        assert ex.value.message == (
+            ErrorMessages.Auth.incompatible_authentication_arguments(
+                ["--azure-cli", expected_flag]
+            )
+        )
         assert_fab_auth_not_called(mock_fab_auth)
 
-    def test_init_with_interactive_azure_cli_selection(
+    def test_init_with_interactive_azure_cli_selection_success(
         self, mock_fab_auth, mock_fab_context
     ):
         """Interactive menu Azure CLI selection should set azure_cli mode."""
@@ -1075,20 +1078,44 @@ class TestAuthAzureCli:
         assert_fab_context(mock_fab_context)
         assert result is True
 
-    def test_failed_azure_cli_token_acquisition_raises(
+    def test_interactive_azure_cli_selection_rejects_tenant_failure(
+        self, mock_fab_auth
+    ):
+        args = prepare_auth_args({"tenant": "my-tenant"})
+
+        with (
+            patch(
+                "fabric_cli.utils.fab_ui.prompt_select_item",
+                return_value="Azure CLI (existing 'az login' session)",
+            ),
+            pytest.raises(FabricCLIError) as ex,
+        ):
+            fab_auth.init(args)
+
+        assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
+        assert ex.value.message == (
+            ErrorMessages.Auth.incompatible_authentication_arguments(
+                ["--azure-cli", "--tenant"]
+            )
+        )
+        assert_fab_auth_not_called(mock_fab_auth)
+
+    def test_azure_cli_token_acquisition_error_propagates_failure(
         self, mock_fab_auth, mock_fab_context
     ):
         """If token acquisition fails, error propagates (no rollback, consistent with MSAL)."""
         args = prepare_auth_args({"azure_cli": True})
         mock_fab_auth_instance = mock_fab_auth.get("instance")
         mock_fab_auth_instance.get_access_token.side_effect = FabricCLIError(
-            "Azure CLI is not installed or not logged in",
-            "auth_error",
+            ErrorMessages.Auth.azure_cli_not_available(),
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
         )
 
-        with pytest.raises(FabricCLIError, match="not installed or not logged in"):
+        with pytest.raises(FabricCLIError) as ex:
             fab_auth.init(args)
 
+        assert ex.value.message == ErrorMessages.Auth.azure_cli_not_available()
+        assert ex.value.status_code == fab_constant.ERROR_AUTHENTICATION_FAILED
         mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
 
 

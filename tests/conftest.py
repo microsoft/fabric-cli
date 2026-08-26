@@ -89,3 +89,41 @@ def reset_context():
     context_instance._runtime_mode = fab_constant.FAB_MODE_COMMANDLINE
 
     yield context_instance
+
+
+@pytest.fixture
+def azure_cli_auth_fixture(monkeypatch, tmp_path):
+    """Isolate Azure CLI authentication state and files for a test."""
+    from fabric_cli.core.fab_auth import FabAuth
+    from fabric_cli.core.fab_context import Context
+
+    monkeypatch.setattr(
+        "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
+    )
+    for variable in (
+        "FAB_TOKEN",
+        "FAB_TOKEN_ONELAKE",
+        "FAB_TOKEN_AZURE",
+        "FAB_TENANT_ID",
+        "FAB_SPN_CLIENT_ID",
+        "FAB_SPN_CLIENT_SECRET",
+        "FAB_SPN_CERT_PATH",
+        "FAB_SPN_CERT_PASSWORD",
+        "FAB_SPN_FEDERATED_TOKEN",
+        "FAB_MANAGED_IDENTITY",
+    ):
+        monkeypatch.delenv(variable, raising=False)
+
+    auth = FabAuth()
+    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
+    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda _: {"tid": "test-tenant"})
+    auth._azure_cli_credential = None
+    auth._auth_info = {}
+    auth.app = None
+
+    context = Context()
+    context._context = None
+    monkeypatch.setattr(context, "_context_file", str(tmp_path / "context.json"))
+
+    return auth

@@ -35,13 +35,9 @@ class TestMainModule:
                     mock_get_parsers.return_value = (mock_parser, mock_subparsers)
 
                     with patch("fabric_cli.core.fab_state_config.init_defaults"):
-                        with patch(
-                            "fabric_cli.core.fab_logger.suppress_azure_sdk_logging"
-                        ) as mock_suppress_azure_sdk_logging:
-                            main()
+                        main()
 
                     mock_start_interactive.assert_called_once()
-                    mock_suppress_azure_sdk_logging.assert_called_once_with()
 
     def test_start_interactive_mode_directly_success(self):
         """Test that start_interactive_mode can be called directly without infinite loops."""

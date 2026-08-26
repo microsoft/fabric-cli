@@ -31,6 +31,9 @@ fab auth login [--tenant <tenant_id>]
 ```
 
 #### Azure CLI
+
+`--tenant` cannot be used with `--azure-cli`. Uses the tenant from the existing `az login` session. 
+
 ```
 fab auth login --azure-cli
 ```

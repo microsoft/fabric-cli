@@ -76,6 +76,7 @@ def init(args: Namespace) -> Any:
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Azure CLI"):
+                _validate_azure_cli_auth_args(args, azure_cli_selected=True)
                 FabAuth().set_access_mode("azure_cli")
                 _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
@@ -300,12 +301,13 @@ def status(args: Namespace) -> None:
 
 
 # Utils
-def _validate_azure_cli_auth_args(args: Namespace) -> None:
-    if not getattr(args, "azure_cli", False):
+def _validate_azure_cli_auth_args(
+    args: Namespace, azure_cli_selected: bool = False
+) -> None:
+    if not azure_cli_selected and not getattr(args, "azure_cli", False):
         return
 
     auth_args = {
-        "azure_cli": "--azure-cli",
         "identity": "--identity",
         "username": "--username",
         "password": "--password",
@@ -313,7 +315,7 @@ def _validate_azure_cli_auth_args(args: Namespace) -> None:
         "certificate": "--certificate",
         "federated_token": "--federated-token",
     }
-    incompatible = [
+    incompatible = ["--azure-cli"] + [
         flag for attribute, flag in auth_args.items() if getattr(args, attribute, None)
     ]
 

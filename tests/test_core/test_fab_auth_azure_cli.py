@@ -25,62 +25,22 @@ def _mock_credential(mock_class):
     return mock_credential, mock_token
 
 
-@pytest.fixture(autouse=True)
-def temp_dir_fixture(monkeypatch, tmp_path):
-    """Create a temporary directory and configure FabAuth to use it."""
-    monkeypatch.setattr(
-        "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
-    )
-    # Clear env vars that would interfere with auth
-    for var in (
-        "FAB_TOKEN",
-        "FAB_TOKEN_ONELAKE",
-        "FAB_TOKEN_AZURE",
-        "FAB_TENANT_ID",
-        "FAB_SPN_CLIENT_ID",
-        "FAB_SPN_CLIENT_SECRET",
-        "FAB_SPN_CERT_PATH",
-        "FAB_SPN_CERT_PASSWORD",
-        "FAB_SPN_FEDERATED_TOKEN",
-        "FAB_MANAGED_IDENTITY",
-    ):
-        monkeypatch.delenv(var, raising=False)
-    # Clear singleton state between tests
-    auth = FabAuth()
-    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
-    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
-    auth._azure_cli_credential = None
-    auth._auth_info = {}
-    auth.app = None
-    context = Context()
-    context._context = None
-    monkeypatch.setattr(context, "_context_file", str(tmp_path / "context.json"))
-
-    monkeypatch.setattr(
-        auth,
-        "_decode_jwt_token",
-        MagicMock(return_value={"tid": "test-tenant"}),
-    )
-
-    return str(tmp_path)
-
-
 class TestAzureCliIdentityType:
     """Test that azure_cli is a valid identity type."""
 
-    def test_azure_cli_in_auth_keys(self):
+    def test_azure_cli_in_auth_keys_success(self):
         """azure_cli should be in the allowed identity types."""
         assert "azure_cli" in con.AUTH_KEYS[con.IDENTITY_TYPE]
 
-    def test_set_access_mode_accepts_azure_cli(self, temp_dir_fixture):
+    def test_set_access_mode_accepts_azure_cli_success(self, azure_cli_auth_fixture):
         """set_access_mode should accept azure_cli without raising."""
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
         assert auth.get_identity_type() == "azure_cli"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_first_token_acquisition_stores_tenant(
-        self, mock_credential_class, temp_dir_fixture
+    def test_first_token_acquisition_stores_tenant_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """First token acquisition should discover and store tenant from JWT."""
         _mock_credential(mock_credential_class)
@@ -96,8 +56,8 @@ class TestAzureCliIdentityType:
         assert auth.get_tenant_id() == "discovered-tenant"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_tenant_updated_on_subsequent_calls(
-        self, mock_credential_class, temp_dir_fixture
+    def test_tenant_updated_on_subsequent_calls_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """A changed Azure CLI tenant should reset context and cached resources."""
         mock_credential, _ = _mock_credential(mock_credential_class)
@@ -128,8 +88,8 @@ class TestAzureCliTokenAcquisition:
     """Test token acquisition via AzureCliCredential."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_acquire_token_dispatches_to_azure_cli(
-        self, mock_credential_class, temp_dir_fixture
+    def test_acquire_token_dispatches_to_azure_cli_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """acquire_token should use AzureCliCredential for azure_cli identity."""
         mock_credential, _ = _mock_credential(mock_credential_class)
@@ -147,7 +107,7 @@ class TestAzureCliTokenAcquisition:
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
     def test_acquire_token_from_azure_cli_success(
-        self, mock_credential_class, temp_dir_fixture
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """_acquire_token_from_azure_cli should return token dict on success."""
         mock_credential, _ = _mock_credential(mock_credential_class)
@@ -164,8 +124,8 @@ class TestAzureCliTokenAcquisition:
         )
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_acquire_token_credential_inherits_azure_cli_context(
-        self, mock_credential_class, temp_dir_fixture
+    def test_acquire_token_credential_inherits_azure_cli_context_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """Credential should be created without tenant_id — inherits Azure CLI context."""
         _mock_credential(mock_credential_class)
@@ -181,8 +141,8 @@ class TestAzureCliTokenAcquisition:
             assert call == ((), {}), f"Expected no tenant_id, got {call}"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_acquire_token_from_azure_cli_credential_unavailable(
-        self, mock_credential_class, temp_dir_fixture
+    def test_acquire_token_from_azure_cli_credential_unavailable_failure(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """Should raise FabricCLIError when Azure CLI is not logged in."""
         from fabric_cli.core.fab_auth import CredentialUnavailableError
@@ -204,8 +164,8 @@ class TestAzureCliTokenAcquisition:
         assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_sdk_exception_surfaces_message(
-        self, mock_credential_class, temp_dir_fixture
+    def test_sdk_exception_surfaces_message_failure(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """SDK exceptions (pre-sanitized by azure-identity) surface their message."""
         from azure.core.exceptions import ClientAuthenticationError
@@ -226,8 +186,8 @@ class TestAzureCliTokenAcquisition:
         assert "Tenant not found" in str(exc_info.value)
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_unknown_exception_returns_safe_message(
-        self, mock_credential_class, temp_dir_fixture
+    def test_unknown_exception_returns_safe_message_failure(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """Non-SDK exceptions should always return a safe generic message."""
         mock_credential = MagicMock()
@@ -249,8 +209,8 @@ class TestAzureCliSingletonCredential:
     """Test singleton AzureCliCredential lifecycle."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_singleton_credential_reused_across_calls(
-        self, mock_credential_class, temp_dir_fixture
+    def test_singleton_credential_reused_across_calls_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """Repeated calls should reuse the same AzureCliCredential instance."""
         _mock_credential(mock_credential_class)
@@ -268,8 +228,8 @@ class TestAzureCliSingletonCredential:
         assert mock_credential_class.return_value.get_token.call_count == 2
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_different_scopes_use_same_credential(
-        self, mock_credential_class, temp_dir_fixture
+    def test_different_scopes_use_same_credential_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """Different scopes should use the same singleton credential instance."""
         _mock_credential(mock_credential_class)
@@ -286,7 +246,9 @@ class TestAzureCliSingletonCredential:
         assert mock_credential_class.return_value.get_token.call_count == 2
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_logout_clears_credential(self, mock_credential_class, temp_dir_fixture):
+    def test_logout_clears_credential_success(
+        self, mock_credential_class, azure_cli_auth_fixture
+    ):
         """logout() should clear the credential instance."""
         _mock_credential(mock_credential_class)
 
@@ -304,7 +266,7 @@ class TestAzureCliScopeHandling:
     """Test that different scopes are correctly passed to Azure CLI."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_onelake_scope(self, mock_credential_class, temp_dir_fixture):
+    def test_onelake_scope_success(self, mock_credential_class, azure_cli_auth_fixture):
         """OneLake scope should be passed correctly."""
         mock_credential, _ = _mock_credential(mock_credential_class)
 
@@ -319,7 +281,9 @@ class TestAzureCliScopeHandling:
         )
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_azure_management_scope(self, mock_credential_class, temp_dir_fixture):
+    def test_azure_management_scope_success(
+        self, mock_credential_class, azure_cli_auth_fixture
+    ):
         """Azure management scope should be passed correctly."""
         mock_credential, _ = _mock_credential(mock_credential_class)
 
@@ -338,7 +302,9 @@ class TestAzureCliLoginLogoutLifecycle:
     """Test login/logout lifecycle and credential management."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_logout_clears_credential(self, mock_credential_class, temp_dir_fixture):
+    def test_logout_clears_credential_success(
+        self, mock_credential_class, azure_cli_auth_fixture
+    ):
         """logout() should clear the credential instance."""
         _mock_credential(mock_credential_class)
 
@@ -353,8 +319,8 @@ class TestAzureCliLoginLogoutLifecycle:
         assert auth._azure_cli_credential is None
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_first_acquisition_discovers_tenant(
-        self, mock_credential_class, temp_dir_fixture
+    def test_first_acquisition_discovers_tenant_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """First token acquisition should discover tenant from JWT claims."""
         _mock_credential(mock_credential_class)
@@ -369,7 +335,9 @@ class TestAzureCliLoginLogoutLifecycle:
         assert auth.get_tenant_id() == "discovered-tenant"
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_re_login_resets_state(self, mock_credential_class, temp_dir_fixture):
+    def test_re_login_resets_state_success(
+        self, mock_credential_class, azure_cli_auth_fixture
+    ):
         """Re-login (set_access_mode again) should reset state."""
         _mock_credential(mock_credential_class)
         auth = FabAuth()
@@ -387,8 +355,8 @@ class TestNonAzureCliIsolation:
     """Verify each auth method uses only its own credential path — no overlap."""
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_user_identity_does_not_invoke_azure_cli(
-        self, mock_credential_class, temp_dir_fixture
+    def test_user_identity_does_not_invoke_azure_cli_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """When identity_type is 'user', AzureCliCredential must not be instantiated."""
         auth = FabAuth()
@@ -407,8 +375,8 @@ class TestNonAzureCliIsolation:
         mock_credential_class.assert_not_called()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_service_principal_does_not_invoke_azure_cli(
-        self, mock_credential_class, temp_dir_fixture
+    def test_service_principal_does_not_invoke_azure_cli_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """When identity_type is 'service_principal', AzureCliCredential must not be instantiated."""
         auth = FabAuth()
@@ -426,8 +394,8 @@ class TestNonAzureCliIsolation:
         mock_credential_class.assert_not_called()
 
     @patch("fabric_cli.core.fab_auth.AzureCliCredential")
-    def test_azure_cli_does_not_invoke_msal_app(
-        self, mock_credential_class, temp_dir_fixture
+    def test_azure_cli_does_not_invoke_msal_app_success(
+        self, mock_credential_class, azure_cli_auth_fixture
     ):
         """When identity_type is 'azure_cli', MSAL app methods must not be called."""
         _mock_credential(mock_credential_class)

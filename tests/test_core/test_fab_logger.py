@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import platform
+import subprocess
+import sys
 import time
 from unittest.mock import patch
 
@@ -13,7 +15,6 @@ from requests import RequestException
 
 from fabric_cli.core import fab_logger as logger
 from fabric_cli.core import fab_state_config
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 def test_log_warning():
@@ -352,6 +353,35 @@ def test_suppress_azure_sdk_logging_suppresses_azure_sdk_records() -> None:
         for azure_logger, (handlers, propagate) in zip(azure_loggers, original_states):
             azure_logger.handlers = handlers
             azure_logger.propagate = propagate
+
+
+def test_import_suppresses_azure_sdk_logging() -> None:
+    script = """
+import json
+import logging
+
+from fabric_cli.core import fab_logger
+
+print(json.dumps({
+    namespace: {
+        "handlers": [type(handler).__name__ for handler in logging.getLogger(namespace).handlers],
+        "propagate": logging.getLogger(namespace).propagate,
+    }
+    for namespace in ("azure.identity", "azure.core")
+}))
+"""
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert json.loads(result.stdout) == {
+        "azure.identity": {"handlers": ["NullHandler"], "propagate": False},
+        "azure.core": {"handlers": ["NullHandler"], "propagate": False},
+    }
 
 
 def test_get_log_file_path(monkeypatch):
