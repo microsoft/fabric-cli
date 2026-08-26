@@ -41,7 +41,7 @@ def init(args: Namespace) -> Any:
         _acquire_default_access_tokens(FabAuth())
         Context().context = FabAuth().get_tenant()
 
-    elif any([args.username, args.password, args.certificate, args.federated_token]):
+    elif any([args.username, args.password]):
         if not (
             all([args.username, args.tenant])
             and any([args.password, args.certificate, args.federated_token])
