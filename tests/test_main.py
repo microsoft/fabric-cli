@@ -2,138 +2,49 @@
 # Licensed under the MIT License.
 
 import sys
+from unittest.mock import patch
 
-import argcomplete
-
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
-from fabric_cli.core.fab_commands import Command
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
-from fabric_cli.parsers import fab_auth_parser as auth_parser
-from fabric_cli.utils import fab_ui
+import pytest
 
 
-def main():
-    parser, subparsers = get_global_parser_and_subparsers()
+class TestMainModule:
+    """Test suite for main module functionality."""
 
-    argcomplete.autocomplete(parser, default_completer=None)
+    def test_main_no_args_starts_interactive_mode_success(self):
+        """Test that running 'fab' without arguments automatically enters interactive mode."""
+        with patch("fabric_cli.core.fab_interactive.start_interactive_mode") as mock_start_interactive:
+            from fabric_cli.main import main
 
-    args = parser.parse_args()
+            with patch.object(sys, 'argv', ['fab']):
+                with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
+                    mock_parser = type('MockParser', (), {
+                        'parse_args': lambda: type('Args', (), {
+                            'command': None,
+                            'version': False
+                        })(),
+                        'set_mode': lambda mode: None
+                    })()
+                    mock_subparsers = object()
+                    mock_get_parsers.return_value = (mock_parser, mock_subparsers)
+                    
+                    with patch("fabric_cli.core.fab_state_config.init_defaults"):
+                        main()
+                    
+                    mock_start_interactive.assert_called_once()
 
-    try:
-        fab_state_config.init_defaults()
-        
-        if args.command == "auth" and args.auth_command == None:
-            auth_parser.show_help(args)
-            return
-
-        if args.command == "auth" and args.auth_command == "login":
-            from fabric_cli.commands.auth import fab_auth
-
-            fab_auth.init(args)
-            return
-
-        if args.command == "auth" and args.auth_command == "logout":
-            from fabric_cli.commands.auth import fab_auth
-
-            fab_auth.logout(args)
-            return
-
-        if args.command == "auth" and args.auth_command == "status":
-            from fabric_cli.commands.auth import fab_auth
-
-            fab_auth.status(args)
-            return
-
-        last_exit_code = fab_constant.EXIT_CODE_SUCCESS
-
-        if args.command:
-            if args.command not in ["auth"]:
-                fab_logger.print_log_file_path()
-                parser.set_mode(fab_constant.FAB_MODE_COMMANDLINE)
-
-                if isinstance(args.command, list):
-                    commands_execs = 0
-                    for index, command in enumerate(args.command):
-                        command_parts = command.strip().split()
-                        if command_parts:  # Ensure we have valid command parts
-                            subparser = subparsers.choices[command_parts[0]]
-                            subparser_args = subparser.parse_args(command_parts[1:])
-                            subparser_args.command = command_parts[0]
-                            last_exit_code = _execute_command(
-                                subparser_args, subparsers, parser
-                            )
-                            commands_execs += 1
-                            if index != len(args.command) - 1:
-                                fab_ui.print_grey("------------------------------")
-                    if commands_execs > 1:
-                        fab_ui.print("\n")
-                        fab_ui.print_output_format(
-                            args, message=f"{len(args.command)} commands executed."
-                        )
-                else:
-                    last_exit_code = _execute_command(args, subparsers, parser)
-
-                if last_exit_code:
-                    sys.exit(last_exit_code)
-                else:
-                    sys.exit(fab_constant.EXIT_CODE_SUCCESS)
-
-        elif args.version:
-            fab_ui.print_version()
-        else:
-            # AUTO-REPL: When no command is provided, automatically enter interactive mode
+    def test_start_interactive_mode_directly_success(self):
+        """Test that start_interactive_mode can be called directly without infinite loops."""
+        # Mock the InteractiveCLI to prevent actual interactive session
+        with patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
+            from unittest.mock import Mock
+            
+            mock_cli_instance = Mock()
+            mock_cli_instance._is_running = False
+            mock_cli_instance.start_interactive = Mock()  # Mock the start_interactive method
+            mock_interactive_cli.return_value = mock_cli_instance
+            
             from fabric_cli.core.fab_interactive import start_interactive_mode
-
             start_interactive_mode()
-
-    except KeyboardInterrupt:
-        _handle_keyboard_interrupt(args)
-    except Exception as err:
-        _handle_unexpected_error(err, args)
-
-
-def _handle_keyboard_interrupt(args):
-    """Handle KeyboardInterrupt with proper error formatting."""
-    fab_ui.print_output_error(
-        FabricCLIError(
-            "Operation cancelled",
-            fab_constant.ERROR_OPERATION_CANCELLED,
-        ),
-        output_format_type=args.output_format,
-    )
-    sys.exit(fab_constant.EXIT_CODE_CANCELLED_OR_MISUSE_BUILTINS)
-
-
-def _handle_unexpected_error(err, args):
-    """Handle unexpected errors with proper error formatting."""
-    try:
-        error_message = str(err.args[0]) if err.args else str(err)
-    except:
-        error_message = "An unexpected error occurred"
-
-    fab_ui.print_output_error(
-        FabricCLIError(error_message, fab_constant.ERROR_UNEXPECTED_ERROR),
-        output_format_type=args.output_format,
-    )
-    sys.exit(fab_constant.EXIT_CODE_ERROR)
-
-
-def _execute_command(args, subparsers, parser):
-    if args.command in subparsers.choices:
-        subparser_args = args
-        subparser_args.command = args.command
-        subparser_args.fab_mode = parser.get_mode()
-        subparser_args.command_path = Command.get_command_path(subparser_args)
-
-        if hasattr(subparser_args, "func"):
-            return subparser_args.func(subparser_args)
-        else:
-            return None
-    else:
-        parser.error(f"invalid choice: '{args.command.strip()}'")
-        return None
-
-
-if __name__ == "__main__":
-    main()
+            
+            mock_interactive_cli.assert_called_once()
+            mock_cli_instance.start_interactive.assert_called_once()
