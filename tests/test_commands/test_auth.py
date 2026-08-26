@@ -919,7 +919,6 @@ class TestAuth:
             auth_subcommand="status",
             output_format="text",
         )
-
         with patch(
             "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
             return_value={

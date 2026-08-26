@@ -18,13 +18,13 @@ def _build_auth_parser() -> CustomArgumentParser:
 class TestAuthParserAzureCli:
     """Verify --azure-cli flag is parsed correctly."""
 
-    def test_azure_cli_flag_sets_attribute(self) -> None:
+    def test_azure_cli_flag_sets_attribute_success(self) -> None:
         """--azure-cli should map to args.azure_cli=True."""
         parser = _build_auth_parser()
         args = parser.parse_args(["auth", "login", "--azure-cli"])
         assert args.azure_cli is True
 
-    def test_azure_cli_flag_absent_defaults_false(self) -> None:
+    def test_azure_cli_flag_absent_defaults_false_success(self) -> None:
         """Without --azure-cli, azure_cli should be falsy."""
         parser = _build_auth_parser()
         args = parser.parse_args(["auth", "login"])
