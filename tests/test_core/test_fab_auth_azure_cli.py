@@ -40,20 +40,21 @@ def temp_dir_fixture(monkeypatch, tmp_path):
         "FAB_SPN_CLIENT_ID",
         "FAB_SPN_CLIENT_SECRET",
         "FAB_SPN_CERT_PATH",
+        "FAB_SPN_CERT_PASSWORD",
+        "FAB_SPN_FEDERATED_TOKEN",
         "FAB_MANAGED_IDENTITY",
     ):
         monkeypatch.delenv(var, raising=False)
     # Clear singleton state between tests
     auth = FabAuth()
+    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
+    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
     auth._azure_cli_credential = None
     auth._auth_info = {}
     auth.app = None
     context = Context()
     context._context = None
     monkeypatch.setattr(context, "_context_file", str(tmp_path / "context.json"))
-    # Update file paths to use the test's tmp_path
-    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
-    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
 
     monkeypatch.setattr(
         auth,
@@ -373,9 +374,7 @@ class TestAzureCliLoginLogoutLifecycle:
         _mock_credential(mock_credential_class)
         auth = FabAuth()
         auth.set_access_mode("azure_cli")
-        with patch.object(
-            auth, "_decode_jwt_token", return_value={"tid": "tenant-A"}
-        ):
+        with patch.object(auth, "_decode_jwt_token", return_value={"tid": "tenant-A"}):
             auth._acquire_token_from_azure_cli(con.SCOPE_FABRIC_DEFAULT)
         assert auth.get_tenant_id() == "tenant-A"
 

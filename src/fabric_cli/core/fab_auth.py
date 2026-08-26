@@ -527,7 +527,6 @@ class FabAuth:
         try:
             token = None
             env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
-
             identity_type = self.get_identity_type()
 
             if identity_type == "service_principal":

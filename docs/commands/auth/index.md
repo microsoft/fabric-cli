@@ -23,8 +23,11 @@ Authenticate with Fabric CLI.
 **Usage:**
 
 #### Interactive login
+
+Uses the default tenant unless `--tenant` is specified.
+
 ```
-fab auth login
+fab auth login [--tenant <tenant_id>]
 ```
 
 #### Azure CLI

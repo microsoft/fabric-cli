@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import argparse
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -719,9 +718,7 @@ class TestAuth:
     def test_init_with_mi_auth_user_assigned_command_line(
         self, mock_fab_auth, mock_fab_context
     ):
-        args = prepare_auth_args(
-            {"identity": True, "username": "mocked_client_id"}
-        )
+        args = prepare_auth_args({"identity": True, "username": "mocked_client_id"})
 
         fab_auth.init(args)
 
@@ -1034,9 +1031,7 @@ class TestAuthAzureCli:
             pytest.param({"tenant": "my-tenant"}, "--tenant", id="tenant"),
             pytest.param({"identity": True}, "--identity", id="identity"),
             pytest.param({"username": "client-id"}, "--username", id="username"),
-            pytest.param(
-                {"password": "client-secret"}, "--password", id="password"
-            ),
+            pytest.param({"password": "client-secret"}, "--password", id="password"),
             pytest.param(
                 {"certificate": "certificate.pem"},
                 "--certificate",
@@ -1098,69 +1093,6 @@ class TestAuthAzureCli:
 
 
 class TestAuthArgumentValidation:
-    @pytest.mark.parametrize(
-        ("other_auth_arg", "expected_flag"),
-        [
-            pytest.param({"tenant": "my-tenant"}, "--tenant", id="tenant"),
-            pytest.param(
-                {"password": "client-secret"}, "--password", id="password"
-            ),
-            pytest.param(
-                {"certificate": "certificate.pem"},
-                "--certificate",
-                id="certificate",
-            ),
-            pytest.param(
-                {"federated_token": "federated-token"},
-                "--federated-token",
-                id="federated-token",
-            ),
-        ],
-    )
-    def test_managed_identity_rejects_other_auth_modes(
-        self, mock_fab_auth, other_auth_arg, expected_flag
-    ):
-        args = prepare_auth_args({"identity": True, **other_auth_arg})
-
-        with pytest.raises(FabricCLIError) as ex:
-            fab_auth.init(args)
-
-        assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "--identity" in ex.value.message
-        assert expected_flag in ex.value.message
-        assert_fab_auth_not_called(mock_fab_auth)
-
-    @pytest.mark.parametrize(
-        "conflicting_credentials",
-        [
-            pytest.param(
-                {"password": "secret", "federated_token": "token"},
-                id="secret-and-federated-token",
-            ),
-            pytest.param(
-                {"certificate": "certificate.pem", "federated_token": "token"},
-                id="certificate-and-federated-token",
-            ),
-        ],
-    )
-    def test_service_principal_rejects_mixed_credential_modes(
-        self, mock_fab_auth, conflicting_credentials
-    ):
-        args = prepare_auth_args(
-            {
-                "username": "client-id",
-                "tenant": "tenant-id",
-                **conflicting_credentials,
-            }
-        )
-
-        with pytest.raises(FabricCLIError) as ex:
-            fab_auth.init(args)
-
-        assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
-        assert "--federated-token" in ex.value.message
-        assert_fab_auth_not_called(mock_fab_auth)
-
     def test_service_principal_certificate_allows_password(
         self, mock_fab_auth, mock_fab_context
     ):

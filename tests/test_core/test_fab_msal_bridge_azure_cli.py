@@ -24,6 +24,8 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
     monkeypatch.delenv("FAB_TOKEN_AZURE", raising=False)
     auth = FabAuth()
+    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
+    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
     auth._azure_cli_credential = None
     auth._auth_info = {}
 

@@ -23,7 +23,7 @@ def init(args: Namespace) -> Any:
         "Managed identity authentication",
     ]
 
-    _validate_auth_args(args)
+    _validate_azure_cli_auth_args(args)
 
     utils_mem_store.clear_caches()
 
@@ -300,7 +300,10 @@ def status(args: Namespace) -> None:
 
 
 # Utils
-def _validate_auth_args(args: Namespace) -> None:
+def _validate_azure_cli_auth_args(args: Namespace) -> None:
+    if not getattr(args, "azure_cli", False):
+        return
+
     auth_args = {
         "azure_cli": "--azure-cli",
         "identity": "--identity",
@@ -310,35 +313,13 @@ def _validate_auth_args(args: Namespace) -> None:
         "certificate": "--certificate",
         "federated_token": "--federated-token",
     }
-    specified_args = [
-        attribute for attribute in auth_args if getattr(args, attribute, None)
+    incompatible = [
+        flag for attribute, flag in auth_args.items() if getattr(args, attribute, None)
     ]
 
-    incompatible: list[str] = []
-    if "azure_cli" in specified_args:
-        incompatible = specified_args if len(specified_args) > 1 else []
-    elif "identity" in specified_args:
-        incompatible = [
-            attribute
-            for attribute in specified_args
-            if attribute not in {"identity", "username"}
-        ]
-        if incompatible:
-            incompatible.insert(0, "identity")
-    elif "federated_token" in specified_args:
-        incompatible = [
-            attribute
-            for attribute in specified_args
-            if attribute in {"password", "certificate"}
-        ]
-        if incompatible:
-            incompatible.append("federated_token")
-
-    if incompatible:
+    if len(incompatible) > 1:
         raise FabricCLIError(
-            ErrorMessages.Auth.incompatible_authentication_arguments(
-                [auth_args[attribute] for attribute in incompatible]
-            ),
+            ErrorMessages.Auth.incompatible_authentication_arguments(incompatible),
             fab_constant.ERROR_INVALID_INPUT,
         )
 
