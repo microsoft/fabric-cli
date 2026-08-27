@@ -1014,6 +1014,7 @@ def delete_external_data_share_from_cache(
 def clear_caches() -> None:
     _get_workspaces_from_cache.cache.clear()
     _get_workspace_items_from_cache.cache.clear()
+    _get_workspace_folders_from_cache.cache.clear()
     _get_spark_pools_from_cache.cache.clear()
     _get_managed_identities_from_cache.cache.clear()
     _get_managed_private_endpoints_from_cache.cache.clear()
