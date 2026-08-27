@@ -276,8 +276,6 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     run_update_parser.add_argument(
         "--days", metavar="", help="Days of the week. Optional"
     )
-    # Required: an explicit usage string keeps argparse out of its own
-    # usage-wrapping path, which crashes on this parser's `metavar=""` args.
     run_update_parser.usage = f"{utils_error_parser.get_usage_prog(run_update_parser)}"
     run_update_parser.set_defaults(func=lazy_command(_jobs_module_path, 'run_update_command'))
 
