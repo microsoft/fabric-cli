@@ -108,6 +108,20 @@ def _find_parser(command: str) -> argparse.ArgumentParser:
     raise AssertionError(f"parser '{command}' not found")
 
 
+# Every flag `job run-update` defines itself, excluding global flags.
+_RUN_UPDATE_FLAGS = (
+    "--id",
+    "--input",
+    "--enable",
+    "--disable",
+    "--type",
+    "--interval",
+    "--start",
+    "--end",
+    "--days",
+)
+
+
 def test_job_run_update_help_lists_flags() -> None:
     """Regression test for #277."""
     run_update = _find_parser("fab job run-update")
@@ -115,5 +129,34 @@ def test_job_run_update_help_lists_flags() -> None:
     help_message = run_update.format_help()
 
     assert "Usage: job run-update <path>" in help_message
-    for flag in ("--id", "--input", "--enable", "--disable", "--type", "--days"):
-        assert flag in help_message
+    for flag in _RUN_UPDATE_FLAGS:
+        assert flag in help_message, f"'{flag}' missing from help"
+
+
+def test_required_flags_are_not_bracketed_in_usage() -> None:
+    """Brackets denote optionality, so a required flag must not be bracketed."""
+    run_update = _find_parser("fab job run-update")
+
+    usage_line = run_update.format_help().splitlines()[0]
+
+    assert "--id" in usage_line
+    assert "[--id]" not in usage_line, "required '--id' must not look optional"
+    # A genuinely optional flag on the same command stays bracketed.
+    assert "[--enable]" in usage_line
+
+
+def test_help_flag_renders_through_real_dispatch(
+    capsys: pytest.CaptureFixture[str], narrow_terminal: None
+) -> None:
+    """`fab job run-update --help` must exit 0 and print help.
+
+    The other tests call `format_help()` directly; this drives the actual
+    `parse_args` -> `print_help` path a user hits from the command line.
+    """
+    root, _ = fab_parser_setup.create_parser_and_subparsers()
+
+    with pytest.raises(SystemExit) as excinfo:
+        root.parse_args(["job", "run-update", "--help"])
+
+    assert excinfo.value.code == 0
+    assert "job run-update" in capsys.readouterr().out

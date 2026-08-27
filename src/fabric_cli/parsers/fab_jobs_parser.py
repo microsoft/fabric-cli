@@ -176,7 +176,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# set up pipeline schedule to run every 10 minutes and enable it",
         "$ job run-sch pip1.DataPipeline --type cron --interval 10 --start 2024-11-15T09:00:00 --end 2024-12-15T10:00:00 --enable \n",
         "# set up pipeline schedule to run every day at 10:00 and 16:00 (disabled by default)",
-        "$ job run-update pip1.DataPipeline --id <schedule_id> --type daily --interval 10:00,16:00 --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
+        "$ job run-sch pip1.DataPipeline --type daily --interval 10:00,16:00 --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
         "# set up pipeline schedule to run every Monday and Friday at 10:00 and 16:00, disabled by default",
         "$ job run-sch pip1.DataPipeline --type weekly --interval 10:00,16:00 --days Monday,Friday --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
         "# set up pipeline schedule with custom input",
