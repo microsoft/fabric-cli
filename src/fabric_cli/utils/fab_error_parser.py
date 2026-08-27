@@ -74,9 +74,10 @@ def get_usage_prog(parser: argparse.ArgumentParser) -> str:
     # Collect positional arguments in `<...>`
     pos_args = [f"<{arg.dest}>" for arg in parser._get_positional_actions()]
 
-    # Collect optional (flag) arguments in `[...]`
+    # Collect optional (flag) arguments in `[...]`. Required flags are left
+    # unbracketed, since brackets denote optionality.
     opt_args = [
-        f"[{arg.option_strings[0]}]"
+        (arg.option_strings[0] if arg.required else f"[{arg.option_strings[0]}]")
         for arg in parser._get_optional_actions()
         if arg.option_strings
     ]

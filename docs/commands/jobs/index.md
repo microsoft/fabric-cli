@@ -15,12 +15,12 @@ The `job` commands provide tools for starting, running, monitoring, and scheduli
 |-----------------|---------------------------|-----------------------------------------------------------------------|
 | `job start`     | Start an item (async)     | `job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>]` |
 | `job run`       | Run an item (sync)        | `job run <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>] [--timeout <seconds>]` |
-| `job run-cancel`| Cancel an item run        | `job run-cancel <path> [--id <id>] [--wait]`                          |
+| `job run-cancel`| Cancel an item run        | `job run-cancel <path> --id <id> [--wait]`                          |
 | `job run-list`  | List item or scheduled job runs | `job run-list <path> [--schedule]`                              |
-| `job run-status`| Get job run details       | `job run-status <path> [--id <id>] [--schedule]`                      |
+| `job run-status`| Get job run details       | `job run-status <path> --id <id> [--schedule]`                      |
 | `job run-sch`   | Schedule a job            | `job run-sch <path> [-i <json_inline_or_path>*] [--type <type>] [--interval <interval>] [--days <days>]` |
-| `job run-update`| Update a scheduled job    | `job run-update <path> [--id <id>] [-i <json_inline_or_path>] [--type <type>] [--enable/--disable]` |
-| `job run-rm`    | Delete a scheduled job    | `job run-rm <path> [--id <scheduled-id>] [--force]` |
+| `job run-update`| Update a scheduled job    | `job run-update <path> --id <id> [-i <json_inline_or_path>] [--type <type>] [--interval <interval>] [--start <start>] [--end <end>] [--days <days>] [--enable/--disable]` |
+| `job run-rm`    | Delete a scheduled job    | `job run-rm <path> --id <scheduled-id> [--force]` |
 
 ---
 
