@@ -67,6 +67,13 @@ def invalid_for_command_line_mode() -> None:
 
 
 def get_usage_prog(parser: argparse.ArgumentParser) -> str:
+    """Build an explicit usage string for a parser.
+
+    Assigning the result to `parser.usage` is load-bearing, not cosmetic: it
+    diverts argparse away from generating and wrapping its own usage line.
+    That generation path asserts on a round-trip re-split which fails for
+    arguments declared with `metavar=""`, crashing help on Python <= 3.12.
+    """
     # Removes 'fab' from %(prog)s
     # Start with the command (like "acl ls" or "acl dir")
     command_part = " ".join(parser.prog.split()[1:])
@@ -82,8 +89,10 @@ def get_usage_prog(parser: argparse.ArgumentParser) -> str:
         if arg.option_strings
     ]
 
-    # Combine parts for the final usage string
-    return f"{command_part} {' '.join(pos_args)} {' '.join(opt_args)}"
+    # Combine parts for the final usage string. Empty sections are dropped so
+    # commands without positionals don't render a double space.
+    sections = [command_part, " ".join(pos_args), " ".join(opt_args)]
+    return " ".join(section for section in sections if section)
 
 
 def map_http_status_code_to_error_code(status_code: int) -> str:
