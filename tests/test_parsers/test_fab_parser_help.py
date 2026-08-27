@@ -54,7 +54,7 @@ _PARSERS = _all_parsers()
 
 
 @pytest.fixture
-def narrow_terminal(monkeypatch):
+def narrow_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
     """Force argparse to wrap usage lines.
 
     `argparse.HelpFormatter` derives its width from `shutil.get_terminal_size()`,
@@ -69,7 +69,9 @@ def narrow_terminal(monkeypatch):
     [(command, parser) for command, parser, _ in _PARSERS],
     ids=[command for command, _, _ in _PARSERS],
 )
-def test_format_help_does_not_raise(command, parser, narrow_terminal):
+def test_format_help_does_not_raise(
+    command: str, parser: argparse.ArgumentParser, narrow_terminal: None
+) -> None:
     """`<command> --help` must render instead of crashing.
 
     Regression test for #277: `job run-update` had no explicit `usage`, so argparse
@@ -85,7 +87,9 @@ def test_format_help_does_not_raise(command, parser, narrow_terminal):
     [(command, parser) for command, parser, is_group in _PARSERS if not is_group],
     ids=[command for command, _, is_group in _PARSERS if not is_group],
 )
-def test_leaf_parsers_declaring_arguments_set_explicit_usage(command, parser):
+def test_leaf_parsers_declaring_arguments_set_explicit_usage(
+    command: str, parser: argparse.ArgumentParser
+) -> None:
     """Leaf commands with their own arguments must set `usage` explicitly.
 
     Relying on argparse's generated usage is what triggered #277. This check is
@@ -104,7 +108,7 @@ def _find_parser(command: str) -> argparse.ArgumentParser:
     raise AssertionError(f"parser '{command}' not found")
 
 
-def test_job_run_update_help_lists_flags():
+def test_job_run_update_help_lists_flags() -> None:
     """Regression test for #277."""
     run_update = _find_parser("fab job run-update")
 
