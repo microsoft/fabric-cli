@@ -74,16 +74,15 @@ def get_usage_prog(parser: argparse.ArgumentParser) -> str:
     # Collect positional arguments in `<...>`
     pos_args = [f"<{arg.dest}>" for arg in parser._get_positional_actions()]
 
-    # Collect optional (flag) arguments in `[...]`. Required flags are left
-    # unbracketed, since brackets denote optionality.
+    # Collect optional (flag) arguments in `[...]`
     opt_args = [
-        (arg.option_strings[0] if arg.required else f"[{arg.option_strings[0]}]")
+        f"[{arg.option_strings[0]}]"
         for arg in parser._get_optional_actions()
         if arg.option_strings
     ]
 
-    sections = [command_part, " ".join(pos_args), " ".join(opt_args)]
-    return " ".join(section for section in sections if section)
+    # Combine parts for the final usage string
+    return f"{command_part} {' '.join(pos_args)} {' '.join(opt_args)}"
 
 
 def map_http_status_code_to_error_code(status_code: int) -> str:
