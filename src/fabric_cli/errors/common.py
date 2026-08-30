@@ -100,6 +100,13 @@ class CommonErrors:
         return "The headers format is invalid"
 
     @staticmethod
+    def invalid_fabric_skill_name() -> str:
+        return (
+            "The Fabric skill name must start with a letter or number and contain "
+            "only letters, numbers, periods, underscores, or hyphens (maximum 128 characters)"
+        )
+
+    @staticmethod
     def invalid_json_content(content: str, error: Optional[str]) -> str:
         base_msg = f"The JSON content is invalid: {content}"
         return f"{base_msg}. Error: {error}" if error else f"{base_msg}"
@@ -252,7 +259,9 @@ class CommonErrors:
     @staticmethod
     def invalid_definition_format(valid_formats: list[str]) -> str:
         if valid_formats:
-            message = f"Only the following formats are supported: {', '.join(valid_formats)}"
+            message = (
+                f"Only the following formats are supported: {', '.join(valid_formats)}"
+            )
         else:
             message = "No formats are supported"
         return f"Invalid format. {message}"

@@ -19,8 +19,7 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable(
-        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
@@ -68,6 +67,8 @@ AUTH_KEYS = {
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
 FAB_HOST_APP_VERSION_ENV_VAR = "FAB_HOST_APP_VERSION"
+FABRIC_SKILL_ENV_VAR = "FABRIC_SKILL"
+FABRIC_SKILL_HEADER = "x-ms-fabric-skill"
 
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"

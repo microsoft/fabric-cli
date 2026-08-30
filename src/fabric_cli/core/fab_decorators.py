@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
 from functools import wraps
 
 import fabric_cli.core.fab_logger as fab_logger
@@ -8,6 +9,7 @@ from fabric_cli.core.fab_constant import (
     ERROR_UNAUTHORIZED,
     EXIT_CODE_AUTHORIZATION_REQUIRED,
     EXIT_CODE_ERROR,
+    FABRIC_SKILL_ENV_VAR,
 )
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_ui
@@ -21,7 +23,7 @@ def singleton(class_):
         if class_ not in instances:
             instances[class_] = class_(*args, **kwargs)
         return instances[class_]
-    
+
     return getinstance
 
 
@@ -64,7 +66,12 @@ def set_command_context():
         def wrapper(*args, **kwargs):
             # Import Context locally to avoid circular import
             from fabric_cli.core.fab_context import Context
+
             Context().command = args[0].command_path
+            skill = getattr(args[0], "skill", None)
+            Context().fabric_skill = (
+                skill if skill is not None else os.environ.get(FABRIC_SKILL_ENV_VAR)
+            )
             return func(*args, **kwargs)
 
         return wrapper

@@ -113,7 +113,11 @@ def do_request(
     # Build headers
     from fabric_cli.core.fab_context import Context as FabContext
 
-    ctxt_cmd = FabContext().command
+    fab_context = FabContext()
+    ctxt_cmd = fab_context.command
+    fabric_skill = fab_context.fabric_skill
+    if not isinstance(fabric_skill, str):
+        fabric_skill = None
 
     headers = {
         "Authorization": "Bearer " + str(token),
@@ -131,6 +135,12 @@ def do_request(
                 ErrorMessages.Common.invalid_headers_format(),
                 fab_constant.ERROR_INVALID_OPERATION,
             )
+
+    if audience_value not in ("storage", "azure", "powerbi") and fabric_skill:
+        for header_name in list(headers):
+            if header_name.lower() == fab_constant.FABRIC_SKILL_HEADER:
+                del headers[header_name]
+        headers[fab_constant.FABRIC_SKILL_HEADER] = fabric_skill
 
     try:
         session = _get_session()
