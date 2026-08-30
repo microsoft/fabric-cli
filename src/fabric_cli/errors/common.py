@@ -252,9 +252,7 @@ class CommonErrors:
     @staticmethod
     def invalid_definition_format(valid_formats: list[str]) -> str:
         if valid_formats:
-            message = (
-                f"Only the following formats are supported: {', '.join(valid_formats)}"
-            )
+            message = f"Only the following formats are supported: {', '.join(valid_formats)}"
         else:
             message = "No formats are supported"
         return f"Invalid format. {message}"
