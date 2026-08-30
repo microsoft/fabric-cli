@@ -260,6 +260,18 @@ fab export ws1.Workspace -o /ws1.Workspace/lh1.Lakehouse/Files
 fab export ws1.Workspace -o /ws1.Workspace/lh1.Lakehouse/Files -a
 ```
 
+### Bulk-Export Workspace Items
+
+!!! info "When you bulk-export item definitions, the sensitivity labels are not part of the definitions"
+
+Bulk-export all supported items from a workspace preserving folder structure and item bindings. See [bulk-export command](../commands/fs/bulk_export.md) for full details and supported item types.
+
+#### Bulk-Export Workspace to Local Directory
+
+```
+fab bulk-export ws1.Workspace -o /tmp --recursive
+```
+
 ### Deploy Workspace Items
 
 Deploy workspace items from local source to target workspaces using configuration files.

@@ -39,6 +39,6 @@ jobs:
 
       - name: Log in to Fabric CLI
         run: |
-          fab config set fab_encryption_fallback_enabled true
+          fab config set encryption_fallback_enabled true
           FED_TOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | jq -r '.value')
           fab auth login -t $FAB_TENANT_ID -u $FAB_CLIENT_ID --federated-token $FED_TOKEN

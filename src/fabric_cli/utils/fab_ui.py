@@ -653,6 +653,7 @@ def _check_special_cases(pretty: str) -> str:
     # Here add special cases for specific keys that need to be formatted differently
     special_cases = {
         "Id": "ID",
+        "Cli": "CLI",
         "Powerbi": "PowerBI",
     }
 

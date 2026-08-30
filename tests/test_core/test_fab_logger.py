@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import platform
+import subprocess
+import sys
 import time
 from unittest.mock import patch
 
@@ -13,7 +15,6 @@ from requests import RequestException
 
 from fabric_cli.core import fab_logger as logger
 from fabric_cli.core import fab_state_config
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 def test_log_warning():
@@ -128,21 +129,21 @@ def test_log_debug_http_request_sample_header(monkeypatch):
 
 def test_log_debug_http_response(monkeypatch):
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "1")
-    logger.log_debug_http_response(200, {}, "Response text", time.time())
+    logger.log_debug_http_response(200, {}, "Response text", time.time(), "cmd")
 
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "0")
-    logger.log_debug_http_response(200, {}, "Response text", time.time())
+    logger.log_debug_http_response(200, {}, "Response text", time.time(), "cmd")
 
 
 def test_log_debug_http_response_sample_header(monkeypatch):
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "1")
     logger.log_debug_http_response(
-        200, {"Some-Header": "value"}, "Response text", time.time()
+        200, {"Some-Header": "value"}, "Response text", time.time(), "cmd"
     )
 
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "0")
     logger.log_debug_http_response(
-        200, {"Some-Header": "value"}, "Response text", time.time()
+        200, {"Some-Header": "value"}, "Response text", time.time(), "cmd"
     )
 
 
@@ -153,6 +154,7 @@ def test_log_debug_http_response_json(monkeypatch):
         {"Content-Type": "application/json"},
         json.dumps({"key": "value"}),
         time.time(),
+        "cmd",
     )
 
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "0")
@@ -161,14 +163,139 @@ def test_log_debug_http_response_json(monkeypatch):
         {"Content-Type": "application/json"},
         json.dumps({"key": "value"}),
         time.time(),
+        "cmd",
     )
 
 
 def test_log_debug_http_response_bad_json(monkeypatch):
     monkeypatch.setattr(fab_state_config, "get_config", lambda x: "1")
     logger.log_debug_http_response(
-        200, {"Content-Type": "application/json"}, "{ bad json", time.time()
+        200, {"Content-Type": "application/json"}, "{ bad json", time.time(), "cmd"
     )
+
+
+def test_log_debug_http_response_bulk_export(monkeypatch):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "true")
+    response_body = json.dumps(
+        {
+            "itemDefinitionsIndex": {"item1": "index1"},
+            "definitionParts": [
+                {
+                    "path": "item_path",
+                    "payload": "item_payload",
+                    "payloadType": "base64",
+                }
+            ],
+        }
+    )
+    with patch.object(logger.get_logger(), "debug") as mock_debug:
+        logger.log_debug_http_response(
+            200,
+            {"Content-Type": "application/json"},
+            response_body,
+            time.time(),
+            "bulk-export",
+        )
+
+    logged_messages = [call.args[0] for call in mock_debug.call_args_list]
+    expected_json = '{"itemDefinitionsIndex":{"item1":"index1"},"definitionParts":"redacted_from_log"}'
+    assert any(expected_json in msg for msg in logged_messages)
+
+
+def test_log_debug_http_response_bulk_export_missing_keys(monkeypatch):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "true")
+    response_body = json.dumps({"itemDefinitionsIndex": {"item1": "index1"}})
+    with patch.object(logger.get_logger(), "debug") as mock_debug:
+        logger.log_debug_http_response(
+            200,
+            {"Content-Type": "application/json"},
+            response_body,
+            time.time(),
+            "bulk-export",
+        )
+
+    logged_messages = [call.args[0] for call in mock_debug.call_args_list]
+    expected_json = '{"itemDefinitionsIndex":{"item1":"index1"}}'
+    assert any(expected_json in msg for msg in logged_messages)
+
+
+def test_log_debug_http_response_export(monkeypatch):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "true")
+    response_body = json.dumps(
+        {
+            "definition": {
+                "format": "ipynb",
+                "parts": [
+                    {
+                        "path": "notebook.ipynb",
+                        "payload": "base64encodedcontent",
+                        "payloadType": "base64",
+                    },
+                    {
+                        "path": "meta.json",
+                        "payload": "anotherpayload",
+                        "payloadType": "base64",
+                    },
+                ],
+            }
+        }
+    )
+    with patch.object(logger.get_logger(), "debug") as mock_debug:
+        logger.log_debug_http_response(
+            200,
+            {"Content-Type": "application/json"},
+            response_body,
+            time.time(),
+            "export",
+        )
+
+    logged_messages = [call.args[0] for call in mock_debug.call_args_list]
+    expected_json = (
+        '{"definition":{"format":"ipynb","parts":'
+        '[{"path":"notebook.ipynb","payload":"redacted_from_log","payloadType":"base64"},'
+        '{"path":"meta.json","payload":"redacted_from_log","payloadType":"base64"}]}}'
+    )
+    assert any(expected_json in msg for msg in logged_messages)
+
+
+def test_log_debug_http_response_export_missing_parts(monkeypatch):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "true")
+    response_body = json.dumps({"definition": {"format": "ipynb"}})
+    with patch.object(logger.get_logger(), "debug") as mock_debug:
+        logger.log_debug_http_response(
+            200,
+            {"Content-Type": "application/json"},
+            response_body,
+            time.time(),
+            "export",
+        )
+
+    logged_messages = [call.args[0] for call in mock_debug.call_args_list]
+    expected_json = '{"definition":{"format":"ipynb"}}'
+    assert any(expected_json in msg for msg in logged_messages)
+
+
+def test_log_debug_http_response_other_command_no_processing(monkeypatch):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "true")
+    response_body = json.dumps(
+        {
+            "itemDefinitionsIndex": {"item1": "index1"},
+            "definitionParts": {"part1": "large_payload_data"},
+            "definition": {"format": "ipynb", "parts": [{"payload": "content"}]},
+        }
+    )
+    with patch.object(logger.get_logger(), "debug") as mock_debug:
+        logger.log_debug_http_response(
+            200,
+            {"Content-Type": "application/json"},
+            response_body,
+            time.time(),
+            "other cmd",
+        )
+
+    logged_messages = [call.args[0] for call in mock_debug.call_args_list]
+    expected_json = json.dumps(json.loads(response_body), separators=(",", ":"))
+    assert any(expected_json in msg for msg in logged_messages)
 
 
 def test_log_debug_http_request_exception(monkeypatch):
@@ -188,6 +315,73 @@ def test_get_logger():
         == "%(asctime)s - %(levelname)s - %(message)s"
     )
     assert logger.log_file_path is not None
+
+
+def test_suppress_azure_sdk_logging_suppresses_azure_sdk_records() -> None:
+    azure_loggers = [
+        logging.getLogger("azure.identity"),
+        logging.getLogger("azure.core"),
+    ]
+    original_states = [
+        (list(azure_logger.handlers), azure_logger.propagate)
+        for azure_logger in azure_loggers
+    ]
+    root_logger = logging.getLogger()
+    emitted_records = []
+
+    class _CaptureHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            emitted_records.append(record)
+
+    capture_handler = _CaptureHandler()
+    root_logger.addHandler(capture_handler)
+
+    try:
+        logger.suppress_azure_sdk_logging()
+
+        logging.getLogger("azure.identity._internal.decorators").warning(
+            "Azure identity warning"
+        )
+        logging.getLogger("azure.core.pipeline").critical("Azure core error")
+        logging.getLogger("unrelated.library").warning("Unrelated warning")
+
+        assert [record.getMessage() for record in emitted_records] == [
+            "Unrelated warning"
+        ]
+    finally:
+        root_logger.removeHandler(capture_handler)
+        for azure_logger, (handlers, propagate) in zip(azure_loggers, original_states):
+            azure_logger.handlers = handlers
+            azure_logger.propagate = propagate
+
+
+def test_import_suppresses_azure_sdk_logging() -> None:
+    script = """
+import json
+import logging
+
+from fabric_cli.core import fab_logger
+
+print(json.dumps({
+    namespace: {
+        "handlers": [type(handler).__name__ for handler in logging.getLogger(namespace).handlers],
+        "propagate": logging.getLogger(namespace).propagate,
+    }
+    for namespace in ("azure.identity", "azure.core")
+}))
+"""
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert json.loads(result.stdout) == {
+        "azure.identity": {"handlers": ["NullHandler"], "propagate": False},
+        "azure.core": {"handlers": ["NullHandler"], "propagate": False},
+    }
 
 
 def test_get_log_file_path(monkeypatch):

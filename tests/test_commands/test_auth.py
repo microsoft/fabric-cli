@@ -715,6 +715,20 @@ class TestAuth:
             name="Unknown", id="mocked_tenant_id"
         )
 
+    def test_init_with_mi_auth_user_assigned_command_line(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        args = prepare_auth_args({"identity": True, "username": "mocked_client_id"})
+
+        fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("managed_identity")
+        mock_fab_auth_instance.set_managed_identity.assert_called_with(
+            "mocked_client_id"
+        )
+        assert_get_access_token(mock_fab_auth_instance)
+
     def test_init_with_mi_auth_ctrlc(
         self,
         mock_fab_auth,
@@ -903,30 +917,77 @@ class TestAuth:
         args = argparse.Namespace(
             command="auth",
             auth_subcommand="status",
-            output_format=None,
+            output_format="text",
         )
         with patch(
             "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
             return_value={
                 "appid": "mocked_appid",
                 "upn": "mocked_upn",
-                "oid": "mocke_oid",
+                "oid": "mocked_oid",
+                "tid": "mocked_tenant_id",
             },
         ):
             # Act
             fab_auth.status(args)
 
-            # Assert
-            captured = capsys.readouterr()
-            assert "account" in captured.out.lower()
-            assert "tenant" in captured.out.lower()
-            assert "app" in captured.out.lower()
-            assert "token" in captured.out.lower()
-            assert "mocked_upn" in captured.out
-            assert "mocked_appid" in captured.out
-            assert "mocke_oid" in captured.out
-            assert "mocked_tenant_id" in captured.out
-            assert "mock************************************" in captured.out
+        # Assert
+        captured = capsys.readouterr()
+        assert "Logged In: True" in captured.out
+        assert "Account: mocked_upn" in captured.out
+        assert "Principal ID: mocked_oid" in captured.out
+        assert "Tenant ID: mocked_tenant_id" in captured.out
+        assert "App ID: mocked_appid" in captured.out
+        assert (
+            "Token Fabric PowerBI: mock************************************"
+            in captured.out
+        )
+        assert "Token Storage: mock************************************" in captured.out
+        assert "Token Azure: mock************************************" in captured.out
+
+    def test_auth_status_azure_cli_session_available(self, mock_fab_auth, capsys):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+
+        with (
+            patch.object(auth, "get_identity_type", return_value="azure_cli"),
+            patch(
+                "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+                return_value={"tid": "mocked_tenant_id"},
+            ),
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Logged in to app.fabric.microsoft.com" in captured.err
+        assert "Authentication Mode: Azure CLI" in captured.out
+        assert "Azure CLI Session: Available" in captured.out
+        assert "Logged In: True" in captured.out
+
+    def test_auth_status_azure_cli_session_unavailable(self, mock_fab_auth, capsys):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+        auth.get_access_token.side_effect = FabricCLIError(
+            ErrorMessages.Auth.azure_cli_not_available(),
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
+
+        with patch.object(auth, "get_identity_type", return_value="azure_cli"):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Not logged in to app.fabric.microsoft.com" in captured.err
+        assert "Authentication Mode: Azure CLI" in captured.out
+        assert "Azure CLI Session: Unavailable" in captured.out
+        assert "Logged In: False" in captured.out
 
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys
@@ -947,6 +1008,142 @@ class TestAuth:
             mock_fab_logger_log_warning.assert_not_called()
             assert_fab_auth_not_called(mock_fab_auth)
             assert_prompt_cancelled(capsys)
+
+
+class TestAuthAzureCli:
+    """Command-level tests for Azure CLI auth paths."""
+
+    def test_init_with_azure_cli_flag_success(self, mock_fab_auth, mock_fab_context):
+        """fab auth login --azure-cli should set azure_cli mode."""
+        args = prepare_auth_args({"azure_cli": True})
+
+        result = fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+        assert_get_access_token(mock_fab_auth_instance)
+        assert result is True
+
+    @pytest.mark.parametrize(
+        ("other_auth_arg", "expected_flag"),
+        [
+            pytest.param({"tenant": "my-tenant"}, "--tenant", id="tenant"),
+            pytest.param({"identity": True}, "--identity", id="identity"),
+            pytest.param({"username": "client-id"}, "--username", id="username"),
+            pytest.param({"password": "client-secret"}, "--password", id="password"),
+            pytest.param(
+                {"certificate": "certificate.pem"},
+                "--certificate",
+                id="certificate",
+            ),
+            pytest.param(
+                {"federated_token": "federated-token"},
+                "--federated-token",
+                id="federated-token",
+            ),
+        ],
+    )
+    def test_init_with_azure_cli_flag_rejects_other_auth_args_failure(
+        self, mock_fab_auth, other_auth_arg, expected_flag
+    ):
+        """Azure CLI auth cannot be combined with another auth mode."""
+        args = prepare_auth_args({"azure_cli": True, **other_auth_arg})
+
+        with pytest.raises(FabricCLIError) as ex:
+            fab_auth.init(args)
+
+        assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
+        assert ex.value.message == (
+            ErrorMessages.Auth.incompatible_authentication_arguments(
+                ["--azure-cli", expected_flag]
+            )
+        )
+        assert_fab_auth_not_called(mock_fab_auth)
+
+    def test_init_with_interactive_azure_cli_selection_success(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """Interactive menu Azure CLI selection should set azure_cli mode."""
+        with patch(
+            "fabric_cli.utils.fab_ui.prompt_select_item",
+            return_value="Azure CLI (existing 'az login' session)",
+        ):
+            args = prepare_auth_args()
+            result = fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+        assert_get_access_token(mock_fab_auth_instance)
+        assert_fab_context(mock_fab_context)
+        assert result is True
+
+    def test_interactive_azure_cli_selection_rejects_tenant_failure(
+        self, mock_fab_auth
+    ):
+        args = prepare_auth_args({"tenant": "my-tenant"})
+
+        with (
+            patch(
+                "fabric_cli.utils.fab_ui.prompt_select_item",
+                return_value="Azure CLI (existing 'az login' session)",
+            ),
+            pytest.raises(FabricCLIError) as ex,
+        ):
+            fab_auth.init(args)
+
+        assert ex.value.status_code == fab_constant.ERROR_INVALID_INPUT
+        assert ex.value.message == (
+            ErrorMessages.Auth.incompatible_authentication_arguments(
+                ["--azure-cli", "--tenant"]
+            )
+        )
+        assert_fab_auth_not_called(mock_fab_auth)
+
+    def test_azure_cli_token_acquisition_error_propagates_failure(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        """If token acquisition fails, error propagates (no rollback, consistent with MSAL)."""
+        args = prepare_auth_args({"azure_cli": True})
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.get_access_token.side_effect = FabricCLIError(
+            ErrorMessages.Auth.azure_cli_not_available(),
+            fab_constant.ERROR_AUTHENTICATION_FAILED,
+        )
+
+        with pytest.raises(FabricCLIError) as ex:
+            fab_auth.init(args)
+
+        assert ex.value.message == ErrorMessages.Auth.azure_cli_not_available()
+        assert ex.value.status_code == fab_constant.ERROR_AUTHENTICATION_FAILED
+        mock_fab_auth_instance.set_access_mode.assert_called_with("azure_cli")
+
+
+class TestAuthArgumentValidation:
+    def test_service_principal_certificate_allows_password(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        args = prepare_auth_args(
+            {
+                "username": "client-id",
+                "tenant": "tenant-id",
+                "certificate": "certificate.pem",
+                "password": "certificate-password",
+            }
+        )
+
+        fab_auth.init(args)
+
+        mock_fab_auth_instance = mock_fab_auth.get("instance")
+        mock_fab_auth_instance.set_access_mode.assert_called_with(
+            "service_principal", "tenant-id"
+        )
+        mock_fab_auth_instance.set_spn.assert_called_with(
+            "client-id",
+            cert_path="certificate.pem",
+            password="certificate-password",
+        )
+        assert_get_access_token(mock_fab_auth_instance)
+        assert_fab_context(mock_fab_context)
 
 
 # Helpers
@@ -971,6 +1168,7 @@ def prepare_auth_args(args=None):
                 "identity",
                 "certificate",
                 "federated_token",
+                "azure_cli",
             ]
         }
     )

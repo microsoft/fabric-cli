@@ -22,7 +22,7 @@ def main():
 
     try:
         fab_state_config.init_defaults()
-        
+
         if args.command == "auth" and args.auth_command == None:
             auth_parser.show_help(args)
             return

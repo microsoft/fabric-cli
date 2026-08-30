@@ -166,7 +166,11 @@ def do_request(
             start_time = time.time()
             response = session.request(method=method, url=url, **request_params)
             fab_logger.log_debug_http_response(
-                response.status_code, response.headers, response.text, start_time
+                response.status_code,
+                response.headers,
+                response.text,
+                start_time,
+                ctxt_cmd,
             )
 
             api_error_code = response.headers.get(
@@ -198,7 +202,7 @@ def do_request(
                         fab_constant.ERROR_NOT_FOUND,
                     )
                 case 429:
-                    retry_after = int(response.headers["Retry-After"])
+                    retry_after = get_polling_interval(response.headers)
                     utils_ui.print_info(
                         f"Rate limit exceeded. {attempt}º retrying attemp in {retry_after} seconds"
                     )

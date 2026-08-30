@@ -62,7 +62,7 @@ FAB_AUTHORITY = "fab_authority"
 
 AUTH_KEYS = {
     FAB_TENANT_ID: [],
-    IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
+    IDENTITY_TYPE: ["user", "service_principal", "managed_identity", "azure_cli"],
 }
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
@@ -102,6 +102,9 @@ FAB_CHECK_UPDATES = "check_cli_version_updates"
 # Version check settings
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
 VERSION_CHECK_TIMEOUT_SECONDS = 3
+
+# Authentication request settings
+AAD_JWKS_TIMEOUT_SECONDS = 10
 
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
@@ -183,6 +186,7 @@ COMMAND_FS_EXISTS_DESCRIPTION = "Check if a workspace, item, or file exists."
 COMMAND_FS_PWD_DESCRIPTION = "Print the current working directory."
 COMMAND_FS_OPEN_DESCRIPTION = "Open a workspace or item in browser."
 COMMAND_FS_EXPORT_DESCRIPTION = "Export an item."
+COMMAND_FS_BULKEXPORT_DESCRIPTION = "Export a workspace or folder in bulk while preserving folder structure and item bindings."
 COMMAND_FS_GET_DESCRIPTION = "Get workspace or item properties."
 COMMAND_FS_IMPORT_DESCRIPTION = "Import an item to create or update it."
 COMMAND_FS_DEPLOY_DESCRIPTION = "Deploy items using a configuration file."

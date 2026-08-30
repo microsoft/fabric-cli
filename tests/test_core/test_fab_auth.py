@@ -587,7 +587,12 @@ def test_fetch_public_key_success(monkeypatch):
     jwks = {"keys": [fake_jwk]}
 
     # Patch requests.get to return our fake JWKS
-    monkeypatch.setattr(requests, "get", lambda url: fake_response_success(jwks))
+    def fake_get(url, timeout):
+        assert url.endswith("/discovery/v2.0/keys")
+        assert timeout == con.AAD_JWKS_TIMEOUT_SECONDS
+        return fake_response_success(jwks)
+
+    monkeypatch.setattr(requests, "get", fake_get)
     # Patch jwt.get_unverified_header to return a header with our fake kid
     monkeypatch.setattr(jwt, "get_unverified_header", lambda token: {"kid": fake_kid})
     # Patch jwt.algorithms.RSAAlgorithm.from_jwk to simply return the JSON string of the jwk for testing
@@ -615,7 +620,11 @@ def test_fetch_public_key_not_found(monkeypatch):
     jwks = {"keys": [fake_jwk]}
 
     # Patch requests.get to return our fake JWKS
-    monkeypatch.setattr(requests, "get", lambda url: fake_response_success(jwks))
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda url, timeout: fake_response_success(jwks),
+    )
     # Patch jwt.get_unverified_header to return a header with a kid that is not available in JWKS
     monkeypatch.setattr(jwt, "get_unverified_header", lambda token: {"kid": fake_kid})
     # Patch jwt.algorithms.RSAAlgorithm as before
@@ -627,6 +636,23 @@ def test_fetch_public_key_not_found(monkeypatch):
         auth._fetch_public_key_from_aad(DUMMY_TOKEN)
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
     assert "Public key not found in JWKS" in str(exc_info.value.message)
+
+
+def test_decode_jwt_token_jwks_timeout(monkeypatch):
+    auth = FabAuth()
+
+    def fake_get(url, timeout):
+        assert timeout == con.AAD_JWKS_TIMEOUT_SECONDS
+        raise requests.Timeout("sensitive network details")
+
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    with pytest.raises(FabricCLIError) as exc_info:
+        auth._decode_jwt_token(DUMMY_TOKEN)
+
+    assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+    assert exc_info.value.message == ErrorMessages.Auth.jwt_decode_failed()
+    assert "sensitive network details" not in str(exc_info.value)
 
 
 def test_get_token_claim_success(monkeypatch):
@@ -875,10 +901,7 @@ def test_get_access_token_token_error(monkeypatch):
     with pytest.raises(FabricCLIError) as exc_info:
         auth.get_access_token(["dummy_scope"])
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert (
-        exc_info.value.message
-        == ErrorMessages.Auth.token_acquisition_failed()
-    )
+    assert exc_info.value.message == ErrorMessages.Auth.token_acquisition_failed()
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
 

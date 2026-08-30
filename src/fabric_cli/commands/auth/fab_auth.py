@@ -16,23 +16,29 @@ from fabric_cli.utils import fab_ui, fab_version_check
 def init(args: Namespace) -> Any:
     auth_options = [
         "Interactive with a web browser",
+        "Azure CLI (existing 'az login' session)",
         "Service principal authentication with secret",
         "Service principal authentication with certificate",
         "Service principal authentication with federated credential",
         "Managed identity authentication",
     ]
 
+    _validate_azure_cli_auth_args(args)
+
     utils_mem_store.clear_caches()
 
     # Clean up stale context files when logging in
     Context().cleanup_context_files(cleanup_all_stale=True, cleanup_current=False)
 
-    if args.identity:
+    if getattr(args, "azure_cli", False):
+        FabAuth().set_access_mode("azure_cli")
+        _acquire_default_access_tokens(FabAuth())
+        Context().context = FabAuth().get_tenant()
+
+    elif args.identity:
         FabAuth().set_access_mode("managed_identity")
         FabAuth().set_managed_identity(args.username)
-        FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-        FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-        FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+        _acquire_default_access_tokens(FabAuth())
         Context().context = FabAuth().get_tenant()
 
     elif any([args.username, args.password]):
@@ -54,9 +60,7 @@ def init(args: Namespace) -> Any:
                 FabAuth().set_spn(args.username, password=args.password)
             elif args.federated_token:
                 FabAuth().set_spn(args.username, client_assertion=args.federated_token)
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-            FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+            _acquire_default_access_tokens(FabAuth())
             Context().context = FabAuth().get_tenant()
     else:
         selected_auth = fab_ui.prompt_select_item(
@@ -69,9 +73,12 @@ def init(args: Namespace) -> Any:
         try:
             if selected_auth == "Interactive with a web browser":
                 FabAuth().set_access_mode("user", args.tenant)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                _acquire_default_access_tokens(FabAuth())
+                Context().context = FabAuth().get_tenant()
+            elif selected_auth.startswith("Azure CLI"):
+                _validate_azure_cli_auth_args(args, azure_cli_selected=True)
+                FabAuth().set_access_mode("azure_cli")
+                _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth.startswith("Service principal authentication"):
                 fab_logger.log_warning(
@@ -174,9 +181,7 @@ def init(args: Namespace) -> Any:
                     FabAuth().set_spn(client_id, password=client_secret)
                 elif federated_token:
                     FabAuth().set_spn(client_id, client_assertion=federated_token)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
             elif selected_auth == "Managed identity authentication":
                 fab_logger.log_warning(
@@ -191,9 +196,7 @@ def init(args: Namespace) -> Any:
 
                 FabAuth().set_access_mode("managed_identity")
                 FabAuth().set_managed_identity(client_id)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
-                FabAuth().get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
+                _acquire_default_access_tokens(FabAuth())
                 Context().context = FabAuth().get_tenant()
 
         except KeyboardInterrupt:
@@ -217,6 +220,7 @@ def logout(args: Namespace) -> None:
 
 def status(args: Namespace) -> None:
     auth = FabAuth()
+    identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 
     def __get_token_info(scope):
@@ -273,21 +277,62 @@ def status(args: Namespace) -> None:
     )
     fab_ui.print_grey(login_status)
 
-    auth_data = {
-        "logged_in": is_logged_in,
-        "account": upn,
-        "principal_id": oid,
-        "tenant_id": tid,
-        "app_id": appid,
-        "token_fabric_powerbi": fabric_secret,
-        "token_storage": storage_secret,
-        "token_azure": azure_secret,
-    }
+    auth_data = {}
+    if identity_type == "azure_cli":
+        auth_data.update(
+            {
+                "authentication_mode": "Azure CLI",
+                "azure_cli_session": "Available" if is_logged_in else "Unavailable",
+            }
+        )
+    auth_data.update(
+        {
+            "logged_in": is_logged_in,
+            "account": upn,
+            "principal_id": oid,
+            "tenant_id": tid,
+            "app_id": appid,
+            "token_fabric_powerbi": fabric_secret,
+            "token_storage": storage_secret,
+            "token_azure": azure_secret,
+        }
+    )
     fab_ui.print_output_format(args, data=auth_data, show_key_value_list=True)
 
 
 # Utils
+def _validate_azure_cli_auth_args(
+    args: Namespace, azure_cli_selected: bool = False
+) -> None:
+    if not azure_cli_selected and not getattr(args, "azure_cli", False):
+        return
+
+    auth_args = {
+        "identity": "--identity",
+        "username": "--username",
+        "password": "--password",
+        "tenant": "--tenant",
+        "certificate": "--certificate",
+        "federated_token": "--federated-token",
+    }
+    incompatible = ["--azure-cli"] + [
+        flag for attribute, flag in auth_args.items() if getattr(args, attribute, None)
+    ]
+
+    if len(incompatible) > 1:
+        raise FabricCLIError(
+            ErrorMessages.Auth.incompatible_authentication_arguments(incompatible),
+            fab_constant.ERROR_INVALID_INPUT,
+        )
+
+
 def _get_token_info_from_bearer_token(bearer_token: str) -> Optional[dict[str, str]]:
     return FabAuth()._get_claims_from_token(
         bearer_token, ["upn", "oid", "tid", "appid"]
     )
+
+
+def _acquire_default_access_tokens(auth: FabAuth) -> None:
+    auth.get_access_token(scope=fab_constant.SCOPE_FABRIC_DEFAULT)
+    auth.get_access_token(scope=fab_constant.SCOPE_ONELAKE_DEFAULT)
+    auth.get_access_token(scope=fab_constant.SCOPE_AZURE_DEFAULT)
