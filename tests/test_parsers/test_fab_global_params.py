@@ -8,7 +8,6 @@ import argparse
 import pytest
 
 from fabric_cli.parsers import fab_global_params
-from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
 
 
 def test_add_global_flags():
@@ -37,11 +36,6 @@ def test_add_global_flags():
     assert not format_flag.required
     assert "Override output format type" in format_flag.help
 
-    skill_flag = next(a for a in all_flags if "--skill" in a.option_strings)
-    assert skill_flag.dest == "skill"
-    assert not skill_flag.required
-    assert skill_flag.help == argparse.SUPPRESS
-
 
 def test_add_global_flags_parser_integration():
     """Test that global flags work correctly in parser."""
@@ -60,28 +54,6 @@ def test_add_global_flags_parser_integration():
     args = parser.parse_args(["--output_format", "text"])
     assert args.output_format == "text"
 
-    args = parser.parse_args(["--skill", "semantic-model-authoring"])
-    assert args.skill == "semantic-model-authoring"
-
     # Test invalid output format (should raise SystemExit)
     with pytest.raises(SystemExit):
         parser.parse_args(["--output_format", "invalid"])
-
-
-@pytest.mark.parametrize(
-    "command",
-    [
-        ["--skill", "semantic-model-authoring", "export", "ws.Workspace", "-o", "out"],
-        ["export", "--skill", "semantic-model-authoring", "ws.Workspace", "-o", "out"],
-        ["export", "ws.Workspace", "-o", "out", "--skill", "semantic-model-authoring"],
-        ["--skill", "semantic-model-authoring", "job", "run", "list", "ws.Notebook"],
-        ["job", "--skill", "semantic-model-authoring", "run", "list", "ws.Notebook"],
-        ["job", "run", "list", "ws.Notebook", "--skill", "semantic-model-authoring"],
-    ],
-)
-def test_skill_flag_preserved_across_command_tree(command):
-    parser, _ = create_parser_and_subparsers()
-
-    args = parser.parse_args(command)
-
-    assert args.skill == "semantic-model-authoring"

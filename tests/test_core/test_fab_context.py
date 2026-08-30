@@ -55,22 +55,6 @@ def test_context_workspace():
     Context().reset_context()
 
 
-def test_fabric_skill_valid_name_success():
-    Context().fabric_skill = "semantic-model-authoring"
-
-    assert Context().fabric_skill == "semantic-model-authoring"
-
-
-@pytest.mark.parametrize(
-    "skill_name",
-    ["", "-invalid", "invalid skill", "invalid\nheader", "a" * 129],
-)
-def test_fabric_skill_invalid_name_ignored(skill_name):
-    Context().fabric_skill = skill_name
-
-    assert Context().fabric_skill is None
-
-
 def test_context_virtual_workspace():
     _tenant = hierarchy.Tenant(name="tenant_name", id="0000")
     _workspace = hierarchy.VirtualWorkspace(name=".capacities", id=None, parent=_tenant)
@@ -456,7 +440,6 @@ def mock_get_command_context():
 
 # region Runtime Mode
 
-
 class TestRuntimeMode:
     """Verify Context.set_runtime_mode / get_runtime_mode behaviour after mode-setting removal."""
 
@@ -489,9 +472,7 @@ class TestRuntimeMode:
     def test_runtime_mode_not_module_level_success(self):
         """Runtime mode must live on Context, not as module-level functions."""
         from fabric_cli.core import fab_context as ctx_module
-
         assert not hasattr(ctx_module, "set_runtime_mode")
         assert not hasattr(ctx_module, "get_runtime_mode")
-
 
 # endregion

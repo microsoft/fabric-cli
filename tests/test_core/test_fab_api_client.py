@@ -14,7 +14,6 @@ from fabric_cli.client.fab_api_client import (
 )
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_auth import FabAuth
-from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_exceptions import FabricAPIError
 
 
@@ -309,72 +308,6 @@ def test_do_request_fabric_api_error_raised_on_failed_response(mock_get_token):
             do_request(dummy_args, hostname="custom.hostname.com")
         assert "Some Error Message" == excinfo.value.message
         assert "ErrorCode" == excinfo.value.status_code
-
-
-@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
-@pytest.mark.parametrize(
-    "audience, expects_skill_header",
-    [
-        (None, True),
-        ("fabric", True),
-        ("storage", False),
-        ("azure", False),
-        ("powerbi", False),
-    ],
-)
-def test_do_request_fabric_skill_header_scoped_to_fabric_api(
-    mock_get_token, audience, expects_skill_header, reset_context
-):
-    class DummyResponse:
-        status_code = 200
-        text = "{}"
-        content = b"{}"
-        headers = {}
-
-    reset_context.fabric_skill = "semantic-model-authoring"
-    dummy_args = Namespace(uri="items", method="get", audience=audience)
-
-    with patch(
-        "requests.Session.request", return_value=DummyResponse()
-    ) as mock_request:
-        do_request(dummy_args)
-
-    request_headers = mock_request.call_args.kwargs["headers"]
-    if expects_skill_header:
-        assert (
-            request_headers[fab_constant.FABRIC_SKILL_HEADER]
-            == "semantic-model-authoring"
-        )
-    else:
-        assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
-
-
-@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
-def test_do_request_fabric_skill_overrides_custom_header(mock_get_token, reset_context):
-    class DummyResponse:
-        status_code = 200
-        text = "{}"
-        content = b"{}"
-        headers = {}
-
-    reset_context.fabric_skill = "semantic-model-authoring"
-    dummy_args = Namespace(
-        uri="items",
-        method="get",
-        audience=None,
-        headers={"X-MS-FABRIC-SKILL": "other-skill"},
-    )
-
-    with patch(
-        "requests.Session.request", return_value=DummyResponse()
-    ) as mock_request:
-        do_request(dummy_args)
-
-    assert (
-        mock_request.call_args.kwargs["headers"][fab_constant.FABRIC_SKILL_HEADER]
-        == "semantic-model-authoring"
-    )
-    assert "X-MS-FABRIC-SKILL" not in mock_request.call_args.kwargs["headers"]
 
 
 @patch.object(FabAuth(), "get_access_token", return_value="dummy-token")

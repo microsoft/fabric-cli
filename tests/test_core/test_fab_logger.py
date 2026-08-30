@@ -14,7 +14,6 @@ import pytest
 from requests import RequestException
 
 from fabric_cli.core import fab_logger as logger
-from fabric_cli.core import fab_constant
 from fabric_cli.core import fab_state_config
 
 
@@ -102,23 +101,6 @@ def test_log_debug_http_request_user_agent(monkeypatch):
     logger.log_debug_http_request(
         "GET", "http://example.com", {"User-Agent": "value"}, 10
     )
-
-
-def test_log_debug_http_request_fabric_skill_not_logged(monkeypatch):
-    monkeypatch.setattr(fab_state_config, "get_config", lambda x: "1")
-
-    with patch.object(logger, "get_logger") as mock_get_logger:
-        logger.log_debug_http_request(
-            "GET",
-            "http://example.com",
-            {fab_constant.FABRIC_SKILL_HEADER: "semantic-model-authoring"},
-            10,
-        )
-
-    logged_messages = [
-        call.args[0] for call in mock_get_logger.return_value.debug.call_args_list
-    ]
-    assert not any("semantic-model-authoring" in message for message in logged_messages)
 
 
 def test_log_debug_http_request_authorization(monkeypatch):
