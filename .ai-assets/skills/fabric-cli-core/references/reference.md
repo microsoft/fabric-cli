@@ -680,7 +680,7 @@ fab job run-sch "Production.Workspace/Pipeline.DataPipeline" -i '{"enabled": tru
 #### Syntax
 
 ```bash
-fab job run-update <item_path> --id <schedule_id> [--type <type>] [--interval <interval>] [--enable] [--disable] [-i <json>]
+fab job run-update <item_path> --id <schedule_id> [--type <type>] [--interval <interval>] [--start <start>] [--end <end>] [--days <days>] [--enable] [--disable] [-i <json>]
 ```
 
 #### Examples
