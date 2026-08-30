@@ -101,7 +101,6 @@ The following parameters are available for all commands:
 
 - `-h, --help`: Display help information for the command
 - `--output_format`: Specify the output format (`text` or `json`).
-- `--skill`: Attribute Fabric API requests to a Fabric skill.
 
 ## Common Parameters
 

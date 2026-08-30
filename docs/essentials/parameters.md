@@ -63,16 +63,9 @@ For a complete list of commands, see the [Commands page](../commands/index.md).
 | `--retain_n_hours` | Retain specified hours for `table vacuum`               |
 | `--schedule`       | Set the job schedule for `job`                          |
 | `--show_headers`   | Turn headers on for `api`                               |
-| `--skill`          | Attribute Fabric API requests to a Fabric skill         |
 | `--start`          | Start date in UTC for `job`                             |
 | `--target`         | Specify the target for `ln`                             |
 | `--timeout`        | Specify the timeout of the command in seconds for `job` |
 | `--type`           | Specify the type for `ln` or `job`                      |
 | `--vorder`         | Apply v-order for `table optimize`                      |
 | `--zorder`         | Apply Z-order indexing for `table optimize`             |
-
-`--skill` adds the `x-ms-fabric-skill` header to Fabric control-plane
-requests made by the command, including internal requests and long-running
-operation polling. Set `FABRIC_SKILL` to apply the attribution through an
-environment variable; an explicit `--skill` value takes precedence. The
-header is not added to OneLake, Azure, or Power BI requests.
