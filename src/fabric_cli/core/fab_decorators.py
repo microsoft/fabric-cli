@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
 from functools import wraps
 
 import fabric_cli.core.fab_logger as fab_logger
@@ -9,7 +8,6 @@ from fabric_cli.core.fab_constant import (
     ERROR_UNAUTHORIZED,
     EXIT_CODE_AUTHORIZATION_REQUIRED,
     EXIT_CODE_ERROR,
-    FABRIC_SKILL_ENV_VAR,
 )
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_ui
@@ -68,10 +66,7 @@ def set_command_context():
             from fabric_cli.core.fab_context import Context
 
             Context().command = args[0].command_path
-            skill = getattr(args[0], "skill", None)
-            Context().fabric_skill = (
-                skill if skill is not None else os.environ.get(FABRIC_SKILL_ENV_VAR)
-            )
+            Context().fabric_skill = getattr(args[0], "skill", None)
             return func(*args, **kwargs)
 
         return wrapper
