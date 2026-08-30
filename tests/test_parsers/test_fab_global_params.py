@@ -40,7 +40,7 @@ def test_add_global_flags():
     skill_flag = next(a for a in all_flags if "--skill" in a.option_strings)
     assert skill_flag.dest == "skill"
     assert not skill_flag.required
-    assert "FABRIC_SKILL" in skill_flag.help
+    assert skill_flag.help == argparse.SUPPRESS
 
 
 def test_add_global_flags_parser_integration():

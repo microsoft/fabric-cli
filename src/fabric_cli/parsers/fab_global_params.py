@@ -26,8 +26,5 @@ def add_global_flags(parser) -> None:
         "--skill",
         required=False,
         default=argparse.SUPPRESS,
-        help=(
-            "Attribute Fabric API requests to a Fabric skill. "
-            "Overrides the FABRIC_SKILL environment variable. Optional"
-        ),
+        help=argparse.SUPPRESS,
     )

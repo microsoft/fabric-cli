@@ -84,10 +84,7 @@ class Context:
         if fabric_skill is not None and not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", fabric_skill
         ):
-            raise FabricCLIError(
-                ErrorMessages.Common.invalid_fabric_skill_name(),
-                fab_constant.ERROR_INVALID_INPUT,
-            )
+            fabric_skill = None
         self._fabric_skill = fabric_skill
 
     def reset_context(self) -> None:

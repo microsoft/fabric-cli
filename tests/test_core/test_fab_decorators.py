@@ -8,7 +8,6 @@ import pytest
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import set_command_context
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 pytestmark = pytest.mark.usefixtures("reset_context")
 
@@ -44,14 +43,13 @@ def test_set_command_context_clears_previous_skill(monkeypatch):
     command(Namespace(command_path="export", skill=None))
 
 
-def test_set_command_context_rejects_empty_argument_instead_of_using_environment(
+def test_set_command_context_ignores_empty_argument_instead_of_using_environment(
     monkeypatch,
 ):
     monkeypatch.setenv(fab_constant.FABRIC_SKILL_ENV_VAR, "environment-skill")
 
     @set_command_context()
     def command(args: Namespace) -> None:
-        pytest.fail("Command should not run with an invalid skill name")
+        assert Context().fabric_skill is None
 
-    with pytest.raises(FabricCLIError):
-        command(Namespace(command_path="export", skill=""))
+    command(Namespace(command_path="export", skill=""))

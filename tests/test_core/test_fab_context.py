@@ -65,12 +65,10 @@ def test_fabric_skill_valid_name_success():
     "skill_name",
     ["", "-invalid", "invalid skill", "invalid\nheader", "a" * 129],
 )
-def test_fabric_skill_invalid_name_failure(skill_name):
-    with pytest.raises(FabricCLIError) as excinfo:
-        Context().fabric_skill = skill_name
+def test_fabric_skill_invalid_name_ignored(skill_name):
+    Context().fabric_skill = skill_name
 
-    assert excinfo.value.message == ErrorMessages.Common.invalid_fabric_skill_name()
-    assert excinfo.value.status_code == fab_constant.ERROR_INVALID_INPUT
+    assert Context().fabric_skill is None
 
 
 def test_context_virtual_workspace():
