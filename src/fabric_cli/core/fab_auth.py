@@ -10,6 +10,7 @@ from typing import Any, NamedTuple, Optional
 import jwt
 import msal
 import requests
+from azure.identity import AzureCliCredential, CredentialUnavailableError
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -49,6 +50,7 @@ class FabAuth:
         self.aad_public_key = None
         # Reset the auth info
         self.app: msal.ClientApplication = None
+        self._azure_cli_credential: Optional[AzureCliCredential] = None
         self._auth_info = {}
 
         # Load the auth info and environment variables
@@ -418,6 +420,73 @@ class FabAuth:
             }
         )
 
+    def _acquire_token_from_azure_cli(self, scope: list[str]) -> dict:
+        """Acquire a token using the current Azure CLI authentication context.
+
+        Synchronizes Fabric CLI's tenant, resource caches, and command context
+        with the tenant claim in the acquired token.
+        """
+        from azure.core.exceptions import (
+            ClientAuthenticationError,
+            HttpResponseError,
+            ServiceRequestError,
+            ServiceResponseError,
+        )
+
+        try:
+            # Create singleton credential — inherit Azure CLI context
+            if self._azure_cli_credential is None:
+                self._azure_cli_credential = AzureCliCredential()
+            # AzureCliCredential.get_token expects scopes as positional args
+            azure_token = self._azure_cli_credential.get_token(scope[0])
+
+            # Keep tenant-scoped context and caches aligned with Azure CLI
+            claims = self._decode_jwt_token(azure_token.token)
+            tid = claims.get("tid")
+            if tid and tid != self.get_tenant_id():
+                self._synchronize_azure_cli_tenant(tid)
+
+            token_result = {
+                "access_token": azure_token.token,
+                "expires_on": azure_token.expires_on,
+            }
+            return token_result
+        except CredentialUnavailableError:
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_not_available(),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except FabricCLIError:
+            raise
+        except (
+            ClientAuthenticationError,
+            HttpResponseError,
+            ServiceRequestError,
+            ServiceResponseError,
+        ) as e:
+            # Azure SDK exceptions are pre-sanitized; safe to include their message
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(str(e)),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+        except Exception:
+            # Unknown exceptions get a safe generic message — never leak raw details
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_auth_failed(
+                    ErrorMessages.Auth.azure_cli_token_acquisition_failed()
+                ),
+                status_code=con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+    def _synchronize_azure_cli_tenant(self, tenant_id: str) -> None:
+        """Synchronize state when the active Azure CLI tenant changes."""
+        from fabric_cli.core.fab_context import Context
+        from fabric_cli.utils import fab_mem_store
+
+        self._set_auth_properties({con.FAB_TENANT_ID: tenant_id})
+        fab_mem_store.clear_caches()
+        Context().context = self.get_tenant()
+
     def print_auth_info(self):
         utils_ui.print_grey(json.dumps(self._get_auth_info(), indent=2))
 
@@ -458,7 +527,6 @@ class FabAuth:
         try:
             token = None
             env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
-
             identity_type = self.get_identity_type()
 
             if identity_type == "service_principal":
@@ -480,6 +548,8 @@ class FabAuth:
                         ErrorMessages.Auth.managed_identity_token_failed(),
                         status_code=con.ERROR_AUTHENTICATION_FAILED,
                     )
+            elif identity_type == "azure_cli":
+                token = self._acquire_token_from_azure_cli(scope)
             elif env_var_token:
                 token = {
                     "access_token": env_var_token,
@@ -546,6 +616,9 @@ class FabAuth:
 
         self.app = None
 
+        # Clear Azure CLI state
+        self._azure_cli_credential = None
+
         if os.path.exists(self.cache_file):
             os.remove(self.cache_file)
 
@@ -589,7 +662,7 @@ class FabAuth:
 
     def _fetch_public_key_from_aad(self, token):
         jwks_url = f"{self._get_authority_url()}/discovery/v2.0/keys"
-        jwks = requests.get(jwks_url).json()
+        jwks = requests.get(jwks_url, timeout=con.AAD_JWKS_TIMEOUT_SECONDS).json()
         unverified_header = jwt.get_unverified_header(token)
         public_keys = {}
         for jwk in jwks["keys"]:

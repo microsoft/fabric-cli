@@ -62,7 +62,7 @@ FAB_AUTHORITY = "fab_authority"
 
 AUTH_KEYS = {
     FAB_TENANT_ID: [],
-    IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
+    IDENTITY_TYPE: ["user", "service_principal", "managed_identity", "azure_cli"],
 }
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
@@ -100,6 +100,9 @@ FAB_CHECK_UPDATES = "check_cli_version_updates"
 # Version check settings
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
 VERSION_CHECK_TIMEOUT_SECONDS = 3
+
+# Authentication request settings
+AAD_JWKS_TIMEOUT_SECONDS = 10
 
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],
