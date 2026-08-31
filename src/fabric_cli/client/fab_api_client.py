@@ -136,7 +136,8 @@ def do_request(
                 fab_constant.ERROR_INVALID_OPERATION,
             )
 
-    if fabric_skill and audience_value not in ("storage", "azure", "powerbi"):
+    # The fabric skills header is only applicable for the Fabric audience (None or "fabric")
+    if fabric_skill and audience_value in (None, "fabric"):
         headers[fab_constant.FABRIC_SKILL_HEADER] = fabric_skill
 
     try:
