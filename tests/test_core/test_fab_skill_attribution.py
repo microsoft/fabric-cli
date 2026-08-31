@@ -8,9 +8,8 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.client.fab_api_client import do_request
-from fabric_cli.core import fab_constant
+from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core import fab_logger as logger
-from fabric_cli.core import fab_state_config
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import set_command_context
@@ -140,7 +139,7 @@ def test_skill_argument_overrides_custom_header(mock_get_token):
 
 
 def test_skill_header_is_not_logged(monkeypatch):
-    monkeypatch.setattr(fab_state_config, "get_config", lambda key: "1")
+    monkeypatch.setattr(fab_state_config, "get_config", lambda key: "true")
 
     with patch.object(logger, "get_logger") as mock_get_logger:
         logger.log_debug_http_request(

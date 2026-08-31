@@ -80,12 +80,8 @@ class Context:
         return self._fabric_skill
 
     @fabric_skill.setter
-    def fabric_skill(self, fabric_skill: Optional[str]) -> None:
-        if fabric_skill is not None and not re.fullmatch(
-            r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", fabric_skill
-        ):
-            fabric_skill = None
-        self._fabric_skill = fabric_skill
+    def fabric_skill(self, value: Optional[str]) -> None:
+        self._fabric_skill = value
 
     def reset_context(self) -> None:
         self.cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)

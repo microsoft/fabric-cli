@@ -136,10 +136,7 @@ def do_request(
                 fab_constant.ERROR_INVALID_OPERATION,
             )
 
-    if audience_value not in ("storage", "azure", "powerbi") and fabric_skill:
-        for header_name in list(headers):
-            if header_name.lower() == fab_constant.FABRIC_SKILL_HEADER:
-                del headers[header_name]
+    if fabric_skill and audience_value not in ("storage", "azure", "powerbi"):
         headers[fab_constant.FABRIC_SKILL_HEADER] = fabric_skill
 
     try:
