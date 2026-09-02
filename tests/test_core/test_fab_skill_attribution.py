@@ -74,6 +74,30 @@ def test_command_context_clears_previous_skill():
     command(Namespace(command_path="export", skill=None))
 
 
+@pytest.mark.parametrize(
+    "value",
+    [123, True, [], {}, object()],
+    ids=["integer", "boolean", "list", "dictionary", "object"],
+)
+def test_fabric_skill_setter_normalizes_non_string_value(value):
+    Context().fabric_skill = value
+
+    assert Context().fabric_skill is None
+
+
+@pytest.mark.parametrize(
+    "skill",
+    [123, True, [], {}, object()],
+    ids=["integer", "boolean", "list", "dictionary", "object"],
+)
+def test_command_context_normalizes_non_string_skill_argument(skill):
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        assert Context().fabric_skill is None
+
+    command(Namespace(command_path="export", skill=skill))
+
+
 @patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
 @pytest.mark.parametrize(
     "audience, expects_skill_header",
@@ -86,7 +110,7 @@ def test_command_context_clears_previous_skill():
     ],
 )
 def test_skill_header_is_scoped_to_fabric_api(
-    mock_get_token, audience, expects_skill_header
+    _mock_get_token, audience, expects_skill_header
 ):
     Context().fabric_skill = "semantic-model-authoring"
     args = Namespace(uri="items", method="get", audience=audience)

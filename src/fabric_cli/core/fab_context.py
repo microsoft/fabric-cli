@@ -81,7 +81,7 @@ class Context:
 
     @fabric_skill.setter
     def fabric_skill(self, value: Optional[str]) -> None:
-        self._fabric_skill = value
+        self._fabric_skill = value if isinstance(value, str) else None
 
     def reset_context(self) -> None:
         self.cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)

@@ -116,8 +116,6 @@ def do_request(
     fab_context = FabContext()
     ctxt_cmd = fab_context.command
     fabric_skill = fab_context.fabric_skill
-    if not isinstance(fabric_skill, str):
-        fabric_skill = None
 
     headers = {
         "Authorization": "Bearer " + str(token),
