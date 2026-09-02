@@ -14,6 +14,17 @@ from fabric_cli.utils import fab_ui, fab_version_check
 
 
 def init(args: Namespace) -> Any:
+    if FabAuth().is_proxy_auth_mode():
+        fab_ui.print_output_error(
+            FabricCLIError(
+                ErrorMessages.Auth.login_not_available_in_proxy_mode(),
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ),
+            command=args.command,
+            output_format_type=args.output_format,
+        )
+        return
+
     auth_options = [
         "Interactive with a web browser",
         "Azure CLI (existing 'az login' session)",
@@ -209,6 +220,17 @@ def init(args: Namespace) -> Any:
 
 
 def logout(args: Namespace) -> None:
+    if FabAuth().is_proxy_auth_mode():
+        fab_ui.print_output_error(
+            FabricCLIError(
+                ErrorMessages.Auth.logout_not_available_in_proxy_mode(),
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ),
+            command=args.command,
+            output_format_type=args.output_format,
+        )
+        return
+
     FabAuth().logout()
 
     # Clear cache and context including current and stale context files
@@ -220,6 +242,10 @@ def logout(args: Namespace) -> None:
 
 def status(args: Namespace) -> None:
     auth = FabAuth()
+    if auth.is_proxy_auth_mode():
+        fab_ui.print_output_format(args, data="proxy authentication mode")
+        return
+
     identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 

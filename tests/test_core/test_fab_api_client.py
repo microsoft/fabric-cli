@@ -345,6 +345,51 @@ def test_do_request_429_without_retry_after_header_retries_with_default_interval
     mock_sleep.assert_called_once_with(10)
 
 
+@pytest.mark.parametrize("audience", [None, "storage", "azure"])
+def test_do_request_proxy_auth_mode_sends_placeholder_header(monkeypatch, audience):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    monkeypatch.delenv("FAB_TOKEN", raising=False)
+    monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
+    monkeypatch.delenv("FAB_TOKEN_AZURE", raising=False)
+
+    auth = FabAuth()
+    auth._auth_info = {}
+    monkeypatch.setattr(
+        auth,
+        "_get_app",
+        lambda: pytest.fail("Proxy authentication must not initialize MSAL"),
+    )
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None: pytest.fail(
+            "Proxy authentication must not decode the placeholder token"
+        ),
+    )
+
+    class DummyResponse:
+        status_code = 200
+        text = "{}"
+        content = b"{}"
+        headers = {}
+
+    dummy_args = Namespace(
+        uri="items",
+        method="get",
+        audience=audience,
+        headers=None,
+        wait=False,
+        raw_response=True,
+        request_params={},
+        json_file=None,
+    )
+
+    with patch("requests.Session.request", return_value=DummyResponse()) as request:
+        do_request(dummy_args)
+
+    assert request.call_args.kwargs["headers"]["Authorization"] == "Bearer mockToken"
+
+
 @pytest.mark.parametrize(
     "host_app_env, host_app_version_env, expected_suffix",
     [
