@@ -6,6 +6,7 @@ import json
 import os
 import platform
 import sys
+from typing import Optional
 
 import psutil
 
@@ -23,6 +24,7 @@ class Context:
     def __init__(self):
         self._context: FabricElement = None
         self._command: str = None
+        self._fabric_skill: Optional[str] = None
         self._runtime_mode: str = fab_constant.FAB_MODE_COMMANDLINE
         session_id = self._get_context_session_id()
         self._context_file = os.path.join(
@@ -71,6 +73,14 @@ class Context:
     @command.setter
     def command(self, command: str) -> None:
         self._command = command
+
+    @property
+    def fabric_skill(self) -> Optional[str]:
+        return self._fabric_skill
+
+    @fabric_skill.setter
+    def fabric_skill(self, value: Optional[str]) -> None:
+        self._fabric_skill = value if isinstance(value, str) else None
 
     def reset_context(self) -> None:
         self.cleanup_context_files(cleanup_all_stale=True, cleanup_current=True)
