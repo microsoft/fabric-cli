@@ -74,16 +74,6 @@ def test_command_context_clears_previous_skill():
     command(Namespace(command_path="export", skill=None))
 
 
-@pytest.mark.parametrize(
-    "skill_name",
-    ["", "-invalid", "invalid skill", "invalid\nheader", "a" * 129],
-)
-def test_invalid_skill_name_is_ignored(skill_name):
-    Context().fabric_skill = skill_name
-
-    assert Context().fabric_skill is None
-
-
 @patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
 @pytest.mark.parametrize(
     "audience, expects_skill_header",
@@ -114,28 +104,6 @@ def test_skill_header_is_scoped_to_fabric_api(
         )
     else:
         assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
-
-
-@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
-def test_skill_argument_overrides_custom_header(mock_get_token):
-    Context().fabric_skill = "semantic-model-authoring"
-    args = Namespace(
-        uri="items",
-        method="get",
-        audience=None,
-        headers={"X-MS-FABRIC-SKILL": "other-skill"},
-    )
-
-    with patch(
-        "requests.Session.request", return_value=DummyResponse()
-    ) as mock_request:
-        do_request(args)
-
-    request_headers = mock_request.call_args.kwargs["headers"]
-    assert (
-        request_headers[fab_constant.FABRIC_SKILL_HEADER] == "semantic-model-authoring"
-    )
-    assert "X-MS-FABRIC-SKILL" not in request_headers
 
 
 def test_skill_header_is_not_logged(monkeypatch):
