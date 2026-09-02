@@ -26,7 +26,7 @@ class DummyResponse:
     headers: dict[str, str] = {}
 
 
-def test_skill_argument_is_hidden():
+def test_skill_argument_is_hidden_success():
     parser = argparse.ArgumentParser()
     fab_global_params.add_global_flags(parser)
 
@@ -48,7 +48,7 @@ def test_skill_argument_is_hidden():
         ["job", "run", "ws.Notebook", "--skill", "semantic-model-authoring"],
     ],
 )
-def test_skill_argument_is_preserved_across_command_tree(command):
+def test_skill_argument_is_preserved_across_command_tree_success(command):
     parser, _ = create_parser_and_subparsers()
 
     args = parser.parse_args(command)
@@ -56,7 +56,7 @@ def test_skill_argument_is_preserved_across_command_tree(command):
     assert args.skill == "semantic-model-authoring"
 
 
-def test_command_context_uses_skill_argument():
+def test_command_context_uses_skill_argument_success():
     @set_command_context()
     def command(args: Namespace) -> None:
         assert Context().fabric_skill == "argument-skill"
@@ -64,7 +64,7 @@ def test_command_context_uses_skill_argument():
     command(Namespace(command_path="export", skill="argument-skill"))
 
 
-def test_command_context_clears_previous_skill():
+def test_command_context_clears_previous_skill_success():
     Context().fabric_skill = "previous-skill"
 
     @set_command_context()
@@ -79,7 +79,7 @@ def test_command_context_clears_previous_skill():
     [123, True, [], {}, object()],
     ids=["integer", "boolean", "list", "dictionary", "object"],
 )
-def test_fabric_skill_setter_normalizes_non_string_value(value):
+def test_fabric_skill_setter_normalizes_non_string_value_success(value):
     Context().fabric_skill = value
 
     assert Context().fabric_skill is None
@@ -90,7 +90,7 @@ def test_fabric_skill_setter_normalizes_non_string_value(value):
     [123, True, [], {}, object()],
     ids=["integer", "boolean", "list", "dictionary", "object"],
 )
-def test_command_context_normalizes_non_string_skill_argument(skill):
+def test_command_context_normalizes_non_string_skill_argument_success(skill):
     @set_command_context()
     def command(args: Namespace) -> None:
         assert Context().fabric_skill is None
@@ -109,7 +109,7 @@ def test_command_context_normalizes_non_string_skill_argument(skill):
         ("powerbi", False),
     ],
 )
-def test_skill_header_is_scoped_to_fabric_api(
+def test_skill_header_is_scoped_to_fabric_api_success(
     _mock_get_token, audience, expects_skill_header
 ):
     Context().fabric_skill = "semantic-model-authoring"
@@ -130,7 +130,7 @@ def test_skill_header_is_scoped_to_fabric_api(
         assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
 
 
-def test_skill_header_is_not_logged(monkeypatch):
+def test_skill_header_is_not_logged_success(monkeypatch):
     monkeypatch.setattr(fab_state_config, "get_config", lambda key: "true")
 
     with patch.object(logger, "get_logger") as mock_get_logger:
