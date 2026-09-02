@@ -76,6 +76,35 @@ def test_command_context_clears_previous_skill_success():
 
 @pytest.mark.parametrize(
     "value",
+    [
+        "",
+        "   ",
+        "bad\nvalue",
+        "bad\rvalue",
+        "-leading",
+        "a",
+        "semantic-model_authoring.v2",
+        "a" * 129,
+    ],
+    ids=[
+        "empty",
+        "whitespace",
+        "newline",
+        "carriage-return",
+        "leading-hyphen",
+        "single-character",
+        "punctuation",
+        "long",
+    ],
+)
+def test_fabric_skill_setter_preserves_string_value_success(value):
+    Context().fabric_skill = value
+
+    assert Context().fabric_skill == value
+
+
+@pytest.mark.parametrize(
+    "value",
     [123, True, [], {}, object()],
     ids=["integer", "boolean", "list", "dictionary", "object"],
 )
@@ -83,19 +112,6 @@ def test_fabric_skill_setter_normalizes_non_string_value_success(value):
     Context().fabric_skill = value
 
     assert Context().fabric_skill is None
-
-
-@pytest.mark.parametrize(
-    "skill",
-    [123, True, [], {}, object()],
-    ids=["integer", "boolean", "list", "dictionary", "object"],
-)
-def test_command_context_normalizes_non_string_skill_argument_success(skill):
-    @set_command_context()
-    def command(args: Namespace) -> None:
-        assert Context().fabric_skill is None
-
-    command(Namespace(command_path="export", skill=skill))
 
 
 @patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
@@ -130,14 +146,32 @@ def test_skill_header_is_scoped_to_fabric_api_success(
         assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
 
 
-def test_skill_header_is_not_logged_success(monkeypatch):
+@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
+def test_skill_header_is_omitted_when_skill_is_not_set_success(_mock_get_token):
+    args = Namespace(uri="items", method="get", audience="fabric")
+
+    with patch(
+        "requests.Session.request", return_value=DummyResponse()
+    ) as mock_request:
+        do_request(args)
+
+    request_headers = mock_request.call_args.kwargs["headers"]
+    assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [fab_constant.FABRIC_SKILL_HEADER, "X-MS-FABRIC-SKILL"],
+    ids=["canonical-case", "uppercase"],
+)
+def test_skill_header_is_not_logged_success(monkeypatch, header_name):
     monkeypatch.setattr(fab_state_config, "get_config", lambda key: "true")
 
     with patch.object(logger, "get_logger") as mock_get_logger:
         logger.log_debug_http_request(
             "GET",
             "http://example.com",
-            {fab_constant.FABRIC_SKILL_HEADER: "semantic-model-authoring"},
+            {header_name: "semantic-model-authoring"},
             10,
         )
 
