@@ -53,7 +53,7 @@ class TestMsalBridgeAzureCli:
         with pytest.raises(ClientAuthenticationError):
             credential.get_token("https://evil.example.com/.default")
 
-    def test_bridge_returns_access_token_in_proxy_auth_mode(
+    def test_bridge_returns_access_token_in_proxy_auth_mode_success(
         self, monkeypatch, azure_cli_auth_fixture
     ):
         """Proxy auth placeholders should satisfy the TokenCredential contract."""

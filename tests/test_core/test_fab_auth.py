@@ -497,7 +497,7 @@ def test_validate_jwt_token_empty():
 
 
 @pytest.mark.parametrize("value", ["true", "TRUE", "1"])
-def test_proxy_auth_mode_enabled(monkeypatch, value):
+def test_proxy_auth_mode_enabled_success(monkeypatch, value):
     auth = FabAuth()
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", value)
 
@@ -505,14 +505,14 @@ def test_proxy_auth_mode_enabled(monkeypatch, value):
 
 
 @pytest.mark.parametrize("value", ["", "false", "0", "yes"])
-def test_proxy_auth_mode_disabled(monkeypatch, value):
+def test_proxy_auth_mode_disabled_success(monkeypatch, value):
     auth = FabAuth()
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", value)
 
     assert auth.is_proxy_auth_mode() is False
 
 
-def test_proxy_auth_mode_not_enabled_by_placeholder_tokens(monkeypatch):
+def test_proxy_auth_mode_not_enabled_by_placeholder_tokens_success(monkeypatch):
     auth = FabAuth()
     monkeypatch.setenv("FAB_TOKEN", "mockToken")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "mockToken")
@@ -521,7 +521,7 @@ def test_proxy_auth_mode_not_enabled_by_placeholder_tokens(monkeypatch):
     assert auth.is_proxy_auth_mode() is False
 
 
-def test_proxy_auth_mode_skips_other_auth_environment(monkeypatch):
+def test_proxy_auth_mode_skips_other_auth_environment_success(monkeypatch):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     monkeypatch.setenv("FAB_SPN_CLIENT_ID", "not-a-guid")
     auth = FabAuth()
@@ -535,7 +535,7 @@ def test_proxy_auth_mode_skips_other_auth_environment(monkeypatch):
 
 
 @pytest.mark.parametrize("token", ["mockToken", b"mockToken"])
-def test_decode_jwt_token_proxy_auth_mode(monkeypatch, token):
+def test_decode_jwt_token_proxy_auth_mode_success(monkeypatch, token):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     auth = FabAuth()
 
@@ -548,7 +548,7 @@ def test_decode_jwt_token_proxy_auth_mode(monkeypatch, token):
     assert auth._decode_jwt_token(token) == {}
 
 
-def test_get_claims_from_token_proxy_auth_mode(monkeypatch):
+def test_get_claims_from_token_proxy_auth_mode_success(monkeypatch):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     auth = FabAuth()
 
@@ -894,7 +894,7 @@ def test_get_access_token_env_var(monkeypatch):
         ["https://example.com/.default"],
     ],
 )
-def test_get_access_token_proxy_auth_mode(monkeypatch, scope):
+def test_get_access_token_proxy_auth_mode_success(monkeypatch, scope):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     auth = FabAuth()
     auth._auth_info = {}
@@ -902,7 +902,7 @@ def test_get_access_token_proxy_auth_mode(monkeypatch, scope):
     assert auth.get_access_token(scope) == "mockToken"
 
 
-def test_acquire_token_proxy_auth_mode_includes_expiry(monkeypatch):
+def test_acquire_token_proxy_auth_mode_includes_expiry_success(monkeypatch):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     auth = FabAuth()
 
@@ -924,7 +924,7 @@ def test_acquire_token_proxy_auth_mode_includes_expiry(monkeypatch):
         con.SCOPE_AZURE_DEFAULT,
     ],
 )
-def test_proxy_auth_mode_overrides_configured_auth_method(
+def test_proxy_auth_mode_overrides_configured_auth_method_success(
     monkeypatch, identity_type, scope
 ):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
@@ -956,7 +956,9 @@ def test_proxy_auth_mode_overrides_configured_auth_method(
         con.SCOPE_AZURE_DEFAULT,
     ],
 )
-def test_proxy_auth_mode_overrides_token_environment_variables(monkeypatch, scope):
+def test_proxy_auth_mode_overrides_token_environment_variables_success(
+    monkeypatch, scope
+):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     monkeypatch.setenv("FAB_TOKEN", "fabric-access-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-access-token")
