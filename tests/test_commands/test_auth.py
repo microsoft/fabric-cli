@@ -912,7 +912,7 @@ class TestAuth:
 
         mock_print_done.assert_called_once()
 
-    def test_auth_login_proxy_auth_mode_failure(self, mock_fab_auth):
+    def test_auth_login_proxy_auth_mode_no_side_effects_success(self, mock_fab_auth):
         args = prepare_auth_args()
         auth = mock_fab_auth["instance"]
         auth.is_proxy_auth_mode.return_value = True
@@ -943,7 +943,9 @@ class TestAuth:
         clear_caches.assert_not_called()
         prompt_select_item.assert_not_called()
 
-    def test_auth_logout_proxy_auth_mode_failure(self, mock_fab_auth, mock_fab_context):
+    def test_auth_logout_proxy_auth_mode_no_side_effects_success(
+        self, mock_fab_auth, mock_fab_context
+    ):
         args = argparse.Namespace(command="auth", output_format="text")
         auth = mock_fab_auth["instance"]
         auth.is_proxy_auth_mode.return_value = True
