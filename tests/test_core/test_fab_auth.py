@@ -33,10 +33,11 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     auth = FabAuth()
     monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
     monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
-    monkeypatch.setattr(auth, "_auth_info", {})
-    monkeypatch.setattr(auth, "app", None)
-    monkeypatch.setattr(auth, "_azure_cli_credential", None)
-    monkeypatch.setattr(auth, "aad_public_key", None)
+    # Reset singleton state without restoring stale values at teardown.
+    auth._auth_info = {}
+    auth.app = None
+    auth._azure_cli_credential = None
+    auth.aad_public_key = None
     return str(tmp_path)
 
 

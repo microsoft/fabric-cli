@@ -353,7 +353,7 @@ def test_do_request_proxy_auth_mode_sends_placeholder_header(monkeypatch, audien
     monkeypatch.delenv("FAB_TOKEN_AZURE", raising=False)
 
     auth = FabAuth()
-    auth._auth_info = {}
+    monkeypatch.setattr(auth, "_auth_info", {})
     monkeypatch.setattr(
         auth,
         "_get_app",
