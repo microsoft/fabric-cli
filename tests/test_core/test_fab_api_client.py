@@ -346,7 +346,9 @@ def test_do_request_429_without_retry_after_header_retries_with_default_interval
 
 
 @pytest.mark.parametrize("audience", [None, "storage", "azure"])
-def test_do_request_proxy_auth_mode_sends_placeholder_header(monkeypatch, audience):
+def test_do_request_proxy_auth_mode_sends_placeholder_header_success(
+    monkeypatch, audience
+):
     monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
     monkeypatch.delenv("FAB_TOKEN", raising=False)
     monkeypatch.delenv("FAB_TOKEN_ONELAKE", raising=False)
