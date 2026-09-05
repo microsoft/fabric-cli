@@ -121,6 +121,20 @@ class AuthErrors:
         return "This operation is only supported with user authentication"
 
     @staticmethod
+    def login_not_available_in_proxy_mode() -> str:
+        return (
+            "Authentication login is not available in proxy authentication mode. "
+            "Unset FAB_PROXY_AUTH_ENABLED to manage CLI authentication"
+        )
+
+    @staticmethod
+    def logout_not_available_in_proxy_mode() -> str:
+        return (
+            "Authentication logout is not available in proxy authentication mode. "
+            "Unset FAB_PROXY_AUTH_ENABLED to manage CLI authentication"
+        )
+
+    @staticmethod
     def azure_cli_not_available() -> str:
         return (
             "Azure CLI is not installed or not logged in. "

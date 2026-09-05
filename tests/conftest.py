@@ -101,6 +101,7 @@ def azure_cli_auth_fixture(monkeypatch, tmp_path):
         "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
     for variable in (
+        "FAB_PROXY_AUTH_ENABLED",
         "FAB_TOKEN",
         "FAB_TOKEN_ONELAKE",
         "FAB_TOKEN_AZURE",

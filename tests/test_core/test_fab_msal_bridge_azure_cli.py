@@ -52,3 +52,16 @@ class TestMsalBridgeAzureCli:
         credential = MsalTokenCredential(auth)
         with pytest.raises(ClientAuthenticationError):
             credential.get_token("https://evil.example.com/.default")
+
+    def test_bridge_returns_access_token_in_proxy_auth_mode_success(
+        self, monkeypatch, azure_cli_auth_fixture
+    ):
+        """Proxy auth placeholders should satisfy the TokenCredential contract."""
+        monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+        auth = FabAuth()
+
+        credential = MsalTokenCredential(auth)
+        result = credential.get_token(con.SCOPE_FABRIC_DEFAULT[0])
+
+        assert result.token == "mockToken"
+        assert result.expires_on == 9999999999
