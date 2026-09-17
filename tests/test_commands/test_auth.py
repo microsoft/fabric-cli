@@ -912,6 +912,68 @@ class TestAuth:
 
         mock_print_done.assert_called_once()
 
+    def test_auth_login_proxy_auth_mode_no_side_effects_success(self, mock_fab_auth):
+        args = prepare_auth_args()
+        auth = mock_fab_auth["instance"]
+        auth.is_proxy_auth_mode.return_value = True
+
+        with (
+            patch(
+                "fabric_cli.commands.auth.fab_auth.utils_mem_store.clear_caches"
+            ) as clear_caches,
+            patch(
+                "fabric_cli.commands.auth.fab_auth.fab_ui.prompt_select_item"
+            ) as prompt_select_item,
+            patch(
+                "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_error"
+            ) as print_error,
+        ):
+            result = fab_auth.init(args)
+
+        assert result is None
+        error = print_error.call_args.args[0]
+        assert error.status_code == fab_constant.ERROR_AUTHENTICATION_FAILED
+        assert error.message == ErrorMessages.Auth.login_not_available_in_proxy_mode()
+        print_error.assert_called_once_with(
+            error,
+            command=args.command,
+            output_format_type=args.output_format,
+        )
+        assert_fab_auth_not_called(mock_fab_auth)
+        clear_caches.assert_not_called()
+        prompt_select_item.assert_not_called()
+
+    def test_auth_logout_proxy_auth_mode_no_side_effects_success(
+        self, mock_fab_auth, mock_fab_context
+    ):
+        args = argparse.Namespace(command="auth", output_format="text")
+        auth = mock_fab_auth["instance"]
+        auth.is_proxy_auth_mode.return_value = True
+        context = mock_fab_context["instance"]
+
+        with (
+            patch(
+                "fabric_cli.commands.auth.fab_auth.utils_mem_store.clear_caches"
+            ) as clear_caches,
+            patch(
+                "fabric_cli.commands.auth.fab_auth.fab_ui.print_output_error"
+            ) as print_error,
+        ):
+            result = fab_auth.logout(args)
+
+        assert result is None
+        error = print_error.call_args.args[0]
+        assert error.status_code == fab_constant.ERROR_AUTHENTICATION_FAILED
+        assert error.message == ErrorMessages.Auth.logout_not_available_in_proxy_mode()
+        print_error.assert_called_once_with(
+            error,
+            command="auth",
+            output_format_type="text",
+        )
+        auth.logout.assert_not_called()
+        clear_caches.assert_not_called()
+        context.reset_context.assert_not_called()
+
     def test_auth_status(self, mock_fab_auth, capsys):
         # Arrange
         args = argparse.Namespace(
@@ -944,6 +1006,19 @@ class TestAuth:
         )
         assert "Token Storage: mock************************************" in captured.out
         assert "Token Azure: mock************************************" in captured.out
+
+    def test_auth_status_proxy_auth_mode_success(self, monkeypatch, capsys):
+        monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert captured.out.strip() == "proxy authentication mode"
+        assert captured.err == ""
 
     def test_auth_status_azure_cli_session_available(self, mock_fab_auth, capsys):
         args = argparse.Namespace(
@@ -1217,6 +1292,7 @@ def mock_fab_auth():
         set_spn=MagicMock(),
         set_managed_identity=MagicMock(),
         logout=MagicMock(),
+        is_proxy_auth_mode=MagicMock(return_value=False),
         # add more methods if needed
     ) as mocks:
         # mocks is a dictionary containing the mock objects for each method

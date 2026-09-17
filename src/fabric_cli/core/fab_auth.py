@@ -28,6 +28,17 @@ from fabric_cli.core.hiearchy.fab_tenant import Tenant
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
+_PROXY_AUTH_ENVIRONMENT_VARIABLE = "FAB_PROXY_AUTH_ENABLED"
+_PROXY_AUTH_PLACEHOLDER_TOKEN = "mockToken"
+_PROXY_AUTH_EXPIRES_ON = 9999999999
+
+
+def _is_proxy_auth_placeholder(token: Any) -> bool:
+    return token in (
+        _PROXY_AUTH_PLACEHOLDER_TOKEN,
+        _PROXY_AUTH_PLACEHOLDER_TOKEN.encode(),
+    )
+
 
 def singleton(class_):
     instances = {}
@@ -128,6 +139,9 @@ class FabAuth:
                     )
 
     def _load_env(self):
+        if self.is_proxy_auth_mode():
+            return
+
         # Validate the environment variables
         self._validate_environment_variables()
 
@@ -328,6 +342,14 @@ class FabAuth:
     def get_identity_type(self):
         return self._get_auth_property(con.IDENTITY_TYPE)
 
+    @staticmethod
+    def is_proxy_auth_mode() -> bool:
+        """Return whether proxy authentication mode is enabled."""
+        return os.environ.get(_PROXY_AUTH_ENVIRONMENT_VARIABLE, "").lower() in (
+            "true",
+            "1",
+        )
+
     def set_access_mode(self, mode, tenant_id=None):
         if mode not in con.AUTH_KEYS[con.IDENTITY_TYPE]:
             raise FabricCLIError(
@@ -525,6 +547,12 @@ class FabAuth:
         from fabric_cli.utils.fab_secure_io import restrict_existing_file
 
         try:
+            if self.is_proxy_auth_mode():
+                return {
+                    "access_token": _PROXY_AUTH_PLACEHOLDER_TOKEN,
+                    "expires_on": _PROXY_AUTH_EXPIRES_ON,
+                }
+
             token = None
             env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
             identity_type = self.get_identity_type()
@@ -677,6 +705,9 @@ class FabAuth:
         return key
 
     def _decode_jwt_token(self, token, expected_audience=None):
+        if self.is_proxy_auth_mode() and _is_proxy_auth_placeholder(token):
+            return {}
+
         decode_options = {"verify_aud": expected_audience is not None}
         # Try using the cached public key if available
         if self.aad_public_key is not None:
