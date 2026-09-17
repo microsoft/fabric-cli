@@ -8,6 +8,7 @@ from fabric_cli.core.fab_constant import (
     ERROR_UNAUTHORIZED,
     EXIT_CODE_AUTHORIZATION_REQUIRED,
     EXIT_CODE_ERROR,
+    FAB_MODE_INTERACTIVE,
 )
 from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_ui
@@ -21,7 +22,7 @@ def singleton(class_):
         if class_ not in instances:
             instances[class_] = class_(*args, **kwargs)
         return instances[class_]
-    
+
     return getinstance
 
 
@@ -64,8 +65,14 @@ def set_command_context():
         def wrapper(*args, **kwargs):
             # Import Context locally to avoid circular import
             from fabric_cli.core.fab_context import Context
-            Context().command = args[0].command_path
-            Context().fabric_skill = getattr(args[0], "skill", None)
+
+            context = Context()
+            context.command = args[0].command_path
+            context.fabric_skill = getattr(args[0], "skill", None)
+            if context.get_runtime_mode() == FAB_MODE_INTERACTIVE:
+                from fabric_cli.core.fab_auth import FabAuth
+
+                FabAuth().validate_azure_cli_identity()
             return func(*args, **kwargs)
 
         return wrapper

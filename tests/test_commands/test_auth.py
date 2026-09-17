@@ -881,9 +881,13 @@ class TestAuth:
         args = argparse.Namespace()
 
         # Act
-        fab_auth.logout(args)
+        with patch.object(
+            fab_auth.utils_mem_store, "clear_caches"
+        ) as mock_clear_caches:
+            fab_auth.logout(args)
 
         # Assert
+        mock_clear_caches.assert_called_once_with()
         mock_fab_context_instance = mock_fab_context.get("instance")
         mock_fab_context_instance.reset_context.assert_called_once()
 
@@ -919,14 +923,18 @@ class TestAuth:
             auth_subcommand="status",
             output_format="text",
         )
-        with patch(
-            "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
-            return_value={
-                "appid": "mocked_appid",
-                "upn": "mocked_upn",
-                "oid": "mocked_oid",
-                "tid": "mocked_tenant_id",
-            },
+        auth = mock_fab_auth["instance"]
+        with (
+            patch.object(auth, "get_identity_type", return_value="user"),
+            patch(
+                "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+                return_value={
+                    "appid": "mocked_appid",
+                    "upn": "mocked_upn",
+                    "oid": "mocked_oid",
+                    "tid": "mocked_tenant_id",
+                },
+            ),
         ):
             # Act
             fab_auth.status(args)
@@ -988,6 +996,155 @@ class TestAuth:
         assert "Authentication Mode: Azure CLI" in captured.out
         assert "Azure CLI Session: Unavailable" in captured.out
         assert "Logged In: False" in captured.out
+
+    def test_auth_status_identity_drift_during_token_masking(
+        self, mock_fab_auth, capsys
+    ):
+        """Status should report logged-out state after Azure CLI identity drift."""
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+        auth._auth_info = {
+            fab_constant.IDENTITY_TYPE: "azure_cli",
+            fab_constant.FAB_TENANT_ID: "previous-tenant",
+        }
+        auth.get_tenant_id.side_effect = lambda: auth._auth_info.get(
+            fab_constant.FAB_TENANT_ID
+        )
+
+        def get_access_token(*args, **kwargs):
+            if auth.get_access_token.call_count <= 2:
+                return "mocked_access_token"
+            auth._auth_info = {}
+            raise FabricCLIError(
+                ErrorMessages.Auth.azure_cli_identity_changed(),
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        auth.get_access_token.side_effect = get_access_token
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+            return_value={"tid": "previous-tenant"},
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Not logged in to app.fabric.microsoft.com" in captured.err
+        assert "Authentication Mode: Azure CLI" not in captured.out
+        assert "Azure CLI Session:" not in captured.out
+        assert "Account: N/A" in captured.out
+        assert "Principal ID: N/A" in captured.out
+        assert "Tenant ID: N/A" in captured.out
+        assert "App ID: N/A" in captured.out
+        assert "Token Fabric PowerBI: N/A" in captured.out
+        assert "Token Storage: N/A" in captured.out
+        assert "Token Azure: N/A" in captured.out
+        assert "Logged In: False" in captured.out
+        assert "previous-tenant" not in captured.out
+
+    def test_auth_status_identity_drift_preserves_environment_tokens(
+        self, mock_fab_auth, capsys
+    ):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+        auth._auth_info = {
+            fab_constant.IDENTITY_TYPE: "azure_cli",
+            fab_constant.FAB_TENANT_ID: "previous-tenant",
+        }
+        auth.get_tenant_id.side_effect = lambda: auth._auth_info.get(
+            fab_constant.FAB_TENANT_ID
+        )
+
+        def get_access_token(scope, **kwargs):
+            if auth.get_access_token.call_count <= 2:
+                return "azure_cli_token"
+            if auth.get_access_token.call_count == 3:
+                auth._auth_info = {}
+                raise FabricCLIError(
+                    ErrorMessages.Auth.azure_cli_identity_changed(),
+                    fab_constant.ERROR_AUTHENTICATION_FAILED,
+                )
+            if scope == fab_constant.SCOPE_FABRIC_DEFAULT:
+                return "fabe_environment_token"
+            if scope == fab_constant.SCOPE_ONELAKE_DEFAULT:
+                return "onel_environment_token"
+            return "azur_environment_token"
+
+        auth.get_access_token.side_effect = get_access_token
+
+        with patch(
+            "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+            side_effect=lambda token: (
+                {"upn": "environment-user", "tid": "environment-tenant"}
+                if token == b"fabe_environment_token"
+                else {"tid": "previous-tenant"}
+            ),
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Logged in to app.fabric.microsoft.com" in captured.err
+        assert "Authentication Mode: Azure CLI" not in captured.out
+        assert "Azure CLI Session:" not in captured.out
+        assert "Account: environment-user" in captured.out
+        assert "Tenant ID: environment-tenant" in captured.out
+        assert (
+            "Token Fabric PowerBI: fabe************************************"
+            in captured.out
+        )
+        assert "Token Storage: onel************************************" in captured.out
+        assert "Token Azure: azur************************************" in captured.out
+        assert "Logged In: True" in captured.out
+        assert "previous-tenant" not in captured.out
+
+    def test_auth_status_without_identity_preserves_available_tokens(
+        self, mock_fab_auth, capsys
+    ):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+
+        with (
+            patch.object(auth, "get_identity_type", return_value=None),
+            patch(
+                "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+                return_value={},
+            ),
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Logged in to app.fabric.microsoft.com" in captured.err
+        assert "Logged In: True" in captured.out
+        assert (
+            "Token Fabric PowerBI: mock************************************"
+            in captured.out
+        )
+        assert "Token Storage: mock************************************" in captured.out
+        assert "Token Azure: mock************************************" in captured.out
+        assert [
+            token_call.args[0] for token_call in auth.get_access_token.call_args_list
+        ] == [
+            fab_constant.SCOPE_FABRIC_DEFAULT,
+            fab_constant.SCOPE_FABRIC_DEFAULT,
+            fab_constant.SCOPE_ONELAKE_DEFAULT,
+            fab_constant.SCOPE_AZURE_DEFAULT,
+        ]
+        assert all(
+            token_call.kwargs == {"interactive_renew": False}
+            for token_call in auth.get_access_token.call_args_list
+        )
 
     def test_init_when_user_cancels_the_prompt(
         self, mock_fab_auth, mock_fab_context, mock_fab_logger_log_warning, capsys

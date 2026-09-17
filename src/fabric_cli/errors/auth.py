@@ -139,5 +139,16 @@ class AuthErrors:
         )
 
     @staticmethod
+    def azure_cli_identity_claims_missing() -> str:
+        return "Azure CLI returned an invalid token. Run 'az login' to authenticate, then retry"
+
+    @staticmethod
+    def azure_cli_identity_changed() -> str:
+        return (
+            "Fabric CLI logged out due to change in Azure CLI identity. "
+            "Run `fab auth login --azure-cli` to re-authenticate with the current Azure CLI identity"
+        )
+
+    @staticmethod
     def incompatible_authentication_arguments(arguments: list[str]) -> str:
         return f"Authentication arguments cannot be combined: {', '.join(arguments)}"

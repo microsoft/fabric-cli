@@ -54,6 +54,7 @@ FAB_SPN_CERT_PATH = "fab_spn_cert_path"
 FAB_SPN_CERT_PASSWORD = "fab_spn_cert_password"
 FAB_SPN_FEDERATED_TOKEN = "fab_spn_federated_token"
 FAB_TENANT_ID = "fab_tenant_id"
+FAB_PRINCIPAL_ID = "fab_principal_id"
 
 FAB_REFRESH_TOKEN = "fab_refresh_token"
 IDENTITY_TYPE = "identity_type"
