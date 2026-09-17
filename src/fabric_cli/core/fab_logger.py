@@ -73,8 +73,8 @@ def log_debug_http_request(
     for key, value in headers.items():
         if key.lower() == "authorization":
             value = "*****"  # Mask authorization token
-        elif key.lower() == "user-agent":
-            continue  # Skip logging the User-Agent header
+        elif key.lower() in ("user-agent", fab_constant.FABRIC_SKILL_HEADER):
+            continue  # Skip logging telemetry headers
         logger.debug(f"    '{key}': '{value}'")
 
     # Body

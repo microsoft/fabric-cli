@@ -85,6 +85,7 @@ def reset_context():
     context_instance = Context()
     context_instance._context = None
     context_instance._command = None
+    context_instance._fabric_skill = None
     context_instance._loading_context = False
     context_instance._runtime_mode = fab_constant.FAB_MODE_COMMANDLINE
 
