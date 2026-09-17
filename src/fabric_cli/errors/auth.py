@@ -140,7 +140,7 @@ class AuthErrors:
 
     @staticmethod
     def azure_cli_identity_claims_missing() -> str:
-        return "Azure CLI token is missing required tenant or principal identity claims"
+        return "Azure CLI returned an invalid token. Run 'az login' to authenticate, then retry"
 
     @staticmethod
     def azure_cli_identity_changed() -> str:

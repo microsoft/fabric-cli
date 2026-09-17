@@ -344,9 +344,9 @@ class FabAuth:
         if mode != self.get_identity_type():
             self.logout()
         elif mode == "azure_cli":
-            # Reset the baseline so an explicit re-login establishes the
+            # Clear the baseline so an explicit re-login establishes the
             # current Azure CLI identity instead of reporting identity drift
-            self._reset_azure_cli_identity_baseline()
+            self._clear_azure_cli_identity_baseline()
         if tenant_id and self.get_tenant_id() != tenant_id:
             self.set_tenant(tenant_id)
         self._set_auth_property(con.IDENTITY_TYPE, mode)
@@ -525,6 +525,7 @@ class FabAuth:
             self.logout()
             fab_mem_store.clear_caches()
             Context().reset_context()
+            # Raise an error to stop the current operation upon detecting identity drift
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_identity_changed(),
                 status_code=con.ERROR_AUTHENTICATION_FAILED,
@@ -539,10 +540,9 @@ class FabAuth:
             auth_properties[con.FAB_PRINCIPAL_ID] = principal_id
         if auth_properties:
             self._set_auth_properties(auth_properties)
-        if current_tenant_id is None:
             Context().context = self.get_tenant()
 
-    def _reset_azure_cli_identity_baseline(self):
+    def _clear_azure_cli_identity_baseline(self):
         self._auth_info.pop(con.FAB_TENANT_ID, None)
         self._auth_info.pop(con.FAB_PRINCIPAL_ID, None)
         self._azure_cli_credential = None

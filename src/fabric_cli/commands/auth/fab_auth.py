@@ -265,6 +265,7 @@ def status(args: Namespace) -> None:
     identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 
+    # Clear stale tokens after Azure CLI identity drift without affecting env var supplied tokens
     if identity_type is None and initial_identity_type == "azure_cli":
         token_info = {}
         fabric_secret, storage_secret, azure_secret = ("N/A",) * 3
