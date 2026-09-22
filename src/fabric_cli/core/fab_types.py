@@ -264,6 +264,7 @@ class ItemType(_BaseItemType):
     ENVIRONMENT = "Environment"
     EVENTHOUSE = "Eventhouse"
     EVENTSTREAM = "Eventstream"
+    GRAPH_MODEL = "GraphModel"
     KQL_DASHBOARD = "KQLDashboard"
     KQL_DATABASE = "KQLDatabase"
     KQL_QUERYSET = "KQLQueryset"
@@ -274,6 +275,7 @@ class ItemType(_BaseItemType):
     ML_EXPERIMENT = "MLExperiment"
     ML_MODEL = "MLModel"
     NOTEBOOK = "Notebook"
+    ONTOLOGY = "Ontology"
     PAGINATED_REPORT = "PaginatedReport"
     REFLEX = "Reflex"
     REPORT = "Report"
@@ -328,6 +330,7 @@ class FabricJobType(Enum):
     RUN_NOTEBOOK = "RunNotebook"
     PIPELINE = "Pipeline"
     TABLE_MAINTENANCE = "TableMaintenance"
+    REFRESH_GRAPH = "refreshGraph"
 
 
 ITJobMap: dict[ItemType, FabricJobType] = {
@@ -339,6 +342,7 @@ ITJobMap: dict[ItemType, FabricJobType] = {
     ItemType.DATA_PIPELINE: FabricJobType.PIPELINE,
     # {"tableName": "orders", "optimizeSettings": {"vOrder": true, "zOrderBy": ["account_id"]}, "vacuumSettings": {"retentionPeriod": "7.01:00:00"}}
     ItemType.LAKEHOUSE: FabricJobType.TABLE_MAINTENANCE,
+    ItemType.GRAPH_MODEL: FabricJobType.REFRESH_GRAPH,
 }
 
 ###################################
@@ -505,6 +509,7 @@ format_mapping = {
     ItemType.ENVIRONMENT: "environments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
+    ItemType.GRAPH_MODEL: "graphModels",
     ItemType.KQL_DASHBOARD: "kqlDashboards",
     ItemType.KQL_DATABASE: "kqlDatabases",
     ItemType.KQL_QUERYSET: "kqlQuerysets",
@@ -515,6 +520,7 @@ format_mapping = {
     ItemType.MIRRORED_WAREHOUSE: "mirroredWarehouses",
     ItemType.MIRRORED_DATABASE: "mirroredDatabases",
     ItemType.NOTEBOOK: "notebooks",
+    ItemType.ONTOLOGY: "ontologies",
     ItemType.PAGINATED_REPORT: "paginatedReports",
     ItemType.REFLEX: "reflexes",
     ItemType.REPORT: "reports",
@@ -554,6 +560,7 @@ uri_mapping = {
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
     ItemType.EVENTSTREAM: "eventstreams",
+    ItemType.GRAPH_MODEL: "graph",
     ItemType.KQL_DASHBOARD: "kustodashboards",
     ItemType.KQL_DATABASE: "databases",
     ItemType.KQL_QUERYSET: "queryworkbenches",
@@ -563,6 +570,7 @@ uri_mapping = {
     ItemType.ML_EXPERIMENT: "mlexperiments",
     ItemType.ML_MODEL: "mlmodels",
     ItemType.NOTEBOOK: "synapsenotebooks",
+    ItemType.ONTOLOGY: "ontologies",
     ItemType.PAGINATED_REPORT: "rdlreports",
     ItemType.REFLEX: "reflexes",
     ItemType.REPORT: "reports",
@@ -606,4 +614,6 @@ definition_format_mapping = {
     ItemType.VARIABLE_LIBRARY: {"default": ""},
     ItemType.MAP: {"default": ""},
     ItemType.ENVIRONMENT: {"default": ""},
+    ItemType.GRAPH_MODEL: {"default": ""},
+    ItemType.ONTOLOGY: {"default": ""},
 }

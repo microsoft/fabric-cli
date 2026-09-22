@@ -362,3 +362,21 @@ Execute only vacuum operation to clean up old files.
 ```
 fab job run ws1.Workspace/lh1.Lakehouse -i '{"tableName": "orders", "vacuumSettings": {"retentionPeriod": "7.01:00:00"}}'
 ```
+
+### Graph Model Jobs
+
+#### Refresh a Graph Model
+
+Refresh a graph model and wait for the job to complete.
+
+```
+fab job run ws1.Workspace/gm1.GraphModel
+```
+
+#### Refresh a Graph Model Asynchronously
+
+Start a graph model refresh without waiting for the job to complete.
+
+```
+fab job start ws1.Workspace/gm1.GraphModel
+```

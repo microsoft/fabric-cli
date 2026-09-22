@@ -69,6 +69,8 @@ ALL_ITEM_TYPES = [
     ItemType.DIGITAL_TWIN_BUILDER_FLOW,
     ItemType.GRAPH_QUERY_SET,
     ItemType.MAP,
+    ItemType.GRAPH_MODEL,
+    ItemType.ONTOLOGY,
 ]
 
 item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
@@ -93,6 +95,8 @@ basic_item_parametrize = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.GRAPH_QUERY_SET,
         ItemType.MAP,
+        ItemType.GRAPH_MODEL,
+        ItemType.ONTOLOGY,
     ],
 )
 
@@ -113,6 +117,8 @@ import_update_existing_item_success_params = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER,
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.LAKEHOUSE,
+        ItemType.GRAPH_MODEL,
+        ItemType.ONTOLOGY,
     ],
 )
 
@@ -137,6 +143,8 @@ import_create_new_item_success_params = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.LAKEHOUSE,
         ItemType.ENVIRONMENT,
+        ItemType.GRAPH_MODEL,
+        ItemType.ONTOLOGY,
     ],
 )
 
@@ -214,6 +222,8 @@ mv_item_to_item_success_params = pytest.mark.parametrize(
         ItemType.USER_DATA_FUNCTION,
         ItemType.MAP,
         ItemType.ENVIRONMENT,
+        # ItemType.GRAPH_MODEL,
+        # ItemType.ONTOLOGY,
     ],
 )
 
@@ -249,6 +259,8 @@ mv_item_within_workspace_rename_success_params = pytest.mark.parametrize(
         ItemType.USER_DATA_FUNCTION,
         ItemType.MAP,
         ItemType.ENVIRONMENT,
+        # ItemType.GRAPH_MODEL,
+        # ItemType.ONTOLOGY,
     ],
 )
 
@@ -328,6 +340,8 @@ set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize(
         ItemType.MAP,
         ItemType.DIGITAL_TWIN_BUILDER,
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
+        ItemType.GRAPH_MODEL,
+        ItemType.ONTOLOGY,
     ],
 )
 
@@ -395,6 +409,8 @@ export_item_with_extension_parameters = pytest.mark.parametrize(
         (ItemType.DIGITAL_TWIN_BUILDER_FLOW, ".json"),
         (ItemType.MAP, ".json"),
         (ItemType.LAKEHOUSE, ".json"),
+        (ItemType.GRAPH_MODEL, ".json"),
+        (ItemType.ONTOLOGY, ".json"),
     ],
 )
 
@@ -416,6 +432,8 @@ export_item_types_parameters = pytest.mark.parametrize(
         ItemType.MAP,
         ItemType.LAKEHOUSE,
         ItemType.ENVIRONMENT,
+        ItemType.GRAPH_MODEL,
+        ItemType.ONTOLOGY,
     ],
 )
 
@@ -448,6 +466,8 @@ export_item_default_format_parameters = pytest.mark.parametrize(
         (ItemType.DIGITAL_TWIN_BUILDER_FLOW, 2),
         (ItemType.LAKEHOUSE, 4),
         (ItemType.ENVIRONMENT, 2),
+        (ItemType.GRAPH_MODEL, 6),
+        (ItemType.ONTOLOGY, 2),
     ],
 )
 
@@ -464,6 +484,8 @@ export_item_invalid_format_parameters = pytest.mark.parametrize(
         (ItemType.GRAPH_QUERY_SET, ".txt"),
         (ItemType.DIGITAL_TWIN_BUILDER, ".txt"),
         (ItemType.LAKEHOUSE, ".txt"),
+        (ItemType.GRAPH_MODEL, ".txt"),
+        (ItemType.ONTOLOGY, ".txt"),
     ],
 )
 
@@ -492,6 +514,8 @@ cp_item_types_success_params = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         # ItemType.DIGITAL_TWIN_BUILDER,
         # ItemType.DIGITAL_TWIN_BUILDER_FLOW,
+        # ItemType.GRAPH_MODEL,
+        # ItemType.ONTOLOGY,
     ],
 )
 
@@ -508,6 +532,8 @@ cp_folder_item_types_success_params = pytest.mark.parametrize(
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
         ItemType.ENVIRONMENT,
+        # ItemType.GRAPH_MODEL,
+        # ItemType.ONTOLOGY,
     ],
 )
 
@@ -558,6 +584,8 @@ ls_folder_content_success_params = pytest.mark.parametrize(
         ItemType.COSMOS_DB_DATABASE,
         ItemType.USER_DATA_FUNCTION,
         ItemType.GRAPH_QUERY_SET,
+        # ItemType.GRAPH_MODEL,
+        # ItemType.ONTOLOGY,
     ],
 )
 
