@@ -30,6 +30,14 @@ def temp_dir_fixture(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "fabric_cli.core.fab_state_config.config_location", lambda: str(tmp_path)
     )
+    auth = FabAuth()
+    monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
+    monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
+    # Reset singleton state without restoring stale values at teardown.
+    auth._auth_info = {}
+    auth.app = None
+    auth._azure_cli_credential = None
+    auth.aad_public_key = None
     return str(tmp_path)
 
 
@@ -40,6 +48,7 @@ DUMMY_KEY_INVALID = "dummy_key_invalid"
 
 
 def _clear_environment_variables(monkeypatch):
+    monkeypatch.delenv("FAB_PROXY_AUTH_ENABLED", raising=False)
     monkeypatch.delenv("FAB_TENANT_ID", raising=False)
     monkeypatch.delenv("FAB_SPN_CLIENT_ID", raising=False)
     monkeypatch.delenv("FAB_SPN_CLIENT_SECRET", raising=False)
@@ -488,6 +497,68 @@ def test_validate_jwt_token_empty():
     assert e.value.message == "Invalid JWT token"
 
 
+@pytest.mark.parametrize("value", ["true", "TRUE", "1"])
+def test_proxy_auth_mode_enabled_success(monkeypatch, value):
+    auth = FabAuth()
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", value)
+
+    assert auth.is_proxy_auth_mode() is True
+
+
+@pytest.mark.parametrize("value", ["", "false", "0", "yes"])
+def test_proxy_auth_mode_disabled_success(monkeypatch, value):
+    auth = FabAuth()
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", value)
+
+    assert auth.is_proxy_auth_mode() is False
+
+
+def test_proxy_auth_mode_not_enabled_by_placeholder_tokens_success(monkeypatch):
+    auth = FabAuth()
+    monkeypatch.setenv("FAB_TOKEN", "mockToken")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "mockToken")
+    monkeypatch.setenv("FAB_TOKEN_AZURE", "mockToken")
+
+    assert auth.is_proxy_auth_mode() is False
+
+
+def test_proxy_auth_mode_skips_other_auth_environment_success(monkeypatch):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    monkeypatch.setenv("FAB_SPN_CLIENT_ID", "not-a-guid")
+    auth = FabAuth()
+    monkeypatch.setattr(
+        auth,
+        "_validate_environment_variables",
+        lambda: pytest.fail("Other authentication variables must be ignored"),
+    )
+
+    auth._load_env()
+
+
+@pytest.mark.parametrize("token", ["mockToken", b"mockToken"])
+def test_decode_jwt_token_proxy_auth_mode_success(monkeypatch, token):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    auth = FabAuth()
+
+    monkeypatch.setattr(
+        auth,
+        "_fetch_public_key_from_aad",
+        lambda token: pytest.fail("Proxy authentication must not fetch a public key"),
+    )
+
+    assert auth._decode_jwt_token(token) == {}
+
+
+def test_get_claims_from_token_proxy_auth_mode_success(monkeypatch):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    auth = FabAuth()
+
+    assert (
+        auth._get_claims_from_token(b"mockToken", ["upn", "oid", "tid", "appid"])
+        is None
+    )
+
+
 def test_decode_jwt_token_with_cached_key_success(monkeypatch):
     auth = FabAuth()
     # Set a valid cached key
@@ -813,6 +884,99 @@ def test_get_access_token_env_var(monkeypatch):
     )
     token = auth.get_access_token(["dummy_scope"])
     assert token == "env_token"
+
+
+@pytest.mark.parametrize(
+    "scope",
+    [
+        con.SCOPE_FABRIC_DEFAULT,
+        con.SCOPE_ONELAKE_DEFAULT,
+        con.SCOPE_AZURE_DEFAULT,
+        ["https://example.com/.default"],
+    ],
+)
+def test_get_access_token_proxy_auth_mode_success(monkeypatch, scope):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    auth = FabAuth()
+    auth._auth_info = {}
+
+    assert auth.get_access_token(scope) == "mockToken"
+
+
+def test_acquire_token_proxy_auth_mode_includes_expiry_success(monkeypatch):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    auth = FabAuth()
+
+    result = auth.acquire_token(con.SCOPE_FABRIC_DEFAULT)
+
+    assert result["access_token"] == "mockToken"
+    assert result["expires_on"] == 9999999999
+
+
+@pytest.mark.parametrize(
+    "identity_type",
+    ["user", "service_principal", "managed_identity", "azure_cli"],
+)
+@pytest.mark.parametrize(
+    "scope",
+    [
+        con.SCOPE_FABRIC_DEFAULT,
+        con.SCOPE_ONELAKE_DEFAULT,
+        con.SCOPE_AZURE_DEFAULT,
+    ],
+)
+def test_proxy_auth_mode_overrides_configured_auth_method_success(
+    monkeypatch, identity_type, scope
+):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: identity_type}
+    monkeypatch.setattr(
+        auth,
+        "_get_app",
+        lambda: pytest.fail("Proxy authentication must not initialize MSAL"),
+    )
+    monkeypatch.setattr(
+        auth,
+        "_acquire_token_from_azure_cli",
+        lambda requested_scope: pytest.fail(
+            "Proxy authentication must not use Azure CLI credentials"
+        ),
+    )
+
+    result = auth.acquire_token(scope)
+
+    assert result == {"access_token": "mockToken", "expires_on": 9999999999}
+
+
+@pytest.mark.parametrize(
+    "scope",
+    [
+        con.SCOPE_FABRIC_DEFAULT,
+        con.SCOPE_ONELAKE_DEFAULT,
+        con.SCOPE_AZURE_DEFAULT,
+    ],
+)
+def test_proxy_auth_mode_overrides_token_environment_variables_success(
+    monkeypatch, scope
+):
+    monkeypatch.setenv("FAB_PROXY_AUTH_ENABLED", "true")
+    monkeypatch.setenv("FAB_TOKEN", "fabric-access-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-access-token")
+    monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-access-token")
+    auth = FabAuth()
+    auth._auth_info = {}
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None: pytest.fail(
+            "Proxy authentication must not validate token environment variables"
+        ),
+    )
+
+    result = auth.acquire_token(scope)
+
+    assert result == {"access_token": "mockToken", "expires_on": 9999999999}
 
 
 # -----------------------------
