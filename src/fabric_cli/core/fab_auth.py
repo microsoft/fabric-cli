@@ -351,9 +351,7 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        # Detect cross-mode drift: the direct access tokens must also match the
-        # identity of any already authenticated session (e.g. a prior user or
-        # Azure CLI login), otherwise env vars would silently switch identity.
+        # The direct access tokens must also match the identity of any already authenticated session
         session_tenant, session_principal = self._get_active_session_identity()
         token_principals = {object_id for _, object_id in identities}
         if (
@@ -370,9 +368,7 @@ class FabAuth:
             )
 
         # Pin the direct access token identity as the baseline on first use so
-        # that any later identity change (including a swap to a different direct
-        # token with no prior login) is detected as drift on the next command,
-        # consistent with Azure CLI authentication mode.
+        # that any later identity change is detected as drift on the next command
         if len(identities) == 1:
             token_tenant, token_principal = next(iter(identities))
             baseline: dict[str, str] = {}
@@ -384,10 +380,7 @@ class FabAuth:
                 self._set_auth_properties(baseline)
 
     def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
-        """Return the ``(tenant_id, principal_id)`` recorded for the currently
-        authenticated session, lowercased, so direct access token environment
-        variables can be checked for drift against an already established
-        identity. Either value is ``None`` when the session has not recorded it."""
+        """Return the ``(tenant_id, principal_id)`` recorded for the currently authenticated session."""
         tenant_id = self.get_tenant_id()
         principal_id = self._get_auth_property(con.FAB_PRINCIPAL_ID)
         return (
