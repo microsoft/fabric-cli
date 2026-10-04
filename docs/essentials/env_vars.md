@@ -33,5 +33,11 @@ token tenant must also match `FAB_TENANT_ID`. If a claim is missing or the
 identities differ, the CLI logs out, clears its authentication and resource
 caches, resets the current context, and fails the command.
 
+The token identity must also match the identity of an already authenticated
+session. If you are signed in (for example, in user or Azure CLI mode) and then
+set direct access token variables for a different tenant or principal, the CLI
+treats this as identity drift, logs out, and fails the command instead of
+silently switching identity.
+
 This validation applies only to direct access token environment variables. It
 does not apply when Azure CLI authentication mode is active.

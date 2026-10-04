@@ -70,6 +70,14 @@ class AuthErrors:
         )
 
     @staticmethod
+    def direct_token_session_identity_drift() -> str:
+        return (
+            "Direct access token identity drift detected. The access token "
+            "environment variables do not match the currently authenticated "
+            "session identity. The Fabric CLI session has been logged out"
+        )
+
+    @staticmethod
     def invalid_identity_type(identity_type: str, allowed_values: list) -> str:
         return f"The identity type '{identity_type}' is invalid. Allowed values are: {allowed_values}"
 

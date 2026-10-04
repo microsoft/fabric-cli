@@ -351,6 +351,36 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
+        # Detect cross-mode drift: the direct access tokens must also match the
+        # identity of any already authenticated session (e.g. a prior user or
+        # Azure CLI login), otherwise env vars would silently switch identity.
+        session_tenant, session_principal = self._get_active_session_identity()
+        token_principals = {object_id for _, object_id in identities}
+        if (
+            session_tenant and token_tenants and session_tenant not in token_tenants
+        ) or (
+            session_principal
+            and token_principals
+            and session_principal not in token_principals
+        ):
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.direct_token_session_identity_drift(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+    def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
+        """Return the ``(tenant_id, principal_id)`` recorded for the currently
+        authenticated session, lowercased, so direct access token environment
+        variables can be checked for drift against an already established
+        identity. Either value is ``None`` when the session has not recorded it."""
+        tenant_id = self.get_tenant_id()
+        principal_id = self._get_auth_property(con.FAB_PRINCIPAL_ID)
+        return (
+            tenant_id.lower() if tenant_id else None,
+            principal_id.lower() if principal_id else None,
+        )
+
     def get_tenant(self):
         return Tenant(
             name=self.get_tenant_name(),
@@ -526,7 +556,6 @@ class FabAuth:
     def _check_azure_cli_identity(self, claims: dict) -> None:
         """Records Azure CLI tenant and principal IDs and rejects identity drift."""
         from fabric_cli.core.fab_context import Context
-        from fabric_cli.utils import fab_mem_store
 
         # Get the tenant and principal IDs from the claims
         tenant_id = claims.get("tid")
@@ -560,9 +589,7 @@ class FabAuth:
             fab_logger.log_warning(f"Change detected in Azure CLI {changed_identity}")
 
             # Logout and clear identity-bound state before raising an error
-            self.logout()
-            fab_mem_store.clear_caches()
-            Context().reset_context()
+            self.logout_session()
             # Raise an error to stop the current operation upon detecting identity drift
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_identity_changed(),
@@ -671,7 +698,13 @@ class FabAuth:
                             parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
                         )
                         if token is not None and "id_token_claims" in token:
-                            self.set_tenant(token.get("id_token_claims")["tid"])
+                            claims = token.get("id_token_claims")
+                            self.set_tenant(claims["tid"])
+                            principal_id = claims.get("oid")
+                            if principal_id:
+                                self._set_auth_property(
+                                    con.FAB_PRINCIPAL_ID, principal_id
+                                )
 
             if token and token.get("error"):
                 fab_logger.log_debug(

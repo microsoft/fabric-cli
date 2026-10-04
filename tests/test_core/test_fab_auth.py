@@ -819,6 +819,7 @@ def test_get_access_token_env_var(monkeypatch):
 def test_direct_token_identity_consistent(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
+    auth._auth_info = {}
     tenant_id = str(uuid.uuid4())
     object_id = str(uuid.uuid4())
     tokens = {
@@ -888,6 +889,83 @@ def test_direct_token_tenant_drift_logs_out_session(monkeypatch):
         auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
 
     assert exc_info.value.message == ErrorMessages.Auth.direct_token_identity_drift()
+    mock_logout_session.assert_called_once_with()
+
+
+def test_direct_token_matches_active_session_identity(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: tenant_id,
+        con.FAB_PRINCIPAL_ID: object_id,
+    }
+    tokens = {
+        "fabric-token": {"tid": tenant_id, "oid": object_id},
+        "onelake-token": {"tid": tenant_id, "oid": object_id},
+    }
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+    )
+
+    token = auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert token == "fabric-token"
+
+
+def test_direct_token_session_tenant_drift_logs_out_session(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    token_claims = {"tid": str(uuid.uuid4()), "oid": str(uuid.uuid4())}
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: str(uuid.uuid4()),
+    }
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+
+    with (
+        patch.object(auth, "logout_session") as mock_logout_session,
+        pytest.raises(FabricCLIError) as exc_info,
+    ):
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert (
+        exc_info.value.message
+        == ErrorMessages.Auth.direct_token_session_identity_drift()
+    )
+    mock_logout_session.assert_called_once_with()
+
+
+def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    token_claims = {"tid": tenant_id, "oid": str(uuid.uuid4())}
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: tenant_id,
+        con.FAB_PRINCIPAL_ID: str(uuid.uuid4()),
+    }
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+
+    with (
+        patch.object(auth, "logout_session") as mock_logout_session,
+        pytest.raises(FabricCLIError) as exc_info,
+    ):
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert (
+        exc_info.value.message
+        == ErrorMessages.Auth.direct_token_session_identity_drift()
+    )
     mock_logout_session.assert_called_once_with()
 
 
