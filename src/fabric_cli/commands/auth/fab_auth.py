@@ -220,8 +220,7 @@ def logout(args: Namespace) -> None:
 
 def status(args: Namespace) -> None:
     auth = FabAuth()
-    identity_type = auth.get_identity_type()
-    tenant_id = auth.get_tenant_id()
+    initial_identity_type = auth.get_identity_type()
 
     def __get_token_info(scope):
         try:
@@ -239,11 +238,6 @@ def status(args: Namespace) -> None:
         return _get_token_info_from_bearer_token(token) if token else {}
 
     token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
-
-    upn = token_info.get("upn") or "N/A"
-    oid = token_info.get("oid") or "N/A"
-    tid = token_info.get("tid", tenant_id) or "N/A"
-    appid = token_info.get("appid") or "N/A"
 
     def __mask_token(scope):
         try:
@@ -267,6 +261,21 @@ def status(args: Namespace) -> None:
     fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
     storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
     azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
+
+    identity_type = auth.get_identity_type()
+    tenant_id = auth.get_tenant_id()
+
+    # Reacquire status after drift to discard stale values and allow env token fallback
+    if identity_type is None and initial_identity_type == "azure_cli":
+        token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
+        fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
+        storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
+        azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
+
+    upn = token_info.get("upn") or "N/A"
+    oid = token_info.get("oid") or "N/A"
+    tid = token_info.get("tid", tenant_id) or "N/A"
+    appid = token_info.get("appid") or "N/A"
 
     # Check login status
     is_logged_in = fabric_secret != "N/A"
