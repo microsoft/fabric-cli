@@ -63,18 +63,16 @@ class AuthErrors:
     @staticmethod
     def direct_token_identity_drift() -> str:
         return (
-            "Direct access token identity drift detected. FAB_TOKEN, "
-            "FAB_TOKEN_ONELAKE, FAB_TOKEN_AZURE, and FAB_TENANT_ID must "
-            "represent the same tenant and principal. The Fabric CLI session "
-            "has been logged out"
+            "Identity mismatch detected in environment-variable credentials. "
+            "The Fabric CLI session has been logged out"
         )
 
     @staticmethod
     def direct_token_session_identity_drift() -> str:
         return (
-            "Direct access token identity drift detected. The access token "
-            "environment variables do not match the currently authenticated "
-            "session identity. The Fabric CLI session has been logged out"
+            "Identity mismatch detected between environment-variable "
+            "credentials and the authenticated session. The Fabric CLI session "
+            "has been logged out"
         )
 
     @staticmethod
