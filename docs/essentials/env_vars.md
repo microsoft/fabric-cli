@@ -39,5 +39,10 @@ set direct access token variables for a different tenant or principal, the CLI
 treats this as identity drift, logs out, and fails the command instead of
 silently switching identity.
 
+When no prior session exists, the CLI records the direct access token identity
+on first use. Any later change to a different tenant or principal — including
+swapping to another direct access token — is then detected as drift, logs out,
+and fails the command, consistent with Azure CLI authentication mode.
+
 This validation applies only to direct access token environment variables. It
 does not apply when Azure CLI authentication mode is active.

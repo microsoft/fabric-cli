@@ -917,6 +917,29 @@ def test_direct_token_matches_active_session_identity(monkeypatch):
     assert token == "fabric-token"
 
 
+def test_direct_token_identity_recorded_on_first_use(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {}
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    tokens = {
+        "fabric-token": {"tid": tenant_id, "oid": object_id},
+        "onelake-token": {"tid": tenant_id, "oid": object_id},
+    }
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+    )
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert auth.get_tenant_id() == tenant_id
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == object_id
+
+
 def test_direct_token_session_tenant_drift_logs_out_session(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()

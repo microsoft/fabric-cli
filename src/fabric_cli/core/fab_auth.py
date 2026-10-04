@@ -369,6 +369,20 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
+        # Pin the direct access token identity as the baseline on first use so
+        # that any later identity change (including a swap to a different direct
+        # token with no prior login) is detected as drift on the next command,
+        # consistent with Azure CLI authentication mode.
+        if len(identities) == 1:
+            token_tenant, token_principal = next(iter(identities))
+            baseline: dict[str, str] = {}
+            if self.get_tenant_id() is None:
+                baseline[con.FAB_TENANT_ID] = token_tenant
+            if self._get_auth_property(con.FAB_PRINCIPAL_ID) is None:
+                baseline[con.FAB_PRINCIPAL_ID] = token_principal
+            if baseline:
+                self._set_auth_properties(baseline)
+
     def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
         """Return the ``(tenant_id, principal_id)`` recorded for the currently
         authenticated session, lowercased, so direct access token environment
