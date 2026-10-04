@@ -792,6 +792,8 @@ class FabAuth:
         from fabric_cli.utils import fab_mem_store
 
         self.logout()
+
+        # Clear cache and context including current and stale context files
         fab_mem_store.clear_caches()
         Context().reset_context()
 
