@@ -992,6 +992,29 @@ def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
     mock_logout_session.assert_called_once_with()
 
 
+def test_direct_token_azure_scope_missing_azure_token_raises_fabric_error(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: tenant_id,
+        con.FAB_PRINCIPAL_ID: object_id,
+    }
+    token_claims = {"tid": tenant_id, "oid": object_id}
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    # FAB_TOKEN_AZURE intentionally not set
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+
+    with pytest.raises(FabricCLIError) as exc_info:
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_AZURE_DEFAULT)
+
+    assert exc_info.value.message == ErrorMessages.Auth.azure_token_required()
+    assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+
 def test_azure_cli_auth_ignores_direct_token_environment(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()

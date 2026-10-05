@@ -289,17 +289,16 @@ class FabAuth:
                     )
                     return os.environ["FAB_TOKEN_ONELAKE"]
                 case con.SCOPE_AZURE_DEFAULT:
-                    # this call will validate the token we got from the env var
-                    self._decode_jwt_token(
-                        os.environ["FAB_TOKEN_AZURE"], con.AZURE_TOKEN_AUDIENCE
-                    )
-                    if "FAB_TOKEN_AZURE" in os.environ:
-                        return os.environ["FAB_TOKEN_AZURE"]
-                    else:
+                    if "FAB_TOKEN_AZURE" not in os.environ:
                         raise FabricCLIError(
                             ErrorMessages.Auth.azure_token_required(),
                             con.ERROR_AUTHENTICATION_FAILED,
                         )
+                    # this call will validate the token we got from the env var
+                    self._decode_jwt_token(
+                        os.environ["FAB_TOKEN_AZURE"], con.AZURE_TOKEN_AUDIENCE
+                    )
+                    return os.environ["FAB_TOKEN_AZURE"]
                 case _:
                     raise FabricCLIError(
                         ErrorMessages.Auth.invalid_scope(scope),
