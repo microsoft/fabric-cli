@@ -354,7 +354,11 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        # The direct access tokens must also match the identity of any already authenticated session
+        # The direct access tokens must also match the identity of any already authenticated session.
+        # Recover the cached principal first so a restored session that only has a
+        # tenant recorded is still compared against its real identity instead of
+        # silently pinning the environment token's principal.
+        self._recover_session_principal()
         session_tenant, session_principal = self._get_active_session_identity()
         token_principals = {object_id for _, object_id in identities}
         if (
@@ -394,6 +398,53 @@ class FabAuth:
             tenant_id.lower() if tenant_id else None,
             principal_id.lower() if principal_id else None,
         )
+
+    def _record_user_principal(self, token: Optional[dict], account=None) -> None:
+        """Record the user's principal ID from a token's claims or cached account.
+
+        Invoked after both silent and interactive acquisition so that a user
+        session's principal baseline is populated regardless of how the token
+        was obtained. Without this, a session refreshed only through silent
+        acquisition would keep an empty principal and fail to detect drift
+        against environment tokens for a different user in the same tenant.
+        """
+        if not isinstance(token, dict):
+            return
+        principal_id = None
+        claims = token.get("id_token_claims")
+        if isinstance(claims, dict):
+            principal_id = claims.get("oid")
+        if not principal_id and isinstance(account, dict):
+            principal_id = account.get("local_account_id")
+        if isinstance(principal_id, str) and principal_id:
+            self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
+
+    def _recover_session_principal(self) -> None:
+        """Populate the principal ID of a restored user session from the MSAL cache.
+
+        A user session restored from disk may have a tenant recorded but no
+        principal ID (older sessions, or sessions only ever refreshed silently).
+        In that state a direct-token baseline for a different user in the same
+        tenant would be accepted silently. Recovering the cached principal first
+        ensures the session identity comparison has a value to check against.
+        """
+        if self._get_auth_property(con.FAB_PRINCIPAL_ID) is not None:
+            return
+        if self.get_identity_type() != "user":
+            return
+        try:
+            accounts = self._get_app().get_accounts()
+        except Exception as e:
+            fab_logger.log_debug(f"Unable to recover cached principal: {e}")
+            return
+        if not accounts:
+            return
+        account = accounts[0]
+        principal_id = (
+            account.get("local_account_id") if isinstance(account, dict) else None
+        )
+        if isinstance(principal_id, str) and principal_id:
+            self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
 
     def get_tenant(self):
         return Tenant(
@@ -714,11 +765,12 @@ class FabAuth:
                         if token is not None and "id_token_claims" in token:
                             claims = token.get("id_token_claims")
                             self.set_tenant(claims["tid"])
-                            principal_id = claims.get("oid")
-                            if principal_id:
-                                self._set_auth_property(
-                                    con.FAB_PRINCIPAL_ID, principal_id
-                                )
+
+                    # Record the principal after either silent or interactive
+                    # acquisition so the session identity baseline is populated
+                    # regardless of how the token was obtained.
+                    if token is not None and not token.get("error"):
+                        self._record_user_principal(token, account)
 
             if token and token.get("error"):
                 fab_logger.log_debug(

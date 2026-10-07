@@ -7,7 +7,7 @@ import os
 import stat
 import tempfile
 import uuid
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
@@ -1100,7 +1100,68 @@ def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
     mock_logout_session.assert_called_once_with()
 
 
-def test_direct_token_azure_scope_missing_azure_token_raises_fabric_error(monkeypatch):
+def test_restored_session_recovers_cached_principal_and_detects_drift(monkeypatch):
+    # A restored user session may have a tenant recorded but no principal ID.
+    # Switching straight to environment tokens for a different user in the same
+    # tenant must still be detected as drift once the cached principal is
+    # recovered (without first acquiring a silent token).
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    cached_principal = str(uuid.uuid4())  # real cached user
+    env_principal = str(uuid.uuid4())  # different user, same tenant
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: tenant_id,
+    }
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    mock_app = MagicMock()
+    mock_app.get_accounts.return_value = [{"local_account_id": cached_principal}]
+    monkeypatch.setattr(auth, "_get_app", lambda: mock_app)
+
+    token_claims = {"tid": tenant_id, "oid": env_principal}
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
+
+    with (
+        patch.object(auth, "logout_session") as mock_logout_session,
+        pytest.raises(FabricCLIError) as exc_info,
+    ):
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert (
+        exc_info.value.message
+        == ErrorMessages.Auth.direct_token_session_identity_drift()
+    )
+    mock_logout_session.assert_called_once_with()
+    # The principal was recovered from the cache before the comparison ran
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == cached_principal
+
+
+def test_record_user_principal_populates_from_claims_and_account(monkeypatch):
+    # The principal must be recorded after silent acquisition (claims absent ->
+    # cached account) as well as interactive acquisition (claims present).
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {con.IDENTITY_TYPE: "user"}
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    account_principal = str(uuid.uuid4())
+    auth._record_user_principal(
+        {"access_token": "t"}, account={"local_account_id": account_principal}
+    )
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == account_principal
+
+    claims_principal = str(uuid.uuid4())
+    auth._record_user_principal(
+        {"access_token": "t", "id_token_claims": {"oid": claims_principal}},
+        account={"local_account_id": account_principal},
+    )
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == claims_principal
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
