@@ -326,7 +326,11 @@ class FabAuth:
             if token is None:
                 continue
 
-            claims = self._decode_jwt_token(token, audience)
+            # Identity-drift detection only needs the token's identity claims, so
+            # skip expiry here; a non-selected expired token must not block commands
+            # that use a different, still-valid token. The selected token is fully
+            # validated (including expiry) when it is returned below.
+            claims = self._decode_jwt_token(token, audience, verify_exp=False)
             tenant_id = claims.get("tid")
             object_id = claims.get("oid")
             if not tenant_id or not object_id:
@@ -829,8 +833,11 @@ class FabAuth:
             )
         return key
 
-    def _decode_jwt_token(self, token, expected_audience=None):
-        decode_options = {"verify_aud": expected_audience is not None}
+    def _decode_jwt_token(self, token, expected_audience=None, verify_exp=True):
+        decode_options = {
+            "verify_aud": expected_audience is not None,
+            "verify_exp": verify_exp,
+        }
         # Try using the cached public key if available
         if self.aad_public_key is not None:
             try:

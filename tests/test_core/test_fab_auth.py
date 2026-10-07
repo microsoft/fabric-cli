@@ -673,7 +673,7 @@ def test_get_token_claim_success(monkeypatch):
     monkeypatch.setattr(
         auth,
         "_decode_jwt_token",
-        lambda token, expected_audience=None: (
+        lambda token, expected_audience=None, verify_exp=True: (
             dummy_payload if token == dummy_token else {}
         ),
     )
@@ -695,7 +695,9 @@ def test_get_token_claim_missing_claim(monkeypatch):
         auth, "get_access_token", lambda scope, interactive_renew=False: dummy_token
     )
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, expected_audience=None: dummy_payload
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None, verify_exp=True: dummy_payload,
     )
 
     result = auth.get_token_claims(dummy_scope, [dummy_claim_name])
@@ -832,7 +834,9 @@ def test_direct_token_identity_consistent(monkeypatch):
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-token")
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
     )
 
     token = auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
@@ -849,7 +853,9 @@ def test_direct_token_first_use_pin_refreshes_navigation_context(monkeypatch):
     token_claims = {"tid": tenant_id, "oid": object_id}
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
     monkeypatch.setattr(auth, "_save_auth", lambda: None)
 
     with patch("fabric_cli.core.fab_context.Context") as mock_context:
@@ -875,7 +881,9 @@ def test_direct_token_existing_baseline_does_not_touch_context(monkeypatch):
     token_claims = {"tid": tenant_id, "oid": object_id}
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
     monkeypatch.setattr(auth, "_save_auth", lambda: None)
 
     with patch("fabric_cli.core.fab_context.Context") as mock_context:
@@ -912,7 +920,9 @@ def test_invalid_direct_token_identity_claims(
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-token")
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
     )
 
     with (
@@ -940,7 +950,9 @@ def test_direct_token_identity_drift_logs_out_session(monkeypatch):
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-token")
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
     )
 
     with (
@@ -966,7 +978,9 @@ def test_direct_token_tenant_drift_logs_out_session(monkeypatch):
     monkeypatch.setenv("FAB_TENANT_ID", str(uuid.uuid4()))
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
 
     with (
         patch.object(auth, "logout_session") as mock_logout_session,
@@ -995,7 +1009,9 @@ def test_direct_token_matches_active_session_identity(monkeypatch):
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
     )
 
     token = auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
@@ -1016,7 +1032,9 @@ def test_direct_token_identity_recorded_on_first_use(monkeypatch):
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
     )
     monkeypatch.setattr(auth, "_save_auth", lambda: None)
 
@@ -1036,7 +1054,9 @@ def test_direct_token_session_tenant_drift_logs_out_session(monkeypatch):
     }
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
 
     with (
         patch.object(auth, "logout_session") as mock_logout_session,
@@ -1063,7 +1083,9 @@ def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
     }
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
 
     with (
         patch.object(auth, "logout_session") as mock_logout_session,
@@ -1092,13 +1114,96 @@ def test_direct_token_azure_scope_missing_azure_token_raises_fabric_error(monkey
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     # FAB_TOKEN_AZURE intentionally not set
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience, verify_exp=True: token_claims
+    )
 
     with pytest.raises(FabricCLIError) as exc_info:
         auth._get_access_token_from_env_vars_if_exist(con.SCOPE_AZURE_DEFAULT)
 
     assert exc_info.value.message == ErrorMessages.Auth.azure_token_required()
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+
+
+def test_decode_jwt_token_skips_expiry_when_disabled(monkeypatch):
+    auth = FabAuth()
+    auth.aad_public_key = None
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public_key = private_key.public_key()
+    monkeypatch.setattr(auth, "_fetch_public_key_from_aad", lambda token: public_key)
+
+    expired_claims = {
+        "aud": "https://management.azure.com",
+        "tid": str(uuid.uuid4()),
+        "oid": str(uuid.uuid4()),
+        "exp": int(
+            (
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(hours=1)
+            ).timestamp()
+        ),
+    }
+    expired_token = jwt.encode(expired_claims, private_key, algorithm="RS256")
+
+    # Expiry enforced by default -> rejected
+    with pytest.raises(FabricCLIError) as exc_info:
+        auth._decode_jwt_token(
+            expired_token, expected_audience=con.AZURE_TOKEN_AUDIENCE
+        )
+    assert exc_info.value.message == ErrorMessages.Auth.jwt_decode_failed()
+
+    # Expiry skipped -> identity claims still readable
+    payload = auth._decode_jwt_token(
+        expired_token, expected_audience=con.AZURE_TOKEN_AUDIENCE, verify_exp=False
+    )
+    assert payload["tid"] == expired_claims["tid"]
+    assert payload["oid"] == expired_claims["oid"]
+
+
+def test_expired_non_selected_token_does_not_block_other_scope(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {}
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    # All three tokens share one identity; FAB_TOKEN_AZURE is expired
+    tokens = {
+        "fabric-token": {"tid": tenant_id, "oid": object_id, "expired": False},
+        "onelake-token": {"tid": tenant_id, "oid": object_id, "expired": False},
+        "azure-token": {"tid": tenant_id, "oid": object_id, "expired": True},
+    }
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-token")
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    def fake_decode(token, expected_audience=None, verify_exp=True):
+        claims = tokens[token]
+        if claims["expired"] and verify_exp:
+            raise FabricCLIError(
+                ErrorMessages.Auth.jwt_decode_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+        return claims
+
+    monkeypatch.setattr(auth, "_decode_jwt_token", fake_decode)
+
+    with patch("fabric_cli.core.fab_context.Context"):
+        fabric_token = auth._get_access_token_from_env_vars_if_exist(
+            con.SCOPE_FABRIC_DEFAULT
+        )
+        onelake_token = auth._get_access_token_from_env_vars_if_exist(
+            con.SCOPE_ONELAKE_DEFAULT
+        )
+
+    # Still-valid tokens are returned despite the expired, non-selected Azure token
+    assert fabric_token == "fabric-token"
+    assert onelake_token == "onelake-token"
+
+    # The selected token is still fully validated: expiry is enforced on it
+    with pytest.raises(FabricCLIError) as exc_info:
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_AZURE_DEFAULT)
+    assert exc_info.value.message == ErrorMessages.Auth.jwt_decode_failed()
 
 
 def test_azure_cli_auth_ignores_direct_token_environment(monkeypatch):
@@ -1291,7 +1396,9 @@ def test_get_claims_from_token_multiple_claims(monkeypatch):
 
     # Mock _decode_jwt_token to return our dummy payload
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, expected_audience=None: dummy_payload
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None, verify_exp=True: dummy_payload,
     )
 
     claims = auth._get_claims_from_token(dummy_token, ["sub", "name", "email"])
@@ -1307,7 +1414,9 @@ def test_get_claims_from_token_missing_claims(monkeypatch):
 
     # Mock _decode_jwt_token to return our dummy payload
     monkeypatch.setattr(
-        auth, "_decode_jwt_token", lambda token, expected_audience=None: dummy_payload
+        auth,
+        "_decode_jwt_token",
+        lambda token, expected_audience=None, verify_exp=True: dummy_payload,
     )
 
     claims = auth._get_claims_from_token(dummy_token, ["sub", "name", "email"])
