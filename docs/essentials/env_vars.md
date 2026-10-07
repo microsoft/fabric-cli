@@ -25,24 +25,31 @@ The CLI supports multiple authentication methods through environment variables. 
 | Managed Identity | `FAB_MANAGED_IDENTITY` | Enable Managed Identity auth (values: `true`, `1`) |
 | | `FAB_SPN_CLIENT_ID` | **Optional**. Service principal client ID for User Assigned |
 
-## Direct access token identity consistency
+## Identity drift with direct access tokens
 
-When direct access tokens are used, the CLI verifies that all configured token
-variables contain the same tenant (`tid`) and principal (`oid`) claims. The
-token tenant must also match `FAB_TENANT_ID`. If a claim is missing or the
-identities differ, the CLI logs out, clears its authentication and resource
-caches, resets the current context, and fails the command.
+When direct access token authentication is used, the CLI detects identity drift
+in any of the following situations:
 
-The token identity must also match the identity of an already authenticated
-session. If you are signed in (for example, in user or Azure CLI mode) and then
-set direct access token variables for a different tenant or principal, the CLI
-treats this as identity drift, logs out, and fails the command instead of
-silently switching identity.
+- The configured `FAB_TOKEN`, `FAB_TOKEN_ONELAKE`, and `FAB_TOKEN_AZURE`
+  values do not belong to the same identity and tenant.
+- A token's tenant differs from `FAB_TENANT_ID`.
+- The token identity differs from the identity recorded for the current CLI
+  session, including an earlier interactive sign-in or set of direct access
+  tokens.
 
-When no prior session exists, the CLI records the direct access token identity
-on first use. Any later change to a different tenant or principal — including
-swapping to another direct access token — is then detected as drift, logs out,
-and fails the command, consistent with Azure CLI authentication mode.
+When identity drift is detected, the CLI logs out of the current session and
+the command fails.
 
-This validation applies only to direct access token environment variables. It
-does not apply when Azure CLI authentication mode is active.
+To continue after the error:
+
+- If the configured tokens do not share an identity and tenant, replace the
+  inconsistent tokens, and then run the command again.
+- If a token's tenant differs from `FAB_TENANT_ID`, update the token or
+  `FAB_TENANT_ID` so that the tenants match, and then run the command again.
+- If the token identity changed from the identity recorded for the previous
+  session, run the command again to start a session with the new identity. To
+  keep using the previous identity, replace the tokens before running the
+  command again.
+
+**Note:** Direct access token environment variables are ignored when the CLI uses Azure
+CLI, service principal, or managed identity authentication.

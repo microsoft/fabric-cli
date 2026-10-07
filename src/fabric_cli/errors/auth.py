@@ -63,16 +63,25 @@ class AuthErrors:
     @staticmethod
     def direct_token_identity_drift() -> str:
         return (
-            "Identity mismatch detected in environment-variable credentials. "
-            "The Fabric CLI session has been logged out"
+            "Identity mismatch detected in environment-variable tokens. "
+            "The Fabric CLI session has been logged out. Ensure all tokens belong "
+            "to the same identity and FAB_TENANT_ID matches their tenant, then "
+            "rerun the command"
+        )
+
+    @staticmethod
+    def invalid_direct_token(variable: str) -> str:
+        return (
+            f"The access token provided through {variable} is invalid. "
+            "Provide a valid token and try again"
         )
 
     @staticmethod
     def direct_token_session_identity_drift() -> str:
         return (
-            "Identity mismatch detected between environment-variable "
-            "credentials and the authenticated session. The Fabric CLI session "
-            "has been logged out"
+            "Identity mismatch detected between environment-variable tokens and "
+            "the authenticated session. The Fabric CLI session has been logged out. "
+            "Rerun the command to continue with the environment-variable token identity"
         )
 
     @staticmethod

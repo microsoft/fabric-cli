@@ -840,6 +840,92 @@ def test_direct_token_identity_consistent(monkeypatch):
     assert token == "fabric-token"
 
 
+def test_direct_token_first_use_pin_refreshes_navigation_context(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth._auth_info = {}  # no baseline yet -> first-use pin path
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    token_claims = {"tid": tenant_id, "oid": object_id}
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    with patch("fabric_cli.core.fab_context.Context") as mock_context:
+        token = auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert token == "fabric-token"
+    # Baseline pinned on first use
+    assert auth.get_tenant_id() == tenant_id
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == object_id
+    # Navigation context refreshed to the pinned identity
+    assert mock_context.return_value.context.id == tenant_id
+
+
+def test_direct_token_existing_baseline_does_not_touch_context(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    auth._auth_info = {
+        con.FAB_TENANT_ID: tenant_id,
+        con.FAB_PRINCIPAL_ID: object_id,
+    }
+    token_claims = {"tid": tenant_id, "oid": object_id}
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setattr(auth, "_decode_jwt_token", lambda token, audience: token_claims)
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    with patch("fabric_cli.core.fab_context.Context") as mock_context:
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    mock_context.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("variable", "token", "missing_claim"),
+    [
+        ("FAB_TOKEN", "fabric-token", "tid"),
+        ("FAB_TOKEN", "fabric-token", "oid"),
+        ("FAB_TOKEN_ONELAKE", "onelake-token", "tid"),
+        ("FAB_TOKEN_ONELAKE", "onelake-token", "oid"),
+        ("FAB_TOKEN_AZURE", "azure-token", "tid"),
+        ("FAB_TOKEN_AZURE", "azure-token", "oid"),
+    ],
+)
+def test_invalid_direct_token_identity_claims(
+    monkeypatch, variable, token, missing_claim
+):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    tokens = {
+        "fabric-token": {"tid": tenant_id, "oid": object_id},
+        "onelake-token": {"tid": tenant_id, "oid": object_id},
+        "azure-token": {"tid": tenant_id, "oid": object_id},
+    }
+    tokens[token].pop(missing_claim)
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    monkeypatch.setenv("FAB_TOKEN_AZURE", "azure-token")
+    monkeypatch.setattr(
+        auth, "_decode_jwt_token", lambda token, audience: tokens[token]
+    )
+
+    with (
+        patch.object(auth, "logout_session") as mock_logout_session,
+        pytest.raises(FabricCLIError) as exc_info,
+    ):
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
+    assert exc_info.value.message == ErrorMessages.Auth.invalid_direct_token(variable)
+    mock_logout_session.assert_called_once_with()
+
+
 def test_direct_token_identity_drift_logs_out_session(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()

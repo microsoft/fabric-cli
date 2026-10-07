@@ -332,7 +332,7 @@ class FabAuth:
             if not tenant_id or not object_id:
                 self.logout_session()
                 raise FabricCLIError(
-                    ErrorMessages.Auth.direct_token_identity_drift(),
+                    ErrorMessages.Auth.invalid_direct_token(variable),
                     con.ERROR_AUTHENTICATION_FAILED,
                 )
             identities.add((tenant_id.lower(), object_id.lower()))
@@ -377,6 +377,10 @@ class FabAuth:
                 baseline[con.FAB_PRINCIPAL_ID] = token_principal
             if baseline:
                 self._set_auth_properties(baseline)
+                from fabric_cli.core.fab_context import Context
+
+                # Refresh navigation context to match the pinned identity
+                Context().context = self.get_tenant()
 
     def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
         """Return the ``(tenant_id, principal_id)`` recorded for the currently authenticated session."""
