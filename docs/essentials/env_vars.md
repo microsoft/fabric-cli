@@ -25,17 +25,16 @@ The CLI supports multiple authentication methods through environment variables. 
 | Managed Identity | `FAB_MANAGED_IDENTITY` | Enable Managed Identity auth (values: `true`, `1`) |
 | | `FAB_SPN_CLIENT_ID` | **Optional**. Service principal client ID for User Assigned |
 
-## Identity drift with direct access tokens
+## Identity drift with Authentication Tokens
 
-When direct access token authentication is used, the CLI detects identity drift
+When `Authentication Tokens` are used, the CLI detects identity drift
 in any of the following situations:
 
 - The configured `FAB_TOKEN`, `FAB_TOKEN_ONELAKE`, and `FAB_TOKEN_AZURE`
   values do not belong to the same identity and tenant.
 - A token's tenant differs from `FAB_TENANT_ID`.
 - The token identity differs from the identity recorded for the current CLI
-  session, including an earlier interactive sign-in or set of direct access
-  tokens.
+  session, including an earlier interactive sign-in or set of `Authentication Tokens`.
 
 When identity drift is detected, the CLI logs out of the current session and
 the command fails.
@@ -51,5 +50,5 @@ To continue after the error:
   keep using the previous identity, replace the tokens before running the
   command again.
 
-**Note:** Direct access token environment variables are ignored when the CLI uses Azure
-CLI, service principal, or managed identity authentication.
+**Note:** `Authentication Tokens` are ignored when the CLI uses Azure
+CLI, service principal, or managed identity authentication modes.
