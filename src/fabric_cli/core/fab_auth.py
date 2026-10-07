@@ -439,12 +439,34 @@ class FabAuth:
             return
         if not accounts:
             return
-        account = accounts[0]
+        account = self._select_cached_account(accounts)
         principal_id = (
             account.get("local_account_id") if isinstance(account, dict) else None
         )
         if isinstance(principal_id, str) and principal_id:
             self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
+
+    def _select_cached_account(self, accounts: list):
+        """Select the cached account that matches the recorded session tenant.
+
+        A user may have signed in to several identities over time, leaving more
+        than one account in the MSAL cache. Prefer the account whose home tenant
+        matches the recorded session tenant so the recovered principal belongs
+        to the active session; fall back to the first account when no tenant is
+        recorded or none match.
+        """
+        session_tenant = self.get_tenant_id()
+        if session_tenant:
+            session_tenant = session_tenant.lower()
+            for account in accounts:
+                if not isinstance(account, dict):
+                    continue
+                # home_account_id has the form "<local_account_id>.<tenant_id>"
+                home_account_id = account.get("home_account_id") or ""
+                account_tenant = home_account_id.split(".")[-1].lower()
+                if account_tenant and account_tenant == session_tenant:
+                    return account
+        return accounts[0]
 
     def get_tenant(self):
         return Tenant(

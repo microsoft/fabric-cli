@@ -1142,6 +1142,39 @@ def test_restored_session_recovers_cached_principal_and_detects_drift(monkeypatc
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == cached_principal
 
 
+def test_recover_session_principal_prefers_tenant_matched_account(monkeypatch):
+    # With several cached accounts, recovery must pick the one whose home tenant
+    # matches the recorded session tenant rather than the first account.
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    session_tenant = str(uuid.uuid4())
+    other_tenant = str(uuid.uuid4())
+    other_principal = str(uuid.uuid4())
+    matching_principal = str(uuid.uuid4())
+    auth._auth_info = {
+        con.IDENTITY_TYPE: "user",
+        con.FAB_TENANT_ID: session_tenant,
+    }
+    monkeypatch.setattr(auth, "_save_auth", lambda: None)
+
+    mock_app = MagicMock()
+    mock_app.get_accounts.return_value = [
+        {
+            "local_account_id": other_principal,
+            "home_account_id": f"{other_principal}.{other_tenant}",
+        },
+        {
+            "local_account_id": matching_principal,
+            "home_account_id": f"{matching_principal}.{session_tenant}",
+        },
+    ]
+    monkeypatch.setattr(auth, "_get_app", lambda: mock_app)
+
+    auth._recover_session_principal()
+
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == matching_principal
+
+
 def test_record_user_principal_populates_from_claims_and_account(monkeypatch):
     # The principal must be recorded after silent acquisition (claims absent ->
     # cached account) as well as interactive acquisition (claims present).
