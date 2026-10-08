@@ -29,6 +29,10 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
 
+class _JWTIdentityClaimsError(FabricCLIError):
+    pass
+
+
 def singleton(class_):
     instances = {}
 
@@ -326,19 +330,17 @@ class FabAuth:
             if token is None:
                 continue
 
-            # Identity-drift detection only needs the token's identity claims, so
-            # skip expiry here; a non-selected expired token must not block commands
-            # that use a different, still-valid token. The selected token is fully
-            # validated (including expiry) when it is returned below.
-            claims = self._decode_jwt_token(token, audience, verify_exp=False)
-            tenant_id = claims.get("tid")
-            object_id = claims.get("oid")
-            if not tenant_id or not object_id:
+            # Skip expiry while comparing identities; the selected token is fully validated when returned
+            try:
+                claims = self._decode_jwt_token(token, audience, verify_exp=False)
+            except _JWTIdentityClaimsError:
                 self.logout_session()
                 raise FabricCLIError(
                     ErrorMessages.Auth.invalid_direct_token(variable),
                     con.ERROR_AUTHENTICATION_FAILED,
                 )
+            tenant_id = claims["tid"]
+            object_id = claims["oid"]
             identities.add((tenant_id.lower(), object_id.lower()))
 
         configured_tenant = os.environ.get("FAB_TENANT_ID")
@@ -354,16 +356,26 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        # The direct access tokens must also match the identity of any already authenticated session.
-        # Recover the cached principal first so a restored session that only has a
-        # tenant recorded is still compared against its real identity instead of
-        # silently pinning the environment token's principal.
-        self._recover_session_principal()
         session_tenant, session_principal = self._get_active_session_identity()
         token_principals = {object_id for _, object_id in identities}
+        if session_tenant and token_tenants and session_tenant not in token_tenants:
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.direct_token_session_identity_drift(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
         if (
-            session_tenant and token_tenants and session_tenant not in token_tenants
-        ) or (
+            session_tenant
+            and not session_principal
+            and not self._recover_session_principal()
+        ):
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.session_identity_recovery_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+        session_tenant, session_principal = self._get_active_session_identity()
+        if (
             session_principal
             and token_principals
             and session_principal not in token_principals
@@ -400,14 +412,7 @@ class FabAuth:
         )
 
     def _record_user_principal(self, token: Optional[dict], account=None) -> None:
-        """Record the user's principal ID from a token's claims or cached account.
-
-        Invoked after both silent and interactive acquisition so that a user
-        session's principal baseline is populated regardless of how the token
-        was obtained. Without this, a session refreshed only through silent
-        acquisition would keep an empty principal and fail to detect drift
-        against environment tokens for a different user in the same tenant.
-        """
+        """Record the user's principal ID for session identity checks."""
         if not isinstance(token, dict):
             return
         principal_id = None
@@ -419,51 +424,37 @@ class FabAuth:
         if isinstance(principal_id, str) and principal_id:
             self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
 
-    def _recover_session_principal(self) -> None:
-        """Populate the principal ID of a restored user session from the MSAL cache.
-
-        A user session restored from disk may have a tenant recorded but no
-        principal ID (older sessions, or sessions only ever refreshed silently).
-        In that state a direct-token baseline for a different user in the same
-        tenant would be accepted silently. Recovering the cached principal first
-        ensures the session identity comparison has a value to check against.
-        """
+    def _recover_session_principal(self) -> bool:
+        """Recover a restored session's principal ID for identity comparison."""
         if self._get_auth_property(con.FAB_PRINCIPAL_ID) is not None:
-            return
+            return True
         if self.get_identity_type() != "user":
-            return
+            return False
         try:
             accounts = self._get_app().get_accounts()
         except Exception as e:
             fab_logger.log_debug(f"Unable to recover cached principal: {e}")
-            return
+            return False
         if not accounts:
-            return
+            return False
         account = self._select_cached_account(accounts)
         principal_id = (
             account.get("local_account_id") if isinstance(account, dict) else None
         )
         if isinstance(principal_id, str) and principal_id:
             self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
+            return True
+        return False
 
     def _select_cached_account(self, accounts: list):
-        """Select the cached account that matches the recorded session tenant.
-
-        A user may have signed in to several identities over time, leaving more
-        than one account in the MSAL cache. Prefer the account whose home tenant
-        matches the recorded session tenant so the recovered principal belongs
-        to the active session; fall back to the first account when no tenant is
-        recorded or none match.
-        """
+        """Select the cached account whose realm matches the session tenant."""
         session_tenant = self.get_tenant_id()
         if session_tenant:
             session_tenant = session_tenant.lower()
             for account in accounts:
                 if not isinstance(account, dict):
                     continue
-                # home_account_id has the form "<local_account_id>.<tenant_id>"
-                home_account_id = account.get("home_account_id") or ""
-                account_tenant = home_account_id.split(".")[-1].lower()
+                account_tenant = (account.get("realm") or "").lower()
                 if account_tenant and account_tenant == session_tenant:
                     return account
         return accounts[0]
@@ -487,6 +478,25 @@ class FabAuth:
         """Validate the current Azure CLI identity when that mode is active."""
         if self.get_identity_type() == "azure_cli":
             self.get_access_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=False)
+
+    def validate_command_identity(self) -> None:
+        """Validate identity before an interactive command uses cached state."""
+        identity_type = self.get_identity_type()
+        if identity_type == "azure_cli":
+            self.validate_azure_cli_identity()
+            return
+        if identity_type in ("service_principal", "managed_identity"):
+            return
+
+        has_fabric_token = "FAB_TOKEN" in os.environ
+        has_onelake_token = "FAB_TOKEN_ONELAKE" in os.environ
+        if has_fabric_token and has_onelake_token:
+            self._validate_direct_token_identity()
+        elif has_fabric_token or has_onelake_token:
+            raise FabricCLIError(
+                ErrorMessages.Auth.both_fab_and_onelake_tokens_required(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
 
     def set_access_mode(self, mode, tenant_id=None):
         if mode not in con.AUTH_KEYS[con.IDENTITY_TYPE]:
@@ -788,9 +798,7 @@ class FabAuth:
                             claims = token.get("id_token_claims")
                             self.set_tenant(claims["tid"])
 
-                    # Record the principal after either silent or interactive
-                    # acquisition so the session identity baseline is populated
-                    # regardless of how the token was obtained.
+                    # Record the principal for both silent and interactive acquisition
                     if token is not None and not token.get("error"):
                         self._record_user_principal(token, account)
 
@@ -922,7 +930,17 @@ class FabAuth:
                     audience=expected_audience,
                     options=decode_options,
                 )
+                if not payload.get("tid") or not payload.get("oid"):
+                    fab_logger.log_debug(
+                        "JWT token is missing required identity claims 'tid' or 'oid'"
+                    )
+                    raise _JWTIdentityClaimsError(
+                        ErrorMessages.Auth.jwt_identity_claims_missing(),
+                        con.ERROR_AUTHENTICATION_FAILED,
+                    )
                 return payload
+            except _JWTIdentityClaimsError:
+                raise
             except Exception as e:
                 fab_logger.log_debug(
                     f"JWT decode error with cached key: {e}. Fetching new key..."
@@ -944,6 +962,14 @@ class FabAuth:
             )
         # Cache the new key for future use
         self.aad_public_key = key
+        if not payload.get("tid") or not payload.get("oid"):
+            fab_logger.log_debug(
+                "JWT token is missing required identity claims 'tid' or 'oid'"
+            )
+            raise _JWTIdentityClaimsError(
+                ErrorMessages.Auth.jwt_identity_claims_missing(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
         return payload
 
     def _get_claims_from_token(self, token, claim_names) -> Optional[dict[str, str]]:

@@ -48,8 +48,8 @@ To continue, resolve the cause of the error and run the command again:
 - If the configured tokens belong to different identities or tenants, replace
   the inconsistent tokens so that they all belong to the same user or service
   principal and tenant.
-- If a token's tenant differs from `FAB_TENANT_ID`, update the token or
-  `FAB_TENANT_ID` so that the tenants match.
+- If `FAB_TENANT_ID` is set and a token's tenant differs from it, update the
+  token or `FAB_TENANT_ID` so that the tenants match.
 - If the token identity differs from the previous session, run the command
   again to use the new token identity. To keep using the previous identity,
   replace the tokens before running the command again.

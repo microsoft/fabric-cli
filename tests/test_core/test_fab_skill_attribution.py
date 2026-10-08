@@ -85,7 +85,7 @@ def test_command_context_validates_identity_before_interactive_command_success()
         nonlocal command_executed
         command_executed = True
 
-    with patch.object(FabAuth(), "validate_azure_cli_identity") as validate_identity:
+    with patch.object(FabAuth(), "validate_command_identity") as validate_identity:
         command(Namespace(command_path="ls", skill=None))
 
     validate_identity.assert_called_once_with()
@@ -104,9 +104,9 @@ def test_command_context_prevents_interactive_command_on_identity_drift_failure(
     with (
         patch.object(
             FabAuth(),
-            "validate_azure_cli_identity",
+            "validate_command_identity",
             side_effect=FabricCLIError(
-                ErrorMessages.Auth.azure_cli_identity_changed(),
+                ErrorMessages.Auth.direct_token_session_identity_drift(),
                 fab_constant.ERROR_AUTHENTICATION_FAILED,
             ),
         ),

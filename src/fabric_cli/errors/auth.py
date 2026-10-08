@@ -85,6 +85,13 @@ class AuthErrors:
         )
 
     @staticmethod
+    def session_identity_recovery_failed() -> str:
+        return (
+            "Unable to verify the authenticated session identity. "
+            "The Fabric CLI session has been logged out. Rerun the command"
+        )
+
+    @staticmethod
     def invalid_identity_type(identity_type: str, allowed_values: list) -> str:
         return f"The identity type '{identity_type}' is invalid. Allowed values are: {allowed_values}"
 
@@ -119,6 +126,10 @@ class AuthErrors:
     @staticmethod
     def jwt_decode_failed() -> str:
         return "Failed to decode JWT token"
+
+    @staticmethod
+    def jwt_identity_claims_missing() -> str:
+        return "The access token is invalid. Acquire a new token and try again"
 
     @staticmethod
     def invalid_cert_path(parameter_name: str) -> str:
