@@ -118,7 +118,11 @@ def azure_cli_auth_fixture(monkeypatch, tmp_path):
     auth = FabAuth()
     monkeypatch.setattr(auth, "auth_file", str(tmp_path / "auth.json"))
     monkeypatch.setattr(auth, "cache_file", str(tmp_path / "cache.bin"))
-    monkeypatch.setattr(auth, "_decode_jwt_token", lambda _: {"tid": "test-tenant"})
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda _: {"tid": "test-tenant", "oid": "test-principal"},
+    )
     auth._azure_cli_credential = None
     auth._auth_info = {}
     auth.app = None

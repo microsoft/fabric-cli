@@ -13,7 +13,9 @@ from fabric_cli.core import fab_logger as logger
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import set_command_context
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+from fabric_cli.errors import ErrorMessages
 from fabric_cli.parsers import fab_global_params
 
 pytestmark = pytest.mark.usefixtures("reset_context")
@@ -72,6 +74,47 @@ def test_command_context_clears_previous_skill_success():
         assert Context().fabric_skill is None
 
     command(Namespace(command_path="export", skill=None))
+
+
+def test_command_context_validates_identity_before_interactive_command_success():
+    Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with patch.object(FabAuth(), "validate_azure_cli_identity") as validate_identity:
+        command(Namespace(command_path="ls", skill=None))
+
+    validate_identity.assert_called_once_with()
+    assert command_executed is True
+
+
+def test_command_context_prevents_interactive_command_on_identity_drift_failure():
+    Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with (
+        patch.object(
+            FabAuth(),
+            "validate_azure_cli_identity",
+            side_effect=FabricCLIError(
+                ErrorMessages.Auth.azure_cli_identity_changed(),
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ),
+        ),
+        pytest.raises(FabricCLIError),
+    ):
+        command(Namespace(command_path="ls", skill=None))
+
+    assert command_executed is False
 
 
 @pytest.mark.parametrize(
