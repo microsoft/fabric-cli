@@ -323,6 +323,7 @@ class FabAuth:
             ("FAB_TOKEN_ONELAKE", con.ONELAKE_TOKEN_AUDIENCE),
             ("FAB_TOKEN_AZURE", con.AZURE_TOKEN_AUDIENCE),
         )
+        configured_tenant = os.environ.get("FAB_TENANT_ID")
         identities = set()
 
         for variable, audience in token_variables:
@@ -343,12 +344,10 @@ class FabAuth:
             object_id = claims["oid"]
             identities.add((tenant_id.lower(), object_id.lower()))
 
-        configured_tenant = os.environ.get("FAB_TENANT_ID")
-        token_tenants = {tenant_id for tenant_id, _ in identities}
+        # Check for identity drift across tokens and against the configured tenant, if set
+        token_tenant, token_principal = next(iter(identities))
         if len(identities) > 1 or (
-            configured_tenant
-            and token_tenants
-            and configured_tenant.lower() not in token_tenants
+            configured_tenant and configured_tenant.lower() != token_tenant
         ):
             self.logout_session()
             raise FabricCLIError(
@@ -356,16 +355,11 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
+        # Check for identity drift between the token and the active authenticated session
         session_tenant, session_principal = self._get_active_session_identity()
-        token_principals = {object_id for _, object_id in identities}
-        if session_tenant and token_tenants and session_tenant not in token_tenants:
-            self.logout_session()
-            raise FabricCLIError(
-                ErrorMessages.Auth.direct_token_session_identity_drift(),
-                con.ERROR_AUTHENTICATION_FAILED,
-            )
+        # Recover a missing principal only when the session tenant matches
         if (
-            session_tenant
+            session_tenant == token_tenant
             and not session_principal
             and not self._recover_session_principal()
         ):
@@ -374,11 +368,10 @@ class FabAuth:
                 ErrorMessages.Auth.session_identity_recovery_failed(),
                 con.ERROR_AUTHENTICATION_FAILED,
             )
-        session_tenant, session_principal = self._get_active_session_identity()
-        if (
-            session_principal
-            and token_principals
-            and session_principal not in token_principals
+        _, session_principal = self._get_active_session_identity()
+        # Reject tokens that do not match the active session identity
+        if (session_tenant and session_tenant != token_tenant) or (
+            session_principal and session_principal != token_principal
         ):
             self.logout_session()
             raise FabricCLIError(
@@ -386,21 +379,19 @@ class FabAuth:
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
-        # Pin the direct access token identity as the baseline on first use so
+        # Pin the authentication tokens identity as the baseline on first use so
         # that any later identity change is detected as drift on the next command
-        if len(identities) == 1:
-            token_tenant, token_principal = next(iter(identities))
-            baseline: dict[str, str] = {}
-            if self.get_tenant_id() is None:
-                baseline[con.FAB_TENANT_ID] = token_tenant
-            if self._get_auth_property(con.FAB_PRINCIPAL_ID) is None:
-                baseline[con.FAB_PRINCIPAL_ID] = token_principal
-            if baseline:
-                self._set_auth_properties(baseline)
-                from fabric_cli.core.fab_context import Context
+        baseline: dict[str, str] = {}
+        if self.get_tenant_id() is None:
+            baseline[con.FAB_TENANT_ID] = token_tenant
+        if self._get_auth_property(con.FAB_PRINCIPAL_ID) is None:
+            baseline[con.FAB_PRINCIPAL_ID] = token_principal
+        if baseline:
+            self._set_auth_properties(baseline)
+            from fabric_cli.core.fab_context import Context
 
-                # Refresh navigation context to match the pinned identity
-                Context().context = self.get_tenant()
+            # Refresh navigation context to match the pinned identity
+            Context().context = self.get_tenant()
 
     def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
         """Return the ``(tenant_id, principal_id)`` recorded for the currently authenticated session."""
