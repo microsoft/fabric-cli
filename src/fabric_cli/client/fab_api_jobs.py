@@ -12,7 +12,9 @@ def run_on_demand_item_job(
     args: Namespace, payload: Optional[str] = None
 ) -> tuple[ApiResponse, Any]:
     """https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job?tabs=HTTP"""
-    args.uri = f"workspaces/{args.ws_id}/items/{args.item_id}/jobs/instances?jobType={args.jobType}"
+    args.uri = (
+        f"workspaces/{args.ws_id}/items/{args.item_id}/jobs/{args.jobType}/instances"
+    )
     args.method = "post"
 
     if payload is not None:
@@ -89,6 +91,7 @@ def list_item_runs(args: Namespace) -> ApiResponse:
     args.method = "get"
 
     return fabric_api.do_request(args)
+
 
 def remove_item_schedule(args: Namespace) -> ApiResponse:
     """https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/delete-item-schedule?tabs=HTTP"""
