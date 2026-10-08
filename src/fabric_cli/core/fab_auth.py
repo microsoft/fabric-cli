@@ -135,12 +135,25 @@ class FabAuth:
         # Validate the environment variables
         self._validate_environment_variables()
 
-        # Check if the environment variables are set
-        # Removed usage of user tokens, need to see if this is still needed and if so, how to implement it
         if "FAB_TENANT_ID" in os.environ:
             tenant_id = os.environ["FAB_TENANT_ID"]
             self._verify_valid_guid_parameter(tenant_id, "FAB_TENANT_ID")
-            self.set_tenant(tenant_id)
+            # Preserve the saved identity loaded from auth.json until direct tokens are checked for drift
+            direct_tokens_configured = (
+                "FAB_TOKEN" in os.environ or "FAB_TOKEN_ONELAKE" in os.environ
+            )
+            alternate_auth_configured = (
+                "FAB_SPN_CLIENT_ID" in os.environ
+                or os.environ.get("FAB_MANAGED_IDENTITY", "").lower() in ("true", "1")
+            )
+            direct_tokens_active = (
+                direct_tokens_configured
+                and not alternate_auth_configured
+                and self.get_identity_type()
+                not in ("azure_cli", "service_principal", "managed_identity")
+            )
+            if not direct_tokens_active:
+                self.set_tenant(tenant_id)
 
         if "FAB_SPN_CLIENT_ID" in os.environ and "FAB_SPN_CLIENT_SECRET" in os.environ:
             client_id = os.environ["FAB_SPN_CLIENT_ID"]
@@ -357,9 +370,10 @@ class FabAuth:
 
         # Check for identity drift between the token and the active authenticated session
         session_tenant, session_principal = self._get_active_session_identity()
-        # Recover a missing principal only when the session tenant matches
+        # Recover a missing principal only for a restored user session
         if (
-            session_tenant == token_tenant
+            self.get_identity_type() == "user"
+            and session_tenant == token_tenant
             and not session_principal
             and not self._recover_session_principal()
         ):

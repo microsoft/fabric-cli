@@ -864,6 +864,80 @@ def test_direct_token_identity_consistent(monkeypatch):
     assert token == "fabric-token"
 
 
+def test_direct_tokens_establish_identity_when_tenant_is_loaded_from_env(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    tenant_id = str(uuid.uuid4())
+    object_id = str(uuid.uuid4())
+    tokens = {
+        "fabric-token": {"tid": tenant_id, "oid": object_id},
+        "onelake-token": {"tid": tenant_id, "oid": object_id},
+    }
+    monkeypatch.setenv("FAB_TENANT_ID", tenant_id)
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+
+    auth.__init__()
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: tokens[token],
+    )
+
+    token = auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert token == "fabric-token"
+    assert auth.get_identity_type() is None
+    assert auth.get_tenant_id() == tenant_id
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == object_id
+
+
+def test_direct_token_tenant_switch_detected_from_persisted_session(monkeypatch):
+    _clear_environment_variables(monkeypatch)
+    auth = FabAuth()
+    auth.__init__()
+    saved_tenant = str(uuid.uuid4())
+    saved_principal = str(uuid.uuid4())
+    token_tenant = str(uuid.uuid4())
+    token_principal = str(uuid.uuid4())
+    with open(auth.auth_file, "w") as auth_file:
+        json.dump(
+            {
+                con.IDENTITY_TYPE: "user",
+                con.FAB_TENANT_ID: saved_tenant,
+                con.FAB_PRINCIPAL_ID: saved_principal,
+            },
+            auth_file,
+        )
+
+    monkeypatch.setenv("FAB_TENANT_ID", token_tenant)
+    monkeypatch.setenv("FAB_TOKEN", "fabric-token")
+    monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
+    auth.__init__()
+    monkeypatch.setattr(
+        auth,
+        "_decode_jwt_token",
+        lambda token, audience, verify_exp=True: {
+            "tid": token_tenant,
+            "oid": token_principal,
+        },
+    )
+
+    with (
+        patch.object(auth, "logout_session") as mock_logout_session,
+        pytest.raises(FabricCLIError) as exc_info,
+    ):
+        auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
+
+    assert (
+        exc_info.value.message
+        == ErrorMessages.Auth.direct_token_session_identity_drift()
+    )
+    assert auth.get_tenant_id() == saved_tenant
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == saved_principal
+    mock_logout_session.assert_called_once_with()
+
+
 def test_validate_command_identity_checks_direct_tokens(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
