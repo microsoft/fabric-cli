@@ -29,6 +29,10 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as utils_ui
 
 
+class _JWTIdentityClaimsError(FabricCLIError):
+    pass
+
+
 def singleton(class_):
     instances = {}
 
@@ -131,12 +135,25 @@ class FabAuth:
         # Validate the environment variables
         self._validate_environment_variables()
 
-        # Check if the environment variables are set
-        # Removed usage of user tokens, need to see if this is still needed and if so, how to implement it
         if "FAB_TENANT_ID" in os.environ:
             tenant_id = os.environ["FAB_TENANT_ID"]
             self._verify_valid_guid_parameter(tenant_id, "FAB_TENANT_ID")
-            self.set_tenant(tenant_id)
+            # Preserve the saved identity loaded from auth.json until direct tokens are checked for drift
+            direct_tokens_configured = (
+                "FAB_TOKEN" in os.environ or "FAB_TOKEN_ONELAKE" in os.environ
+            )
+            alternate_auth_configured = (
+                "FAB_SPN_CLIENT_ID" in os.environ
+                or os.environ.get("FAB_MANAGED_IDENTITY", "").lower() in ("true", "1")
+            )
+            direct_tokens_active = (
+                direct_tokens_configured
+                and not alternate_auth_configured
+                and self.get_identity_type()
+                not in ("azure_cli", "service_principal", "managed_identity")
+            )
+            if not direct_tokens_active:
+                self.set_tenant(tenant_id)
 
         if "FAB_SPN_CLIENT_ID" in os.environ and "FAB_SPN_CLIENT_SECRET" in os.environ:
             client_id = os.environ["FAB_SPN_CLIENT_ID"]
@@ -274,6 +291,7 @@ class FabAuth:
 
     def _get_access_token_from_env_vars_if_exist(self, scope):
         if "FAB_TOKEN" in os.environ and "FAB_TOKEN_ONELAKE" in os.environ:
+            self._validate_direct_token_identity()
             match scope:
                 case con.SCOPE_FABRIC_DEFAULT:
                     # this call will validate the token we got from the env var
@@ -288,17 +306,16 @@ class FabAuth:
                     )
                     return os.environ["FAB_TOKEN_ONELAKE"]
                 case con.SCOPE_AZURE_DEFAULT:
-                    # this call will validate the token we got from the env var
-                    self._decode_jwt_token(
-                        os.environ["FAB_TOKEN_AZURE"], con.AZURE_TOKEN_AUDIENCE
-                    )
-                    if "FAB_TOKEN_AZURE" in os.environ:
-                        return os.environ["FAB_TOKEN_AZURE"]
-                    else:
+                    if "FAB_TOKEN_AZURE" not in os.environ:
                         raise FabricCLIError(
                             ErrorMessages.Auth.azure_token_required(),
                             con.ERROR_AUTHENTICATION_FAILED,
                         )
+                    # this call will validate the token we got from the env var
+                    self._decode_jwt_token(
+                        os.environ["FAB_TOKEN_AZURE"], con.AZURE_TOKEN_AUDIENCE
+                    )
+                    return os.environ["FAB_TOKEN_AZURE"]
                 case _:
                     raise FabricCLIError(
                         ErrorMessages.Auth.invalid_scope(scope),
@@ -312,6 +329,140 @@ class FabAuth:
             )
 
         return None
+
+    def _validate_direct_token_identity(self) -> None:
+        token_variables = (
+            ("FAB_TOKEN", con.FABRIC_TOKEN_AUDIENCE),
+            ("FAB_TOKEN_ONELAKE", con.ONELAKE_TOKEN_AUDIENCE),
+            ("FAB_TOKEN_AZURE", con.AZURE_TOKEN_AUDIENCE),
+        )
+        configured_tenant = os.environ.get("FAB_TENANT_ID")
+        identities = set()
+
+        for variable, audience in token_variables:
+            token = os.environ.get(variable)
+            if token is None:
+                continue
+
+            # Skip expiry while comparing identities; the selected token is fully validated when returned
+            try:
+                claims = self._decode_jwt_token(token, audience, verify_exp=False)
+            except _JWTIdentityClaimsError:
+                self.logout_session()
+                raise FabricCLIError(
+                    ErrorMessages.Auth.invalid_direct_token(variable),
+                    con.ERROR_AUTHENTICATION_FAILED,
+                )
+            tenant_id = claims["tid"]
+            object_id = claims["oid"]
+            identities.add((tenant_id.lower(), object_id.lower()))
+
+        # Check for identity drift across tokens and against the configured tenant, if set
+        token_tenant, token_principal = next(iter(identities))
+        if len(identities) > 1 or (
+            configured_tenant and configured_tenant.lower() != token_tenant
+        ):
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.direct_token_identity_drift(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Check for identity drift between the token and the active authenticated session
+        session_tenant, session_principal = self._get_active_session_identity()
+        # Recover a missing principal only for a restored user session
+        if (
+            self.get_identity_type() == "user"
+            and session_tenant == token_tenant
+            and not session_principal
+            and not self._recover_session_principal()
+        ):
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.session_identity_recovery_failed(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+        _, session_principal = self._get_active_session_identity()
+        # Reject tokens that do not match the active session identity
+        if (session_tenant and session_tenant != token_tenant) or (
+            session_principal and session_principal != token_principal
+        ):
+            self.logout_session()
+            raise FabricCLIError(
+                ErrorMessages.Auth.direct_token_session_identity_drift(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
+
+        # Pin the authentication tokens identity as the baseline on first use so
+        # that any later identity change is detected as drift on the next command
+        baseline: dict[str, str] = {}
+        if self.get_tenant_id() is None:
+            baseline[con.FAB_TENANT_ID] = token_tenant
+        if self._get_auth_property(con.FAB_PRINCIPAL_ID) is None:
+            baseline[con.FAB_PRINCIPAL_ID] = token_principal
+        if baseline:
+            self._set_auth_properties(baseline)
+            from fabric_cli.core.fab_context import Context
+
+            # Refresh navigation context to match the pinned identity
+            Context().context = self.get_tenant()
+
+    def _get_active_session_identity(self) -> tuple[Optional[str], Optional[str]]:
+        """Return the ``(tenant_id, principal_id)`` recorded for the currently authenticated session."""
+        tenant_id = self.get_tenant_id()
+        principal_id = self._get_auth_property(con.FAB_PRINCIPAL_ID)
+        return (
+            tenant_id.lower() if tenant_id else None,
+            principal_id.lower() if principal_id else None,
+        )
+
+    def _record_user_principal(self, token: Optional[dict], account=None) -> None:
+        """Record the user's principal ID for session identity checks."""
+        if not isinstance(token, dict):
+            return
+        principal_id = None
+        claims = token.get("id_token_claims")
+        if isinstance(claims, dict):
+            principal_id = claims.get("oid")
+        if not principal_id and isinstance(account, dict):
+            principal_id = account.get("local_account_id")
+        if isinstance(principal_id, str) and principal_id:
+            self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
+
+    def _recover_session_principal(self) -> bool:
+        """Recover a restored session's principal ID for identity comparison."""
+        if self._get_auth_property(con.FAB_PRINCIPAL_ID) is not None:
+            return True
+        if self.get_identity_type() != "user":
+            return False
+        try:
+            accounts = self._get_app().get_accounts()
+        except Exception as e:
+            fab_logger.log_debug(f"Unable to recover cached principal: {e}")
+            return False
+        if not accounts:
+            return False
+        account = self._select_cached_account(accounts)
+        principal_id = (
+            account.get("local_account_id") if isinstance(account, dict) else None
+        )
+        if isinstance(principal_id, str) and principal_id:
+            self._set_auth_property(con.FAB_PRINCIPAL_ID, principal_id)
+            return True
+        return False
+
+    def _select_cached_account(self, accounts: list):
+        """Select the cached account whose realm matches the session tenant."""
+        session_tenant = self.get_tenant_id()
+        if session_tenant:
+            session_tenant = session_tenant.lower()
+            for account in accounts:
+                if not isinstance(account, dict):
+                    continue
+                account_tenant = (account.get("realm") or "").lower()
+                if account_tenant and account_tenant == session_tenant:
+                    return account
+        return accounts[0]
 
     def get_tenant(self):
         return Tenant(
@@ -332,6 +483,25 @@ class FabAuth:
         """Validate the current Azure CLI identity when that mode is active."""
         if self.get_identity_type() == "azure_cli":
             self.get_access_token(con.SCOPE_FABRIC_DEFAULT, interactive_renew=False)
+
+    def validate_command_identity(self) -> None:
+        """Validate identity before an interactive command uses cached state."""
+        identity_type = self.get_identity_type()
+        if identity_type == "azure_cli":
+            self.validate_azure_cli_identity()
+            return
+        if identity_type in ("service_principal", "managed_identity"):
+            return
+
+        has_fabric_token = "FAB_TOKEN" in os.environ
+        has_onelake_token = "FAB_TOKEN_ONELAKE" in os.environ
+        if has_fabric_token and has_onelake_token:
+            self._validate_direct_token_identity()
+        elif has_fabric_token or has_onelake_token:
+            raise FabricCLIError(
+                ErrorMessages.Auth.both_fab_and_onelake_tokens_required(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
 
     def set_access_mode(self, mode, tenant_id=None):
         if mode not in con.AUTH_KEYS[con.IDENTITY_TYPE]:
@@ -488,7 +658,6 @@ class FabAuth:
     def _check_azure_cli_identity(self, claims: dict) -> None:
         """Records Azure CLI tenant and principal IDs and rejects identity drift."""
         from fabric_cli.core.fab_context import Context
-        from fabric_cli.utils import fab_mem_store
 
         # Get the tenant and principal IDs from the claims
         tenant_id = claims.get("tid")
@@ -522,9 +691,7 @@ class FabAuth:
             fab_logger.log_warning(f"Change detected in Azure CLI {changed_identity}")
 
             # Logout and clear identity-bound state before raising an error
-            self.logout()
-            fab_mem_store.clear_caches()
-            Context().reset_context()
+            self.logout_session()
             # Raise an error to stop the current operation upon detecting identity drift
             raise FabricCLIError(
                 ErrorMessages.Auth.azure_cli_identity_changed(),
@@ -587,7 +754,6 @@ class FabAuth:
 
         try:
             token = None
-            env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
             identity_type = self.get_identity_type()
 
             if identity_type == "service_principal":
@@ -611,28 +777,35 @@ class FabAuth:
                     )
             elif identity_type == "azure_cli":
                 token = self._acquire_token_from_azure_cli(scope)
-            elif env_var_token:
-                token = {
-                    "access_token": env_var_token,
-                }
-            elif identity_type == "user":
-                # Use the cache to get the token
-                accounts = self._get_app().get_accounts()
-                account = None
-                if accounts:
-                    account = accounts[0]
-                token = self._get_app().acquire_token_silent(
-                    scopes=scope, account=account
-                )
-
-                if token is None and interactive_renew:
-                    token = self._get_app().acquire_token_interactive(
-                        scopes=scope,
-                        prompt="select_account",
-                        parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
+            else:
+                env_var_token = self._get_access_token_from_env_vars_if_exist(scope)
+                if env_var_token:
+                    token = {
+                        "access_token": env_var_token,
+                    }
+                elif identity_type == "user":
+                    # Use the cache to get the token
+                    accounts = self._get_app().get_accounts()
+                    account = None
+                    if accounts:
+                        account = accounts[0]
+                    token = self._get_app().acquire_token_silent(
+                        scopes=scope, account=account
                     )
-                    if token is not None and "id_token_claims" in token:
-                        self.set_tenant(token.get("id_token_claims")["tid"])
+
+                    if token is None and interactive_renew:
+                        token = self._get_app().acquire_token_interactive(
+                            scopes=scope,
+                            prompt="select_account",
+                            parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
+                        )
+                        if token is not None and "id_token_claims" in token:
+                            claims = token.get("id_token_claims")
+                            self.set_tenant(claims["tid"])
+
+                    # Record the principal for both silent and interactive acquisition
+                    if token is not None and not token.get("error"):
+                        self._record_user_principal(token, account)
 
             if token and token.get("error"):
                 fab_logger.log_debug(
@@ -715,6 +888,16 @@ class FabAuth:
         config.set_config(con.FAB_DEFAULT_AZ_RESOURCE_GROUP, "")
         config.set_config(con.FAB_DEFAULT_AZ_LOCATION, "")
 
+    def logout_session(self) -> None:
+        from fabric_cli.core.fab_context import Context
+        from fabric_cli.utils import fab_mem_store
+
+        self.logout()
+
+        # Clear cache and context including current and stale context files
+        fab_mem_store.clear_caches()
+        Context().reset_context()
+
     def get_token_claims(
         self, scope: list[str], claim_names: list[str]
     ) -> Optional[dict[str, str]]:
@@ -737,8 +920,11 @@ class FabAuth:
             )
         return key
 
-    def _decode_jwt_token(self, token, expected_audience=None):
-        decode_options = {"verify_aud": expected_audience is not None}
+    def _decode_jwt_token(self, token, expected_audience=None, verify_exp=True):
+        decode_options = {
+            "verify_aud": expected_audience is not None,
+            "verify_exp": verify_exp,
+        }
         # Try using the cached public key if available
         if self.aad_public_key is not None:
             try:
@@ -749,7 +935,17 @@ class FabAuth:
                     audience=expected_audience,
                     options=decode_options,
                 )
+                if not payload.get("tid") or not payload.get("oid"):
+                    fab_logger.log_debug(
+                        "JWT token is missing required identity claims 'tid' or 'oid'"
+                    )
+                    raise _JWTIdentityClaimsError(
+                        ErrorMessages.Auth.jwt_identity_claims_missing(),
+                        con.ERROR_AUTHENTICATION_FAILED,
+                    )
                 return payload
+            except _JWTIdentityClaimsError:
+                raise
             except Exception as e:
                 fab_logger.log_debug(
                     f"JWT decode error with cached key: {e}. Fetching new key..."
@@ -771,6 +967,14 @@ class FabAuth:
             )
         # Cache the new key for future use
         self.aad_public_key = key
+        if not payload.get("tid") or not payload.get("oid"):
+            fab_logger.log_debug(
+                "JWT token is missing required identity claims 'tid' or 'oid'"
+            )
+            raise _JWTIdentityClaimsError(
+                ErrorMessages.Auth.jwt_identity_claims_missing(),
+                con.ERROR_AUTHENTICATION_FAILED,
+            )
         return payload
 
     def _get_claims_from_token(self, token, claim_names) -> Optional[dict[str, str]]:

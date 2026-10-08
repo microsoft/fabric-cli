@@ -1105,6 +1105,81 @@ class TestAuth:
         assert "Logged In: True" in captured.out
         assert "previous-tenant" not in captured.out
 
+    @pytest.mark.parametrize("initial_identity_type", ["user", None])
+    def test_auth_status_refreshes_metadata_after_direct_token_drift(
+        self, mock_fab_auth, capsys, initial_identity_type
+    ):
+        args = argparse.Namespace(
+            command="auth",
+            auth_subcommand="status",
+            output_format="text",
+        )
+        auth = mock_fab_auth["instance"]
+        auth._auth_info = {
+            fab_constant.FAB_TENANT_ID: "previous-tenant",
+            fab_constant.FAB_PRINCIPAL_ID: "previous-principal",
+        }
+        if initial_identity_type is not None:
+            auth._auth_info[fab_constant.IDENTITY_TYPE] = initial_identity_type
+        auth.get_tenant_id.side_effect = lambda: auth._auth_info.get(
+            fab_constant.FAB_TENANT_ID
+        )
+
+        def get_access_token(scope, **kwargs):
+            if auth.get_access_token.call_count == 1:
+                auth._auth_info = {}
+                raise FabricCLIError(
+                    ErrorMessages.Auth.direct_token_session_identity_drift(),
+                    fab_constant.ERROR_AUTHENTICATION_FAILED,
+                )
+            auth._auth_info.update(
+                {
+                    fab_constant.FAB_TENANT_ID: "environment-tenant",
+                    fab_constant.FAB_PRINCIPAL_ID: "environment-principal",
+                }
+            )
+            if scope == fab_constant.SCOPE_FABRIC_DEFAULT:
+                return "fabe_environment_token"
+            if scope == fab_constant.SCOPE_ONELAKE_DEFAULT:
+                return "onel_environment_token"
+            return "azur_environment_token"
+
+        auth.get_access_token.side_effect = get_access_token
+
+        with (
+            patch.object(
+                auth,
+                "get_identity_type",
+                side_effect=lambda: auth._auth_info.get(fab_constant.IDENTITY_TYPE),
+            ),
+            patch(
+                "fabric_cli.commands.auth.fab_auth._get_token_info_from_bearer_token",
+                return_value={
+                    "upn": "environment-user",
+                    "oid": "environment-principal",
+                    "tid": "environment-tenant",
+                    "appid": "environment-app",
+                },
+            ),
+        ):
+            fab_auth.status(args)
+
+        captured = capsys.readouterr()
+        assert "Logged in to app.fabric.microsoft.com" in captured.err
+        assert "Account: environment-user" in captured.out
+        assert "Principal ID: environment-principal" in captured.out
+        assert "Tenant ID: environment-tenant" in captured.out
+        assert "App ID: environment-app" in captured.out
+        assert (
+            "Token Fabric PowerBI: fabe************************************"
+            in captured.out
+        )
+        assert "Token Storage: onel************************************" in captured.out
+        assert "Token Azure: azur************************************" in captured.out
+        assert "Logged In: True" in captured.out
+        assert "previous-tenant" not in captured.out
+        assert "previous-principal" not in captured.out
+
     def test_auth_status_without_identity_preserves_available_tokens(
         self, mock_fab_auth, capsys
     ):

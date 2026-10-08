@@ -72,7 +72,7 @@ def set_command_context():
             if context.get_runtime_mode() == FAB_MODE_INTERACTIVE:
                 from fabric_cli.core.fab_auth import FabAuth
 
-                FabAuth().validate_azure_cli_identity()
+                FabAuth().validate_command_identity()
             return func(*args, **kwargs)
 
         return wrapper
