@@ -138,21 +138,8 @@ class FabAuth:
         if "FAB_TENANT_ID" in os.environ:
             tenant_id = os.environ["FAB_TENANT_ID"]
             self._verify_valid_guid_parameter(tenant_id, "FAB_TENANT_ID")
-            # Preserve the saved identity loaded from auth.json until direct tokens are checked for drift
-            direct_tokens_configured = (
-                "FAB_TOKEN" in os.environ or "FAB_TOKEN_ONELAKE" in os.environ
-            )
-            alternate_auth_configured = (
-                "FAB_SPN_CLIENT_ID" in os.environ
-                or os.environ.get("FAB_MANAGED_IDENTITY", "").lower() in ("true", "1")
-            )
-            direct_tokens_active = (
-                direct_tokens_configured
-                and not alternate_auth_configured
-                and self.get_identity_type()
-                not in ("azure_cli", "service_principal", "managed_identity")
-            )
-            if not direct_tokens_active:
+            # Preserve the saved identity loaded from auth.json until env var tokens are checked for drift
+            if not self._preserve_env_var_token_identity():
                 self.set_tenant(tenant_id)
 
         if "FAB_SPN_CLIENT_ID" in os.environ and "FAB_SPN_CLIENT_SECRET" in os.environ:
@@ -188,6 +175,25 @@ class FabAuth:
             if client_id:
                 self._verify_valid_guid_parameter(client_id, "FAB_SPN_CLIENT_ID")
             self.set_managed_identity(client_id)
+
+    def _preserve_env_var_token_identity(self) -> bool:
+        """Determine if the current identity should be preserved based on environment variable tokens configuration."""
+        env_var_tokens_configured = (
+            "FAB_TOKEN" in os.environ or "FAB_TOKEN_ONELAKE" in os.environ
+        )
+        alternate_auth_configured = "FAB_SPN_CLIENT_ID" in os.environ or os.environ.get(
+            "FAB_MANAGED_IDENTITY", ""
+        ).lower() in ("true", "1")
+        alternate_identity_active = self.get_identity_type() in (
+            "azure_cli",
+            "service_principal",
+            "managed_identity",
+        )
+        return (
+            env_var_tokens_configured
+            and not alternate_auth_configured
+            and not alternate_identity_active
+        )
 
     def _get_auth_property(self, key):
         return self._auth_info.get(key, None)
@@ -360,7 +366,7 @@ class FabAuth:
         # Check for identity drift across tokens and against the configured tenant, if set
         token_tenant, token_principal = next(iter(identities))
         if len(identities) > 1 or (
-            configured_tenant and configured_tenant.lower() != token_tenant
+            configured_tenant and configured_tenant.lower() != token_tenant.lower()
         ):
             self.logout_session()
             raise FabricCLIError(

@@ -914,6 +914,8 @@ def test_direct_token_tenant_switch_detected_from_persisted_session(monkeypatch)
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
     auth.__init__()
+    assert auth.get_tenant_id() == saved_tenant
+    assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == saved_principal
     monkeypatch.setattr(
         auth,
         "_decode_jwt_token",

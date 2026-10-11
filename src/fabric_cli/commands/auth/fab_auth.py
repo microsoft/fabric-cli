@@ -269,7 +269,6 @@ def status(args: Namespace) -> None:
     if metadata_refresh_needed or (
         identity_type is None and initial_identity_type == "azure_cli"
     ):
-        metadata_refresh_needed = True
         token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
         fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
         storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
