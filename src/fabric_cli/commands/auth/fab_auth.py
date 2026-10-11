@@ -217,10 +217,10 @@ def logout(args: Namespace) -> None:
 def status(args: Namespace) -> None:
     auth = FabAuth()
     initial_identity_type = auth.get_identity_type()
-    metadata_lookup_failed = False
+    token_info_lookup_failed = False
 
     def __get_token_info(scope):
-        nonlocal metadata_lookup_failed
+        nonlocal token_info_lookup_failed
         try:
             token = auth.get_access_token(scope, interactive_renew=False)
         except FabricCLIError as e:
@@ -228,7 +228,7 @@ def status(args: Namespace) -> None:
                 fab_constant.ERROR_UNAUTHORIZED,
                 fab_constant.ERROR_AUTHENTICATION_FAILED,
             ]:
-                metadata_lookup_failed = True
+                token_info_lookup_failed = True
                 return {}
             else:
                 raise e
@@ -264,9 +264,10 @@ def status(args: Namespace) -> None:
     identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 
-    # Refresh after identity fallback so metadata and tokens use the same identity
-    metadata_refresh_needed = metadata_lookup_failed and fabric_secret != "N/A"
-    if metadata_refresh_needed or (
+    # Refresh token information after identity drift failures, when the session
+    # switches to environment-variable tokens or clears the Azure CLI identity
+    refresh_token_info = token_info_lookup_failed and fabric_secret != "N/A"
+    if refresh_token_info or (
         identity_type is None and initial_identity_type == "azure_cli"
     ):
         token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
