@@ -1444,6 +1444,9 @@ def test_record_user_principal_populates_from_claims_and_account(monkeypatch):
         account={"local_account_id": account_principal},
     )
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == claims_principal
+
+
+def test_azure_token_required_when_environment_token_missing(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
