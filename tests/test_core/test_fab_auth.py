@@ -838,7 +838,7 @@ def test_get_access_token_env_var(monkeypatch):
     assert token == "env_token"
 
 
-def test_direct_token_identity_consistent(monkeypatch):
+def test_env_var_token_identity_consistent_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth._auth_info = {}
@@ -864,7 +864,9 @@ def test_direct_token_identity_consistent(monkeypatch):
     assert token == "fabric-token"
 
 
-def test_direct_tokens_establish_identity_when_tenant_is_loaded_from_env(monkeypatch):
+def test_env_var_tokens_establish_identity_when_tenant_is_loaded_from_env_success(
+    monkeypatch,
+):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -892,7 +894,9 @@ def test_direct_tokens_establish_identity_when_tenant_is_loaded_from_env(monkeyp
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == object_id
 
 
-def test_direct_token_tenant_switch_detected_from_persisted_session(monkeypatch):
+def test_env_var_token_tenant_switch_detected_from_persisted_session_failure(
+    monkeypatch,
+):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth.__init__()
@@ -933,28 +937,28 @@ def test_direct_token_tenant_switch_detected_from_persisted_session(monkeypatch)
 
     assert (
         exc_info.value.message
-        == ErrorMessages.Auth.direct_token_session_identity_drift()
+        == ErrorMessages.Auth.env_var_token_session_identity_drift()
     )
     assert auth.get_tenant_id() == saved_tenant
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == saved_principal
     mock_logout_session.assert_called_once_with()
 
 
-def test_validate_command_identity_checks_direct_tokens(monkeypatch):
+def test_validate_command_identity_checks_env_var_tokens_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth._auth_info = {con.IDENTITY_TYPE: "user"}
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
 
-    with patch.object(auth, "_validate_direct_token_identity") as validate_identity:
+    with patch.object(auth, "_validate_env_var_token_identity") as validate_identity:
         auth.validate_command_identity()
 
     validate_identity.assert_called_once_with()
 
 
 @pytest.mark.parametrize("identity_type", ["service_principal", "managed_identity"])
-def test_validate_command_identity_ignores_direct_tokens_for_other_modes(
+def test_validate_command_identity_ignores_env_var_tokens_for_other_modes_success(
     monkeypatch, identity_type
 ):
     _clear_environment_variables(monkeypatch)
@@ -963,7 +967,7 @@ def test_validate_command_identity_ignores_direct_tokens_for_other_modes(
     monkeypatch.setenv("FAB_TOKEN", "fabric-token")
     monkeypatch.setenv("FAB_TOKEN_ONELAKE", "onelake-token")
 
-    with patch.object(auth, "_validate_direct_token_identity") as validate_identity:
+    with patch.object(auth, "_validate_env_var_token_identity") as validate_identity:
         auth.validate_command_identity()
 
     validate_identity.assert_not_called()
@@ -978,16 +982,18 @@ def test_validate_command_identity_uses_azure_cli_validation(monkeypatch):
 
     with (
         patch.object(auth, "validate_azure_cli_identity") as validate_azure_cli,
-        patch.object(auth, "_validate_direct_token_identity") as validate_direct,
+        patch.object(auth, "_validate_env_var_token_identity") as validate_env_var,
     ):
         auth.validate_command_identity()
 
     validate_azure_cli.assert_called_once_with()
-    validate_direct.assert_not_called()
+    validate_env_var.assert_not_called()
 
 
 @pytest.mark.parametrize("variable", ["FAB_TOKEN", "FAB_TOKEN_ONELAKE"])
-def test_validate_command_identity_rejects_partial_direct_tokens(monkeypatch, variable):
+def test_validate_command_identity_rejects_partial_env_var_tokens_failure(
+    monkeypatch, variable
+):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth._auth_info = {con.IDENTITY_TYPE: "user"}
@@ -1003,7 +1009,7 @@ def test_validate_command_identity_rejects_partial_direct_tokens(monkeypatch, va
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
 
 
-def test_direct_token_first_use_pin_refreshes_navigation_context(monkeypatch):
+def test_env_var_token_first_use_pin_refreshes_navigation_context_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth._auth_info = {}  # no baseline yet -> first-use pin path
@@ -1028,7 +1034,7 @@ def test_direct_token_first_use_pin_refreshes_navigation_context(monkeypatch):
     assert mock_context.return_value.context.id == tenant_id
 
 
-def test_direct_token_existing_baseline_does_not_touch_context(monkeypatch):
+def test_env_var_token_existing_baseline_does_not_touch_context_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1062,7 +1068,7 @@ def test_direct_token_existing_baseline_does_not_touch_context(monkeypatch):
         ("FAB_TOKEN_AZURE", "azure-token", "oid"),
     ],
 )
-def test_invalid_direct_token_identity_claims(
+def test_invalid_env_var_token_identity_claims_failure(
     monkeypatch, variable, token, missing_claim
 ):
     _clear_environment_variables(monkeypatch)
@@ -1088,11 +1094,11 @@ def test_invalid_direct_token_identity_claims(
         auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
 
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert exc_info.value.message == ErrorMessages.Auth.invalid_direct_token(variable)
+    assert exc_info.value.message == ErrorMessages.Auth.invalid_env_var_token(variable)
     mock_logout_session.assert_called_once_with()
 
 
-def test_direct_token_identity_drift_logs_out_session(monkeypatch):
+def test_env_var_token_identity_drift_logs_out_session_failure(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1120,13 +1126,13 @@ def test_direct_token_identity_drift_logs_out_session(monkeypatch):
         auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
 
     assert exc_info.value.status_code == con.ERROR_AUTHENTICATION_FAILED
-    assert exc_info.value.message == ErrorMessages.Auth.direct_token_identity_drift()
+    assert exc_info.value.message == ErrorMessages.Auth.env_var_token_identity_drift()
     mock_logout.assert_called_once_with()
     mock_clear_caches.assert_called_once_with()
     mock_context.return_value.reset_context.assert_called_once_with()
 
 
-def test_direct_token_tenant_drift_logs_out_session(monkeypatch):
+def test_env_var_token_tenant_drift_logs_out_session_failure(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     token_tenant_id = str(uuid.uuid4())
@@ -1144,11 +1150,11 @@ def test_direct_token_tenant_drift_logs_out_session(monkeypatch):
     ):
         auth._get_access_token_from_env_vars_if_exist(con.SCOPE_FABRIC_DEFAULT)
 
-    assert exc_info.value.message == ErrorMessages.Auth.direct_token_identity_drift()
+    assert exc_info.value.message == ErrorMessages.Auth.env_var_token_identity_drift()
     mock_logout_session.assert_called_once_with()
 
 
-def test_direct_token_matches_active_session_identity(monkeypatch):
+def test_env_var_token_matches_active_session_identity_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1175,7 +1181,7 @@ def test_direct_token_matches_active_session_identity(monkeypatch):
     assert token == "fabric-token"
 
 
-def test_direct_token_identity_recorded_on_first_use(monkeypatch):
+def test_env_var_token_identity_recorded_on_first_use_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     auth._auth_info = {}
@@ -1200,7 +1206,7 @@ def test_direct_token_identity_recorded_on_first_use(monkeypatch):
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == object_id
 
 
-def test_direct_token_session_tenant_drift_logs_out_session(monkeypatch):
+def test_env_var_token_session_tenant_drift_logs_out_session_failure(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     token_claims = {"tid": str(uuid.uuid4()), "oid": str(uuid.uuid4())}
@@ -1222,12 +1228,12 @@ def test_direct_token_session_tenant_drift_logs_out_session(monkeypatch):
 
     assert (
         exc_info.value.message
-        == ErrorMessages.Auth.direct_token_session_identity_drift()
+        == ErrorMessages.Auth.env_var_token_session_identity_drift()
     )
     mock_logout_session.assert_called_once_with()
 
 
-def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
+def test_env_var_token_session_principal_drift_logs_out_session_failure(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1251,7 +1257,7 @@ def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
 
     assert (
         exc_info.value.message
-        == ErrorMessages.Auth.direct_token_session_identity_drift()
+        == ErrorMessages.Auth.env_var_token_session_identity_drift()
     )
     mock_logout_session.assert_called_once_with()
 
@@ -1259,8 +1265,8 @@ def test_direct_token_session_principal_drift_logs_out_session(monkeypatch):
 def test_restored_session_recovers_cached_principal_and_detects_drift(monkeypatch):
     # A restored user session may have a tenant recorded but no principal ID.
     # Switching straight to environment tokens for a different user in the same
-    # tenant must still be detected as drift once the cached principal is
-    # recovered (without first acquiring a silent token).
+    # tenant must still be detected by recovering the principal directly from
+    # the cached account.
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1291,14 +1297,14 @@ def test_restored_session_recovers_cached_principal_and_detects_drift(monkeypatc
 
     assert (
         exc_info.value.message
-        == ErrorMessages.Auth.direct_token_session_identity_drift()
+        == ErrorMessages.Auth.env_var_token_session_identity_drift()
     )
     mock_logout_session.assert_called_once_with()
     # The principal was recovered from the cache before the comparison ran
     assert auth._get_auth_property(con.FAB_PRINCIPAL_ID) == cached_principal
 
 
-def test_direct_token_recovery_error_logs_out_session(monkeypatch):
+def test_env_var_token_recovery_error_logs_out_session_failure(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     tenant_id = str(uuid.uuid4())
@@ -1331,7 +1337,7 @@ def test_direct_token_recovery_error_logs_out_session(monkeypatch):
 
 
 @pytest.mark.parametrize("accounts", [[], [{}]])
-def test_direct_token_unresolved_cached_principal_logs_out_session(
+def test_env_var_token_unresolved_cached_principal_logs_out_session_failure(
     monkeypatch, accounts
 ):
     _clear_environment_variables(monkeypatch)
@@ -1552,14 +1558,16 @@ def test_expired_non_selected_token_does_not_block_other_scope(monkeypatch):
     assert exc_info.value.message == ErrorMessages.Auth.jwt_decode_failed()
 
 
-def test_azure_cli_auth_ignores_direct_token_environment(monkeypatch):
+def test_azure_cli_auth_ignores_env_var_token_environment_success(monkeypatch):
     _clear_environment_variables(monkeypatch)
     auth = FabAuth()
     monkeypatch.setattr(auth, "get_identity_type", lambda: "azure_cli")
     monkeypatch.setattr(
         auth,
         "_get_access_token_from_env_vars_if_exist",
-        lambda scope: pytest.fail("Azure CLI auth inspected direct-token variables"),
+        lambda scope: pytest.fail(
+            "Azure CLI auth inspected environment-variable token variables"
+        ),
     )
     monkeypatch.setattr(
         auth,

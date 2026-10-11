@@ -61,7 +61,7 @@ class AuthErrors:
         return "Both FAB_TOKEN and FAB_TOKEN_ONELAKE are required"
 
     @staticmethod
-    def direct_token_identity_drift() -> str:
+    def env_var_token_identity_drift() -> str:
         return (
             "Identity mismatch detected in environment-variable tokens. "
             "The Fabric CLI session has been logged out. Ensure all tokens belong "
@@ -70,14 +70,14 @@ class AuthErrors:
         )
 
     @staticmethod
-    def invalid_direct_token(variable: str) -> str:
+    def invalid_env_var_token(variable: str) -> str:
         return (
             f"The access token provided through {variable} is invalid. "
             "Provide a valid token and try again"
         )
 
     @staticmethod
-    def direct_token_session_identity_drift() -> str:
+    def env_var_token_session_identity_drift() -> str:
         return (
             "Identity mismatch detected between environment-variable tokens and "
             "the authenticated session. The Fabric CLI session has been logged out. "

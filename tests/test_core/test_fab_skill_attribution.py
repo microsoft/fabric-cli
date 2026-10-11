@@ -106,7 +106,7 @@ def test_command_context_prevents_interactive_command_on_identity_drift_failure(
             FabAuth(),
             "validate_command_identity",
             side_effect=FabricCLIError(
-                ErrorMessages.Auth.direct_token_session_identity_drift(),
+                ErrorMessages.Auth.env_var_token_session_identity_drift(),
                 fab_constant.ERROR_AUTHENTICATION_FAILED,
             ),
         ),

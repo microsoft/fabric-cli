@@ -1106,7 +1106,7 @@ class TestAuth:
         assert "previous-tenant" not in captured.out
 
     @pytest.mark.parametrize("initial_identity_type", ["user", None])
-    def test_auth_status_refreshes_metadata_after_direct_token_drift(
+    def test_auth_status_refreshes_metadata_after_env_var_token_drift_success(
         self, mock_fab_auth, capsys, initial_identity_type
     ):
         args = argparse.Namespace(
@@ -1129,7 +1129,7 @@ class TestAuth:
             if auth.get_access_token.call_count == 1:
                 auth._auth_info = {}
                 raise FabricCLIError(
-                    ErrorMessages.Auth.direct_token_session_identity_drift(),
+                    ErrorMessages.Auth.env_var_token_session_identity_drift(),
                     fab_constant.ERROR_AUTHENTICATION_FAILED,
                 )
             auth._auth_info.update(

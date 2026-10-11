@@ -297,7 +297,7 @@ class FabAuth:
 
     def _get_access_token_from_env_vars_if_exist(self, scope):
         if "FAB_TOKEN" in os.environ and "FAB_TOKEN_ONELAKE" in os.environ:
-            self._validate_direct_token_identity()
+            self._validate_env_var_token_identity()
             match scope:
                 case con.SCOPE_FABRIC_DEFAULT:
                     # this call will validate the token we got from the env var
@@ -336,7 +336,7 @@ class FabAuth:
 
         return None
 
-    def _validate_direct_token_identity(self) -> None:
+    def _validate_env_var_token_identity(self) -> None:
         token_variables = (
             ("FAB_TOKEN", con.FABRIC_TOKEN_AUDIENCE),
             ("FAB_TOKEN_ONELAKE", con.ONELAKE_TOKEN_AUDIENCE),
@@ -356,7 +356,7 @@ class FabAuth:
             except _JWTIdentityClaimsError:
                 self.logout_session()
                 raise FabricCLIError(
-                    ErrorMessages.Auth.invalid_direct_token(variable),
+                    ErrorMessages.Auth.invalid_env_var_token(variable),
                     con.ERROR_AUTHENTICATION_FAILED,
                 )
             tenant_id = claims["tid"]
@@ -370,7 +370,7 @@ class FabAuth:
         ):
             self.logout_session()
             raise FabricCLIError(
-                ErrorMessages.Auth.direct_token_identity_drift(),
+                ErrorMessages.Auth.env_var_token_identity_drift(),
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
@@ -395,7 +395,7 @@ class FabAuth:
         ):
             self.logout_session()
             raise FabricCLIError(
-                ErrorMessages.Auth.direct_token_session_identity_drift(),
+                ErrorMessages.Auth.env_var_token_session_identity_drift(),
                 con.ERROR_AUTHENTICATION_FAILED,
             )
 
@@ -502,7 +502,7 @@ class FabAuth:
         has_fabric_token = "FAB_TOKEN" in os.environ
         has_onelake_token = "FAB_TOKEN_ONELAKE" in os.environ
         if has_fabric_token and has_onelake_token:
-            self._validate_direct_token_identity()
+            self._validate_env_var_token_identity()
         elif has_fabric_token or has_onelake_token:
             raise FabricCLIError(
                 ErrorMessages.Auth.both_fab_and_onelake_tokens_required(),
