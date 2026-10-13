@@ -4,10 +4,13 @@
 from functools import wraps
 
 import fabric_cli.core.fab_logger as fab_logger
+from fabric_cli.core import fab_state_config
 from fabric_cli.core.fab_constant import (
     ERROR_UNAUTHORIZED,
     EXIT_CODE_AUTHORIZATION_REQUIRED,
     EXIT_CODE_ERROR,
+    FAB_CONTEXT_PERSISTENCE_ENABLED,
+    FAB_MODE_COMMANDLINE,
     FAB_MODE_INTERACTIVE,
 )
 from fabric_cli.core.fab_exceptions import FabricCLIError
@@ -69,7 +72,13 @@ def set_command_context():
             context = Context()
             context.command = args[0].command_path
             context.fabric_skill = getattr(args[0], "skill", None)
-            if context.get_runtime_mode() == FAB_MODE_INTERACTIVE:
+            runtime_mode = context.get_runtime_mode()
+            # Persisted command-line context is identity-bound, so validate before a command can load state saved by a previous identity
+            if runtime_mode == FAB_MODE_INTERACTIVE or (
+                runtime_mode == FAB_MODE_COMMANDLINE
+                and fab_state_config.get_config(FAB_CONTEXT_PERSISTENCE_ENABLED)
+                == "true"
+            ):
                 from fabric_cli.core.fab_auth import FabAuth
 
                 FabAuth().validate_command_identity()

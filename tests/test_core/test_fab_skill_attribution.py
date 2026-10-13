@@ -92,6 +92,51 @@ def test_command_context_validates_identity_before_interactive_command_success()
     assert command_executed is True
 
 
+def test_command_context_validates_identity_with_command_line_persistence_success():
+    """Persisted command-line context must be identity-checked before execution."""
+    Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with (
+        patch.object(
+            fab_state_config,
+            "get_config",
+            return_value="true",
+        ),
+        patch.object(FabAuth(), "validate_command_identity") as validate_identity,
+    ):
+        command(Namespace(command_path="pwd", skill=None))
+
+    validate_identity.assert_called_once_with()
+    assert command_executed is True
+
+
+def test_command_context_skips_identity_without_command_line_persistence_success():
+    """Command-line mode avoids identity checks when no context can persist."""
+    Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        return None
+
+    with (
+        patch.object(
+            fab_state_config,
+            "get_config",
+            return_value="false",
+        ),
+        patch.object(FabAuth(), "validate_command_identity") as validate_identity,
+    ):
+        command(Namespace(command_path="pwd", skill=None))
+
+    validate_identity.assert_not_called()
+
+
 def test_command_context_prevents_interactive_command_on_identity_drift_failure():
     Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
     command_executed = False
