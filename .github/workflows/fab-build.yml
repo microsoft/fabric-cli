@@ -88,6 +88,8 @@ jobs:
             tox-env: "py312"
           - python-version: "3.13"
             tox-env: "py313"
+          - python-version: "3.14"
+            tox-env: "py314"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -119,7 +121,7 @@ jobs:
         with:
           name: coverage-html-report-${{ matrix.python-version }}
           path: coverage_html
-        
+
   # Build Job
   build:
     name: Build Package
