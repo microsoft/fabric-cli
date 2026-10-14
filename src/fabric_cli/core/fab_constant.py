@@ -19,13 +19,14 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
 API_USER_AGENT = "ms-fabric-cli"
 API_USER_AGENT_TEST = "ms-fabric-cli-test"
-WEB_URI = "https://app.powerbi.com/groups"
+WEB_URI = "https://app.fabric.microsoft.com/groups"
 
 # Versioning
 FAB_VERSION = __version__
