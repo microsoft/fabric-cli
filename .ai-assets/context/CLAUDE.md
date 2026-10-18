@@ -7,7 +7,7 @@ Context for Claude Code helping users work with the Fabric CLI. Copy or symlink 
 **Fabric CLI** (`fab`) is a command-line tool for **Microsoft Fabric** with interactive (REPL) and command-line modes.
 
 - **Install**: `pip install ms-fabric-cli`
-- **Python**: 3.10, 3.11, 3.12, 3.13
+- **Python**: 3.10, 3.11, 3.12, 3.13, 3.14
 - **Platforms**: Windows, Linux, macOS
 
 ## Core Design Pattern
