@@ -34,6 +34,9 @@ Override the output format for any command using the global `--output_format` fl
 # Use JSON format for a single command
 fab ls --output_format json
 
+# Equivalent shorthand (no value required)
+fab ls --json
+
 # Use text format explicitly
 fab auth status --output_format text
 ```
@@ -41,6 +44,10 @@ fab auth status --output_format text
 **Available Values:**
 - `json` - JSON structured output
 - `text` - Human-readable text output (default)
+
+The global `--json` flag is equivalent to `--output_format json` and works
+in both command-line and interactive modes. If both options are supplied,
+the last option wins: `fab ls --json --output_format text` uses text output.
 
 ### Configuration File
 Set the default output format using the [`fab config set`](../examples/config_examples.md) command:
@@ -56,7 +63,7 @@ fab config set output_format text
 fab config get output_format
 ```
 
-The configuration is stored in your Fabric CLI configuration file and applies to all subsequent commands unless overridden by the `--output_format` flag.
+The configuration is stored in your Fabric CLI configuration file and applies to all subsequent commands unless overridden by the `--output_format` or `--json` flag.
 
 ## JSON Output Schema
 

@@ -101,6 +101,7 @@ The following parameters are available for all commands:
 
 - `-h, --help`: Display help information for the command
 - `--output_format`: Specify the output format (`text` or `json`).
+- `--json`: Use JSON output, equivalent to `--output_format json`.
 
 ## Common Parameters
 
