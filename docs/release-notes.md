@@ -67,7 +67,7 @@ hide:
 
 ### 🔧 Bug Fix
 
-* fix correct "caracters" typo in error message by [alonyeshurun](https://github.com/alonyeshurun)
+* Fix "caracters" typo in error message by [alonyeshurun](https://github.com/alonyeshurun)
 * Remove hardcoded description when create/import items by [aviatco](https://github.com/aviatco)
 
 ### ⚡ Additional Optimizations
