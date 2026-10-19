@@ -10,7 +10,10 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.core import fab_constant
-from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+from fabric_cli.core.fab_parser_setup import (
+    CustomArgumentParser,
+    create_parser_and_subparsers,
+)
 from fabric_cli.parsers import fab_global_params
 from fabric_cli.utils import fab_ui
 
@@ -124,6 +127,82 @@ def test_json_matches_output_format_across_commands(
     assert vars(shorthand) == vars(explicit)
 
 
+@pytest.mark.parametrize(
+    ("arguments", "expected"),
+    [
+        ([], None),
+        (["ls"], None),
+        (["auth", "status"], None),
+        (["--json", "ls"], "json"),
+        (["auth", "--json", "status"], "json"),
+        (["--json", "auth", "status"], "json"),
+        (["--output_format", "json", "ls"], "json"),
+        (["--output_format", "text", "auth", "status"], "text"),
+        (["auth", "--output_format", "json", "status"], "json"),
+        (["--json", "ls", "--output_format", "text"], "text"),
+        (["--output_format", "text", "ls", "--json"], "json"),
+        (["--json", "auth", "--output_format", "text", "status"], "text"),
+        (["--output_format", "text", "auth", "--json", "status"], "json"),
+        (["--json", "auth", "status", "--output_format", "text"], "text"),
+        (["--output_format", "text", "auth", "status", "--json"], "json"),
+        (["auth", "--json", "status", "--output_format", "text"], "text"),
+        (["auth", "--output_format", "text", "status", "--json"], "json"),
+        (
+            ["--output_format", "json", "auth", "--output_format", "text", "status"],
+            "text",
+        ),
+        (
+            ["--output_format", "text", "auth", "status", "--output_format", "json"],
+            "json",
+        ),
+        (
+            [
+                "--json",
+                "auth",
+                "--output_format",
+                "text",
+                "status",
+                "--json",
+            ],
+            "json",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "mode",
+    [fab_constant.FAB_MODE_COMMANDLINE, fab_constant.FAB_MODE_INTERACTIVE],
+)
+def test_output_format_preserved_across_subparsers(
+    arguments: list[str], expected: str | None, mode: str
+) -> None:
+    """Only explicit options override earlier format selections."""
+    parser, _ = create_parser_and_subparsers()
+    parser.set_mode(mode)
+
+    args = parser.parse_args(arguments)
+
+    assert args.output_format == expected
+    assert not hasattr(args, "json")
+
+
+def test_custom_parser_output_format_defaults() -> None:
+    """Only root parsers supply a fallback, including when parsing known args."""
+    parser = CustomArgumentParser()
+    child = parser.add_subparsers().add_parser("child")
+    child.add_subparsers().add_parser("nested")
+
+    assert parser.parse_args([]).output_format is None
+    assert parser.parse_args(["child", "nested"]).output_format is None
+    args, remaining = parser.parse_known_args(
+        ["--json", "child", "nested", "--unknown"]
+    )
+    assert args.output_format == "json"
+    assert remaining == ["--unknown"]
+    args, remaining = parser.parse_known_args(["child", "nested"])
+    assert args.output_format is None
+    assert remaining == []
+
+
 def test_json_flag_rejects_value() -> None:
     """The shorthand is a switch, not an option requiring a value."""
     parser = argparse.ArgumentParser()
@@ -142,12 +221,25 @@ def test_json_flag_is_documented_in_help() -> None:
 
 
 @pytest.mark.parametrize("flags", [["--json"], ["--output_format", "json"]])
+@pytest.mark.parametrize(
+    ("before", "after"),
+    [
+        ([], ["ls"]),
+        (["ls"], []),
+        ([], ["auth", "status"]),
+        (["auth"], ["status"]),
+        (["auth", "status"], []),
+    ],
+)
 def test_json_output_overrides_configured_text(
-    flags: list[str], capsys: pytest.CaptureFixture[str]
+    flags: list[str],
+    before: list[str],
+    after: list[str],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Both forms render structured JSON through the existing output helper."""
     parser, _ = create_parser_and_subparsers()
-    args = parser.parse_args(["ls", *flags])
+    args = parser.parse_args([*before, *flags, *after])
     data = [{"name": "ws.Workspace"}]
 
     with patch(
@@ -158,6 +250,6 @@ def test_json_output_overrides_configured_text(
     captured = capsys.readouterr()
     output = json.loads(captured.out)
     assert output["status"] == "Success"
-    assert output["command"] == "ls"
+    assert output["command"] == args.command
     assert output["result"] == {"data": data, "hidden_data": [".capacities"]}
     assert captured.err == ""

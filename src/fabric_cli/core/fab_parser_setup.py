@@ -4,6 +4,8 @@
 import argparse
 import re
 import sys
+from functools import partial
+from typing import Any
 
 import argcomplete
 
@@ -112,7 +114,13 @@ class CustomHelpFormatter(argparse.HelpFormatter):
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def __init__(
-        self, *args, fab_examples=None, fab_aliases=None, fab_learnmore=None, **kwargs
+        self,
+        *args,
+        fab_examples=None,
+        fab_aliases=None,
+        fab_learnmore=None,
+        output_format_default: str | None = None,
+        **kwargs,
     ):
         kwargs["formatter_class"] = lambda prog: CustomHelpFormatter(
             prog,
@@ -122,10 +130,20 @@ class CustomArgumentParser(argparse.ArgumentParser):
         )
         super().__init__(*args, **kwargs)
         # Add custom help and format flags
-        fab_global_params.add_global_flags(self)
+        fab_global_params.add_global_flags(
+            self, output_format_default=output_format_default
+        )
         self.fab_mode = fab_constant.FAB_MODE_COMMANDLINE
         self.fab_examples = fab_examples or []
         self.fab_aliases = fab_aliases or []
+
+    def add_subparsers(self, **kwargs: Any) -> argparse._SubParsersAction:
+        """Keep child defaults from overwriting an explicit output format."""
+        kwargs.setdefault(
+            "parser_class",
+            partial(type(self), output_format_default=argparse.SUPPRESS),
+        )
+        return super().add_subparsers(**kwargs)
 
     def print_help(self, file=None):
         command_name = self.prog.split()[-1]

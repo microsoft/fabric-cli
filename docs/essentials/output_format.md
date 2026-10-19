@@ -48,6 +48,11 @@ fab auth status --output_format text
 The global `--json` flag is equivalent to `--output_format json` and works
 in both command-line and interactive modes. If both options are supplied,
 the last option wins: `fab ls --json --output_format text` uses text output.
+Either flag can appear before or after a command or subcommand. For example,
+`fab --json ls` and `fab auth --json status` both use JSON output. An explicit
+selection is preserved across subcommands unless a later format option overrides
+it: `fab --json auth --output_format text status` uses text output. If neither
+flag is supplied, the configured output format is used.
 
 ### Configuration File
 Set the default output format using the [`fab config set`](../examples/config_examples.md) command:
