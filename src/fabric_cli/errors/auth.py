@@ -61,6 +61,37 @@ class AuthErrors:
         return "Both FAB_TOKEN and FAB_TOKEN_ONELAKE are required"
 
     @staticmethod
+    def env_var_token_identity_drift() -> str:
+        return (
+            "Identity mismatch detected in environment-variable tokens. "
+            "The Fabric CLI session has been logged out. Ensure all tokens belong "
+            "to the same identity and FAB_TENANT_ID matches their tenant, then "
+            "rerun the command"
+        )
+
+    @staticmethod
+    def invalid_env_var_token(variable: str) -> str:
+        return (
+            f"The access token provided through {variable} is invalid. "
+            "Provide a valid token and try again"
+        )
+
+    @staticmethod
+    def env_var_token_session_identity_drift() -> str:
+        return (
+            "Identity mismatch detected between environment-variable tokens and "
+            "the authenticated session. The Fabric CLI session has been logged out. "
+            "Rerun the command to continue with the environment-variable token identity"
+        )
+
+    @staticmethod
+    def session_identity_recovery_failed() -> str:
+        return (
+            "Unable to verify the authenticated session identity. "
+            "The Fabric CLI session has been logged out. Rerun the command"
+        )
+
+    @staticmethod
     def invalid_identity_type(identity_type: str, allowed_values: list) -> str:
         return f"The identity type '{identity_type}' is invalid. Allowed values are: {allowed_values}"
 
@@ -97,6 +128,10 @@ class AuthErrors:
         return "Failed to decode JWT token"
 
     @staticmethod
+    def jwt_identity_claims_missing() -> str:
+        return "The access token is invalid. Acquire a new token and try again"
+
+    @staticmethod
     def invalid_cert_path(parameter_name: str) -> str:
         return f"The parameter '{parameter_name}' must be a valid path to a certificate file"
 
@@ -119,3 +154,36 @@ class AuthErrors:
     @staticmethod
     def only_supported_with_user_authentication() -> str:
         return "This operation is only supported with user authentication"
+
+    @staticmethod
+    def azure_cli_not_available() -> str:
+        return (
+            "Azure CLI is not installed or not logged in. "
+            "Run 'az login' to authenticate, then retry"
+        )
+
+    @staticmethod
+    def azure_cli_auth_failed(error_msg: str) -> str:
+        return f"Azure CLI authentication failed: {error_msg}"
+
+    @staticmethod
+    def azure_cli_token_acquisition_failed() -> str:
+        return (
+            "Unable to get a token from Azure CLI. "
+            "Run 'az login' to authenticate, then retry"
+        )
+
+    @staticmethod
+    def azure_cli_identity_claims_missing() -> str:
+        return "Azure CLI returned an invalid token. Run 'az login' to authenticate, then retry"
+
+    @staticmethod
+    def azure_cli_identity_changed() -> str:
+        return (
+            "Fabric CLI logged out due to change in Azure CLI identity. "
+            "Run `fab auth login --azure-cli` to re-authenticate with the current Azure CLI identity"
+        )
+
+    @staticmethod
+    def incompatible_authentication_arguments(arguments: list[str]) -> str:
+        return f"Authentication arguments cannot be combined: {', '.join(arguments)}"

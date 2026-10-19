@@ -326,6 +326,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.KQLDatabase`, `.KQLDashboard`, `.KQLQueryset`
 - `.Eventhouse`, `.Eventstream`, `.MirroredDatabase`
 - `.Reflex`, `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.GraphModel`, `.Ontology`
 
 
 #### Export to Lakehouse

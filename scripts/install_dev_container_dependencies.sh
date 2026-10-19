@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-apt-get update && apt-get install -y \
-    cmake \
-    libcairo2-dev \
-    pkg-config \
-    python3-dev
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/.." && pwd)"
 
-pip3 install -r requirements-dev.txt -r requirements-docs.txt
+local_env="${repo_root}/.devcontainer/local.env"
+if [ -f "$local_env" ]; then
+    pip_index_url="$(sed -n 's/^PIP_INDEX_URL=//p' "$local_env" | tail -n 1)"
+    if [ -n "$pip_index_url" ]; then
+        export PIP_INDEX_URL="$pip_index_url"
+    fi
+fi
 
-npm install -g changie
+pip3 install -r "${repo_root}/requirements-dev.txt" -r "${repo_root}/requirements-docs.txt"

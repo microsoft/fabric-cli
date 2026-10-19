@@ -18,6 +18,7 @@ Tab completion is supported in the following shell environments:
 -   **PowerShell** (Windows PowerShell and PowerShell Core)
 -   **Bash** (Linux/macOS and Windows Subsystem for Linux)
 -   **Zsh** (Z shell - popular on macOS and Linux)
+-   **Fish** (friendly interactive shell)
 
 ## How to Enable Autocompletion
 
@@ -58,3 +59,18 @@ The completion scripts are also available in the [scripts/completion](https://gi
     ```
 
 3.  Restart your terminal or run `source ~/.bashrc` to apply the changes.
+
+
+### Fish
+
+1.  Save the script [`fab_completion.fish`](https://github.com/microsoft/fabric-cli/blob/main/scripts/completion/fab_completion.fish) as `~/.config/fish/completions/fab.fish`. It contains the following line:
+
+    ```fish
+    # This script is provided as a sample to demonstrate how to enable fab tab completion. Users are solely responsible for reviewing, testing, and executing this script in their environment.
+    register-python-argcomplete --shell fish fab | source
+    ```
+
+2.  Restart your terminal to apply the changes.
+
+!!! note
+    Use the completions directory rather than `~/.config/fish/config.fish`. Fish ships completions for an unrelated `fab` command (Python Fabric), and a file in `~/.config/fish/completions` replaces them.

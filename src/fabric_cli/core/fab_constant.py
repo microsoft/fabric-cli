@@ -19,13 +19,14 @@ API_ENDPOINT_AZURE = validate_and_get_env_variable(
 )
 
 API_ENDPOINT_POWER_BI = (
-    validate_and_get_env_variable("FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
+    validate_and_get_env_variable(
+        "FAB_API_ENDPOINT_POWER_BI", "api.powerbi.com")
     + "/v1.0/myorg"
 )
 
 API_USER_AGENT = "ms-fabric-cli"
 API_USER_AGENT_TEST = "ms-fabric-cli-test"
-WEB_URI = "https://app.powerbi.com/groups"
+WEB_URI = "https://app.fabric.microsoft.com/groups"
 
 # Versioning
 FAB_VERSION = __version__
@@ -54,6 +55,7 @@ FAB_SPN_CERT_PATH = "fab_spn_cert_path"
 FAB_SPN_CERT_PASSWORD = "fab_spn_cert_password"
 FAB_SPN_FEDERATED_TOKEN = "fab_spn_federated_token"
 FAB_TENANT_ID = "fab_tenant_id"
+FAB_PRINCIPAL_ID = "fab_principal_id"
 
 FAB_REFRESH_TOKEN = "fab_refresh_token"
 IDENTITY_TYPE = "identity_type"
@@ -62,11 +64,12 @@ FAB_AUTHORITY = "fab_authority"
 
 AUTH_KEYS = {
     FAB_TENANT_ID: [],
-    IDENTITY_TYPE: ["user", "service_principal", "managed_identity"],
+    IDENTITY_TYPE: ["user", "service_principal", "managed_identity", "azure_cli"],
 }
 
 FAB_HOST_APP_ENV_VAR = "FAB_HOST_APP"
 FAB_HOST_APP_VERSION_ENV_VAR = "FAB_HOST_APP_VERSION"
+FABRIC_SKILL_HEADER = "x-ms-fabric-skill"
 
 # Other constants
 FAB_CAPACITY_NAME_NONE = "none"
@@ -100,6 +103,9 @@ FAB_CHECK_UPDATES = "check_cli_version_updates"
 # Version check settings
 VERSION_CHECK_PYPI_URL = "https://pypi.org/pypi/ms-fabric-cli/json"
 VERSION_CHECK_TIMEOUT_SECONDS = 3
+
+# Authentication request settings
+AAD_JWKS_TIMEOUT_SECONDS = 10
 
 FAB_CONFIG_KEYS_TO_VALID_VALUES = {
     FAB_CACHE_ENABLED: ["false", "true"],

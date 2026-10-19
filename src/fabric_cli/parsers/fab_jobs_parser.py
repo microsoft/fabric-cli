@@ -176,7 +176,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# set up pipeline schedule to run every 10 minutes and enable it",
         "$ job run-sch pip1.DataPipeline --type cron --interval 10 --start 2024-11-15T09:00:00 --end 2024-12-15T10:00:00 --enable \n",
         "# set up pipeline schedule to run every day at 10:00 and 16:00 (disabled by default)",
-        "$ job run-update pip1.DataPipeline --id <schedule_id> --type daily --interval 10:00,16:00 --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
+        "$ job run-sch pip1.DataPipeline --type daily --interval 10:00,16:00 --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
         "# set up pipeline schedule to run every Monday and Friday at 10:00 and 16:00, disabled by default",
         "$ job run-sch pip1.DataPipeline --type weekly --interval 10:00,16:00 --days Monday,Friday --start 2024-11-15T09:00:00 --end 2024-12-16T10:00:00 \n",
         "# set up pipeline schedule with custom input",
@@ -221,7 +221,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     # Subcommand for 'run_update'
     update_examples = [
         "# disable pipeline schedule",
-        "$ job run-update pip1.DataPipeline --id <schedule_id> --disabled \n",
+        "$ job run-update pip1.DataPipeline --id <schedule_id> --disable \n",
         "# update pipeline schedule to run every 10 minutes and enable it",
         "$ job run-update pip1.DataPipeline --id <schedule_id> --type cron --interval 10 --start 2024-11-15T09:00:00 --end 2024-12-15T10:00:00 --enable \n",
         "# update pipeline schedule to run every day at 10:00 and 16:00 (maintain the existing enabled state)",
@@ -276,6 +276,7 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     run_update_parser.add_argument(
         "--days", metavar="", help="Days of the week. Optional"
     )
+    run_update_parser.usage = f"{utils_error_parser.get_usage_prog(run_update_parser)}"
     run_update_parser.set_defaults(func=lazy_command(_jobs_module_path, 'run_update_command'))
 
     # Subcommand for 'run_rm'

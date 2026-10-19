@@ -3,7 +3,8 @@
 
 import os
 import platform
-from unittest.mock import patch
+from argparse import Namespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
@@ -354,3 +355,68 @@ class TestDeploy:
         mock_print_done.assert_called()
         assert "Deployment completed successfully" in str(
             mock_print_done.call_args)
+
+    def _run_deploy_with_config_file(self, deploy_with_config, params=None):
+        """Invoke deploy_with_config_file with fabric-cicd symbols patched (no network)."""
+        from fabric_cli.commands.fs.deploy import (
+            fab_fs_deploy_config_file as deploy_mod,
+        )
+
+        args = Namespace(
+            config="config.yml",
+            target_env="dev",
+            command_path="deploy",
+            params=params if params is not None else [],
+        )
+
+        with (
+            patch.object(deploy_mod, "deploy_with_config", deploy_with_config),
+            patch.object(
+                deploy_mod, "create_fabric_token_credential", MagicMock()),
+            patch.object(deploy_mod, "append_feature_flag", MagicMock()),
+            patch.object(deploy_mod, "disable_file_logging", MagicMock()),
+            patch.object(
+                deploy_mod, "configure_external_file_logging", MagicMock()),
+            patch.object(
+                deploy_mod.fab_state_config, "get_config", return_value="false"
+            ),
+            patch.object(deploy_mod.fab_ui,
+                         "print_output_format", MagicMock()),
+        ):
+            deploy_mod.deploy_with_config_file(args)
+
+    def _capture_deploy_host_app(self, params=None):
+        """Run deploy_with_config_file and return the host_app passed to fabric-cicd."""
+        captured = {}
+
+        def fake_deploy_with_config(
+            *,
+            config_file_path,
+            token_credential,
+            environment="N/A",
+            config_override=None,
+            host_app=None,
+        ):
+            captured["host_app"] = host_app
+            return MagicMock(message="Deployment completed successfully")
+
+        self._run_deploy_with_config_file(
+            fake_deploy_with_config, params=params)
+
+        return captured["host_app"]
+
+    def test_deploy_passes_host_app_success(self):
+        """CLI passes host_app as 'ms-fabric-cli/<version>'."""
+        from fabric_cli.core import fab_constant
+
+        host_app = self._capture_deploy_host_app()
+
+        assert host_app == f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION}"
+
+    def test_deploy_host_app_cannot_be_spoofed_via_params_success(self):
+        """A user-supplied host_app (via -P) is overridden by the CLI-controlled value."""
+        from fabric_cli.core import fab_constant
+
+        host_app = self._capture_deploy_host_app(params=["host_app=spoofed"])
+
+        assert host_app == f"{fab_constant.API_USER_AGENT}/{fab_constant.FAB_VERSION}"

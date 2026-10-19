@@ -113,7 +113,9 @@ def do_request(
     # Build headers
     from fabric_cli.core.fab_context import Context as FabContext
 
-    ctxt_cmd = FabContext().command
+    fab_context = FabContext()
+    ctxt_cmd = fab_context.command
+    fabric_skill = fab_context.fabric_skill
 
     headers = {
         "Authorization": "Bearer " + str(token),
@@ -131,6 +133,10 @@ def do_request(
                 ErrorMessages.Common.invalid_headers_format(),
                 fab_constant.ERROR_INVALID_OPERATION,
             )
+
+    # The fabric skills header is only applicable for the Fabric audience (None or "fabric")
+    if fabric_skill and audience_value in (None, "fabric"):
+        headers[fab_constant.FABRIC_SKILL_HEADER] = fabric_skill
 
     try:
         session = _get_session()

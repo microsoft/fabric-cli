@@ -55,6 +55,25 @@ def test_context_workspace():
     Context().reset_context()
 
 
+def test_reset_context_reloads_tenant_from_auth(monkeypatch):
+    old_tenant = hierarchy.Tenant(name="old_tenant", id="old-tenant")
+    workspace = hierarchy.Workspace(
+        name="workspace_name",
+        id="workspace_id",
+        parent=old_tenant,
+        type="Workspace",
+    )
+    new_tenant = hierarchy.Tenant(name="new_tenant", id="new-tenant")
+    context = Context()
+    context.context = workspace
+    monkeypatch.setattr(auth.FabAuth(), "get_tenant", lambda: new_tenant)
+
+    context.reset_context()
+
+    assert context.context is new_tenant
+    assert context.get_tenant_id() == "new-tenant"
+
+
 def test_context_virtual_workspace():
     _tenant = hierarchy.Tenant(name="tenant_name", id="0000")
     _workspace = hierarchy.VirtualWorkspace(name=".capacities", id=None, parent=_tenant)
@@ -440,6 +459,7 @@ def mock_get_command_context():
 
 # region Runtime Mode
 
+
 class TestRuntimeMode:
     """Verify Context.set_runtime_mode / get_runtime_mode behaviour after mode-setting removal."""
 
@@ -472,7 +492,9 @@ class TestRuntimeMode:
     def test_runtime_mode_not_module_level_success(self):
         """Runtime mode must live on Context, not as module-level functions."""
         from fabric_cli.core import fab_context as ctx_module
+
         assert not hasattr(ctx_module, "set_runtime_mode")
         assert not hasattr(ctx_module, "get_runtime_mode")
+
 
 # endregion

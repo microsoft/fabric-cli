@@ -1,0 +1,269 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+import argparse
+from argparse import Namespace
+from unittest.mock import patch
+
+import pytest
+
+from fabric_cli.client.fab_api_client import do_request
+from fabric_cli.core import fab_constant, fab_state_config
+from fabric_cli.core import fab_logger as logger
+from fabric_cli.core.fab_auth import FabAuth
+from fabric_cli.core.fab_context import Context
+from fabric_cli.core.fab_decorators import set_command_context
+from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+from fabric_cli.errors import ErrorMessages
+from fabric_cli.parsers import fab_global_params
+
+pytestmark = pytest.mark.usefixtures("reset_context")
+
+
+class DummyResponse:
+    status_code = 200
+    text = "{}"
+    content = b"{}"
+    headers: dict[str, str] = {}
+
+
+def test_skill_argument_is_hidden_success():
+    parser = argparse.ArgumentParser()
+    fab_global_params.add_global_flags(parser)
+
+    skill_flag = next(
+        action for action in parser._actions if "--skill" in action.option_strings
+    )
+
+    assert skill_flag.help == argparse.SUPPRESS
+    assert "--skill" not in parser.format_help()
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["--skill", "semantic-model-authoring", "export", "ws.Workspace", "-o", "out"],
+        ["export", "--skill", "semantic-model-authoring", "ws.Workspace", "-o", "out"],
+        ["export", "ws.Workspace", "-o", "out", "--skill", "semantic-model-authoring"],
+        ["--skill", "semantic-model-authoring", "job", "run", "ws.Notebook"],
+        ["job", "run", "ws.Notebook", "--skill", "semantic-model-authoring"],
+    ],
+)
+def test_skill_argument_is_preserved_across_command_tree_success(command):
+    parser, _ = create_parser_and_subparsers()
+
+    args = parser.parse_args(command)
+
+    assert args.skill == "semantic-model-authoring"
+
+
+def test_command_context_uses_skill_argument_success():
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        assert Context().fabric_skill == "argument-skill"
+
+    command(Namespace(command_path="export", skill="argument-skill"))
+
+
+def test_command_context_clears_previous_skill_success():
+    Context().fabric_skill = "previous-skill"
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        assert Context().fabric_skill is None
+
+    command(Namespace(command_path="export", skill=None))
+
+
+def test_command_context_validates_identity_before_interactive_command_success():
+    Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with patch.object(FabAuth(), "validate_command_identity") as validate_identity:
+        command(Namespace(command_path="ls", skill=None))
+
+    validate_identity.assert_called_once_with()
+    assert command_executed is True
+
+
+def test_command_context_validates_identity_with_command_line_persistence_success():
+    """Persisted command-line context must be identity-checked before execution."""
+    Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with (
+        patch.object(
+            fab_state_config,
+            "get_config",
+            return_value="true",
+        ),
+        patch.object(FabAuth(), "validate_command_identity") as validate_identity,
+    ):
+        command(Namespace(command_path="pwd", skill=None))
+
+    validate_identity.assert_called_once_with()
+    assert command_executed is True
+
+
+def test_command_context_skips_identity_without_command_line_persistence_success():
+    """Command-line mode avoids identity checks when no context can persist."""
+    Context().set_runtime_mode(fab_constant.FAB_MODE_COMMANDLINE)
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        return None
+
+    with (
+        patch.object(
+            fab_state_config,
+            "get_config",
+            return_value="false",
+        ),
+        patch.object(FabAuth(), "validate_command_identity") as validate_identity,
+    ):
+        command(Namespace(command_path="pwd", skill=None))
+
+    validate_identity.assert_not_called()
+
+
+def test_command_context_prevents_interactive_command_on_identity_drift_failure():
+    Context().set_runtime_mode(fab_constant.FAB_MODE_INTERACTIVE)
+    command_executed = False
+
+    @set_command_context()
+    def command(args: Namespace) -> None:
+        nonlocal command_executed
+        command_executed = True
+
+    with (
+        patch.object(
+            FabAuth(),
+            "validate_command_identity",
+            side_effect=FabricCLIError(
+                ErrorMessages.Auth.env_var_token_session_identity_drift(),
+                fab_constant.ERROR_AUTHENTICATION_FAILED,
+            ),
+        ),
+        pytest.raises(FabricCLIError),
+    ):
+        command(Namespace(command_path="ls", skill=None))
+
+    assert command_executed is False
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "   ",
+        "bad\nvalue",
+        "bad\rvalue",
+        "-leading",
+        "a",
+        "semantic-model_authoring.v2",
+        "a" * 129,
+    ],
+    ids=[
+        "empty",
+        "whitespace",
+        "newline",
+        "carriage-return",
+        "leading-hyphen",
+        "single-character",
+        "punctuation",
+        "long",
+    ],
+)
+def test_fabric_skill_setter_preserves_string_value_success(value):
+    Context().fabric_skill = value
+
+    assert Context().fabric_skill == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [123, True, [], {}, object()],
+    ids=["integer", "boolean", "list", "dictionary", "object"],
+)
+def test_fabric_skill_setter_normalizes_non_string_value_success(value):
+    Context().fabric_skill = value
+
+    assert Context().fabric_skill is None
+
+
+@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
+@pytest.mark.parametrize(
+    "audience, expects_skill_header",
+    [
+        (None, True),
+        ("fabric", True),
+        ("storage", False),
+        ("azure", False),
+        ("powerbi", False),
+    ],
+)
+def test_skill_header_is_scoped_to_fabric_api_success(
+    _mock_get_token, audience, expects_skill_header
+):
+    Context().fabric_skill = "semantic-model-authoring"
+    args = Namespace(uri="items", method="get", audience=audience)
+
+    with patch(
+        "requests.Session.request", return_value=DummyResponse()
+    ) as mock_request:
+        do_request(args)
+
+    request_headers = mock_request.call_args.kwargs["headers"]
+    if expects_skill_header:
+        assert (
+            request_headers[fab_constant.FABRIC_SKILL_HEADER]
+            == "semantic-model-authoring"
+        )
+    else:
+        assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
+
+
+@patch.object(FabAuth(), "get_access_token", return_value="dummy-token")
+def test_skill_header_is_omitted_when_skill_is_not_set_success(_mock_get_token):
+    args = Namespace(uri="items", method="get", audience="fabric")
+
+    with patch(
+        "requests.Session.request", return_value=DummyResponse()
+    ) as mock_request:
+        do_request(args)
+
+    request_headers = mock_request.call_args.kwargs["headers"]
+    assert fab_constant.FABRIC_SKILL_HEADER not in request_headers
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [fab_constant.FABRIC_SKILL_HEADER, "X-MS-FABRIC-SKILL"],
+    ids=["canonical-case", "uppercase"],
+)
+def test_skill_header_is_not_logged_success(monkeypatch, header_name):
+    monkeypatch.setattr(fab_state_config, "get_config", lambda key: "true")
+
+    with patch.object(logger, "get_logger") as mock_get_logger:
+        logger.log_debug_http_request(
+            "GET",
+            "http://example.com",
+            {header_name: "semantic-model-authoring"},
+            10,
+        )
+
+    logged_messages = [
+        call.args[0] for call in mock_get_logger.return_value.debug.call_args_list
+    ]
+    assert not any("semantic-model-authoring" in message for message in logged_messages)

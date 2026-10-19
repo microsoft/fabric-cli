@@ -624,17 +624,20 @@ def test_clear_caches():
     state_config.set_config(con.FAB_CACHE_ENABLED, "true")
     mem_store._get_workspaces_from_cache.cache.update({"key": "value"})
     mem_store._get_workspace_items_from_cache.cache.update({"key": "value"})
+    mem_store._get_workspace_folders_from_cache.cache.update({"key": "value"})
     mem_store._get_spark_pools_from_cache.cache.update({"key": "value"})
     mem_store._get_managed_identities_from_cache.cache.update({"key": "value"})
     mem_store._get_managed_private_endpoints_from_cache.cache.update({"key": "value"})
     assert mem_store._get_workspaces_from_cache.cache.currsize == 1
     assert mem_store._get_workspace_items_from_cache.cache.currsize == 1
+    assert mem_store._get_workspace_folders_from_cache.cache.currsize == 1
     assert mem_store._get_spark_pools_from_cache.cache.currsize == 1
     assert mem_store._get_managed_identities_from_cache.cache.currsize == 1
     assert mem_store._get_managed_private_endpoints_from_cache.cache.currsize == 1
     mem_store.clear_caches()
     assert mem_store._get_workspaces_from_cache.cache.currsize == 0
     assert mem_store._get_workspace_items_from_cache.cache.currsize == 0
+    assert mem_store._get_workspace_folders_from_cache.cache.currsize == 0
     assert mem_store._get_spark_pools_from_cache.cache.currsize == 0
     assert mem_store._get_managed_identities_from_cache.cache.currsize == 0
     assert mem_store._get_managed_private_endpoints_from_cache.cache.currsize == 0

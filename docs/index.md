@@ -31,7 +31,7 @@ Get powerful control over your Fabric resources:
 
 ### What you need
 
-- Python 3.10, 3.11, 3.12 or 3.13
+- Python 3.10, 3.11, 3.12, 3.13, or 3.14
 - `python` in your `PATH` environment variable
 
 Check if Python is ready:

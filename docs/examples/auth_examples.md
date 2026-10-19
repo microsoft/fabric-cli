@@ -25,6 +25,25 @@ fab auth login
 ```
 
 
+### Azure CLI Authentication
+
+Reuse an _existing_ Azure CLI session instead of requiring a separate Fabric CLI login. Useful when tools or scripts already have `az login` done (e.g., in development environments or CI/CD pipelines with Azure CLI pre-authenticated).
+
+!!! info "Requires Azure CLI to be installed and logged in (`az login`)"
+
+#### Log in using Azure CLI in interactive mode
+
+```
+fab auth login
+? How would you like to authenticate Fabric CLI? Azure CLI (existing 'az login' session)
+```
+
+#### Log in using Azure CLI directly from command line
+
+```
+fab auth login --azure-cli
+```
+
 ### Service Principal Authentication
 
 !!! info "Requires 'Allow service principals to use Fabric APIs' tenant switch to be enabled in the admin portal"

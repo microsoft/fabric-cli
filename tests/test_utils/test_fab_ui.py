@@ -21,7 +21,9 @@ class OutputType(Enum):
     STDERR = "stderr"
 
 
-def verify_output_stream(capsys: pytest.CaptureFixture, output_type: OutputType) -> None:
+def verify_output_stream(
+    capsys: pytest.CaptureFixture, output_type: OutputType
+) -> None:
     """Helper to verify output appears in the correct stream.
 
     Args:
@@ -116,6 +118,7 @@ def test_print_warning_success(capsys):
     # Test with command
     ui.print_warning("warning message", command="test-cmd")
     verify_output_stream(capsys, OutputType.STDERR)
+
 
 def test_print_error_success(capsys):
     """Test error function (stdout with HTML escaping)."""
@@ -564,33 +567,29 @@ def test_print_output_format_with_show_key_value_list_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
     """Test print_output_format with show_key_value_list=True calls print_entries_key_value_style."""
-    
+
     # Setup text output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
-    
+
     # Test data with multiple entries
     test_data = [
         {"user_name": "john", "is_active": "true"},
-        {"user_name": "jane", "is_active": "false"}
+        {"user_name": "jane", "is_active": "false"},
     ]
-    
+
     args = Namespace(command="test")
-    ui.print_output_format(
-        args,
-        data=test_data,
-        show_key_value_list=True
-    )
-    
+    ui.print_output_format(args, data=test_data, show_key_value_list=True)
+
     assert mock_questionary_print.call_count >= 1
 
     output_calls = [call.args[0] for call in mock_questionary_print.mock_calls]
     output_text = " ".join(output_calls)
-    
+
     assert "User Name:" in output_text
     assert "Is Active:" in output_text
     assert '"user_name"' not in output_text
-    assert '{\n' not in output_text
-    
+    assert "{\n" not in output_text
+
     mock_questionary_print.reset_mock()
 
 
@@ -598,27 +597,25 @@ def test_print_output_format_with_show_key_value_list_false_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
     """Test print_output_format with show_key_value_list=False uses default JSON formatting."""
-    
+
     # Setup text output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "text")
-    
+
     # Test data
     test_data = [{"user_name": "john", "is_active": "true"}]
-    
+
     args = Namespace(command="test")
     ui.print_output_format(
-        args,
-        data=test_data,
-        show_key_value_list=False  # Explicitly set to False
+        args, data=test_data, show_key_value_list=False  # Explicitly set to False
     )
-    
+
     assert mock_questionary_print.call_count == 1
     output = mock_questionary_print.mock_calls[0].args[0]
-    
+
     # Should contain JSON structure, not key-value format
-    assert '{\n' in output or '[' in output
+    assert "{\n" in output or "[" in output
     assert '"user_name": "john"' in output or '"user_name":"john"' in output
-    
+
     mock_questionary_print.reset_mock()
 
 
@@ -626,29 +623,29 @@ def test_print_output_format_with_show_key_value_list_json_format_success(
     mock_questionary_print, mock_fab_set_state_config
 ):
     """Test that show_key_value_list parameter works correctly with JSON output format."""
-    
+
     # Setup JSON output format
     mock_fab_set_state_config(constant.FAB_OUTPUT_FORMAT, "json")
-    
+
     # Test data
     test_data = [{"user_name": "john", "is_active": "true"}]
-    
+
     args = Namespace(command="test", output_format="json")
     ui.print_output_format(
         args,
         data=test_data,
-        show_key_value_list=True  # This should be ignored in JSON format
+        show_key_value_list=True,  # This should be ignored in JSON format
     )
-    
+
     # Verify that JSON output is produced regardless of show_key_value_list
     assert mock_questionary_print.call_count == 1
     output = json.loads(mock_questionary_print.mock_calls[0].args[0])
-    
+
     assert isinstance(output, dict)
     assert "result" in output
     assert "data" in output["result"]
     assert output["result"]["data"] == test_data
-    
+
     mock_questionary_print.reset_mock()
 
 
@@ -680,37 +677,41 @@ def test_print_output_format_text_no_result_failure():
 
 def test_print_entries_key_value_style_success(mock_questionary_print):
     """Test printing entries in key-value format."""
-    
+
     # Test with single dictionary entry
     entry = {"logged_in": "true", "account_name": "johndoe@example.com"}
     ui._print_entries_key_value_list_style(entry)
-    
+
     # Verify the correct formatted output was printed
     assert mock_questionary_print.call_count == 2
     printed_calls = [call.args[0] for call in mock_questionary_print.call_args_list]
     assert "Logged In: true" in printed_calls
     assert "Account Name: johndoe@example.com" in printed_calls
-    
+
     mock_questionary_print.reset_mock()
-    
+
     # Test with list of dictionaries
     entries = [
         {"user_name": "john", "status": "active"},
-        {"user_name": "jane", "status": "inactive"}
+        {"user_name": "jane", "status": "inactive"},
     ]
     ui._print_entries_key_value_list_style(entries)
-    
+
     # Verify output for list of entries (should include empty line between entries, but not after last)
-    assert mock_questionary_print.call_count == 5  # 2 for john + 1 empty line + 2 for jane
+    assert (
+        mock_questionary_print.call_count == 5
+    )  # 2 for john + 1 empty line + 2 for jane
     printed_calls = [call.args[0] for call in mock_questionary_print.call_args_list]
     assert "User Name: john" in printed_calls
     assert "Status: active" in printed_calls
     assert "User Name: jane" in printed_calls
     assert "Status: inactive" in printed_calls
-    assert "" in printed_calls  # Empty line between entries (but not after the last entry)
-    
+    assert (
+        "" in printed_calls
+    )  # Empty line between entries (but not after the last entry)
+
     mock_questionary_print.reset_mock()
-    
+
     # Test with empty list
     ui._print_entries_key_value_list_style([])
     # Should not call print for empty list
@@ -719,17 +720,17 @@ def test_print_entries_key_value_style_success(mock_questionary_print):
 
 def test_print_entries_key_value_style_invalid_input():
     """Test error handling for invalid input types."""
-    
+
     # Test with invalid input type (string)
     with pytest.raises(FabricCLIError) as ex:
         ui._print_entries_key_value_list_style("invalid_input")
-    
+
     assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
-    
+
     # Test with invalid input type (integer)
     with pytest.raises(FabricCLIError) as ex:
         ui._print_entries_key_value_list_style(123)
-    
+
     assert ex.value.status_code == fab_constant.ERROR_INVALID_ENTRIES_FORMAT
 
 
@@ -739,12 +740,25 @@ def test_format_key_to_title_case_success():
     # Test single word
     assert ui._format_key_to_convert_to_title_case("status") == "Status"
     # Test snake_case with multiple underscores
-    assert ui._format_key_to_convert_to_title_case("user_account_name") == "User Account Name"
+    assert (
+        ui._format_key_to_convert_to_title_case("user_account_name")
+        == "User Account Name"
+    )
     # Test special cases from the function
     assert ui._format_key_to_convert_to_title_case("user_id") == "User ID"
-    assert ui._format_key_to_convert_to_title_case("powerbi_settings") == "PowerBI Settings"
+    assert (
+        ui._format_key_to_convert_to_title_case("azure_cli_session")
+        == "Azure CLI Session"
+    )
+    assert (
+        ui._format_key_to_convert_to_title_case("powerbi_settings")
+        == "PowerBI Settings"
+    )
     # Test numbers in keys
-    assert ui._format_key_to_convert_to_title_case("version_2_settings") == "Version 2 Settings"
+    assert (
+        ui._format_key_to_convert_to_title_case("version_2_settings")
+        == "Version 2 Settings"
+    )
     # Test mixed case
     assert ui._format_key_to_convert_to_title_case("user_Name") == "User Name"
     # Test remove spaces
@@ -755,25 +769,40 @@ def test_format_key_to_title_case_success():
 
 def test_format_key_to_title_case_failure():
     """Test that the function throws ValueError for invalid key formats."""
-    
+
     # Test camelCase (should fail)
-    with pytest.raises(ValueError, match="Invalid key format: 'accountName'. Only underscore-separated words are allowed."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid key format: 'accountName'. Only underscore-separated words are allowed.",
+    ):
         ui._format_key_to_convert_to_title_case("accountName")
-    
+
     # Test camelCase with ID (should fail)
-    with pytest.raises(ValueError, match="Invalid key format: 'accountID'. Only underscore-separated words are allowed."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid key format: 'accountID'. Only underscore-separated words are allowed.",
+    ):
         ui._format_key_to_convert_to_title_case("accountID")
-    
+
     # Test spaces mixed with underscores (should fail)
-    with pytest.raises(ValueError, match="Invalid key format: 'user name_test'. Only underscore-separated words are allowed."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid key format: 'user name_test'. Only underscore-separated words are allowed.",
+    ):
         ui._format_key_to_convert_to_title_case("user name_test")
-    
+
     # Test special characters (should fail)
-    with pytest.raises(ValueError, match="Invalid key format: 'user@name'. Only underscore-separated words are allowed."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid key format: 'user@name'. Only underscore-separated words are allowed.",
+    ):
         ui._format_key_to_convert_to_title_case("user@name")
-    
+
     # Test hyphen separated (should fail)
-    with pytest.raises(ValueError, match="Invalid key format: 'user-name'. Only underscore-separated words are allowed."):
+    with pytest.raises(
+        ValueError,
+        match="Invalid key format: 'user-name'. Only underscore-separated words are allowed.",
+    ):
         ui._format_key_to_convert_to_title_case("user-name")
 
 

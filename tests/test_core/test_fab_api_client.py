@@ -490,6 +490,7 @@ def test_do_request_user_agent_header(
     # Configure mocks
     mock_auth.return_value.get_access_token.return_value = "dummy-token"
     mock_context.return_value.command = "test-command"
+    mock_context.return_value.fabric_skill = None
 
     class DummyResponse:
         status_code = 200

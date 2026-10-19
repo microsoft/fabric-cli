@@ -25,6 +25,7 @@ Tab completion is supported across the following shell environments:
 - **PowerShell** (Windows PowerShell and PowerShell Core)
 - **Bash** (Linux/macOS and Windows Subsystem for Linux)
 - **Zsh** (Z shell - popular on macOS and Linux)
+- **Fish** (friendly interactive shell)
 
 ## Installation Instructions
 
@@ -79,6 +80,18 @@ eval "$(register-python-argcomplete fab)"
 ```
 
 2. Restart your terminal or run `source ~/.bashrc` to apply changes.
+
+### Fish
+
+1. Save the script [`fab_completion.fish`](fab_completion.fish) as `~/.config/fish/completions/fab.fish`. It contains the following line:
+
+```fish
+register-python-argcomplete --shell fish fab | source
+```
+
+2. Restart your terminal to apply changes.
+
+**Note**: Use the completions directory rather than `~/.config/fish/config.fish`. Fish ships completions for an unrelated `fab` command (Python Fabric), and a file in `~/.config/fish/completions` replaces them.
 
 ## Usage
 

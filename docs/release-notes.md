@@ -6,6 +6,29 @@ hide:
 # Release Notes
 
 
+## [v1.7.0](https://pypi.org/project/ms-fabric-cli/v1.7.0) - August 18, 2026
+
+### 🆕 New Items Support
+
+* Supports Digital Twin Builder Flow item by [v-alexmoraru](https://github.com/v-alexmoraru)
+
+### ✨ New Functionality
+
+* Adds support for environment definitions by [v-alexmoraru](https://github.com/v-alexmoraru)
+* Return the job instance ID as a structured field in the JSON output of ``job run`` and ``job start`` commands by [shirasassoon](https://github.com/shirasassoon)
+* Support creating SQLDatabase with optional parameters. Support `creationMode` of type `New`, `Restore` and `RestoreDeletedDatabase`. by [aviatco](https://github.com/aviatco)
+* Adds the `--bulk_publish` flag to the `deploy` command to opt into experimental bulk publish by [ayeshurun](https://github.com/ayeshurun)
+* Add new 'bulk-export' command for exporting workspace or folder items by [ohadedry](https://github.com/ohadedry)
+
+### 🔧 Bug Fix
+
+* Wraps long text on multiple lines by [v-alexmoraru](https://github.com/v-alexmoraru)
+* Restrict file and directory permissions on auth, config, context, and log paths to prevent local credential exposure on multi-user systems by [iemejia](https://github.com/iemejia)
+* Clean up temporary file after table maintenance job execution by [iemejia](https://github.com/iemejia)
+* Enforce owner-only permissions on local files on POSIX by [aviatcohen](https://github.com/aviatcohen)
+* Handle HTTP 429 responses missing the Retry-After header instead of failing with an unexpected error by [ayeshurun](https://github.com/ayeshurun)
+
+
 ## [v1.6.1](https://pypi.org/project/ms-fabric-cli/v1.6.1) - April 29, 2026
 
 ### 🆕 New Items Support

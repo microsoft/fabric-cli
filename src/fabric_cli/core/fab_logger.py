@@ -73,8 +73,8 @@ def log_debug_http_request(
     for key, value in headers.items():
         if key.lower() == "authorization":
             value = "*****"  # Mask authorization token
-        elif key.lower() == "user-agent":
-            continue  # Skip logging the User-Agent header
+        elif key.lower() in ("user-agent", fab_constant.FABRIC_SKILL_HEADER):
+            continue  # Skip logging telemetry headers
         logger.debug(f"    '{key}': '{value}'")
 
     # Body
@@ -273,3 +273,15 @@ def _parse_json_into_single_line(json_text, ctxt_cmd):
         return compact_json
     except json.JSONDecodeError:
         return "Failed to parse JSON response"
+
+
+def suppress_azure_sdk_logging() -> None:
+    """Prevent Azure SDK records from reaching Fabric CLI output."""
+    for namespace in ("azure.identity", "azure.core"):
+        azure_logger = logging.getLogger(namespace)
+        azure_logger.handlers.clear()
+        azure_logger.addHandler(logging.NullHandler())
+        azure_logger.propagate = False
+
+
+suppress_azure_sdk_logging()

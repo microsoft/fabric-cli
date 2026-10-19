@@ -45,6 +45,9 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.DigitalTwinBuilderFlow` | Digital Twin Builder flows      |
 | `.GraphQuerySet`       | Graph query collections            |
 | `.UserDataFunction`    | User data functions                |
+| `.GraphModel`          | Graph models                       |
+| `.Ontology`            | Ontologies                         |
+
 
 ---
 

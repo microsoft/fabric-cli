@@ -5,6 +5,8 @@ import json
 import logging
 import os
 import platform
+import subprocess
+import sys
 import time
 from unittest.mock import patch
 
@@ -13,7 +15,6 @@ from requests import RequestException
 
 from fabric_cli.core import fab_logger as logger
 from fabric_cli.core import fab_state_config
-from fabric_cli.core.fab_exceptions import FabricCLIError
 
 
 def test_log_warning():
@@ -314,6 +315,73 @@ def test_get_logger():
         == "%(asctime)s - %(levelname)s - %(message)s"
     )
     assert logger.log_file_path is not None
+
+
+def test_suppress_azure_sdk_logging_suppresses_azure_sdk_records() -> None:
+    azure_loggers = [
+        logging.getLogger("azure.identity"),
+        logging.getLogger("azure.core"),
+    ]
+    original_states = [
+        (list(azure_logger.handlers), azure_logger.propagate)
+        for azure_logger in azure_loggers
+    ]
+    root_logger = logging.getLogger()
+    emitted_records = []
+
+    class _CaptureHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            emitted_records.append(record)
+
+    capture_handler = _CaptureHandler()
+    root_logger.addHandler(capture_handler)
+
+    try:
+        logger.suppress_azure_sdk_logging()
+
+        logging.getLogger("azure.identity._internal.decorators").warning(
+            "Azure identity warning"
+        )
+        logging.getLogger("azure.core.pipeline").critical("Azure core error")
+        logging.getLogger("unrelated.library").warning("Unrelated warning")
+
+        assert [record.getMessage() for record in emitted_records] == [
+            "Unrelated warning"
+        ]
+    finally:
+        root_logger.removeHandler(capture_handler)
+        for azure_logger, (handlers, propagate) in zip(azure_loggers, original_states):
+            azure_logger.handlers = handlers
+            azure_logger.propagate = propagate
+
+
+def test_import_suppresses_azure_sdk_logging() -> None:
+    script = """
+import json
+import logging
+
+from fabric_cli.core import fab_logger
+
+print(json.dumps({
+    namespace: {
+        "handlers": [type(handler).__name__ for handler in logging.getLogger(namespace).handlers],
+        "propagate": logging.getLogger(namespace).propagate,
+    }
+    for namespace in ("azure.identity", "azure.core")
+}))
+"""
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert json.loads(result.stdout) == {
+        "azure.identity": {"handlers": ["NullHandler"], "propagate": False},
+        "azure.core": {"handlers": ["NullHandler"], "propagate": False},
+    }
 
 
 def test_get_log_file_path(monkeypatch):
