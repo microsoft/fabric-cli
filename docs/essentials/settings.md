@@ -42,17 +42,3 @@ fab config set <setting_name> <value>
 ```
 
 For detailed examples, see the [Configuration Examples](../examples/config_examples.md).
-
-## Long-running operation polling
-
-By default, Fabric long-running operations are polled at elapsed-time targets of
-2, 7, and 20 seconds after polling begins (when the initial asynchronous response
-is received). Request duration counts toward these targets; if a target has
-already passed, the next poll starts immediately. Polling stops as soon as a
-terminal status is received. Subsequent polls wait for the latest response's
-`Retry-After` interval. A missing or invalid header uses the existing 10-second
-fallback.
-
-Set `disable_heuristic_lro_polling` to `true` to use `Retry-After` from the first
-poll onward. Jobs API polling, custom job polling intervals, Azure API polling,
-and HTTP 429 retry delays are unchanged.
