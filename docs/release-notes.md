@@ -6,6 +6,28 @@ hide:
 # Release Notes
 
 
+## [v1.8.0](https://pypi.org/project/ms-fabric-cli/v1.8.0) - October 19, 2026
+
+### 🆕 New Items Support
+
+* Add support for Ontology item by [ohadedry](https://github.com/ohadedry)
+* Add support for GraphModel item by [ohadedry](https://github.com/ohadedry)
+
+### ✨ New Functionality
+
+* Add support for Azure CLI authentication source by [shirasassoon](https://github.com/shirasassoon)
+* Add tab completion support for the fish shell by [abhiishek340](https://github.com/abhiishek340)
+* Add support for Python 3.14 while retaining Python 3.10–3.13 compatibility by [ayeshurun](https://github.com/ayeshurun)
+
+### 🔧 Bug Fix
+
+* Fixed `job run-update --help` crashing with an `AssertionError` instead of printing help by [ayeshurun](https://github.com/ayeshurun)
+
+### ⚡ Additional Optimizations
+
+* Updated 'fab open' uri to app.fabric.microsoft.com by [ayeshurun](https://github.com/ayeshurun)
+
+
 ## [v1.7.0](https://pypi.org/project/ms-fabric-cli/v1.7.0) - August 18, 2026
 
 ### 🆕 New Items Support
@@ -39,7 +61,7 @@ hide:
 ### ✨ New Functionality
 
 * Add new `fab find` command for searching the OneLake catalog across workspaces by [nschachter](https://github.com/nschachter)
-* Promote VariableLibrary from portal-only to full API support, enabling create, get, set, rm, ls, export, import, cp, and mv commands via the Variable Library REST APIs by [itsnotaboutthecell](https://github.com/itsnotaboutthecell)
+* Promote VariableLibrary from portal-only to full API support, enabling `create`, `get`, `set`, `rm`, `ls`, `export`, `import`, `cp`, and `mv` commands via the Variable Library REST APIs by [itsnotaboutthecell](https://github.com/itsnotaboutthecell)
 * adds hard flag to rm command (permanent delete) by [v-alexmoraru](https://github.com/v-alexmoraru)
 * supports lakehouse import & export by [v-alexmoraru](https://github.com/v-alexmoraru)
 
