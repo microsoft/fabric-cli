@@ -71,21 +71,11 @@ fab config set job_cancel_ontimeout true
 
 ### Disable Heuristic Long-running Operation Polling
 
-By default, Fabric long-running operations are polled at elapsed-time targets of
-2, 7, and 20 seconds, then use the latest `Retry-After` header. To use
-`Retry-After` for every poll instead:
+Set to `true` to wait between polls using the `Retry-After` header returned by Fabric long-running operation APIs.
 
 ```
 fab config set disable_heuristic_lro_polling true
 ```
-
-To restore the default early polling schedule:
-
-```
-fab config set disable_heuristic_lro_polling false
-```
-
-This setting does not change Jobs API or Azure API polling.
 
 ### Set Labels Definition File
 
