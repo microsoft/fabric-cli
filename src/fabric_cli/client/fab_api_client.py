@@ -31,7 +31,6 @@ from fabric_cli.utils.fab_util import GUID_PATTERN_STR
 _HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
 
 FABRIC_WORKSPACE_URI_PATTERN = rf"workspaces/{GUID_PATTERN_STR}"
-_FABRIC_LRO_POLL_TARGETS_SECONDS = (2, 7, 20)
 
 # Module-level reusable session for connection pooling
 _shared_session = None
@@ -443,15 +442,11 @@ def _poll_operation(
     polling_headers = original_response.headers
 
     while True:
-        if use_heuristic and poll_count < len(_FABRIC_LRO_POLL_TARGETS_SECONDS):
-            # Deadlines avoid adding request latency to the early polling schedule.
-            interval = max(
-                0.0,
-                _FABRIC_LRO_POLL_TARGETS_SECONDS[poll_count]
-                - (time.monotonic() - polling_started),
-            )
-        else:
-            interval = get_polling_interval(polling_headers)
+        interval = get_polling_interval(
+            polling_headers,
+            heuristic_poll_count=poll_count if use_heuristic else None,
+            elapsed_seconds=time.monotonic() - polling_started,
+        )
         time.sleep(interval)
         response = do_request(args, hostname=hostname)
         poll_count += 1
