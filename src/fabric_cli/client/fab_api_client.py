@@ -25,7 +25,10 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
 from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
+from fabric_cli.utils.fab_http_polling_utils import (
+    get_lro_polling_interval,
+    get_polling_interval,
+)
 from fabric_cli.utils.fab_util import GUID_PATTERN_STR
 
 _HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
@@ -430,22 +433,13 @@ def _poll_operation(
     args.wait = False
     args.params = {}
 
-    use_heuristic = (
-        audience == "fabric"
-        and str(
-            fab_state_config.get_config(fab_constant.FAB_DISABLE_HEURISTIC_LRO_POLLING)
-        ).lower()
-        != "true"
-    )
     polling_started = time.monotonic()
     poll_count = 0
     polling_headers = original_response.headers
 
     while True:
-        interval = get_polling_interval(
-            polling_headers,
-            heuristic_poll_count=poll_count if use_heuristic else None,
-            elapsed_seconds=time.monotonic() - polling_started,
+        interval = get_lro_polling_interval(
+            polling_headers, audience, poll_count, polling_started
         )
         time.sleep(interval)
         response = do_request(args, hostname=hostname)
