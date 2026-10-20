@@ -41,6 +41,7 @@ fab mkdir <path>/<name>.<type> [-P <params>]
     | .Domain | | `parentDomainName`, `description` |
     | .SparkPool | | `nodeSize`, `autoScale.maxNodeCount`, `autoScale.minNodeCount` |
     | .SQLDatabase | | `creationMode`[^5], `backupRetentionDays`, `collation` |
+    | .WarehouseSnapshot | `parentWarehouseId` | `snapshotDateTime` |
 
 [^1]: The `*` indicates parameters that depend on the chosen `type`. For example, for SQL with Basic auth, you need `connectionDetails.parameters.server`, `connectionDetails.parameters.database`, `credentialDetails.username`, and `credentialDetails.password`.
 [^2]: If `connectionDetails.creationMethod` is not specified, the CLI will use the first matching creation method based on connection parameters. For connections supporting multiple creation methods, specify this value to avoid unexpected behavior.

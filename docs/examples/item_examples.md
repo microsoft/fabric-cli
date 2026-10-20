@@ -38,6 +38,7 @@ fab cd ../ws1.Workspace/lh1.Lakehouse
 **Items with Required Parameters:**
 
 - `.MountedDataFactory`: `subscriptionId`, `resourceGroup`, `factoryName`
+- `.WarehouseSnapshot`: `parentWarehouseId`
 
 **Items with Optional Parameters:**
 
@@ -47,6 +48,7 @@ fab cd ../ws1.Workspace/lh1.Lakehouse
 - `.DigitalTwinBuilderFlow`: `digitalTwinBuilderId`
 - `.MirroredDatabase`: `mirrorType`, `connectionId`, `defaultSchema`, `database`, `mountedTables`
 - `.Report`: `semanticModelId`
+- `.WarehouseSnapshot`: `snapshotDateTime`
 
 #### Create Basic Items
 
@@ -327,6 +329,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.Eventhouse`, `.Eventstream`, `.MirroredDatabase`
 - `.Reflex`, `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 - `.GraphModel`, `.Ontology`
+- `.AnomalyDetector`, `.DataBuildToolJob`, `.EventSchemaSet`, `.OrgApp`, `.OrgAppAudience`, `.Plan`
 
 
 #### Export to Lakehouse
