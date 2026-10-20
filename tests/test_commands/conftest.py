@@ -11,6 +11,7 @@ from unittest.mock import patch
 import pytest
 import requests
 import vcr  # type: ignore
+import time
 
 import fabric_cli.commands.fs.fab_fs_import as fab_fs_import
 import fabric_cli.commands.fs.fab_fs_mkdir as fab_fs_mkdir
@@ -71,6 +72,12 @@ ALL_ITEM_TYPES = [
     ItemType.MAP,
     ItemType.GRAPH_MODEL,
     ItemType.ONTOLOGY,
+    ItemType.ANOMALY_DETECTOR,
+    ItemType.APP_BACKEND,
+    ItemType.EVENT_SCHEMA_SET,
+    ItemType.ORG_APP,
+    # ItemType.PLAN,
+    ItemType.DATA_BUILD_TOOL_JOB,
 ]
 
 item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
@@ -97,6 +104,12 @@ basic_item_parametrize = pytest.mark.parametrize(
         ItemType.MAP,
         ItemType.GRAPH_MODEL,
         ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.APP_BACKEND,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
+        ItemType.DATA_BUILD_TOOL_JOB,
     ],
 )
 
@@ -119,6 +132,11 @@ import_update_existing_item_success_params = pytest.mark.parametrize(
         ItemType.LAKEHOUSE,
         ItemType.GRAPH_MODEL,
         ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        ItemType.DATA_BUILD_TOOL_JOB,
+        # ItemType.PLAN,
     ],
 )
 
@@ -145,6 +163,11 @@ import_create_new_item_success_params = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         ItemType.GRAPH_MODEL,
         ItemType.ONTOLOGY,
+        ItemType.DATA_BUILD_TOOL_JOB,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
     ],
 )
 
@@ -224,6 +247,11 @@ mv_item_to_item_success_params = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         # ItemType.GRAPH_MODEL,
         # ItemType.ONTOLOGY,
+        ItemType.DATA_BUILD_TOOL_JOB,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
     ],
 )
 
@@ -261,6 +289,11 @@ mv_item_within_workspace_rename_success_params = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         # ItemType.GRAPH_MODEL,
         # ItemType.ONTOLOGY,
+        ItemType.DATA_BUILD_TOOL_JOB,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
     ],
 )
 
@@ -342,6 +375,12 @@ set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize(
         ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         ItemType.GRAPH_MODEL,
         ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.APP_BACKEND,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
+        ItemType.DATA_BUILD_TOOL_JOB,
     ],
 )
 
@@ -411,6 +450,11 @@ export_item_with_extension_parameters = pytest.mark.parametrize(
         (ItemType.LAKEHOUSE, ".json"),
         (ItemType.GRAPH_MODEL, ".json"),
         (ItemType.ONTOLOGY, ".json"),
+        (ItemType.ANOMALY_DETECTOR, ".json"),
+        (ItemType.EVENT_SCHEMA_SET, ".json"),
+        (ItemType.ORG_APP, ".json"),
+        # (ItemType.PLAN, ".json"),
+        (ItemType.DATA_BUILD_TOOL_JOB, ".json"),
     ],
 )
 
@@ -434,6 +478,11 @@ export_item_types_parameters = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         ItemType.GRAPH_MODEL,
         ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        ItemType.DATA_BUILD_TOOL_JOB,
+        # ItemType.PLAN,
     ],
 )
 
@@ -468,6 +517,11 @@ export_item_default_format_parameters = pytest.mark.parametrize(
         (ItemType.ENVIRONMENT, 2),
         (ItemType.GRAPH_MODEL, 6),
         (ItemType.ONTOLOGY, 2),
+        (ItemType.ANOMALY_DETECTOR, 2),
+        (ItemType.EVENT_SCHEMA_SET, 2),
+        (ItemType.ORG_APP, 2),
+        (ItemType.DATA_BUILD_TOOL_JOB, 2),
+        # (ItemType.PLAN, 2),
     ],
 )
 
@@ -486,6 +540,11 @@ export_item_invalid_format_parameters = pytest.mark.parametrize(
         (ItemType.LAKEHOUSE, ".txt"),
         (ItemType.GRAPH_MODEL, ".txt"),
         (ItemType.ONTOLOGY, ".txt"),
+        (ItemType.ANOMALY_DETECTOR, ".txt"),
+        (ItemType.EVENT_SCHEMA_SET, ".txt"),
+        (ItemType.ORG_APP, ".txt"),
+        # (ItemType.PLAN, ".txt"),
+        (ItemType.DATA_BUILD_TOOL_JOB, ".txt"),
     ],
 )
 
@@ -516,6 +575,11 @@ cp_item_types_success_params = pytest.mark.parametrize(
         # ItemType.DIGITAL_TWIN_BUILDER_FLOW,
         # ItemType.GRAPH_MODEL,
         # ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
+        ItemType.DATA_BUILD_TOOL_JOB,
     ],
 )
 
@@ -534,6 +598,11 @@ cp_folder_item_types_success_params = pytest.mark.parametrize(
         ItemType.ENVIRONMENT,
         # ItemType.GRAPH_MODEL,
         # ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
+        ItemType.DATA_BUILD_TOOL_JOB,
     ],
 )
 
@@ -586,6 +655,12 @@ ls_folder_content_success_params = pytest.mark.parametrize(
         ItemType.GRAPH_QUERY_SET,
         # ItemType.GRAPH_MODEL,
         # ItemType.ONTOLOGY,
+        ItemType.ANOMALY_DETECTOR,
+        ItemType.APP_BACKEND,
+        ItemType.EVENT_SCHEMA_SET,
+        ItemType.ORG_APP,
+        # ItemType.PLAN,
+        ItemType.DATA_BUILD_TOOL_JOB,
     ],
 )
 
@@ -1121,6 +1196,12 @@ def rm(element_full_path):
 
     context = handle_context.get_command_context(args.path)
     fab_fs_rm.exec_command(args, context)
+
+
+def clean_plan_item_companion_items(workspace):
+    companion_item = cli_path_join(workspace.full_path, "__fabric_plan_sys.SQLDatabase")
+    rm(companion_item)
+    time.sleep(20)
 
 
 def import_cmd(element_full_path, content_path, format=None):
