@@ -75,7 +75,7 @@ def test_logging_custom_interval(mock_log_debug):
         (2, 22.0, 0.0),
     ],
 )
-def test_lro_heuristic_uses_elapsed_targets(
+def test_lro_heuristic_uses_elapsed_targets_success(
     monkeypatch: pytest.MonkeyPatch, poll_count: int, elapsed: float, expected: float
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
@@ -94,7 +94,7 @@ def test_lro_heuristic_uses_elapsed_targets(
     ("audience", "disabled", "poll_count"),
     [("fabric", "true", 0), ("azure", "false", 0), ("fabric", "false", 3)],
 )
-def test_lro_uses_retry_after_when_heuristics_do_not_apply(
+def test_lro_uses_retry_after_when_heuristics_do_not_apply_success(
     monkeypatch: pytest.MonkeyPatch, audience: str, disabled: str, poll_count: int
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
@@ -109,7 +109,7 @@ def test_lro_uses_retry_after_when_heuristics_do_not_apply(
 
 
 @pytest.mark.parametrize("retry_after", [None, "", "invalid"])
-def test_lro_heuristic_exhaustion_uses_header_fallback(
+def test_lro_heuristic_exhaustion_uses_header_fallback_success(
     monkeypatch: pytest.MonkeyPatch, retry_after: str | None
 ) -> None:
     headers: CaseInsensitiveDict[str] = CaseInsensitiveDict()

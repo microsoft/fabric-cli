@@ -69,7 +69,7 @@ def _poll(original_response: ApiResponse, audience: str = "fabric") -> ApiRespon
 
 
 @pytest.mark.parametrize("disabled", [None, False, "false"])
-def test_early_polls_follow_elapsed_targets_then_latest_header(
+def test_early_polls_follow_elapsed_targets_then_latest_header_success(
     polling_clock: PollingClock, disabled: object
 ) -> None:
     responses = iter(
@@ -104,7 +104,7 @@ def test_early_polls_follow_elapsed_targets_then_latest_header(
     ("request_duration", "expected_polls", "expected_sleeps"),
     [(1, [2, 7, 20], [2, 4, 12]), (10, [2, 12, 22], [2, 0, 0])],
 )
-def test_poll_targets_account_for_request_duration(
+def test_poll_targets_account_for_request_duration_success(
     polling_clock: PollingClock,
     request_duration: int,
     expected_polls: list[int],
@@ -130,7 +130,7 @@ def test_poll_targets_account_for_request_duration(
 
 
 @pytest.mark.parametrize("disabled", [True, "true", "True", "TRUE"])
-def test_disabled_heuristics_always_use_latest_header(
+def test_disabled_heuristics_always_use_latest_header_success(
     polling_clock: PollingClock, disabled: object
 ) -> None:
     with (
@@ -150,7 +150,7 @@ def test_disabled_heuristics_always_use_latest_header(
 
 @pytest.mark.parametrize("retry_after", [None, "invalid", ""])
 @pytest.mark.parametrize("disabled", ["false", "true"])
-def test_header_fallback_is_preserved(
+def test_header_fallback_is_preserved_success(
     polling_clock: PollingClock, retry_after: str | None, disabled: str
 ) -> None:
     with (
@@ -175,8 +175,8 @@ def test_header_fallback_is_preserved(
     )
 
 
-@pytest.mark.parametrize("status", ["Succeeded", "Completed", "Failed", "Cancelled"])
-def test_terminal_status_stops_polling(
+@pytest.mark.parametrize("status", ["Succeeded", "Completed"])
+def test_terminal_status_stops_polling_success(
     polling_clock: PollingClock, status: str
 ) -> None:
     with (
@@ -187,22 +187,37 @@ def test_terminal_status_stops_polling(
             fab_api_client, "do_request", return_value=_response(status)
         ) as request,
     ):
-        if status in ("Failed", "Cancelled"):
-            with pytest.raises(FabricCLIError) as error:
-                _poll(_response(status_code=202))
-            assert error.value.status_code == (
-                fab_constant.ERROR_OPERATION_FAILED
-                if status == "Failed"
-                else fab_constant.ERROR_OPERATION_CANCELLED
-            )
-        else:
-            _poll(_response(status_code=202))
+        _poll(_response(status_code=202))
 
     request.assert_called_once()
     assert polling_clock["sleeps"] == [2]
 
 
-def test_operation_result_is_fetched_without_additional_polling(
+@pytest.mark.parametrize("status", ["Failed", "Cancelled"])
+def test_terminal_status_stops_polling_failure(
+    polling_clock: PollingClock, status: str
+) -> None:
+    with (
+        patch.object(
+            fab_api_client.fab_state_config, "get_config", return_value="false"
+        ),
+        patch.object(
+            fab_api_client, "do_request", return_value=_response(status)
+        ) as request,
+    ):
+        with pytest.raises(FabricCLIError) as error:
+            _poll(_response(status_code=202))
+        assert error.value.status_code == (
+            fab_constant.ERROR_OPERATION_FAILED
+            if status == "Failed"
+            else fab_constant.ERROR_OPERATION_CANCELLED
+        )
+
+    request.assert_called_once()
+    assert polling_clock["sleeps"] == [2]
+
+
+def test_operation_result_is_fetched_without_additional_polling_success(
     polling_clock: PollingClock,
 ) -> None:
     completed = _response("Succeeded")
@@ -226,7 +241,7 @@ def test_operation_result_is_fetched_without_additional_polling(
 
 
 @pytest.mark.parametrize("check_status", [True, False])
-def test_azure_polling_keeps_header_intervals(
+def test_azure_polling_keeps_header_intervals_success(
     polling_clock: PollingClock, check_status: bool
 ) -> None:
     original = _response(status_code=202)
@@ -254,7 +269,7 @@ def test_azure_polling_keeps_header_intervals(
 
 
 @pytest.mark.parametrize("custom_interval", [None, 3])
-def test_jobs_polling_keeps_header_and_custom_intervals(
+def test_jobs_polling_keeps_header_and_custom_intervals_success(
     polling_clock: PollingClock, custom_interval: int | None
 ) -> None:
     with (
@@ -278,7 +293,9 @@ def test_jobs_polling_keeps_header_and_custom_intervals(
 
 
 @pytest.mark.parametrize("value", ["true", "false"])
-def test_polling_config_can_be_set_and_completed(tmp_path: Path, value: str) -> None:
+def test_polling_config_can_be_set_and_completed_success(
+    tmp_path: Path, value: str
+) -> None:
     from fabric_cli.commands.config import fab_config_set
     from fabric_cli.core import fab_state_config
     from fabric_cli.core.completers import fab_config_completers
