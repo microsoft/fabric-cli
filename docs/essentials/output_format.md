@@ -58,6 +58,50 @@ fab config get output_format
 
 The configuration is stored in your Fabric CLI configuration file and applies to all subsequent commands unless overridden by the `--output_format` flag.
 
+## JSON Help
+
+Help uses the saved output format and supports an explicit override. The override
+can appear before or after the help flag:
+
+```bash
+fab --help --output_format json
+fab mkdir --help --output_format json
+fab job run --output_format json --help
+```
+
+The aliases `-h` and `-help` support the same behavior. To view human-readable help
+when JSON is configured, use `fab mkdir --help --output_format text`.
+Help does not execute the command or require authentication.
+
+JSON help uses the standard success response, with the full canonical command name
+in `command` (for example, `"job run"`). Root help uses `"fab"`. The `result.data`
+array contains exactly one help object with these fields:
+
+| Field | Content |
+| --- | --- |
+| `schema_version` | Always `"1.0"`. |
+| `cli_version` | The installed CLI version. |
+| `description` | Command description. |
+| `usage` | Usage starting with `fab`, followed by arguments and `[flags]`. |
+| `args` | Positional arguments with `name`, `type`, `required`, and `description`. |
+| `flags` | Flags with `name`, `aliases`, `type`, `required`, and `description`. |
+| `aliases` | Alternate command names. |
+| `subcommands` | Available subcommands with `name`, `description`, and `aliases`; aliases are not listed as separate commands. |
+| `examples` | Examples with `description` and a complete `command` starting with `fab`. |
+| `notes` | Additional guidance from command help. |
+| `learn_more` | Documentation URLs. |
+
+All fields are present, including empty arrays for sections that do not apply.
+Descriptions are nonempty and `required` is always a boolean. Flags include
+`choices` when values are restricted. Value-taking flags also include
+`value_optional` and `repeat_behavior` (`"replace"` or `"append"`), derived from
+argument parsing behavior. The help aliases are grouped under `--help`.
+Hidden internal flags are omitted.
+
+Help describes static parser arguments. Target-specific parameter names and
+allowed values are not included; for example, use `fab mkdir nb1.Notebook -P`
+to request parameter help for a notebook.
+
 ## JSON Output Schema
 
 ### Success Response Structure

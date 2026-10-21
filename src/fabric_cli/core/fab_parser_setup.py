@@ -4,8 +4,7 @@
 import argparse
 import re
 import sys
-
-import argcomplete
+from typing import Any, Iterable
 
 from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.parsers import fab_acls_parser as acls_parser
@@ -23,6 +22,17 @@ from fabric_cli.parsers import fab_tables_parser as tables_parser
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
+
+
+class _HelpSubParsersAction(argparse._SubParsersAction):
+    def add_parser(self, name: str, **kwargs: Any) -> argparse.ArgumentParser:
+        """Keep registration metadata without changing rendered text help."""
+        parser = super().add_parser(name, **kwargs)
+        parser.fab_description = (
+            kwargs.get("description") or kwargs.get("help") or f"Help for {name}."
+        )
+        parser.fab_aliases = list(kwargs.get("aliases", []))
+        return parser
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -126,8 +136,23 @@ class CustomArgumentParser(argparse.ArgumentParser):
         self.fab_mode = fab_constant.FAB_MODE_COMMANDLINE
         self.fab_examples = fab_examples or []
         self.fab_aliases = fab_aliases or []
+        self.fab_learnmore = fab_learnmore or []
+        self.fab_description = self.description
+        self.register("action", "parsers", _HelpSubParsersAction)
+
+    def parse_known_args(
+        self,
+        args: Iterable[str] | None = None,
+        namespace: Any = None,
+    ) -> tuple[Any, list[str]]:
+        """Let the UI prepare help rendering while arguments are parsed."""
+        with fab_ui.help_context(args) as arguments:
+            return super().parse_known_args(arguments, namespace)
 
     def print_help(self, file=None):
+        fab_ui.print_help(self, text_help=lambda: self._print_text_help(file))
+
+    def _print_text_help(self, file=None):
         command_name = self.prog.split()[-1]
 
         help_functions = {
@@ -169,6 +194,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
 # Global parser instances
 _global_parser = None
 _global_subparsers = None
+
 
 def create_parser_and_subparsers():
     """Create parser and subparsers for reuse across CLI modes"""
@@ -232,12 +258,12 @@ def create_parser_and_subparsers():
 
     return parser, subparsers
 
+
 def get_global_parser_and_subparsers():
     """Get singleton parser and subparsers instances"""
     global _global_parser, _global_subparsers
-    
+
     if _global_parser is None:
         _global_parser, _global_subparsers = create_parser_and_subparsers()
-    
-    return _global_parser, _global_subparsers
 
+    return _global_parser, _global_subparsers

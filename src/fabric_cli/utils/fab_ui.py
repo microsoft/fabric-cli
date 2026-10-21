@@ -1,21 +1,71 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import argparse
 import builtins
 import html
 import shutil
 import sys
 import unicodedata
 from argparse import Namespace
-from typing import Any, Optional, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Any, Callable, Iterable, Iterator, Optional, Sequence
 
 from fabric_cli import __version__
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_help import build_help_data
 from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_lazy_load
 from fabric_cli.utils import fab_util
+
+_help_output_format: ContextVar[str | None] = ContextVar(
+    "help_output_format", default=None
+)
+
+
+@contextmanager
+def help_context(args: Iterable[str] | None = None) -> Iterator[list[str]]:
+    """Resolve help's output format before argparse's help action exits."""
+    arguments = list(args) if args is not None else sys.argv[1:]
+    help_arguments = (
+        arguments[: arguments.index("--")] if "--" in arguments else arguments
+    )
+    if not any(arg in ("-h", "--help", "-help") for arg in help_arguments):
+        yield arguments
+        return
+
+    format_parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    format_parser.add_argument("--output_format", choices=["json", "text"])
+    format_args, _ = format_parser.parse_known_args(arguments)
+    token = _help_output_format.set(
+        format_args.output_format or _help_output_format.get()
+    )
+    try:
+        yield arguments
+    finally:
+        _help_output_format.reset(token)
+
+
+def print_help(
+    parser: argparse.ArgumentParser, *, text_help: Callable[[], None]
+) -> None:
+    """Render structured help or the command's existing text presentation."""
+    output_format = _help_output_format.get() or fab_state_config.get_config(
+        fab_constant.FAB_OUTPUT_FORMAT
+    )
+    if output_format == "json":
+        print_output_format(
+            Namespace(
+                command=" ".join(parser.prog.split()[1:]) or "fab",
+                output_format="json",
+            ),
+            data=build_help_data(parser),
+        )
+    else:
+        text_help()
 
 
 def get_common_style():
