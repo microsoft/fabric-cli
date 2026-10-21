@@ -4,6 +4,7 @@
 import argparse
 import re
 import sys
+from collections.abc import Iterable
 from functools import partial
 from typing import Any
 
@@ -144,6 +145,17 @@ class CustomArgumentParser(argparse.ArgumentParser):
             partial(type(self), output_format_default=argparse.SUPPRESS),
         )
         return super().add_subparsers(**kwargs)
+
+    def parse_args(
+        self,
+        args: Iterable[str] | None = None,
+        namespace: Any = None,
+    ) -> Any:
+        """Supply the output format fallback when parsing any parser directly."""
+        parsed_args = super().parse_args(args, namespace)
+        if not hasattr(parsed_args, "output_format"):
+            setattr(parsed_args, "output_format", None)
+        return parsed_args
 
     def print_help(self, file=None):
         command_name = self.prog.split()[-1]

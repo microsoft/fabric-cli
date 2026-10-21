@@ -186,13 +186,20 @@ def test_output_format_preserved_across_subparsers(
 
 
 def test_custom_parser_output_format_defaults() -> None:
-    """Only root parsers supply a fallback, including when parsing known args."""
+    """Public parsing supplies a fallback without changing recursive defaults."""
     parser = CustomArgumentParser()
     child = parser.add_subparsers().add_parser("child")
-    child.add_subparsers().add_parser("nested")
+    nested = child.add_subparsers().add_parser("nested")
 
     assert parser.parse_args([]).output_format is None
     assert parser.parse_args(["child", "nested"]).output_format is None
+    assert child.parse_args([]).output_format is None
+    assert child.parse_args(["nested"]).output_format is None
+    assert nested.parse_args([]).output_format is None
+    for subparser in (child, nested):
+        args, remaining = subparser.parse_known_args([])
+        assert not hasattr(args, "output_format")
+        assert remaining == []
     args, remaining = parser.parse_known_args(
         ["--json", "child", "nested", "--unknown"]
     )
@@ -201,6 +208,28 @@ def test_custom_parser_output_format_defaults() -> None:
     args, remaining = parser.parse_known_args(["child", "nested"])
     assert args.output_format is None
     assert remaining == []
+
+
+@pytest.mark.parametrize(
+    ("flags", "expected"),
+    [
+        ([], "text"),
+        (["--json"], "json"),
+        (["--output_format", "json"], "json"),
+    ],
+)
+def test_child_parser_preserves_namespace_output_format(
+    flags: list[str], expected: str
+) -> None:
+    """Public parsing preserves supplied namespaces and explicit format flags."""
+    parser = CustomArgumentParser()
+    child = parser.add_subparsers().add_parser("child")
+    namespace = argparse.Namespace(output_format="text")
+
+    args = child.parse_args(flags, namespace)
+
+    assert args is namespace
+    assert args.output_format == expected
 
 
 def test_json_flag_rejects_value() -> None:
