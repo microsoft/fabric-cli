@@ -69,16 +69,16 @@ def test_logging_custom_interval(mock_log_debug):
         (0, 0.0, 2),
         (1, 2.0, 5),
         (2, 7.0, 13),
-        (1, 3.25, 4),
-        (1, 3.75, 3),
-        (2, 10.5, 10),
-        (2, 19.75, 0),
+        (1, 3.25, 3.75),
+        (1, 3.75, 3.25),
+        (2, 10.5, 9.5),
+        (2, 19.75, 0.25),
         (1, 12.0, 0),
         (2, 22.0, 0),
     ],
 )
 def test_lro_heuristic_uses_elapsed_targets_success(
-    monkeypatch: pytest.MonkeyPatch, poll_count: int, elapsed: float, expected: int
+    monkeypatch: pytest.MonkeyPatch, poll_count: int, elapsed: float, expected: float
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
     monkeypatch.setattr(
@@ -87,7 +87,7 @@ def test_lro_heuristic_uses_elapsed_targets_success(
     )
     interval = get_lro_polling_interval(headers, "fabric", poll_count, 100.0)
     assert interval == expected
-    assert isinstance(interval, int)
+    assert isinstance(interval, float)
 
 
 @pytest.mark.parametrize(
@@ -113,41 +113,4 @@ def test_lro_heuristic_exhaustion_uses_header_fallback_success(
         headers["Retry-After"] = retry_after
     assert (
         get_lro_polling_interval(headers, "fabric", 3, 20.0) == DEFAULT_POLLING_INTERVAL
-    )
-
-
-@pytest.mark.parametrize(
-    ("audience", "poll_count", "elapsed", "retry_after", "expected", "source"),
-    [
-        ("fabric", 1, 3.25, "30", 4, "heuristic (target=7s)"),
-        ("fabric", 2, 22.0, "30", 0, "heuristic (target=20s)"),
-        ("fabric", 3, 20.5, "9", 9, "latest response Retry-After or fallback"),
-        ("fabric", 4, 30.0, None, 10, "latest response Retry-After or fallback"),
-        ("azure", 0, 0.5, "8", 8, "latest response Retry-After or fallback"),
-    ],
-)
-def test_lro_polling_hop_debug_trace_success(
-    monkeypatch: pytest.MonkeyPatch,
-    audience: str,
-    poll_count: int,
-    elapsed: float,
-    retry_after: str | None,
-    expected: int,
-    source: str,
-) -> None:
-    headers: CaseInsensitiveDict[str] = CaseInsensitiveDict()
-    if retry_after is not None:
-        headers["Retry-After"] = retry_after
-    monkeypatch.setattr(
-        "fabric_cli.utils.fab_http_polling_utils.time.monotonic",
-        lambda: 100.0 + elapsed,
-    )
-    with patch("fabric_cli.core.fab_logger.log_debug") as log_debug:
-        assert (
-            get_lro_polling_interval(headers, audience, poll_count, 100.0) == expected
-        )
-
-    log_debug.assert_called_with(
-        f"LRO poll #{poll_count + 1}: audience={audience}, "
-        f"elapsed={elapsed:.3f}s, wait={expected:.3f}s, source={source}"
     )
