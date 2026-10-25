@@ -3,7 +3,7 @@
 
 import json
 from argparse import Namespace
-from typing import TypedDict
+from dataclasses import dataclass, field
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,10 +16,16 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.utils import fab_cmd_job_utils
 
 
-class PollingClock(TypedDict):
-    now: float
-    polls: list[float]
-    sleeps: list[float]
+@dataclass
+class PollingClock:
+    elapsed: float = 0
+    poll_times: list[float] = field(default_factory=list)
+    waits: list[float] = field(default_factory=list)
+
+    def sleep(self, seconds: float) -> None:
+        assert seconds >= 0
+        self.waits.append(seconds)
+        self.elapsed += seconds
 
 
 def _response(
@@ -40,34 +46,24 @@ def _response(
 
 @pytest.fixture
 def polling_clock(monkeypatch: pytest.MonkeyPatch) -> PollingClock:
-    clock: PollingClock = {"now": 100.0, "polls": [], "sleeps": []}
-
-    def sleep(seconds: float) -> None:
-        assert seconds >= 0
-        clock["sleeps"].append(seconds)
-        clock["now"] += seconds
-
-    monkeypatch.setattr(fab_api_client.time, "monotonic", lambda: clock["now"])
-    monkeypatch.setattr(fab_api_client.time, "sleep", sleep)
+    clock = PollingClock()
+    monkeypatch.setattr(fab_api_client.time, "monotonic", lambda: clock.elapsed)
+    monkeypatch.setattr(fab_api_client.time, "sleep", clock.sleep)
     monkeypatch.setattr(fab_api_client.fab_logger, "log_progress", Mock())
     return clock
 
 
-def _poll(original_response: ApiResponse, audience: str = "fabric") -> ApiResponse:
+def _poll_fabric_operation(original_response: ApiResponse) -> ApiResponse:
     return fab_api_client._poll_operation(
-        audience,
+        "fabric",
         "operations/test-operation",
         original_response,
-        (
-            fab_constant.SCOPE_FABRIC_DEFAULT
-            if audience == "fabric"
-            else fab_constant.SCOPE_AZURE_DEFAULT
-        ),
+        fab_constant.SCOPE_FABRIC_DEFAULT,
         check_status=True,
     )
 
 
-def test_early_polls_follow_elapsed_targets_then_latest_header_success(
+def test_first_three_polls_use_heuristic_then_latest_retry_after_success(
     polling_clock: PollingClock,
 ) -> None:
     responses = iter(
@@ -81,44 +77,47 @@ def test_early_polls_follow_elapsed_targets_then_latest_header_success(
     )
 
     def request(*args: object, **kwargs: object) -> ApiResponse:
-        polling_clock["polls"].append(polling_clock["now"] - 100)
+        polling_clock.poll_times.append(polling_clock.elapsed)
         return next(responses)
 
     original = _response(status_code=202)
     with patch.object(fab_api_client, "do_request", side_effect=request):
-        assert _poll(original) is original
+        assert _poll_fabric_operation(original) is original
 
-    assert polling_clock["polls"] == [2, 7, 20, 29, 33]
-    assert polling_clock["sleeps"] == [2, 5, 13, 9, 4]
+    assert polling_clock.poll_times == [2, 7, 20, 29, 33]
+    assert polling_clock.waits == [2, 5, 13, 9, 4]
     assert original.status_code == 200
 
 
 @pytest.mark.parametrize(
-    ("request_duration", "expected_polls", "expected_sleeps"),
-    [(1, [2, 7, 20], [2, 4, 12]), (10, [2, 12, 22], [2, 0, 0])],
+    ("request_duration", "expected_poll_times", "expected_waits"),
+    [
+        pytest.param(1, [2, 7, 20], [2, 4, 12], id="subtract-request-time-from-wait"),
+        pytest.param(10, [2, 12, 22], [2, 0, 0], id="no-wait-after-missed-target"),
+    ],
 )
-def test_poll_targets_account_for_request_duration_success(
+def test_time_spent_on_requests_is_subtracted_from_poll_waits_success(
     polling_clock: PollingClock,
     request_duration: int,
-    expected_polls: list[int],
-    expected_sleeps: list[int],
+    expected_poll_times: list[int],
+    expected_waits: list[int],
 ) -> None:
     responses = iter([_response(), _response(), _response("Succeeded")])
 
     def request(*args: object, **kwargs: object) -> ApiResponse:
-        polling_clock["polls"].append(polling_clock["now"] - 100)
-        polling_clock["now"] += request_duration
+        polling_clock.poll_times.append(polling_clock.elapsed)
+        polling_clock.elapsed += request_duration
         return next(responses)
 
     with patch.object(fab_api_client, "do_request", side_effect=request):
-        _poll(_response(status_code=202))
+        _poll_fabric_operation(_response(status_code=202))
 
-    assert polling_clock["polls"] == expected_polls
-    assert polling_clock["sleeps"] == expected_sleeps
+    assert polling_clock.poll_times == expected_poll_times
+    assert polling_clock.waits == expected_waits
 
 
 @pytest.mark.parametrize("retry_after", [None, "invalid", ""])
-def test_header_fallback_is_preserved_success(
+def test_missing_or_invalid_retry_after_waits_10_seconds_success(
     polling_clock: PollingClock, retry_after: str | None
 ) -> None:
     with patch.object(
@@ -131,48 +130,46 @@ def test_header_fallback_is_preserved_success(
             _response("Succeeded"),
         ],
     ):
-        _poll(_response(retry_after=retry_after, status_code=202))
+        _poll_fabric_operation(_response(retry_after=retry_after, status_code=202))
 
-    assert polling_clock["sleeps"] == [2, 5, 13, 10]
+    assert polling_clock.waits == [2, 5, 13, 10]
 
 
 @pytest.mark.parametrize("status", ["Succeeded", "Completed"])
-def test_terminal_status_stops_polling_success(
+def test_completed_operation_stops_polling_success(
     polling_clock: PollingClock, status: str
 ) -> None:
-    with (
-        patch.object(
-            fab_api_client, "do_request", return_value=_response(status)
-        ) as request,
-    ):
-        _poll(_response(status_code=202))
+    with patch.object(
+        fab_api_client, "do_request", return_value=_response(status)
+    ) as request:
+        _poll_fabric_operation(_response(status_code=202))
 
     request.assert_called_once()
-    assert polling_clock["sleeps"] == [2]
+    assert polling_clock.waits == [2]
 
 
-@pytest.mark.parametrize("status", ["Failed", "Cancelled"])
-def test_terminal_status_stops_polling_failure(
-    polling_clock: PollingClock, status: str
+@pytest.mark.parametrize(
+    ("status", "expected_error"),
+    [
+        ("Failed", fab_constant.ERROR_OPERATION_FAILED),
+        ("Cancelled", fab_constant.ERROR_OPERATION_CANCELLED),
+    ],
+)
+def test_failed_or_cancelled_operation_raises_error_failure(
+    polling_clock: PollingClock, status: str, expected_error: int
 ) -> None:
-    with (
-        patch.object(
-            fab_api_client, "do_request", return_value=_response(status)
-        ) as request,
-    ):
+    with patch.object(
+        fab_api_client, "do_request", return_value=_response(status)
+    ) as request:
         with pytest.raises(FabricCLIError) as error:
-            _poll(_response(status_code=202))
-        assert error.value.status_code == (
-            fab_constant.ERROR_OPERATION_FAILED
-            if status == "Failed"
-            else fab_constant.ERROR_OPERATION_CANCELLED
-        )
+            _poll_fabric_operation(_response(status_code=202))
+        assert error.value.status_code == expected_error
 
     request.assert_called_once()
-    assert polling_clock["sleeps"] == [2]
+    assert polling_clock.waits == [2]
 
 
-def test_operation_result_is_fetched_without_additional_polling_success(
+def test_completed_operation_fetches_result_without_another_wait_success(
     polling_clock: PollingClock,
 ) -> None:
     completed = _response("Succeeded")
@@ -180,20 +177,18 @@ def test_operation_result_is_fetched_without_additional_polling_success(
         "https://api.fabric.microsoft.com/v1/operations/test-operation/result"
     )
     result = _response("result")
-    with (
-        patch.object(
-            fab_api_client, "do_request", side_effect=[completed, result]
-        ) as request,
-    ):
-        assert _poll(_response(status_code=202)) is result
+    with patch.object(
+        fab_api_client, "do_request", side_effect=[completed, result]
+    ) as request:
+        assert _poll_fabric_operation(_response(status_code=202)) is result
 
     assert request.call_count == 2
     assert request.call_args.args[0].uri == "operations/test-operation/result"
-    assert polling_clock["sleeps"] == [2]
+    assert polling_clock.waits == [2]
 
 
 @pytest.mark.parametrize("check_status", [True, False])
-def test_azure_polling_keeps_header_intervals_success(
+def test_azure_polls_always_wait_for_retry_after_success(
     polling_clock: PollingClock, check_status: bool
 ) -> None:
     original = _response(status_code=202)
@@ -212,12 +207,17 @@ def test_azure_polling_keeps_header_intervals_success(
         )
 
     assert result is original
-    assert polling_clock["sleeps"] == [20, 8]
+    assert polling_clock.waits == [20, 8]
 
 
-@pytest.mark.parametrize("custom_interval", [None, 3])
-def test_jobs_polling_keeps_header_and_custom_intervals_success(
-    polling_clock: PollingClock, custom_interval: int | None
+@pytest.mark.parametrize(
+    ("custom_interval", "expected_waits"),
+    [(None, [20, 8]), (3, [3, 3])],
+)
+def test_jobs_wait_for_retry_after_unless_custom_interval_is_set_success(
+    polling_clock: PollingClock,
+    custom_interval: int | None,
+    expected_waits: list[int],
 ) -> None:
     with (
         patch.object(
@@ -236,4 +236,4 @@ def test_jobs_polling_keeps_header_and_custom_intervals_success(
             custom_polling_interval=custom_interval,
         )
 
-    assert polling_clock["sleeps"] == ([20, 8] if custom_interval is None else [3, 3])
+    assert polling_clock.waits == expected_waits
