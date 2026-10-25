@@ -60,7 +60,7 @@ def get_lro_polling_interval(
     Other audiences and later polls use Retry-After.
     """
     if audience == "fabric" and 0 <= poll_count < len(_LRO_POLL_TARGETS_SECONDS):
-        # Deadlines account for time spent on previous poll requests.
+        # Wait until the next target time, or poll immediately if it has passed.
         elapsed = time.monotonic() - polling_started
         target = _LRO_POLL_TARGETS_SECONDS[poll_count]
         custom_interval = max(0, round(target - elapsed))
