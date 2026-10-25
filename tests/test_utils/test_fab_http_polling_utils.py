@@ -69,16 +69,16 @@ def test_logging_custom_interval(mock_log_debug):
         (0, 0.0, 2),
         (1, 2.0, 5),
         (2, 7.0, 13),
-        (1, 3.25, 3.75),
-        (1, 3.75, 3.25),
-        (2, 10.5, 9.5),
-        (2, 19.75, 0.25),
+        (1, 3.25, 4),
+        (1, 3.75, 3),
+        (2, 10.5, 10),
+        (2, 19.75, 0),
         (1, 12.0, 0),
         (2, 22.0, 0),
     ],
 )
 def test_lro_heuristic_uses_elapsed_targets_success(
-    monkeypatch: pytest.MonkeyPatch, poll_count: int, elapsed: float, expected: float
+    monkeypatch: pytest.MonkeyPatch, poll_count: int, elapsed: float, expected: int
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
     monkeypatch.setattr(
@@ -87,7 +87,7 @@ def test_lro_heuristic_uses_elapsed_targets_success(
     )
     interval = get_lro_polling_interval(headers, "fabric", poll_count, 100.0)
     assert interval == expected
-    assert isinstance(interval, float)
+    assert isinstance(interval, int)
 
 
 @pytest.mark.parametrize(
