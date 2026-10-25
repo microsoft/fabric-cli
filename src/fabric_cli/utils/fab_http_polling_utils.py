@@ -12,8 +12,8 @@ _LRO_POLL_TARGETS_SECONDS = (2, 7, 20)
 
 def get_polling_interval(
     response_headers: CaseInsensitiveDict[str],
-    custom_polling_interval: Optional[float] = None,
-) -> float:
+    custom_polling_interval: Optional[int] = None,
+) -> int:
     """
     Extract a custom interval or Retry-After header with fallback and logging.
 
@@ -22,7 +22,7 @@ def get_polling_interval(
         custom_polling_interval: Optional custom polling interval in seconds
 
     Returns:
-        float: Polling interval in seconds
+        int: Polling interval in seconds
     """
     if custom_polling_interval is not None:
         fab_logger.log_debug(
@@ -51,20 +51,27 @@ def get_lro_polling_interval(
     audience: str,
     poll_count: int,
     polling_started: float,
-) -> float:
+) -> int:
     """
     Select the heuristic or Retry-After interval for a long-running operation.
 
     Fabric operations use elapsed-time targets for the first three polls.
+    Remaining waits are rounded to the nearest whole second.
     Other audiences and later polls use Retry-After.
     """
+    elapsed = time.monotonic() - polling_started
     if audience == "fabric" and 0 <= poll_count < len(_LRO_POLL_TARGETS_SECONDS):
         # Deadlines account for time spent on previous poll requests.
-        custom_interval = max(
-            0.0,
-            _LRO_POLL_TARGETS_SECONDS[poll_count]
-            - (time.monotonic() - polling_started),
-        )
-        return get_polling_interval(response_headers, custom_interval)
+        target = _LRO_POLL_TARGETS_SECONDS[poll_count]
+        custom_interval = max(0, round(target - elapsed))
+        interval = get_polling_interval(response_headers, custom_interval)
+        source = f"heuristic (target={target}s)"
+    else:
+        interval = get_polling_interval(response_headers)
+        source = "latest response Retry-After or fallback"
 
-    return get_polling_interval(response_headers)
+    fab_logger.log_debug(
+        f"LRO poll #{poll_count + 1}: audience={audience}, "
+        f"elapsed={elapsed:.3f}s, wait={interval:.3f}s, source={source}"
+    )
+    return interval
