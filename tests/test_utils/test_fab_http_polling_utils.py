@@ -90,18 +90,21 @@ def test_lro_heuristic_uses_elapsed_targets_success(
     assert isinstance(interval, int)
 
 
-@pytest.mark.parametrize(
-    ("audience", "poll_count"),
-    [("azure", 0), ("fabric", 3)],
-)
-def test_lro_uses_retry_after_when_heuristics_do_not_apply_success(
-    monkeypatch: pytest.MonkeyPatch, audience: str, poll_count: int
+@pytest.mark.parametrize("audience", ["azure", "other"])
+@pytest.mark.parametrize("poll_count", [0, 1, 2, 3])
+def test_non_fabric_polls_use_retry_after_success(
+    audience: str, poll_count: int
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
-    monkeypatch.setattr(
-        "fabric_cli.utils.fab_http_polling_utils.time.monotonic", lambda: 100.0
-    )
     assert get_lro_polling_interval(headers, audience, poll_count, 100.0) == 30
+
+
+def test_fabric_polls_use_latest_retry_after_after_heuristic_success() -> None:
+    headers = CaseInsensitiveDict({"Retry-After": "9"})
+    assert get_lro_polling_interval(headers, "fabric", 3, 100.0) == 9
+
+    headers["Retry-After"] = "4"
+    assert get_lro_polling_interval(headers, "fabric", 4, 100.0) == 4
 
 
 @pytest.mark.parametrize("retry_after", [None, "", "invalid"])
