@@ -69,14 +69,6 @@ Control whether jobs are cancelled when they timeout.
 fab config set job_cancel_ontimeout true
 ```
 
-### Disable Heuristic Long-running Operation Polling
-
-Set to `true` to wait between polls using the `Retry-After` header returned by long-running operation APIs. Applied only to Fabric APIs.
-
-```
-fab config set disable_heuristic_lro_polling true
-```
-
 ### Set Labels Definition File
 
 Specify a local file containing label definitions for the CLI.

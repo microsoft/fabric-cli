@@ -9,7 +9,6 @@ The Fabric CLI provides a comprehensive set of configuration settings that allow
 | `cache_enabled`                | Toggles caching of CLI HTTP responses                           | `BOOLEAN`  | `true`  |
 | `check_cli_version_updates`                | Enables automatic update notifications on login                                            | `BOOLEAN`  | `true`  |
 | `debug_enabled`                | Toggles additional diagnostic logs for troubleshooting                                   | `BOOLEAN`  | `false` |
-| `disable_heuristic_lro_polling` | Uses `Retry-After` for every Fabric long-running operation poll instead of the early polling schedule. Does not affect Jobs or Azure API polling. | `BOOLEAN` | `false` |
 | `context_persistence_enabled`  | Persists CLI navigation context in command-line mode across sessions | `BOOLEAN` | `false` |
 | `encryption_fallback_enabled`  | Permits storing tokens in plain text if secure encryption is unavailable                  | `BOOLEAN`  | `false` |
 | `job_cancel_ontimeout`         | Cancels job runs that exceed the timeout period                                  | `BOOLEAN`  | `true`  |

@@ -4,7 +4,7 @@
 import time
 from typing import Optional
 from requests.structures import CaseInsensitiveDict
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+from fabric_cli.core import fab_logger
 
 DEFAULT_POLLING_INTERVAL = 10
 _LRO_POLL_TARGETS_SECONDS = (2, 7, 20)
@@ -55,17 +55,10 @@ def get_lro_polling_interval(
     """
     Select the heuristic or Retry-After interval for a long-running operation.
 
-    Fabric operations use elapsed-time targets for the first three polls unless
-    heuristic polling is disabled. Other audiences and later polls use Retry-After.
+    Fabric operations use elapsed-time targets for the first three polls.
+    Other audiences and later polls use Retry-After.
     """
-    if (
-        audience == "fabric"
-        and 0 <= poll_count < len(_LRO_POLL_TARGETS_SECONDS)
-        and str(
-            fab_state_config.get_config(fab_constant.FAB_DISABLE_HEURISTIC_LRO_POLLING)
-        ).lower()
-        != "true"
-    ):
+    if audience == "fabric" and 0 <= poll_count < len(_LRO_POLL_TARGETS_SECONDS):
         # Deadlines account for time spent on previous poll requests.
         custom_interval = max(
             0.0,

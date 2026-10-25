@@ -83,42 +83,30 @@ def test_lro_heuristic_uses_elapsed_targets_success(
         "fabric_cli.utils.fab_http_polling_utils.time.monotonic",
         lambda: 100.0 + elapsed,
     )
-    monkeypatch.setattr(
-        "fabric_cli.utils.fab_http_polling_utils.fab_state_config.get_config",
-        lambda key: "false",
-    )
     assert get_lro_polling_interval(headers, "fabric", poll_count, 100.0) == expected
 
 
 @pytest.mark.parametrize(
-    ("audience", "disabled", "poll_count"),
-    [("fabric", "true", 0), ("azure", "false", 0), ("fabric", "false", 3)],
+    ("audience", "poll_count"),
+    [("azure", 0), ("fabric", 3)],
 )
 def test_lro_uses_retry_after_when_heuristics_do_not_apply_success(
-    monkeypatch: pytest.MonkeyPatch, audience: str, disabled: str, poll_count: int
+    monkeypatch: pytest.MonkeyPatch, audience: str, poll_count: int
 ) -> None:
     headers = CaseInsensitiveDict({"Retry-After": "30"})
     monkeypatch.setattr(
         "fabric_cli.utils.fab_http_polling_utils.time.monotonic", lambda: 100.0
-    )
-    monkeypatch.setattr(
-        "fabric_cli.utils.fab_http_polling_utils.fab_state_config.get_config",
-        lambda key: disabled,
     )
     assert get_lro_polling_interval(headers, audience, poll_count, 100.0) == 30
 
 
 @pytest.mark.parametrize("retry_after", [None, "", "invalid"])
 def test_lro_heuristic_exhaustion_uses_header_fallback_success(
-    monkeypatch: pytest.MonkeyPatch, retry_after: str | None
+    retry_after: str | None,
 ) -> None:
     headers: CaseInsensitiveDict[str] = CaseInsensitiveDict()
     if retry_after is not None:
         headers["Retry-After"] = retry_after
-    monkeypatch.setattr(
-        "fabric_cli.utils.fab_http_polling_utils.fab_state_config.get_config",
-        lambda key: "false",
-    )
     assert (
         get_lro_polling_interval(headers, "fabric", 3, 20.0) == DEFAULT_POLLING_INTERVAL
     )
