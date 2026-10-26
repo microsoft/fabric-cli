@@ -1,20 +1,94 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import json
 import uuid
 from argparse import Namespace
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
+from requests.structures import CaseInsensitiveDict
 
 from fabric_cli.client.fab_api_client import (
     _get_host_app,
+    _poll_operation,
     _transform_workspace_url_for_private_link_if_needed,
     do_request,
 )
+from fabric_cli.client.fab_api_types import ApiResponse
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_auth import FabAuth
 from fabric_cli.core.fab_exceptions import FabricAPIError
+
+
+def test_fabric_polls_use_heuristic_then_latest_retry_after_success() -> None:
+    original = ApiResponse(202, "", b"", CaseInsensitiveDict({"Retry-After": "30"}))
+    responses = [
+        ApiResponse(
+            200,
+            json.dumps({"status": status}),
+            b"",
+            CaseInsensitiveDict({"Retry-After": retry_after}),
+        )
+        for status, retry_after in [
+            ("Running", "40"),
+            ("Running", "50"),
+            ("Running", "17"),
+            ("Running", "5"),
+            ("Succeeded", "60"),
+        ]
+    ]
+    # One-second requests leave 4 and 12 seconds to reach the next poll targets.
+    with (
+        patch(
+            "fabric_cli.client.fab_api_client.time.monotonic",
+            side_effect=[0, 0, 3, 8],
+        ),
+        patch("fabric_cli.client.fab_api_client.time.sleep") as sleep,
+        patch(
+            "fabric_cli.client.fab_api_client.do_request", side_effect=responses
+        ) as request,
+        patch("fabric_cli.client.fab_api_client.fab_logger.log_progress"),
+    ):
+        result = _poll_operation(
+            "fabric",
+            "operations/test-operation",
+            original,
+            fab_constant.SCOPE_FABRIC_DEFAULT,
+            check_status=True,
+        )
+
+    assert result is original
+    assert result.status_code == 200
+    assert request.call_count == 5
+    assert sleep.call_args_list == [call(2), call(4), call(12), call(17), call(5)]
+
+
+def test_azure_polls_use_latest_retry_after_without_heuristic_success() -> None:
+    original = ApiResponse(202, "", b"", CaseInsensitiveDict({"Retry-After": "20"}))
+    responses = [
+        ApiResponse(status, "", b"", CaseInsensitiveDict({"Retry-After": retry_after}))
+        for status, retry_after in [(202, "8"), (201, "6"), (200, "4")]
+    ]
+    with (
+        patch("fabric_cli.client.fab_api_client.time.monotonic", return_value=0),
+        patch("fabric_cli.client.fab_api_client.time.sleep") as sleep,
+        patch(
+            "fabric_cli.client.fab_api_client.do_request", side_effect=responses
+        ) as request,
+    ):
+        result = _poll_operation(
+            "azure",
+            "operation",
+            original,
+            fab_constant.SCOPE_AZURE_DEFAULT,
+            check_status=False,
+        )
+
+    assert result is original
+    assert result.status_code == 200
+    assert request.call_count == 3
+    assert sleep.call_args_list == [call(20), call(8), call(6)]
 
 
 @pytest.mark.parametrize("private_link_enabled_config_value", [True, "True", "true"])
