@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import sys
+import socket
 from unittest.mock import patch
 
 import pytest
@@ -25,10 +26,10 @@ class TestMainModule:
                         "MockParser",
                         (),
                         {
-                            "parse_args": lambda: type(
+                            "parse_args": lambda self: type(
                                 "Args", (), {"command": None, "version": False}
                             )(),
-                            "set_mode": lambda mode: None,
+                            "set_mode": lambda self, mode: None,
                         },
                     )()
                     mock_subparsers = object()
@@ -60,3 +61,41 @@ class TestMainModule:
 
             mock_interactive_cli.assert_called_once()
             mock_cli_instance.start_interactive.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "tokens",
+        [
+            ["job", "run", "--help", "--output_format=json"],
+            ["--version"],
+            ["version"],
+        ],
+    )
+    def test_help_version_no_execution_dependencies_success(
+        self,
+        tokens: list[str],
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        from fabric_cli import main as main_module
+
+        monkeypatch.setattr(sys, "argv", ["fab", *tokens])
+        with (
+            patch("argcomplete.autocomplete") as completion,
+            patch("fabric_cli.core.fab_state_config.init_defaults") as init_config,
+            patch("fabric_cli.core.fab_logger.print_log_file_path") as log,
+            patch.object(main_module, "_execute_command") as execute,
+            patch.object(
+                socket.socket, "connect", side_effect=AssertionError("network")
+            ),
+        ):
+            if "--help" in tokens:
+                with pytest.raises(SystemExit) as exit_info:
+                    main_module.main()
+                assert exit_info.value.code == 0
+            else:
+                main_module.main()
+            completion.assert_not_called()
+            init_config.assert_not_called()
+            log.assert_not_called()
+            execute.assert_not_called()
+        assert capsys.readouterr().err == ""

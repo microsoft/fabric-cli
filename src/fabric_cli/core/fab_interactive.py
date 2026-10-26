@@ -13,7 +13,6 @@ from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import singleton
-from fabric_cli.utils import fab_commands
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
@@ -52,10 +51,11 @@ class InteractiveCLI:
         if command in fab_constant.INTERACTIVE_QUIT_COMMANDS:
             utils_ui.print(fab_constant.INTERACTIVE_EXIT_MESSAGE)
             return True
-        elif command in fab_constant.INTERACTIVE_HELP_COMMANDS:
-            utils_ui.display_help(
-                fab_commands.COMMANDS, "Usage: <command> <subcommand> [flags]"
-            )
+        elif command_parts and command_parts[0] in fab_constant.INTERACTIVE_HELP_COMMANDS:
+            try:
+                self.parser.parse_args(["--help", *command_parts[1:]])
+            except SystemExit:
+                pass
             return False
         elif command in fab_constant.INTERACTIVE_VERSION_COMMANDS:
             utils_ui.print_version()

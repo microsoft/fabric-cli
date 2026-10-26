@@ -2,13 +2,17 @@
 # Licensed under the MIT License.
 
 import argparse
-from unittest.mock import patch
+import json
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fabric_cli.core import fab_constant
+from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_interactive import InteractiveCLI
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+from fabric_cli.utils import fab_commands, fab_ui
 
 
 class TestInteractiveCLI:
@@ -48,23 +52,119 @@ class TestInteractiveCLI:
     def test_handle_command_help_variations_success(
         self,
         interactive_cli,
-        mock_display_help,
         mock_print_log_file_path,
-        mock_commands,
+        mock_parser,
     ):
         """Test help command and its variations."""
         for cmd in fab_constant.INTERACTIVE_HELP_COMMANDS:
             result = interactive_cli.handle_command(cmd)
             assert result is False
 
-        # Verify help display was called
-        assert mock_display_help.call_count == len(
+        assert mock_parser.parse_args.call_count == len(
             fab_constant.INTERACTIVE_HELP_COMMANDS
         )
+        mock_parser.parse_args.assert_called_with(["--help"])
         # Verify log file path is printed for each command
         assert mock_print_log_file_path.call_count == len(
             fab_constant.INTERACTIVE_HELP_COMMANDS
         )
+
+    @pytest.mark.parametrize("alias", fab_constant.INTERACTIVE_HELP_COMMANDS)
+    @pytest.mark.parametrize(
+        ("selector", "saved"),
+        [
+            ("--output_format json", "text"),
+            ("--output_format=json", "text"),
+            ("", "json"),
+        ],
+    )
+    def test_handle_command_root_json_help_success(
+        self,
+        interactive_cli: InteractiveCLI,
+        mock_print_log_file_path: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        alias: str,
+        selector: str,
+        saved: str,
+    ) -> None:
+        parser, _ = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        config = tmp_path / "config.json"
+        config.write_text(json.dumps({"output_format": saved}), encoding="utf-8")
+        monkeypatch.setattr(fab_state_config, "config_file", str(config))
+
+        assert interactive_cli.handle_command(f"{alias} {selector}") is False
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+        assert output["command"] == "fab"
+        assert output["status"] == "Success"
+        data = output["result"]["data"][0]
+        assert {"mkdir", "job", "deploy"} <= {
+            child["name"] for child in data["subcommands"]
+        }
+        assert {"--help", "--output_format", "--version", "--command"} <= {
+            flag["name"] for flag in data["flags"]
+        }
+        assert captured.err == ""
+        assert parser.get_mode() == fab_constant.FAB_MODE_INTERACTIVE
+
+    @pytest.mark.parametrize("alias", fab_constant.INTERACTIVE_HELP_COMMANDS)
+    def test_handle_command_root_text_help_success(
+        self,
+        interactive_cli: InteractiveCLI,
+        mock_print_log_file_path: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        alias: str,
+    ) -> None:
+        parser, _ = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        config = tmp_path / "config.json"
+        config.write_text('{"output_format": "json"}', encoding="utf-8")
+        monkeypatch.setattr(fab_state_config, "config_file", str(config))
+        fab_ui.display_help(
+            fab_commands.COMMANDS, "Usage: <command> <subcommand> [flags]"
+        )
+        expected = capsys.readouterr().out
+
+        assert interactive_cli.handle_command(f"{alias} --output_format text") is False
+        captured = capsys.readouterr()
+        assert captured.out == expected
+        assert captured.err == ""
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            "help --unknown --output_format json",
+            "help --output_format=json --output_format=text",
+            "help --output_format=json --output_format",
+        ],
+    )
+    def test_handle_command_invalid_help_failure(
+        self,
+        interactive_cli: InteractiveCLI,
+        mock_print_log_file_path: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        command: str,
+    ) -> None:
+        parser, _ = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+
+        assert interactive_cli.handle_command(command) is False
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+        assert output["status"] == "Failure"
+        assert "data" not in output["result"]
+        assert captured.err == ""
+        assert interactive_cli.handle_command("ls") is False
+        interactive_cli.subparsers.choices["ls"].parse_args.assert_called_once_with([])
 
     def test_handle_command_version_variations_success(
         self, interactive_cli, mock_print_version, mock_print_log_file_path
@@ -105,9 +205,10 @@ class TestInteractiveCLI:
 
         # Verify it stays in interactive mode and shows message
         assert result is False
-        mock_print_ui.assert_called_with("In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands.")
+        mock_print_ui.assert_called_with(
+            "In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands."
+        )
         mock_print_log_file_path.assert_called_once()
-
 
     def test_handle_command_with_arguments_success(
         self,
@@ -243,7 +344,8 @@ class TestInteractiveCLI:
         # Verify that EOF error message is shown
         calls = mock_print_ui.call_args_list
         error_message_found = any(
-            "Error in interactive session:" in str(call) or "Session will continue" in str(call)
+            "Error in interactive session:" in str(call)
+            or "Session will continue" in str(call)
             for call in calls
         )
         assert error_message_found, "Should show EOF error handling message"
@@ -330,67 +432,80 @@ class TestInteractiveCLI:
 
         # Verify it stays in interactive mode and shows message
         assert result is False
-        mock_print_ui.assert_called_with("In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands.")
+        mock_print_ui.assert_called_with(
+            "In interactive mode, commands don't require the fab prefix. Use --help to view the list of supported commands."
+        )
         mock_print_log_file_path.assert_called_once()
 
     def test_interactive_cli_singleton_pattern_success(self):
         """Test that InteractiveCLI follows singleton pattern"""
         from fabric_cli.core.fab_interactive import InteractiveCLI
-    
-        with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
-            mock_parser = type('MockParser', (), {'set_mode': lambda self, mode: None})()
+
+        with patch(
+            "fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers"
+        ) as mock_get_parsers:
+            mock_parser = type(
+                "MockParser", (), {"set_mode": lambda self, mode: None}
+            )()
             mock_subparsers = object()
             mock_get_parsers.return_value = (mock_parser, mock_subparsers)
-            
+
             # Create two instances
             instance1 = InteractiveCLI()
             instance2 = InteractiveCLI()
-            
+
             # Should be the same instance
             assert instance1 is instance2
 
     def test_start_interactive_mode_success(self):
         """Test mode switching creates singleton and launches interactive CLI"""
-        with patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
+        with patch(
+            "fabric_cli.core.fab_interactive.InteractiveCLI"
+        ) as mock_interactive_cli:
             from unittest.mock import Mock
-            
+
             mock_cli_instance = Mock()
             mock_cli_instance._is_running = False
             mock_interactive_cli.return_value = mock_cli_instance
-            
+
             from fabric_cli.core.fab_interactive import start_interactive_mode
+
             start_interactive_mode()
-            
+
             mock_interactive_cli.assert_called_once()
             mock_cli_instance.start_interactive.assert_called_once()
 
     def test_start_interactive_mode_already_running(self):
         """Test that calling start_interactive_mode when already running prints message"""
-        with patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli, \
-             patch("fabric_cli.core.fab_interactive.utils_ui.print") as mock_print:
+        with (
+            patch(
+                "fabric_cli.core.fab_interactive.InteractiveCLI"
+            ) as mock_interactive_cli,
+            patch("fabric_cli.core.fab_interactive.utils_ui.print") as mock_print,
+        ):
             from unittest.mock import Mock
             from fabric_cli.core import fab_interactive
-            
+
             mock_cli_instance = Mock()
             mock_cli_instance._is_running = True
             mock_interactive_cli.return_value = mock_cli_instance
-            
+
             # Mock the start_interactive method to simulate the actual behavior
             def mock_start_interactive():
                 if mock_cli_instance._is_running:
                     mock_print("Interactive mode is already running.")
                     return
-            
+
             mock_cli_instance.start_interactive = mock_start_interactive
-            
+
             fab_interactive.start_interactive_mode()
-            
+
             # Should call InteractiveCLI() and then start_interactive should print message
             mock_interactive_cli.assert_called_once()
             mock_print.assert_called_once_with("Interactive mode is already running.")
 
-
     # endregion
+
 
 @pytest.fixture
 def mock_parser():
@@ -468,26 +583,9 @@ def mock_print_log_file_path():
 
 
 @pytest.fixture
-def mock_display_help():
-    """Mock utils_ui.display_help function."""
-    with patch("fabric_cli.core.fab_interactive.utils_ui.display_help") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_print_version():
     """Mock utils_ui.print_version function."""
     with patch("fabric_cli.core.fab_interactive.utils_ui.print_version") as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_commands():
-    """Mock fab_commands.COMMANDS."""
-    with patch(
-        "fabric_cli.core.fab_interactive.fab_commands.COMMANDS",
-        ["ls", "help", "config"],
-    ) as mock:
         yield mock
 
 
@@ -522,17 +620,19 @@ def interactive_cli(
 ):
     """Create InteractiveCLI instance with mocked dependencies."""
     from fabric_cli.core.fab_interactive import InteractiveCLI
-    
+
     # Mock the get_global_parser_and_subparsers function to return our mocks
-    with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
+    with patch(
+        "fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers"
+    ) as mock_get_parsers:
         mock_get_parsers.return_value = (mock_parser, mock_subparsers)
-        
+
         # Create a fresh InteractiveCLI instance for each test by directly creating an instance
         # and assigning the mock objects to ensure tests use the same mocks
         cli = InteractiveCLI(mock_parser, mock_subparsers)
-        
+
         # Ensure the instance uses our mock objects
         cli.parser = mock_parser
         cli.subparsers = mock_subparsers
-        
+
         yield cli

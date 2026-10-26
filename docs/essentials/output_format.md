@@ -60,6 +60,56 @@ The configuration is stored in your Fabric CLI configuration file and applies to
 
 ## JSON Output Schema
 
+### Machine-readable help
+
+Use JSON help to discover commands, arguments, and flags for scripts and automation.
+
+```bash
+# Root help
+fab --help --output_format json
+
+# Command help
+fab mkdir -h --output_format json
+
+# Subcommand help
+fab job run --help --output_format json
+```
+
+In interactive mode, omit the `fab` prefix:
+
+```text
+help --output_format json
+help --output_format text
+```
+
+JSON help follows this response structure. Array contents depend on the selected
+command; root help lists available commands and global flags.
+
+```json
+{
+    "timestamp": "<UTC timestamp>",
+    "status": "Success",
+    "command": "<canonical command name>",
+    "result": {
+        "data": [
+            {
+                "schema_version": "1.0",
+                "cli_version": "<installed CLI version>",
+                "description": "<command description>",
+                "usage": "fab <command> [flags]",
+                "args": [],
+                "flags": [],
+                "aliases": [],
+                "subcommands": [],
+                "examples": [],
+                "notes": [],
+                "learn_more": []
+            }
+        ]
+    }
+}
+```
+
 ### Success Response Structure
 ```json
 {

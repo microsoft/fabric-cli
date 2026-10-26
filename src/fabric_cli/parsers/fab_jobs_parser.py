@@ -43,6 +43,10 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Start an item",
         fab_examples=start_examples,
         fab_learnmore=["_"],
+        fab_notes=[
+            "--input cannot be combined with --params or --config.",
+            "Target-specific parameter names and allowed values are not included in static help.",
+        ],
     )
     start_parser.add_argument("path", nargs="+", help="Path to the item")
     start_parser.add_argument(
@@ -83,6 +87,11 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Run an item",
         fab_examples=run_examples,
         fab_learnmore=["_"],
+        fab_notes=[
+            "--input cannot be combined with --params or --config.",
+            "When both are supplied, --polling_interval must be below --timeout.",
+            "Target-specific parameter names and allowed values are not included in static help.",
+        ],
     )
     run_parser.add_argument("path", nargs="+", help="Path to the item")
     run_parser.add_argument(
@@ -105,13 +114,14 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     run_parser.add_argument(
         "--timeout", metavar="", help="Timeout in seconds. Optional", type=int
     )
-    run_parser.add_argument(
+    polling_interval = run_parser.add_argument(
         "--polling_interval",
         metavar="",
         dest="polling_interval",
         help="Custom job status polling interval in seconds. Optional",
         type=validate_positive_int,
     )
+    setattr(polling_interval, "fab_help", {"type": "integer", "minimum": 1})
 
     run_parser.usage = f"{utils_error_parser.get_usage_prog(run_parser)}"
     run_parser.set_defaults(func=lazy_command(_jobs_module_path, 'run_command'))

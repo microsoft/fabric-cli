@@ -3,11 +3,12 @@
 
 import builtins
 import html
+import json
 import shutil
 import sys
 import unicodedata
 from argparse import Namespace
-from typing import Any, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Optional, Sequence
 
 from fabric_cli import __version__
 from fabric_cli.core import fab_constant, fab_state_config
@@ -16,6 +17,11 @@ from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_lazy_load
 from fabric_cli.utils import fab_util
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
+
+    from fabric_cli.core.fab_help import HelpRequest
 
 
 def get_common_style():
@@ -102,7 +108,8 @@ def print_output_format(
     """Create a FabricCLIOutput instance and print it depends on the format.
 
     Args:
-        args: The command arguments namespace containing command and output_format
+        args: The command arguments namespace containing command and output_format.
+            For help, help contains the HelpRequest and help_file the optional stream.
         message: Success message to display
         data: Optional data to include in output
         hidden_data: Optional hidden data to include in output
@@ -138,6 +145,13 @@ def print_output_format(
         case "json":
             _print_output_format_json(output.to_json())
         case "text":
+            help_request: Optional["HelpRequest"] = getattr(args, "help", None)
+            if help_request:
+                parser = help_request.parser
+                getattr(parser, "print_text_help", parser.print_help)(
+                    getattr(args, "help_file", None)
+                )
+                return
             if (
                 truncate_columns
                 and isinstance(output.result.data, list)
@@ -148,9 +162,7 @@ def print_output_format(
             _print_output_format_result_text(output)
         case _:
             raise FabricCLIError(
-                ErrorMessages.Common.output_format_not_supported(
-                    str(format_type)
-                ),
+                ErrorMessages.Common.output_format_not_supported(str(format_type)),
                 fab_constant.ERROR_NOT_SUPPORTED,
             )
 
@@ -211,9 +223,7 @@ def print_output_error(
             return
         case _:
             raise FabricCLIError(
-                ErrorMessages.Common.output_format_not_supported(
-                    str(format_type)
-                ),
+                ErrorMessages.Common.output_format_not_supported(str(format_type)),
                 fab_constant.ERROR_NOT_SUPPORTED,
             )
 
@@ -230,6 +240,80 @@ def print_info(text, command: Optional[str] = None) -> None:
 
 
 # Display
+
+
+def _help_output_format(selectors: list[str]) -> str:
+    if selectors:
+        if any(value not in ("json", "text") for value in selectors):
+            raise FabricCLIError(
+                ErrorMessages.Common.invalid_help_format(),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        if len(set(selectors)) > 1:
+            raise FabricCLIError(
+                ErrorMessages.Common.conflicting_help_formats(),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+        return selectors[0]
+    try:
+        with open(fab_state_config.config_file, encoding="utf-8") as config:
+            saved = json.load(config)
+        if not isinstance(saved, dict):
+            raise ValueError("Config must be an object")
+        format_type = saved.get(fab_constant.FAB_OUTPUT_FORMAT, "text")
+        if format_type not in ("json", "text"):
+            raise ValueError("Invalid saved output format")
+        return format_type
+    except FileNotFoundError:
+        return "text"
+    except (OSError, ValueError):
+        print_warning(ErrorMessages.Common.help_config_unavailable())
+        return "text"
+
+
+def print_help_request(
+    request: "HelpRequest", file: Optional["SupportsWrite[str]"] = None
+) -> int:
+    """Print help through the common output pipeline and return its exit code."""
+    from fabric_cli.core.fab_help import build_help_data, canonical_command
+
+    command = canonical_command(request.parser)
+    # Explicit JSON also governs invalid requests, including conflicting selectors.
+    format_type = "json" if "json" in request.selectors else "text"
+    try:
+        format_type = _help_output_format(request.selectors)
+        if request.error:
+            raise FabricCLIError(
+                ErrorMessages.Common.invalid_help_request(request.error),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
+    except FabricCLIError as error:
+        print_output_error(error, command=command, output_format_type=format_type)
+        return 2
+
+    try:
+        data = build_help_data(request.parser)
+        print_output_format(
+            Namespace(
+                command=command,
+                output_format=format_type,
+                help=request,
+                help_file=file,
+            ),
+            data=data,
+        )
+    except Exception:
+        # This entrypoint is an error boundary: never expose payloads or partial help.
+        print_output_error(
+            FabricCLIError(
+                ErrorMessages.Common.help_generation_failed(),
+                fab_constant.ERROR_UNEXPECTED_ERROR,
+            ),
+            command=command,
+            output_format_type=format_type,
+        )
+        return 1
+    return 0
 
 
 # Display all available commands organized by category with descriptions
@@ -295,10 +379,7 @@ def print_entries_unix_style(
         widths = [
             max(
                 _get_visual_length(field),
-                max(
-                    get_visual_length(entry, field)
-                    for entry in _entries
-                ),
+                max(get_visual_length(entry, field) for entry in _entries),
             )
             for field in fields
         ]
@@ -327,8 +408,7 @@ def print_entries_unix_style(
             new_widths = [max(min_col_width, int(w * scale)) for w in widths]
             # Fine-tune: trim the largest column until we fit
             while sum(new_widths) + separator_space > terminal_width:
-                max_idx = max(range(len(new_widths)),
-                              key=lambda k: new_widths[k])
+                max_idx = max(range(len(new_widths)), key=lambda k: new_widths[k])
                 if new_widths[max_idx] <= min_col_width:
                     break
                 new_widths[max_idx] -= 1
@@ -337,8 +417,7 @@ def print_entries_unix_style(
                 base = available // n
                 remainder = available % n
                 new_widths = [
-                    max(1, base + (1 if i < remainder else 0))
-                    for i in range(n)
+                    max(1, base + (1 if i < remainder else 0)) for i in range(n)
                 ]
             widths = new_widths
 
@@ -347,8 +426,11 @@ def print_entries_unix_style(
         for line in header_lines:
             print_grey(line, to_stderr=False)
         # Print a separator line matching the width of the first header line
-        separator_width = _get_visual_length(
-            header_lines[0]) if header_lines else (sum(widths) + len(widths) - 1)
+        separator_width = (
+            _get_visual_length(header_lines[0])
+            if header_lines
+            else (sum(widths) + len(widths) - 1)
+        )
         print_grey("-" * separator_width, to_stderr=False)
 
     for entry in _entries:
@@ -416,9 +498,9 @@ def _print_output_format_result_text(output: FabricCLIOutput) -> None:
             data_keys = output.result.get_data_keys() if output_result.data else []
             if len(data_keys) > 0:
                 print_entries_unix_style(
-                    output_result.data, data_keys, header=(
-                        len(data_keys) > 1 or show_headers
-                    )
+                    output_result.data,
+                    data_keys,
+                    header=(len(data_keys) > 1 or show_headers),
                 )
             else:
                 _print_raw_data(output_result.data)
@@ -503,9 +585,7 @@ def _print_error_format_json(output: str) -> None:
 
 def _print_error_format_text(message: str, command: Optional[str] = None) -> None:
     command_text = f"{command}: " if command else ""
-    _safe_print_formatted_text(
-        f"<ansired>x</ansired> {command_text}{message}", message
-    )
+    _safe_print_formatted_text(f"<ansired>x</ansired> {command_text}{message}", message)
 
 
 def _print_fallback(text: str, e: Exception, to_stderr: bool = False) -> None:
@@ -629,21 +709,24 @@ def _format_key_to_convert_to_title_case(key: str) -> str:
         ValueError: If the key is not in the expected underscore-separated format
     """
     # Allow letters, numbers, and underscores only
-    if not key.replace('_', '').replace(' ', '').isalnum():
+    if not key.replace("_", "").replace(" ", "").isalnum():
         raise ValueError(
-            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed."
+        )
 
     # Check for invalid patterns (camelCase, spaces mixed with underscores, etc.)
-    if ' ' in key and '_' in key:
+    if " " in key and "_" in key:
         raise ValueError(
-            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed."
+        )
 
     # Check for camelCase pattern (uppercase letters not at the start)
-    if any(char.isupper() for char in key[1:]) and '_' not in key:
+    if any(char.isupper() for char in key[1:]) and "_" not in key:
         raise ValueError(
-            f"Invalid key format: '{key}'. Only underscore-separated words are allowed.")
+            f"Invalid key format: '{key}'. Only underscore-separated words are allowed."
+        )
 
-    pretty = key.replace('_', ' ').title().strip()
+    pretty = key.replace("_", " ").title().strip()
 
     return _check_special_cases(pretty)
 
