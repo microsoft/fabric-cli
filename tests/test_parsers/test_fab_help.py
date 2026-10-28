@@ -200,6 +200,7 @@ def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:
 def test_every_command_alias_resolves_success(parser: CustomArgumentParser) -> None:
     def check(parent: argparse.ArgumentParser, prefix: list[str]) -> None:
         for name, child, aliases, _ in child_parsers(parent):
+            assert build_help_data(child)["aliases"] == aliases
             for spelling in [name, *aliases]:
                 request = resolve_help(
                     parser, [*prefix, spelling, "--help", "--output_format=json"]
@@ -210,6 +211,30 @@ def test_every_command_alias_resolves_success(parser: CustomArgumentParser) -> N
             check(child, [*prefix, name])
 
     check(parser, [])
+
+
+@pytest.mark.parametrize(
+    ("tokens", "command", "aliases"),
+    [
+        (["clear"], "clear", ["cls"]),
+        (["cls"], "clear", ["cls"]),
+        (["config", "ls"], "config ls", ["dir"]),
+        (["config", "dir"], "config ls", ["dir"]),
+    ],
+)
+def test_registered_leaf_aliases_json_help_success(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    tokens: list[str],
+    command: str,
+    aliases: list[str],
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args([*tokens, "--help", "--output_format=json"])
+    assert exit_info.value.code == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["command"] == command
+    assert output["result"]["data"][0]["aliases"] == aliases
 
 
 @pytest.mark.parametrize(

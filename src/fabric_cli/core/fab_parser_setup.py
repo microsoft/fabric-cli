@@ -291,14 +291,15 @@ def create_parser_and_subparsers():
     )
     version_parser.set_defaults(func=fab_ui.print_version)
 
-    def retain_descriptions(parent: argparse.ArgumentParser) -> None:
+    def retain_help_metadata(parent: argparse.ArgumentParser) -> None:
         from fabric_cli.core.fab_help import child_parsers
 
-        for _, child, _, description in child_parsers(parent):
+        for _, child, aliases, description in child_parsers(parent):
             setattr(child, "fab_description", description)
-            retain_descriptions(child)
+            setattr(child, "fab_aliases", aliases)
+            retain_help_metadata(child)
 
-    retain_descriptions(parser)
+    retain_help_metadata(parser)
     return parser, subparsers
 
 
