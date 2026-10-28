@@ -16,7 +16,6 @@ from fabric_cli.core.fab_help import (
     child_parsers,
     resolve_help,
 )
-from fabric_cli.core.fab_output import FabricCLIOutput
 from fabric_cli.core.fab_parser_setup import (
     CustomArgumentParser,
     create_parser_and_subparsers,
@@ -39,6 +38,19 @@ def parser() -> CustomArgumentParser:
 def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -> None:
     for node in _nodes(parser):
         data = build_help_data(node)
+        assert set(data) == {
+            "schema_version",
+            "cli_version",
+            "description",
+            "usage",
+            "args",
+            "flags",
+            "aliases",
+            "subcommands",
+            "examples",
+            "notes",
+            "learn_more",
+        }
         assert data["cli_version"] == __version__
         assert data["schema_version"] == "1.0"
         assert "--skill" not in [flag["name"] for flag in data["flags"]]
