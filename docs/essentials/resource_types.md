@@ -47,7 +47,14 @@ Item types are the primary content resources within Fabric workspaces. Each type
 | `.UserDataFunction`    | User data functions                |
 | `.GraphModel`          | Graph models                       |
 | `.Ontology`            | Ontologies                         |
-
+| `.AnomalyDetector`     | Real-time anomaly detection        |
+| `.AppBackend`          | Fabric application backends        |
+| `.DataBuildToolJob`    | Data build tool jobs               |
+| `.EventSchemaSet`      | Event schema collections           |
+| `.OrgApp`              | Organizational applications        |
+| `.OrgAppAudience`      | Organizational app audiences       |
+| `.Plan`                | Fabric plans                       |
+| `.WarehouseSnapshot`   | Point-in-time warehouse snapshots  |
 
 ---
 

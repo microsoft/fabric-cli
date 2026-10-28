@@ -21,7 +21,12 @@ from tests.test_commands.conftest import (
     import_create_new_item_success_params,
     import_create_new_item_fail_params,
     import_item_wrong_format_fail_params,
+    clean_plan_item_companion_items,
+    mkdir,
+    rm,
 )
+from tests.test_commands.processors import generate_random_string
+from tests.test_commands.utils import cli_path_join
 
 new_name_index = 1
 
@@ -76,6 +81,57 @@ class TestImport:
             item_type,
             cli_executor,
         )
+
+    def test_import_create_new_plan_item_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_grey,
+        mock_print_done,
+        tmp_path,
+        vcr_instance,
+        cassette_name,
+        spy_create_item,
+        upsert_item_to_cache,
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{ItemType.PLAN}"
+        )
+        mkdir(item_full_path)
+
+        export(item_full_path, output=os.path.expanduser(str(tmp_path)))
+
+        # Reset mock
+        mock_print_done.reset_mock()
+        mock_print_grey.reset_mock()
+        upsert_item_to_cache.reset_mock()
+        spy_create_item.reset_mock()
+
+        # Execute command
+        item_path = item_full_path
+        global new_name_index
+        new_name_index += 1
+        new_item_path = item_path.replace(
+            item_display_name, item_display_name + "_new_" + str(new_name_index)
+        )
+        with patch("fabric_cli.utils.fab_ui.prompt_confirm", return_value=True):
+            cli_executor.exec_command(
+                f"import {new_item_path} --input {str(tmp_path)}/{item_display_name}.{ItemType.PLAN.value} --force"
+            )
+
+        # Assert
+        mock_print_grey.assert_called_once()
+        assert "Importing " in mock_print_grey.call_args[0][0]
+        spy_create_item.assert_called_once()
+        mock_print_done.assert_called_once()
+        upsert_item_to_cache.assert_called_once()
+
+        # Cleanup
+        rm(item_full_path)
+        rm(new_item_path)
+        clean_plan_item_companion_items(workspace)
 
     @import_create_new_item_fail_params
     def test_import_create_new_item_fail(
@@ -318,8 +374,7 @@ def _import_create_new_item_fail(
     new_item_path = cli_path_join(workspace.full_path, item_name)
 
     # Execute command
-    cli_executor.exec_command(
-        f"import {new_item_path} --input {str(tmp_path)} --force")
+    cli_executor.exec_command(f"import {new_item_path} --input {str(tmp_path)} --force")
 
     # Assert
     assert_fabric_cli_error(fab_constant.ERROR_UNSUPPORTED_COMMAND)
