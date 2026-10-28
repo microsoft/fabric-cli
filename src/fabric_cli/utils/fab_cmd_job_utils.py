@@ -424,9 +424,30 @@ def _process_params(args: Namespace, item: Item) -> None:
 
 
 def validate_timeout_polling_interval(args: Namespace) -> None:
-    """Validate that polling interval is not greater than or equal to timeout."""
+    """Validate timeout and polling interval options for job execution.
+
+    Wait options require --wait for job start, and the polling
+    interval must be lower than the timeout.
+    """
     timeout = getattr(args, "timeout", None)
     polling_interval = getattr(args, "polling_interval", None)
+
+    if getattr(args, "jobs_command", None) == "start" and not getattr(
+        args, "wait", False
+    ):
+        options = [
+            option
+            for option, value in (
+                ("--timeout", timeout),
+                ("--polling_interval", polling_interval),
+            )
+            if value is not None
+        ]
+        if options:
+            raise FabricCLIError(
+                ErrorMessages.Common.options_require_wait(options),
+                fab_constant.ERROR_INVALID_INPUT,
+            )
 
     if (
         timeout is not None
