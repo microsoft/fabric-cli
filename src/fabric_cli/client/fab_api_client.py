@@ -25,7 +25,10 @@ from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_error_parser as utils_errors
 from fabric_cli.utils import fab_files as files_utils
 from fabric_cli.utils import fab_ui as utils_ui
-from fabric_cli.utils.fab_http_polling_utils import get_polling_interval
+from fabric_cli.utils.fab_http_polling_utils import (
+    get_lro_polling_interval,
+    get_polling_interval,
+)
 from fabric_cli.utils.fab_util import GUID_PATTERN_STR
 
 _HOST_APP_VERSION_RE = re.compile(r"\d+(\.\d+){0,2}(-[a-zA-Z0-9\.-]+)?")
@@ -430,11 +433,18 @@ def _poll_operation(
     args.wait = False
     args.params = {}
 
-    initial_interval = get_polling_interval(original_response.headers)
-    time.sleep(initial_interval)
+    polling_started = time.monotonic()
+    poll_count = 0
+    polling_headers = original_response.headers
 
     while True:
+        interval = get_lro_polling_interval(
+            polling_headers, audience, poll_count, polling_started
+        )
+        time.sleep(interval)
         response = do_request(args, hostname=hostname)
+        poll_count += 1
+        polling_headers = response.headers
 
         if response.status_code == 200:
             if check_status:
@@ -474,14 +484,11 @@ def _poll_operation(
                 else:
                     # Any other status is considered running
                     _log_operation_progress(result_json)
-                    interval = get_polling_interval(response.headers)
-                    time.sleep(interval)
             else:
                 original_response.status_code = 200
                 return original_response
         elif not check_status and response.status_code in [202, 201]:
-            interval = get_polling_interval(response.headers)
-            time.sleep(interval)
+            continue
         else:
             raise FabricCLIError(
                 ErrorMessages.Client.unexpected_error_response(
