@@ -111,6 +111,27 @@ class TestInteractiveCLI:
         assert captured.err == ""
         assert parser.get_mode() == fab_constant.FAB_MODE_INTERACTIVE
 
+    def test_handle_command_group_help_after_invalid_command_success(
+        self,
+        interactive_cli: InteractiveCLI,
+        mock_print_log_file_path: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        parser, subparsers = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        monkeypatch.setattr(interactive_cli, "subparsers", subparsers)
+
+        assert not interactive_cli.handle_command("job unknown")
+        capsys.readouterr()
+
+        assert not interactive_cli.handle_command("job --help --output_format=json")
+        output = json.loads(capsys.readouterr().out)
+        assert output["command"] == "job"
+        assert output["status"] == "Success"
+        assert output["result"]["data"][0]["usage"] == "fab job <command> [flags]"
+
     @pytest.mark.parametrize("alias", fab_constant.INTERACTIVE_HELP_COMMANDS)
     def test_handle_command_root_text_help_success(
         self,

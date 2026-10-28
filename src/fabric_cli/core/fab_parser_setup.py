@@ -174,9 +174,9 @@ class CustomArgumentParser(argparse.ArgumentParser):
     def print_help(self, file: Optional["SupportsWrite[str]"] = None) -> None:
         from fabric_cli.core.fab_help import HelpRequest
 
-        fab_ui.print_help_request(HelpRequest(self), file=file)
+        fab_ui.print_help_request(HelpRequest(self))
 
-    def print_text_help(self, file: Optional["SupportsWrite[str]"] = None) -> None:
+    def print_text_help(self) -> None:
         command_name = self.prog.split()[-1]
 
         help_functions = {
@@ -199,7 +199,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         if command_name in help_functions:
             help_functions[command_name]()
         else:
-            super().print_help(file)
+            super().print_help()
 
     def set_mode(self, mode):
         self.fab_mode = mode

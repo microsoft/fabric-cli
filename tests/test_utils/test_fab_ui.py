@@ -5,7 +5,6 @@ import json
 import platform
 from argparse import Namespace
 from enum import Enum
-from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -133,29 +132,11 @@ def test_print_output_format_help_in_args_success(
     captured = capsys.readouterr()
     assert captured.err == ""
     if output_format == "text":
-        help_text.assert_called_once_with(None)
+        help_text.assert_called_once_with()
         assert captured.out == parser.format_help()
     else:
         help_text.assert_not_called()
         assert json.loads(captured.out)["result"]["data"] == [data]
-
-
-def test_print_output_format_help_stream_success(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    _, subparsers = create_parser_and_subparsers()
-    parser = subparsers.choices["mkdir"]
-    stream = StringIO()
-    args = Namespace(
-        command="mkdir",
-        output_format="text",
-        help=HelpRequest(parser),
-        help_file=stream,
-    )
-    ui.print_output_format(args)
-    assert stream.getvalue() == parser.format_help()
-    captured = capsys.readouterr()
-    assert captured.out == captured.err == ""
 
 
 def test_print_output_format_without_help_success(

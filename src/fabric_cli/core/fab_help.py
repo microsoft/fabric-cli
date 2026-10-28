@@ -44,7 +44,9 @@ def child_parsers(
 
 def canonical_command(parser: argparse.ArgumentParser) -> str:
     """Return the canonical command name used in help response envelopes."""
-    parts = parser.prog.split()[1:]
+    parts = parser.prog.split()
+    if parts and parts[0] == "fab":
+        parts = parts[1:]
     return " ".join(parts) or "fab"
 
 
@@ -76,14 +78,32 @@ def resolve_help(
         if token == "--":
             break
         options = current._option_string_actions
-        spelling, separator, attached = token.partition("=")
+        spelling, separator, value = token.partition("=")
+        attached: Optional[str] = value
         action = options.get(spelling)
-        if action is None and token.startswith("-") and not token.startswith("--"):
-            # argparse permits attached short-option values, e.g. -c"mkdir --help".
-            short = options.get(token[:2])
-            if short is not None and short.nargs != 0:
-                action = short
-                spelling, separator, attached = token[:2], "=", token[2:]
+        if action is None and _is_option(token):
+            matches = current._get_option_tuples(token)
+            if len(matches) > 1:
+                request.error = "An ambiguous option was supplied."
+                index += 1
+                continue
+            if matches:
+                action, spelling = matches[0][:2]
+                # argparse versions differ in tuple size; the explicit value is last.
+                attached = matches[0][-1]
+                separator = "=" if attached is not None else ""
+                if (
+                    len(spelling) == 2
+                    and token.startswith(spelling)
+                    and not token.startswith(f"{spelling}=")
+                ):
+                    while action is not None and action.nargs == 0 and attached:
+                        if isinstance(action, argparse._HelpAction):
+                            found = True
+                        spelling = f"-{attached[0]}"
+                        attached = attached[1:] or None
+                        separator = "=" if attached is not None else ""
+                        action = options.get(spelling)
         if action is not None:
             if isinstance(action, argparse._HelpAction):
                 found = True
@@ -96,7 +116,7 @@ def resolve_help(
                     request.error = "A boolean flag does not accept a value."
                 index += 1
                 continue
-            values = [attached] if separator else []
+            values = [attached] if separator and attached is not None else []
             index += 1
             nargs = action.nargs
             limit = (

@@ -73,6 +73,9 @@ fab mkdir -h --output_format json
 
 # Subcommand help
 fab job run --help --output_format json
+
+# Help accepts combined short flags
+`fab ls -lh --output_format json`
 ```
 
 In interactive mode, omit the `fab` prefix:

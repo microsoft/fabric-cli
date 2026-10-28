@@ -19,8 +19,6 @@ from fabric_cli.utils import fab_lazy_load
 from fabric_cli.utils import fab_util
 
 if TYPE_CHECKING:
-    from _typeshed import SupportsWrite
-
     from fabric_cli.core.fab_help import HelpRequest
 
 
@@ -109,7 +107,7 @@ def print_output_format(
 
     Args:
         args: The command arguments namespace containing command and output_format.
-            For help, help contains the HelpRequest and help_file the optional stream.
+            For help, help contains the HelpRequest.
         message: Success message to display
         data: Optional data to include in output
         hidden_data: Optional hidden data to include in output
@@ -148,9 +146,7 @@ def print_output_format(
             help_request: Optional["HelpRequest"] = getattr(args, "help", None)
             if help_request:
                 parser = help_request.parser
-                getattr(parser, "print_text_help", parser.print_help)(
-                    getattr(args, "help_file", None)
-                )
+                getattr(parser, "print_text_help", parser.print_help)()
                 return
             if (
                 truncate_columns
@@ -271,9 +267,7 @@ def _help_output_format(selectors: list[str]) -> str:
         return "text"
 
 
-def print_help_request(
-    request: "HelpRequest", file: Optional["SupportsWrite[str]"] = None
-) -> int:
+def print_help_request(request: "HelpRequest") -> int:
     """Print help through the common output pipeline and return its exit code."""
     from fabric_cli.core.fab_help import build_help_data, canonical_command
 
@@ -298,7 +292,6 @@ def print_help_request(
                 command=command,
                 output_format=format_type,
                 help=request,
-                help_file=file,
             ),
             data=data,
         )

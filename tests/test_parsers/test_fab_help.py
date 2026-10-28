@@ -35,6 +35,20 @@ def parser() -> CustomArgumentParser:
     return create_parser_and_subparsers()[0]
 
 
+@pytest.mark.parametrize(
+    ("prog", "expected"),
+    [
+        ("fab", "fab"),
+        ("fab job", "job"),
+        ("job", "job"),
+        ("fab job run", "job run"),
+        ("job run", "job run"),
+    ],
+)
+def test_canonical_command_prefix_success(prog: str, expected: str) -> None:
+    assert canonical_command(argparse.ArgumentParser(prog=prog)) == expected
+
+
 def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -> None:
     for node in _nodes(parser):
         data = build_help_data(node)
@@ -217,6 +231,78 @@ def test_resolve_help_success(
     assert request is not None
     assert canonical_command(request.parser) == command
     assert request.error is None
+
+
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        ["ls", "-la", "--help", "--output_format=json"],
+        ["ls", "--out=json", "--help"],
+        ["ls", "-lh", "--output_format=json"],
+        ["ls", "-alh", "--out", "json"],
+        ["ls", "-lqname", "--help", "--out=json"],
+        ["ls", "-lq--help", "--he", "--out=json"],
+        ["ls", "-la", "--out", "json", "--he"],
+    ],
+)
+def test_argparse_option_spellings_json_help_success(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    tokens: list[str],
+) -> None:
+    request = resolve_help(parser, tokens)
+    assert request is not None
+    assert request.error is None
+    assert request.selectors == ["json"]
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args(tokens)
+    assert exit_info.value.code == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["command"] == "ls"
+    assert output["status"] == "Success"
+
+
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        ["ls", "-q--help"],
+        ["ls", "-lq--help"],
+        ["ls", "--que=--help"],
+        ["--comm=job --help"],
+        ["ls", "--", "-lh"],
+    ],
+)
+def test_argparse_option_value_boundaries_success(
+    parser: CustomArgumentParser, tokens: list[str]
+) -> None:
+    assert resolve_help(parser, tokens) is None
+
+
+def test_ambiguous_option_abbreviation_failure(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    parser = CustomArgumentParser(prog="fab example")
+    parser.add_argument("--other")
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args(["--o=json", "--help", "--output_format=json"])
+    assert exit_info.value.code == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "Failure"
+
+
+def test_disabled_option_abbreviation_failure() -> None:
+    parser = CustomArgumentParser(prog="fab example", allow_abbrev=False)
+    request = resolve_help(parser, ["--out=json", "--help"])
+    assert request is not None
+    assert request.error is not None
+
+
+@pytest.mark.parametrize("token", ["-lx", "-la=yes", "-lhx"])
+def test_invalid_combined_options_failure(
+    parser: CustomArgumentParser, token: str
+) -> None:
+    request = resolve_help(parser, ["ls", token, "--help", "--output_format=json"])
+    assert request is not None
+    assert request.error is not None
 
 
 @pytest.mark.parametrize(
