@@ -209,11 +209,7 @@ def init(args: Namespace) -> Any:
 
 
 def logout(args: Namespace) -> None:
-    FabAuth().logout()
-
-    # Clear cache and context including current and stale context files
-    utils_mem_store.clear_caches()
-    Context().reset_context()
+    FabAuth().logout_session()
 
     fab_ui.print_output_format(args, message="Logged out of Fabric account")
 
@@ -221,8 +217,10 @@ def logout(args: Namespace) -> None:
 def status(args: Namespace) -> None:
     auth = FabAuth()
     initial_identity_type = auth.get_identity_type()
+    token_info_lookup_failed = False
 
     def __get_token_info(scope):
+        nonlocal token_info_lookup_failed
         try:
             token = auth.get_access_token(scope, interactive_renew=False)
         except FabricCLIError as e:
@@ -230,6 +228,7 @@ def status(args: Namespace) -> None:
                 fab_constant.ERROR_UNAUTHORIZED,
                 fab_constant.ERROR_AUTHENTICATION_FAILED,
             ]:
+                token_info_lookup_failed = True
                 return {}
             else:
                 raise e
@@ -265,12 +264,18 @@ def status(args: Namespace) -> None:
     identity_type = auth.get_identity_type()
     tenant_id = auth.get_tenant_id()
 
-    # Reacquire status after drift to discard stale values and allow env token fallback
-    if identity_type is None and initial_identity_type == "azure_cli":
+    # Refresh token information after identity drift failures, when the session
+    # switches to environment-variable tokens or clears the Azure CLI identity
+    refresh_token_info = token_info_lookup_failed and fabric_secret != "N/A"
+    if refresh_token_info or (
+        identity_type is None and initial_identity_type == "azure_cli"
+    ):
         token_info = __get_token_info(fab_constant.SCOPE_FABRIC_DEFAULT)
         fabric_secret = __mask_token(fab_constant.SCOPE_FABRIC_DEFAULT)
         storage_secret = __mask_token(fab_constant.SCOPE_ONELAKE_DEFAULT)
         azure_secret = __mask_token(fab_constant.SCOPE_AZURE_DEFAULT)
+        identity_type = auth.get_identity_type()
+        tenant_id = auth.get_tenant_id()
 
     upn = token_info.get("upn") or "N/A"
     oid = token_info.get("oid") or "N/A"
