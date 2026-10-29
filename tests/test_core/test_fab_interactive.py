@@ -56,18 +56,119 @@ class TestInteractiveCLI:
         mock_parser,
     ):
         """Test help command and its variations."""
-        for cmd in fab_constant.INTERACTIVE_HELP_COMMANDS:
-            result = interactive_cli.handle_command(cmd)
-            assert result is False
+        from fabric_cli.core.fab_help import HelpRequest
 
-        assert mock_parser.parse_args.call_count == len(
-            fab_constant.INTERACTIVE_HELP_COMMANDS
+        with (
+            patch(
+                "fabric_cli.core.fab_interactive.resolve_help",
+                return_value=HelpRequest(mock_parser),
+            ) as resolve,
+            patch(
+                "fabric_cli.core.fab_interactive.utils_ui.print_help_request"
+            ) as render,
+        ):
+            for cmd in fab_constant.INTERACTIVE_HELP_COMMANDS:
+                assert interactive_cli.handle_command(cmd) is False
+                resolve.assert_called_with(mock_parser, ["--help"])
+            assert render.call_count == len(fab_constant.INTERACTIVE_HELP_COMMANDS)
+        mock_print_log_file_path.assert_not_called()
+
+    @pytest.mark.parametrize("config_kind", ["invalid_object", "unreadable"])
+    @pytest.mark.parametrize(
+        ("command", "target"),
+        [
+            ("help", "fab"),
+            ("job --help", "job"),
+            ("job run -h", "job run"),
+            ("ls -lh", "ls"),
+        ],
+    )
+    @pytest.mark.parametrize("selector", ["", "--output_format=json"])
+    def test_help_before_config_logging_success(
+        self,
+        interactive_cli: InteractiveCLI,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        config_kind: str,
+        command: str,
+        target: str,
+        selector: str,
+    ) -> None:
+        parser, subparsers = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        monkeypatch.setattr(interactive_cli, "subparsers", subparsers)
+        config = tmp_path / "config.json"
+        config.write_text("[]", encoding="utf-8")
+        monkeypatch.setattr(fab_state_config, "config_file", str(config))
+
+        with (
+            patch(
+                "fabric_cli.core.fab_interactive.fab_logger.get_log_file_path"
+            ) as log,
+            patch(
+                "fabric_cli.core.fab_state_config.get_config",
+                wraps=fab_state_config.get_config,
+            ) as get_config,
+            (
+                patch("builtins.open", side_effect=PermissionError)
+                if config_kind == "unreadable"
+                else patch("builtins.open", wraps=open)
+            ),
+        ):
+            assert interactive_cli.handle_command(f"{command} {selector}") is False
+        captured = capsys.readouterr()
+        log.assert_not_called()
+        get_config.assert_not_called()
+        if selector:
+            output = json.loads(captured.out)
+            assert output["status"] == "Success"
+            assert output["command"] == target
+            assert captured.err == ""
+        else:
+            assert (
+                "Manage and schedule jobs." if target == "job" else "Usage:"
+            ) in captured.out
+            assert "using text for help" in captured.err
+
+        assert interactive_cli.handle_command("help --output_format=json") is False
+        assert json.loads(capsys.readouterr().out)["status"] == "Success"
+
+    def test_interactive_session_continues_after_help_with_invalid_config_success(
+        self,
+        interactive_cli: InteractiveCLI,
+        mock_context: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        parser, subparsers = create_parser_and_subparsers()
+        parser.set_mode(fab_constant.FAB_MODE_INTERACTIVE)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        monkeypatch.setattr(interactive_cli, "subparsers", subparsers)
+        config = tmp_path / "config.json"
+        config.write_text("[]", encoding="utf-8")
+        monkeypatch.setattr(fab_state_config, "config_file", str(config))
+        commands = iter(
+            ["help --output_format=json", "job --help --output_format=json", "quit"]
         )
-        mock_parser.parse_args.assert_called_with(["--help"])
-        # Verify log file path is printed for each command
-        assert mock_print_log_file_path.call_count == len(
-            fab_constant.INTERACTIVE_HELP_COMMANDS
-        )
+
+        def prompt(*args: object, **kwargs: object) -> str:
+            command = next(commands)
+            if command == "quit":
+                config.write_text('{"debug_enabled": "false"}', encoding="utf-8")
+            return command
+
+        with patch.object(interactive_cli.session, "prompt", side_effect=prompt) as ask:
+            interactive_cli.start_interactive()
+
+        captured = capsys.readouterr()
+        assert ask.call_count == 3
+        assert captured.out.count('"status": "Success"') == 2
+        assert "Error in interactive session" not in captured.out
+        assert captured.err == ""
+        assert interactive_cli._is_running is False
 
     @pytest.mark.parametrize("alias", fab_constant.INTERACTIVE_HELP_COMMANDS)
     @pytest.mark.parametrize(
@@ -536,6 +637,9 @@ def mock_parser():
     parser = Mock()
     parser.set_mode = Mock()
     parser.error = Mock()
+    parser._actions = []
+    parser._option_string_actions = {}
+    parser._get_option_tuples.return_value = []
     yield parser
 
 
