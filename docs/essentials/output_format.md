@@ -85,8 +85,6 @@ help --output_format json
 help --output_format text
 ```
 
-Interactive help remains available if the saved configuration cannot be read.
-
 JSON help follows this response structure. Array contents depend on the selected
 command; root help lists available commands and global flags.
 

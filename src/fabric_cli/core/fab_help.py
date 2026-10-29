@@ -257,11 +257,12 @@ def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
             description = example.lstrip("#").strip()
         elif example:
             invocation = example.removeprefix("$").strip()
-            if not invocation.startswith("fab "):
+            if "interactive mode" in description.lower():
+                invocation = invocation.removeprefix("fab ")
+            elif not invocation.startswith("fab "):
                 invocation = f"fab {invocation}"
-            examples.append({"description": description, "command": invocation})
-            if len(examples) == 2:
-                break
+            examples.append(
+                {"description": description, "command": invocation})
     notes = list(getattr(parser, "fab_notes", []))
     links = ["https://aka.ms/fabric-cli"]
     for item in getattr(parser, "fab_learnmore", []):

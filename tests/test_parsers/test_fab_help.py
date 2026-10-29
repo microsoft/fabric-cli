@@ -67,6 +67,11 @@ def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -
         }
         assert data["cli_version"] == __version__
         assert data["schema_version"] == "1.0"
+        assert len(data["examples"]) == sum(
+            1
+            for example in getattr(node, "fab_examples", [])
+            if example.strip() and not example.strip().startswith("#")
+        )
         assert "--skill" not in [flag["name"] for flag in data["flags"]]
         assert len(data["flags"]) == len({flag["name"] for flag in data["flags"]})
         expected = [
@@ -406,4 +411,74 @@ def test_examples_preserve_payload_quoting_success() -> None:
             "description": "Pass JSON",
             "command": """fab example --input '{"key": "--help"}'""",
         }
+    ]
+
+
+@pytest.mark.parametrize("operation", ["login", "logout", "status"])
+def test_auth_examples_preserve_modes_success(
+    parser: CustomArgumentParser, operation: str
+) -> None:
+    node = next(
+        node
+        for node in _nodes(parser)
+        if canonical_command(node) == f"auth {operation}"
+    )
+    expected = [
+        {
+            "description": "interactive mode",
+            "command": f"auth {operation}",
+        },
+        {
+            "description": "command_line mode",
+            "command": f"fab auth {operation}",
+        },
+    ]
+    if operation == "login":
+        expected.extend(
+            [
+                {
+                    "description": "command_line mode using Azure CLI auth",
+                    "command": "fab auth login --azure-cli",
+                },
+                {
+                    "description": "command_line mode using service principal auth",
+                    "command": "fab auth login -u <client_id> -p <client_secret> --tenant <tenant_id>",
+                },
+                {
+                    "description": "command_line mode using system assigned managed identity auth",
+                    "command": "fab auth login --identity",
+                },
+                {
+                    "description": "command_line mode using user assigned managed identity auth",
+                    "command": "fab auth login -i -u <client_id>",
+                },
+            ]
+        )
+    assert build_help_data(node)["examples"] == expected
+    assert getattr(node, "fab_examples")[:2] == [
+        "# interactive mode",
+        f"$ auth {operation}\n",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("description", "invocation", "expected"),
+    [
+        ("interactive mode", "example", "example"),
+        ("interactive mode", "fab example", "example"),
+        ("command_line mode", "example", "fab example"),
+        ("command_line mode", "fab example", "fab example"),
+        ("List items", "ls -l", "fab ls -l"),
+        ("List items", "fab ls -l", "fab ls -l"),
+    ],
+)
+def test_example_prefix_matches_mode_success(
+    description: str, invocation: str, expected: str
+) -> None:
+    parser = CustomArgumentParser(
+        prog="fab example",
+        fab_examples=[f"# {description}", f"$ {invocation}"],
+    )
+    assert build_help_data(parser)["examples"] == [
+        {"description": description, "command": expected}
     ]
