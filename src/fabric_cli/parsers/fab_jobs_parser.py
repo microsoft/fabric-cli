@@ -13,7 +13,7 @@ _jobs_module_path = "fabric_cli.commands.jobs.fab_jobs"
 
 commands = {
     "Commands": {
-        "start": "Start an item asynchronously.",
+        "start": "Start an item asynchronously, or wait for completion with --wait.",
         "run": "Run an item synchronously.",
         "run-cancel": "Cancel a running or scheduled job.",
         "run-list": "Retrieve the status of an item or scheduled job run.",
@@ -35,7 +35,11 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         "# run a pipeline async",
         "$ job start pip1.DataPipeline\n",
         "# run a notebook async",
-        "$ job start nb1.Notebook --input <json_path>",
+        "$ job start nb1.Notebook --input <json_path>\n",
+        "# start a pipeline and wait for completion",
+        "$ job start pip1.DataPipeline --wait\n",
+        "# start a pipeline and wait with a 60 second timeout",
+        "$ job start pip1.DataPipeline --wait --timeout 60",
     ]
 
     start_parser = jobs_subparsers.add_parser(
@@ -61,6 +65,22 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
     start_parser.add_argument(
         "-i", "--input", nargs="+", help="JSON payload, inline or path. Optional"
+    )
+    start_parser.add_argument(
+        "-w", "--wait", action="store_true", help="Wait for the job to complete. Optional"
+    )
+    start_parser.add_argument(
+        "--timeout",
+        metavar="",
+        help="Timeout in seconds. Requires --wait. Optional",
+        type=int,
+    )
+    start_parser.add_argument(
+        "--polling_interval",
+        metavar="",
+        dest="polling_interval",
+        help="Custom job status polling interval in seconds. Requires --wait. Optional",
+        type=validate_positive_int,
     )
 
     start_parser.usage = f"{utils_error_parser.get_usage_prog(start_parser)}"

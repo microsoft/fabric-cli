@@ -13,7 +13,7 @@ The `job` commands provide tools for starting, running, monitoring, and scheduli
 
 | Command         | Description                | Usage                                                                 |
 |-----------------|---------------------------|-----------------------------------------------------------------------|
-| `job start`     | Start an item (async)     | `job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>]` |
+| `job start`     | Start an item (async by default) | `job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>] [--wait [--timeout <seconds>] [--polling_interval <seconds>]]` |
 | `job run`       | Run an item (sync)        | `job run <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>] [--timeout <seconds>]` |
 | `job run-cancel`| Cancel an item run        | `job run-cancel <path> --id <id> [--wait]`                          |
 | `job run-list`  | List item or scheduled job runs | `job run-list <path> [--schedule]`                              |
@@ -27,11 +27,13 @@ The `job` commands provide tools for starting, running, monitoring, and scheduli
 ### start
 
 Start an item asynchronously and return immediately with a job ID.
+Use `--wait` (or `-w`) to wait for completion with the same completion and
+failure handling as `job run`.
 
 **Usage:**
 
 ```
-fab job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>]
+fab job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>] [--wait [--timeout <seconds>] [--polling_interval <seconds>]]
 ```
 
 **Parameters:**
@@ -40,12 +42,17 @@ fab job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>]
 - `-P, --params`: Parameters in name:type=value format, comma-separated. Optional.
 - `-C, --config`: JSON configuration for notebooks. Optional.
 - `-i, --input`: JSON payload for additional configuration. Optional.
+- `-w, --wait`: Wait for the job to complete. Optional.
+- `--timeout`: Maximum time to wait for completion in seconds. Requires `--wait`. Optional.
+- `--polling_interval`: Custom job status polling interval in seconds. Requires `--wait`. Optional.
 
 **Examples:**
 ```
 fab job start pipeline1.datapipeline
 fab job start notebook1.notebook -P param1:string=value1,param2:int=42
 fab job start notebook1.notebook -C '{"spark.executor.memory": "4g"}'
+fab job start ws1.Workspace/pipeline1.DataPipeline --wait
+fab job start ws1.Workspace/notebook1.Notebook --wait --timeout 600
 ```
 
 ---
