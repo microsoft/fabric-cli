@@ -18,6 +18,7 @@ def add_global_flags(parser) -> None:
     parser.add_argument(
         "--output_format",
         required=False,
+        default=argparse.SUPPRESS,
         choices=["json", "text"],
         help="Override output format type. Optional",
     )
