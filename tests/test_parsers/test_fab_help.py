@@ -74,6 +74,9 @@ def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -
         )
         assert "--skill" not in [flag["name"] for flag in data["flags"]]
         assert len(data["flags"]) == len({flag["name"] for flag in data["flags"]})
+        for flag in data["flags"]:
+            if flag["required"]:
+                assert flag["name"] in data["usage"].removesuffix(" [flags]").split()
         expected = [
             action.dest
             for action in node._actions
@@ -166,6 +169,71 @@ def test_representative_help_values_success(
     node = next(node for node in _nodes(parser) if canonical_command(node) == command)
     data = build_help_data(node)
     assert {field: data[field] for field in expected} == expected
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (["deploy"], "fab deploy --config <config> [flags]"),
+        (
+            ["export"],
+            "fab export <path> --output <output> [<output> ...] [flags]",
+        ),
+        (
+            ["import"],
+            "fab import <path> --input <input> [<input> ...] [flags]",
+        ),
+        (
+            ["table", "load"],
+            "fab table load <path> --file <file> [<file> ...] [flags]",
+        ),
+        (
+            ["set"],
+            "fab set <path> --query <query> --input <input> [<input> ...] [flags]",
+        ),
+    ],
+)
+def test_required_flags_json_usage_success(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    tokens: list[str],
+    expected: str,
+) -> None:
+    node = next(
+        node for node in _nodes(parser) if canonical_command(node) == " ".join(tokens)
+    )
+    text_help = node.format_help()
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args([*tokens, "--help", "--output_format=json"])
+    assert exit_info.value.code == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["result"]["data"][0]["usage"] == expected
+    assert node.format_help() == text_help
+
+
+@pytest.mark.parametrize(
+    ("nargs", "expected"),
+    [
+        (None, "--value <value>"),
+        ("?", "--value [<value>]"),
+        ("*", "--value [<value> ...]"),
+        ("+", "--value <value> [<value> ...]"),
+        (2, "--value <value> <value>"),
+    ],
+)
+def test_required_flag_value_arity_usage_success(
+    nargs: str | int | None, expected: str
+) -> None:
+    parser = CustomArgumentParser(prog="fab example")
+    parser.add_argument("--value", required=True, nargs=nargs)
+    parser.add_argument("--optional")
+    assert build_help_data(parser)["usage"] == f"fab example {expected} [flags]"
+
+
+def test_required_boolean_flag_usage_success() -> None:
+    parser = CustomArgumentParser(prog="fab example")
+    parser.add_argument("-f", "--force", required=True, action="store_true")
+    assert build_help_data(parser)["usage"] == "fab example --force [flags]"
 
 
 def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:

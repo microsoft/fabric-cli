@@ -4,6 +4,7 @@
 """Resolve help controls and describe registered parsers without executing commands."""
 
 import argparse
+from copy import copy
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Optional
 
@@ -224,6 +225,8 @@ def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
     command = canonical_command(parser)
     args: list[dict[str, Any]] = []
     flags: list[dict[str, Any]] = []
+    required_flags: list[str] = []
+    formatter = argparse.HelpFormatter(parser.prog)
     help_spellings: list[str] = []
     for action in parser._actions:
         if (
@@ -236,6 +239,13 @@ def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
             continue
         entry = _describe_action(action)
         (flags if action.option_strings else args).append(entry)
+        if action.option_strings and action.required:
+            required_flag = entry["name"]
+            if action.nargs != 0:
+                usage_action = copy(action)
+                usage_action.metavar = action.metavar or f"<{action.dest}>"
+                required_flag += f" {formatter._format_args(usage_action, action.dest)}"
+            required_flags.append(required_flag)
     if help_spellings:
         flags.insert(
             0,
@@ -280,6 +290,8 @@ def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
     suffix = " <command>" if children else ""
     if usage_args:
         suffix += f" {usage_args}"
+    if required_flags:
+        suffix += f" {' '.join(required_flags)}"
     return {
         "schema_version": "1.0",
         "cli_version": __version__,
