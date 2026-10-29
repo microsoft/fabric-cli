@@ -9,12 +9,17 @@ import pytest
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core.fab_types import ItemType
 from tests.test_commands.conftest import (
+    clean_plan_item_companion_items,
     export_item_default_format_parameters,
     export_item_format_parameters,
     export_item_invalid_format_parameters,
     export_item_types_parameters,
     export_item_with_extension_parameters,
+    mkdir,
+    rm,
 )
+from tests.test_commands.processors import generate_random_string
+from tests.test_commands.utils import cli_path_join
 
 
 class TestExport:
@@ -58,6 +63,48 @@ class TestExport:
         assert any(file.name == ".platform" for file in files)
         mock_print_done.assert_called_once()
         mock_print_warning.assert_called_once()
+
+    def test_export_plan_item_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        tmp_path,
+        mock_print_warning,
+        vcr_instance,
+        cassette_name,
+    ):
+        # Setup
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{ItemType.PLAN}"
+        )
+        mkdir(item_full_path)
+
+        # Reset mock
+        mock_print_done.reset_mock()
+        mock_print_warning.reset_mock()
+
+        # Execute command
+        cli_executor.exec_command(
+            f"export {item_full_path} --output {str(tmp_path)} --force"
+        )
+
+        # Assert
+        export_path = tmp_path / f"{item_display_name}.{ItemType.PLAN.value}"
+        assert export_path.is_dir()
+        files = list(export_path.iterdir())
+        expected_file_count = 2
+
+        assert len(files) == expected_file_count
+        assert any(file.suffix == ".json" for file in files)
+        assert any(file.name == ".platform" for file in files)
+        mock_print_done.assert_called_once()
+        mock_print_warning.assert_called_once()
+
+        # Cleanup
+        rm(item_full_path)
+        clean_plan_item_companion_items(workspace)
 
     @export_item_with_extension_parameters
     def test_export_item_home_directory_path_success(
@@ -352,6 +399,11 @@ class TestExport:
             ItemType.LAKEHOUSE: "Invalid format. No formats are supported",
             ItemType.GRAPH_MODEL: "Invalid format. No formats are supported",
             ItemType.ONTOLOGY: "Invalid format. No formats are supported",
+            ItemType.ANOMALY_DETECTOR: "Invalid format. No formats are supported",
+            ItemType.EVENT_SCHEMA_SET: "Invalid format. No formats are supported",
+            ItemType.ORG_APP: "Invalid format. No formats are supported",
+            ItemType.PLAN: "Invalid format. No formats are supported",
+            ItemType.DATA_BUILD_TOOL_JOB: "Invalid format. No formats are supported",
         }
 
         # Assert
