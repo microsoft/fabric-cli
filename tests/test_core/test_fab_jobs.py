@@ -127,6 +127,42 @@ def test_job_start_wait_options_without_wait_failure(
     job_mocks.start.assert_not_called()
 
 
+@pytest.mark.parametrize("command", ["start", "run"])
+def test_job_negative_timeout_failure(command: str, job_mocks: Namespace) -> None:
+    flags = ["--wait"] if command == "start" else []
+    args = _parse_job_args(command, [*flags, "--timeout", "-1"])
+
+    with pytest.raises(FabricCLIError) as exc_info:
+        inspect.unwrap(fab_jobs.run_command)(args)
+
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+    job_mocks.start.assert_not_called()
+    job_mocks.poll.assert_not_called()
+    job_mocks.sleep.assert_not_called()
+
+
+@pytest.mark.parametrize("command", ["start", "run"])
+def test_job_zero_timeout_success(
+    command: str, job_mocks: Namespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    flags = ["--wait"] if command == "start" else []
+    args = _parse_job_args(command, [*flags, "--timeout", "0"])
+    monkeypatch.setattr(
+        fab_jobs.jobs_run.config, "get_config", Mock(return_value="false")
+    )
+    warning = Mock()
+    monkeypatch.setattr(fab_jobs.fab_ui, "print_warning", warning)
+
+    inspect.unwrap(fab_jobs.run_command)(args)
+
+    job_mocks.start.assert_called_once_with(args, None)
+    job_mocks.sleep.assert_called_once_with(0)
+    job_mocks.poll.assert_not_called()
+    warning.assert_called_once_with(
+        "Job instance 'test-job-id' timed out after 0 seconds"
+    )
+
+
 def test_job_start_wait_timeout_success(
     job_mocks: Namespace, monkeypatch: pytest.MonkeyPatch
 ) -> None:
