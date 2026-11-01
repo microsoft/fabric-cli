@@ -72,13 +72,12 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     start_parser.add_argument(
         "--timeout",
         metavar="",
-        help="Timeout in seconds. Requires --wait. Optional",
+        help="Timeout in seconds (0 or greater). Requires --wait. Optional",
         type=int,
     )
     start_parser.add_argument(
         "--polling_interval",
         metavar="",
-        dest="polling_interval",
         help="Custom job status polling interval in seconds. Requires --wait. Optional",
         type=validate_positive_int,
     )

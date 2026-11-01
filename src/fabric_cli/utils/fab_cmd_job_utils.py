@@ -427,7 +427,7 @@ def validate_timeout_polling_interval(args: Namespace) -> None:
     """Validate timeout and polling interval options for job execution.
 
     Wait options require --wait for job start, and the polling
-    interval must be lower than the timeout.
+    interval must be lower than the timeout. Timeouts must be non-negative.
     """
     timeout = getattr(args, "timeout", None)
     polling_interval = getattr(args, "polling_interval", None)
@@ -448,6 +448,12 @@ def validate_timeout_polling_interval(args: Namespace) -> None:
                 ErrorMessages.Common.options_require_wait(options),
                 fab_constant.ERROR_INVALID_INPUT,
             )
+
+    if timeout is not None and timeout < 0:
+        raise FabricCLIError(
+            ErrorMessages.Common.negative_job_timeout(timeout),
+            fab_constant.ERROR_INVALID_INPUT,
+        )
 
     if (
         timeout is not None

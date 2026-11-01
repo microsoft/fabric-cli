@@ -43,7 +43,7 @@ fab job start <path> [-P <params>] [-C <config>] [-i <json_inline_or_path>] [--w
 - `-C, --config`: JSON configuration for notebooks. Optional.
 - `-i, --input`: JSON payload for additional configuration. Optional.
 - `-w, --wait`: Wait for the job to complete. Optional.
-- `--timeout`: Maximum time to wait for completion in seconds. Requires `--wait`. Optional.
+- `--timeout`: Maximum time to wait for completion in seconds (0 or greater). Requires `--wait`. Optional.
 - `--polling_interval`: Custom job status polling interval in seconds. Requires `--wait`. Optional.
 
 **Examples:**
@@ -73,7 +73,7 @@ fab job run <path> [-P <params>] [-C <config>] [-i <json_path>] [--timeout <seco
 - `-P, --params`: Parameters in name:type=value format, comma-separated. Optional.
 - `-C, --config`: JSON configuration for notebooks. Optional.
 - `-i, --input`: JSON payload for additional configuration. Optional.
-- `--timeout`: Maximum time to wait for completion in seconds. Optional.
+- `--timeout`: Maximum time to wait for completion in seconds (0 or greater). Optional.
 - `--polling_interval`: Custom job status polling interval in seconds. Optional.
 
 **Examples:**
