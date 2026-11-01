@@ -29,8 +29,8 @@ def run_command(args: Namespace) -> None:
     utils_job.add_item_props_to_args(args, context)
     utils_job.build_config_from_args(args, context)
     if args.jobs_command == "start":
-        fab_ui.print_grey(f"Starting job (async) for '{args.item}'...")
-        args.wait = False
+        mode = "sync" if args.wait else "async"
+        fab_ui.print_grey(f"Starting job ({mode}) for '{args.item}'...")
     if args.jobs_command == "run":
         fab_ui.print_grey(f"Running job (sync) for '{args.item}'...")
         args.wait = True
