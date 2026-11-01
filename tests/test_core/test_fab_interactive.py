@@ -2,14 +2,16 @@
 # Licensed under the MIT License.
 
 import argparse
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from fabric_cli.core import fab_constant
 from fabric_cli.core.fab_commands import Command
+from fabric_cli.core.fab_decorators import handle_exceptions
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_interactive import InteractiveCLI
-
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
 
 class TestInteractiveCLI:
     """Test suite for InteractiveCLI class functionality."""
@@ -159,6 +161,38 @@ class TestInteractiveCLI:
         mock_print_log_file_path.assert_called_once()
 
     # Exception Handling Tests
+    @pytest.mark.parametrize("command", ["ls", "pwd"])
+    def test_start_interactive_continues_after_unflagged_command_error(
+        self,
+        command: str,
+        interactive_cli,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_context,
+        mock_print_ui,
+        mock_print_log_file_path,
+    ) -> None:
+        """An unflagged command error is reported without ending the REPL."""
+        parser, subparsers = create_parser_and_subparsers()
+        error = FabricCLIError("Command failed", fab_constant.ERROR_INVALID_INPUT)
+
+        @handle_exceptions()
+        def fail(args: argparse.Namespace) -> None:
+            raise error
+
+        subparsers.choices[command].set_defaults(func=fail)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        monkeypatch.setattr(interactive_cli, "subparsers", subparsers)
+        monkeypatch.setattr(interactive_cli, "session", Mock())
+        interactive_cli.session.prompt.side_effect = [command, "quit"]
+
+        with patch("fabric_cli.utils.fab_ui.print_output_error") as print_error:
+            interactive_cli.start_interactive()
+
+        print_error.assert_called_once_with(error, command, output_format_type=None)
+        assert interactive_cli.session.prompt.call_count == 2
+        mock_print_ui.assert_called_with(fab_constant.INTERACTIVE_EXIT_MESSAGE)
+        assert interactive_cli._is_running is False
+
     def test_handle_command_system_exit_exception_success(
         self, interactive_cli, mock_subparsers, mock_print_log_file_path
     ):
@@ -336,16 +370,16 @@ class TestInteractiveCLI:
     def test_interactive_cli_singleton_pattern_success(self):
         """Test that InteractiveCLI follows singleton pattern"""
         from fabric_cli.core.fab_interactive import InteractiveCLI
-    
+
         with patch("fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers") as mock_get_parsers:
             mock_parser = type('MockParser', (), {'set_mode': lambda self, mode: None})()
             mock_subparsers = object()
             mock_get_parsers.return_value = (mock_parser, mock_subparsers)
-            
+
             # Create two instances
             instance1 = InteractiveCLI()
             instance2 = InteractiveCLI()
-            
+
             # Should be the same instance
             assert instance1 is instance2
 
@@ -353,14 +387,14 @@ class TestInteractiveCLI:
         """Test mode switching creates singleton and launches interactive CLI"""
         with patch("fabric_cli.core.fab_interactive.InteractiveCLI") as mock_interactive_cli:
             from unittest.mock import Mock
-            
+
             mock_cli_instance = Mock()
             mock_cli_instance._is_running = False
             mock_interactive_cli.return_value = mock_cli_instance
-            
+
             from fabric_cli.core.fab_interactive import start_interactive_mode
             start_interactive_mode()
-            
+
             mock_interactive_cli.assert_called_once()
             mock_cli_instance.start_interactive.assert_called_once()
 
@@ -370,25 +404,24 @@ class TestInteractiveCLI:
              patch("fabric_cli.core.fab_interactive.utils_ui.print") as mock_print:
             from unittest.mock import Mock
             from fabric_cli.core import fab_interactive
-            
+
             mock_cli_instance = Mock()
             mock_cli_instance._is_running = True
             mock_interactive_cli.return_value = mock_cli_instance
-            
+
             # Mock the start_interactive method to simulate the actual behavior
             def mock_start_interactive():
                 if mock_cli_instance._is_running:
                     mock_print("Interactive mode is already running.")
                     return
-            
+
             mock_cli_instance.start_interactive = mock_start_interactive
-            
+
             fab_interactive.start_interactive_mode()
-            
+
             # Should call InteractiveCLI() and then start_interactive should print message
             mock_interactive_cli.assert_called_once()
             mock_print.assert_called_once_with("Interactive mode is already running.")
-
 
     # endregion
 

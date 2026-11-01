@@ -2,13 +2,49 @@
 # Licensed under the MIT License.
 
 import sys
+from argparse import Namespace
 from unittest.mock import patch
 
 import pytest
 
+from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_decorators import handle_exceptions
+from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+
 
 class TestMainModule:
     """Test suite for main module functionality."""
+
+    @pytest.mark.parametrize("command", ["ls", "pwd"])
+    def test_command_string_reports_unflagged_command_error(self, command: str) -> None:
+        """Child-parser dispatch reports the original error and failure code."""
+        from fabric_cli.main import main
+
+        parser, subparsers = create_parser_and_subparsers()
+        error = FabricCLIError("Command failed", fab_constant.ERROR_INVALID_INPUT)
+
+        @handle_exceptions()
+        def fail(args: Namespace) -> None:
+            raise error
+
+        subparsers.choices[command].set_defaults(func=fail)
+        with (
+            patch(
+                "fabric_cli.main.get_global_parser_and_subparsers",
+                return_value=(parser, subparsers),
+            ),
+            patch("fabric_cli.main.argcomplete.autocomplete"),
+            patch("fabric_cli.main.fab_state_config.init_defaults"),
+            patch("fabric_cli.main.fab_logger.print_log_file_path"),
+            patch("fabric_cli.utils.fab_ui.print_output_error") as print_error,
+            patch.object(sys, "argv", ["fab", "-c", command]),
+        ):
+            with pytest.raises(SystemExit) as exc:
+                main()
+
+        assert exc.value.code == fab_constant.EXIT_CODE_ERROR
+        print_error.assert_called_once_with(error, command, output_format_type=None)
 
     def test_main_no_args_starts_interactive_mode_success(self):
         """Test that running 'fab' without arguments automatically enters interactive mode."""
