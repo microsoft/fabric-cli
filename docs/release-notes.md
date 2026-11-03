@@ -6,6 +6,29 @@ hide:
 # Release Notes
 
 
+## [v1.9.0](https://pypi.org/project/ms-fabric-cli/v1.9.0) - November 03, 2026
+
+### 🆕 New Items Support
+
+* Add support for AppBackend item by [ohadedry](https://github.com/ohadedry)
+* Add support for EventSchemaSet item by [ohadedry](https://github.com/ohadedry)
+* Add support for OrgApp item by [ohadedry](https://github.com/ohadedry)
+* Add support for OrgAppAudience item by [ohadedry](https://github.com/ohadedry)
+* Add support for Plan item by [ohadedry](https://github.com/ohadedry)
+* Add support for WarehouseSnapshot item by [ohadedry](https://github.com/ohadedry)
+* Add support for AnomalyDetector item by [ohadedry](https://github.com/ohadedry)
+* Add support for DataBuildToolJob item by [ohadedry](https://github.com/ohadedry)
+
+### ✨ New Functionality
+
+* Add --json as a shorthand for --output_format json on all commands by [aviatco](https://github.com/aviatco)
+* Add --wait (-w), --timeout, and --polling_interval to job start to wait for completion like job run. by [tarostok](https://github.com/tarostok)
+
+### ⚡ Additional Optimizations
+
+* Improve polling intervals for Fabric long-running operations. by [ayeshurun](https://github.com/ayeshurun)
+
+
 ## [v1.8.0](https://pypi.org/project/ms-fabric-cli/v1.8.0) - October 19, 2026
 
 ### 🆕 New Items Support
