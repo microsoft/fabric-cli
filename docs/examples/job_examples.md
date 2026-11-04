@@ -22,6 +22,14 @@ Execute a job synchronously, waiting for it to complete before returning control
 fab job run ws1.Workspace/pip1.DataPipeline
 ```
 
+Alternatively, use `job start --wait` (or `-w`) to wait for completion with the
+same completion and failure handling as `job run`. `--timeout` and
+`--polling_interval` are also supported with `--wait`.
+
+```
+fab job start ws1.Workspace/pip1.DataPipeline --wait --timeout 120
+```
+
 #### Run Job with Timeout
 
 Execute a job with a specific timeout limit in seconds.

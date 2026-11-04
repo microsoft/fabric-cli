@@ -30,6 +30,7 @@ from fabric_cli.core.fab_types import (
 )
 from fabric_cli.errors import ErrorMessages
 from tests.test_commands.conftest import (
+    clean_plan_item_companion_items,
     item_type_paramerter,
     unsupported_item_failure_params,
     mkdir_item_with_creation_payload_success_params,
@@ -55,6 +56,32 @@ class TestMkdir:
 
         # Assert
         assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
+
+    def test_mkdir_plan_item_name_already_exists_failure(
+        self,
+        workspace,
+        cli_executor,
+        assert_fabric_cli_error,
+        vcr_instance,
+        cassette_name,
+    ):
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{ItemType.PLAN}"
+        )
+
+        # Setup
+        cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Execute command
+        cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Assert
+        assert_fabric_cli_error(constant.ERROR_ALREADY_EXISTS)
+
+        # Cleanup
+        rm(item_full_path)
+        clean_plan_item_companion_items(workspace)
 
     @item_type_paramerter
     def test_mkdir_item_success(
@@ -86,6 +113,35 @@ class TestMkdir:
 
         # Cleanup
         rm(item_full_path)
+
+    def test_mkdir_plan_item_success(
+        self,
+        workspace,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+    ):
+        item_display_name = generate_random_string(vcr_instance, cassette_name)
+        item_full_path = cli_path_join(
+            workspace.full_path, f"{item_display_name}.{ItemType.PLAN}"
+        )
+
+        # Execute command
+        cli_executor.exec_command(f"mkdir {item_full_path}")
+
+        # Assert
+        mock_print_done.assert_called_once()
+        assert item_display_name in mock_print_done.call_args[0][0]
+        mock_questionary_print.reset_mock()
+        get(item_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+        assert item_display_name in mock_questionary_print.call_args[0][0]
+
+        # Cleanup
+        rm(item_full_path)
+        clean_plan_item_companion_items(workspace)
 
     @unsupported_item_failure_params
     def test_mkdir_unsupported_item_failure(
@@ -432,6 +488,56 @@ class TestMkdir:
 
         # Cleanup
         rm(item_full_path)
+
+    def test_mkdir_warehouse_snapshot_with_creation_payload_success(
+        self,
+        workspace,
+        item_factory,
+        cli_executor,
+        mock_print_done,
+        mock_questionary_print,
+        vcr_instance,
+        cassette_name,
+        upsert_item_to_cache,
+    ):
+        # Setup - create the parent warehouse and retrieve its item ID
+        warehouse = item_factory(ItemType.WAREHOUSE)
+
+        mock_questionary_print.reset_mock()
+        warehouse_id = handle_context.get_command_context(warehouse.full_path).id
+
+        mock_print_done.reset_mock()
+        upsert_item_to_cache.reset_mock()
+
+        warehouse_snapshot_display_name = generate_random_string(
+            vcr_instance, cassette_name
+        )
+        warehouse_snapshot_full_path = cli_path_join(
+            workspace.full_path,
+            (f"{warehouse_snapshot_display_name}." f"{ItemType.WAREHOUSE_SNAPSHOT}"),
+        )
+
+        # Execute command
+        cli_executor.exec_command(
+            f"mkdir {warehouse_snapshot_full_path} "
+            f"-P parentWarehouseId={warehouse_id}"
+        )
+
+        # Assert
+        upsert_item_to_cache.assert_called_once()
+        mock_print_done.assert_called_once()
+        assert warehouse_snapshot_display_name in mock_print_done.call_args[0][0]
+
+        mock_questionary_print.reset_mock()
+        get(warehouse_snapshot_full_path, query=".")
+        mock_questionary_print.assert_called_once()
+
+        result_output = mock_questionary_print.call_args[0][0]
+        assert warehouse_snapshot_display_name in result_output
+        assert warehouse_id in result_output
+
+        # Cleanup
+        rm(warehouse_snapshot_full_path)
 
     def test_mkdir_mounted_data_factory_with_required_params_success(
         self,

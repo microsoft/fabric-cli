@@ -59,6 +59,7 @@ For a complete list of commands, see the [Commands page](../commands/index.md).
 | `--format`         | Specify the format for `table load`                     |
 | `--id`             | Specify the ID for `job`                                |
 | `--interval`       | Specify the interval for `job` schedule                 |
+| `--json`           | Use JSON output (same as `--output_format json`)         |
 | `--mode`           | Specify the operational mode for `table load`           |
 | `--retain_n_hours` | Retain specified hours for `table vacuum`               |
 | `--schedule`       | Set the job schedule for `job`                          |

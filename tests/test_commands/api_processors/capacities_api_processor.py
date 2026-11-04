@@ -98,8 +98,10 @@ class CapacitiesAPIProcessor(BaseAPIProcessor):
             if item["id"].lower() == get_static_data().capacity.id.lower():
                 item["id"] = get_mock_data().capacity.id
                 item["displayName"] = get_mock_data().capacity.name
+                item.pop("azureResourceId", None)
                 new_value.append(item)
             elif item["displayName"] in self.generated_name_mapping:
+                item.pop("azureResourceId", None)
                 new_value.append(item)
 
         data["value"] = new_value

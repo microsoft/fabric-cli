@@ -251,18 +251,21 @@ class ItemType(_BaseItemType):
     RETAIL_DATA_MANAGER = "RetailDataManager"
     HEALTHCARE_DATA_SOLUTION = "Healthcaredatasolution"
     METRIC_SET = "MetricSet"
-    ORG_APP = "OrgApp"
     SUSTAINABILITY_DATA_SOLUTION = "SustainabilityDataSolution"
 
     # API
+    ANOMALY_DETECTOR = "AnomalyDetector"
+    APP_BACKEND = "AppBackend"
     COSMOS_DB_DATABASE = "CosmosDBDatabase"
     DASHBOARD = "Dashboard"
     DATAMART = "Datamart"
+    DATA_BUILD_TOOL_JOB = "DataBuildToolJob"
     DATA_PIPELINE = "DataPipeline"
     DIGITAL_TWIN_BUILDER = "DigitalTwinBuilder"
     DIGITAL_TWIN_BUILDER_FLOW = "DigitalTwinBuilderFlow"
     ENVIRONMENT = "Environment"
     EVENTHOUSE = "Eventhouse"
+    EVENT_SCHEMA_SET = "EventSchemaSet"
     EVENTSTREAM = "Eventstream"
     GRAPH_MODEL = "GraphModel"
     KQL_DASHBOARD = "KQLDashboard"
@@ -276,7 +279,10 @@ class ItemType(_BaseItemType):
     ML_MODEL = "MLModel"
     NOTEBOOK = "Notebook"
     ONTOLOGY = "Ontology"
+    ORG_APP = "OrgApp"
+    ORG_APP_AUDIENCE = "OrgAppAudience"
     PAGINATED_REPORT = "PaginatedReport"
+    PLAN = "Plan"
     REFLEX = "Reflex"
     REPORT = "Report"
     SEMANTIC_MODEL = "SemanticModel"
@@ -291,6 +297,7 @@ class ItemType(_BaseItemType):
     SQL_DATABASE = "SQLDatabase"
     DATAFLOW = "Dataflow"
     VARIABLE_LIBRARY = "VariableLibrary"
+    WAREHOUSE_SNAPSHOT = "WarehouseSnapshot"
 
     def __str__(self):
         return self.value
@@ -498,16 +505,19 @@ format_mapping = {
     ItemType.HEALTHCARE_DATA_SOLUTION: "healthcaredatasolutions",
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainabilitydatasolutions",
     ItemType.METRIC_SET: "metricsets",
-    ItemType.ORG_APP: "orgapps",
     # API
+    ItemType.ANOMALY_DETECTOR: "anomalyDetectors",
+    ItemType.APP_BACKEND: "appBackends",
     ItemType.COSMOS_DB_DATABASE: "cosmosDbDatabases",
     ItemType.DASHBOARD: "dashboards",
+    ItemType.DATA_BUILD_TOOL_JOB: "dataBuildToolJobs",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
     ItemType.DIGITAL_TWIN_BUILDER: "digitalTwinBuilders",
     ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digitalTwinBuilderFlows",
     ItemType.ENVIRONMENT: "environments",
     ItemType.EVENTHOUSE: "eventhouses",
+    ItemType.EVENT_SCHEMA_SET: "eventSchemaSets",
     ItemType.EVENTSTREAM: "eventstreams",
     ItemType.GRAPH_MODEL: "graphModels",
     ItemType.KQL_DASHBOARD: "kqlDashboards",
@@ -521,7 +531,10 @@ format_mapping = {
     ItemType.MIRRORED_DATABASE: "mirroredDatabases",
     ItemType.NOTEBOOK: "notebooks",
     ItemType.ONTOLOGY: "ontologies",
+    ItemType.ORG_APP: "orgApps",
+    ItemType.ORG_APP_AUDIENCE: "orgAppAudiences",
     ItemType.PAGINATED_REPORT: "paginatedReports",
+    ItemType.PLAN: "plans",
     ItemType.REFLEX: "reflexes",
     ItemType.REPORT: "reports",
     ItemType.SQL_DATABASE: "sqlDatabases",
@@ -536,6 +549,7 @@ format_mapping = {
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows",
     ItemType.VARIABLE_LIBRARY: "variablelibraries",
+    ItemType.WAREHOUSE_SNAPSHOT: "warehouseSnapshots",
 }
 
 # Item URI in the Fabric Portal
@@ -549,16 +563,19 @@ uri_mapping = {
     ItemType.HEALTHCARE_DATA_SOLUTION: "health-data-manager",
     ItemType.SUSTAINABILITY_DATA_SOLUTION: "sustainability-data-manager",
     ItemType.METRIC_SET: "metricsets",
-    ItemType.ORG_APP: "orgapps",
     # API
+    ItemType.ANOMALY_DETECTOR: "anomalydetectors",
+    ItemType.APP_BACKEND: "appbackends",
     ItemType.COSMOS_DB_DATABASE: "cosmosdbdatabases",
     ItemType.DASHBOARD: "dashboards",
     ItemType.DATAMART: "datamarts",
+    ItemType.DATA_BUILD_TOOL_JOB: "dbtitems",
     ItemType.DATA_PIPELINE: "pipelines",
     ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
     ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digital-twin-builder-flow",
     ItemType.ENVIRONMENT: "sparkenvironments",
     ItemType.EVENTHOUSE: "eventhouses",
+    ItemType.EVENT_SCHEMA_SET: "eventsets",
     ItemType.EVENTSTREAM: "eventstreams",
     ItemType.GRAPH_MODEL: "graph",
     ItemType.KQL_DASHBOARD: "kustodashboards",
@@ -571,7 +588,10 @@ uri_mapping = {
     ItemType.ML_MODEL: "mlmodels",
     ItemType.NOTEBOOK: "synapsenotebooks",
     ItemType.ONTOLOGY: "ontologies",
+    ItemType.ORG_APP: "orgapps",
+    ItemType.ORG_APP_AUDIENCE: "orgappaudiences",
     ItemType.PAGINATED_REPORT: "rdlreports",
+    ItemType.PLAN: "plans",
     ItemType.REFLEX: "reflexes",
     ItemType.REPORT: "reports",
     ItemType.SEMANTIC_MODEL: "datasets",
@@ -586,6 +606,7 @@ uri_mapping = {
     ItemType.MOUNTED_DATA_FACTORY: "mounteddatafactories",
     ItemType.DATAFLOW: "dataflows-gen2",
     ItemType.VARIABLE_LIBRARY: "variable-libraries",
+    ItemType.WAREHOUSE_SNAPSHOT: "warehousesnapshots",
 }
 
 # Item Payload definition
@@ -616,4 +637,12 @@ definition_format_mapping = {
     ItemType.ENVIRONMENT: {"default": ""},
     ItemType.GRAPH_MODEL: {"default": ""},
     ItemType.ONTOLOGY: {"default": ""},
+    ItemType.ANOMALY_DETECTOR: {"default": ""},
+    ItemType.ORG_APP: {"default": ""},
+    ItemType.ORG_APP_AUDIENCE: {"default": ""},
+    ItemType.APP_BACKEND: {"default": ""},
+    ItemType.EVENT_SCHEMA_SET: {"default": ""},
+    ItemType.PLAN: {"default": ""},
+    ItemType.DATA_BUILD_TOOL_JOB: {"default": ""},
+    ItemType.WAREHOUSE_SNAPSHOT: {"default": ""},
 }

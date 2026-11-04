@@ -33,6 +33,11 @@ def add_type_specific_payload(item: Item, args, payload):
             if params.get("enableschemas", "False").lower() == "true":
                 payload_dict["creationPayload"] = {"enableSchemas": True}
 
+        case ItemType.WAREHOUSE_SNAPSHOT:
+            payload_dict["creationPayload"] = {
+                "parentWarehouseId": params.get("parentwarehouseid"),
+                "snapshotDateTime": params.get("snapshotdatetime", None),
+            }
         case ItemType.WAREHOUSE:
             payload_dict["creationPayload"] = {
                 "defaultCollation": "Latin1_General_100_BIN2_UTF8"
@@ -327,6 +332,9 @@ def get_params_per_item_type(item: Item):
             optional_params = ["enableSchemas"]
         case ItemType.WAREHOUSE:
             optional_params = ["enableCaseInsensitive"]
+        case ItemType.WAREHOUSE_SNAPSHOT:
+            required_params = ["parentWarehouseId"]
+            optional_params = ["snapshotDateTime"]
         case ItemType.KQL_DATABASE:
             optional_params = ["dbType", "eventhouseId", "clusterUri", "databaseName"]
         case ItemType.DIGITAL_TWIN_BUILDER_FLOW:
@@ -794,7 +802,7 @@ def lowercase_keys(data):
 def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
     """Build the optional creationPayload for SQLDatabase creation.
 
-    The payload is built based on the creation mode (params["creationMode"]) and the provided parameters. 
+    The payload is built based on the creation mode (params["creationMode"]) and the provided parameters.
     The supported modes are:
     - New: creationMode, backupRetentionDays, collation
     - Restore: creationMode, restorePointInTime, sourceDatabaseReference
@@ -820,7 +828,6 @@ def _build_sql_database_creation_payload_if_exists(params: dict) -> dict:
 
     if mode_lower == fab_constant.SQL_DATABASE_CREATION_MODE_RESTORE_DELETED.lower():
         return _build_sql_database_restore_deleted_payload(params)
-
 
     raise FabricCLIError(
         ErrorMessages.Mkdir.unsupported_creation_mode(mode),

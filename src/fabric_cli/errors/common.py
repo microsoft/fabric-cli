@@ -163,6 +163,14 @@ class CommonErrors:
         return f"Job instance '{job_id}' Failed"
 
     @staticmethod
+    def options_require_wait(options: list[str]) -> str:
+        return f"{', '.join(options)} can only be used with --wait"
+
+    @staticmethod
+    def negative_job_timeout(timeout: int) -> str:
+        return f"Timeout ({timeout}s) must be greater than or equal to 0"
+
+    @staticmethod
     def file_not_accessible(file_path: str) -> str:
         return f"Cannot access '{file_path}'. No such file or directory"
 
