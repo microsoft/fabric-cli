@@ -72,7 +72,7 @@ The configuration is stored in your Fabric CLI configuration file and applies to
 
 ## JSON Output Schema
 
-### Machine-readable help
+### help in JSON format
 
 Use JSON help to discover commands, arguments, and flags for scripts and automation.
 
