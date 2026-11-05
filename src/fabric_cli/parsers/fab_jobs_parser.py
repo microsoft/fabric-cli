@@ -79,12 +79,13 @@ def register_parser(subparsers: _SubParsersAction) -> None:
         help="Timeout in seconds (0 or greater). Requires --wait. Optional",
         type=int,
     )
-    start_parser.add_argument(
+    polling_interval = start_parser.add_argument(
         "--polling_interval",
         metavar="",
         help="Custom job status polling interval in seconds. Requires --wait. Optional",
         type=validate_positive_int,
     )
+    setattr(polling_interval, "fab_help", {"type": "integer", "minimum": 1})
 
     start_parser.usage = f"{utils_error_parser.get_usage_prog(start_parser)}"
     start_parser.set_defaults(func=lazy_command(_jobs_module_path, 'run_command'))

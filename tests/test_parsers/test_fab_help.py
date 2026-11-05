@@ -262,8 +262,6 @@ def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:
     assert all(link.startswith("https://") for link in mkdir["learn_more"])
     assert "target-specific" in " ".join(mkdir["notes"])
     flags = {flag["name"]: flag for flag in nodes["job run"]["flags"]}
-    assert flags["--polling_interval"]["type"] == "integer"
-    assert flags["--polling_interval"]["minimum"] == 1
     assert flags["--timeout"]["type"] == "integer"
     assert flags["--params"]["repeat_behavior"] == "replace"
     assert flags["--input"]["repeat_behavior"] == "replace"
@@ -271,6 +269,21 @@ def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:
     flags = {flag["name"]: flag for flag in nodes["import"]["flags"]}
     assert flags["--input"]["required"] is True
     assert "placeholder" in " ".join(nodes["extension"]["notes"])
+
+
+@pytest.mark.parametrize("command", ["start", "run"])
+def test_job_polling_interval_json_help_success(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    command: str,
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args(["job", command, "--help", "--json"])
+    assert exit_info.value.code == 0
+    output = json.loads(capsys.readouterr().out)
+    flags = {flag["name"]: flag for flag in output["result"]["data"][0]["flags"]}
+    assert flags["--polling_interval"]["type"] == "integer"
+    assert flags["--polling_interval"]["minimum"] == 1
 
 
 def test_every_command_alias_resolves_success(parser: CustomArgumentParser) -> None:

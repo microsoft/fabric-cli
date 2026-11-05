@@ -21,7 +21,7 @@ fab job run --help --output_format json
 ```
 
 `--help`, `-h`, and `-help` support JSON and text. See
-[Machine-readable help](output_format.md#machine-readable-help) for the response
+[Json format help](output_format.md#help-in-json-format) for the response
 contract, format precedence, and offline behavior.
 
 For a complete list of commands, see the [Commands page](../commands/index.md).

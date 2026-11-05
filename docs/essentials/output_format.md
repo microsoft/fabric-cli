@@ -90,7 +90,7 @@ fab job run --help --output_format json
 fab job run --help --json
 
 # Help accepts combined short flags
-`fab ls -lh --output_format json`
+fab ls -lh --output_format json
 ```
 
 In interactive mode, omit the `fab` prefix:
