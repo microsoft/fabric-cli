@@ -4,13 +4,13 @@
 import argparse
 import re
 import sys
-from collections.abc import Iterable
 from functools import partial
 from typing import Any
 
 import argcomplete
 
 from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core.fab_help import resolve_help
 from fabric_cli.parsers import fab_acls_parser as acls_parser
 from fabric_cli.parsers import fab_api_parser as api_parser
 from fabric_cli.parsers import fab_auth_parser as auth_parser
@@ -120,6 +120,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         fab_examples=None,
         fab_aliases=None,
         fab_learnmore=None,
+        fab_notes=None,
         output_format_default: str | None = None,
         **kwargs,
     ):
@@ -137,6 +138,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
         self.fab_mode = fab_constant.FAB_MODE_COMMANDLINE
         self.fab_examples = fab_examples or []
         self.fab_aliases = fab_aliases or []
+        self.fab_learnmore = fab_learnmore or []
+        self.fab_notes = fab_notes or []
 
     def add_subparsers(self, **kwargs: Any) -> argparse._SubParsersAction:
         """Keep child defaults from overwriting an explicit output format."""
@@ -146,34 +149,45 @@ class CustomArgumentParser(argparse.ArgumentParser):
         )
         return super().add_subparsers(**kwargs)
 
-    def parse_args(
-        self,
-        args: Iterable[str] | None = None,
-        namespace: Any = None,
-    ) -> Any:
-        """Supply the output format fallback when parsing any parser directly."""
-        parsed_args = super().parse_args(args, namespace)
-        if not hasattr(parsed_args, "output_format"):
-            setattr(parsed_args, "output_format", None)
-        return parsed_args
+    def parse_args(self, args=None, namespace=None):
+        tokens = list(sys.argv[1:] if args is None else args)
+        request = resolve_help(self, tokens)
+        if request is not None:
+            self.exit(fab_ui.print_help_request(request))
+        parsed = super().parse_args(tokens, namespace)
+        if not hasattr(parsed, "output_format"):
+            setattr(parsed, "output_format", None)
+        return parsed
 
     def print_help(self, file=None):
+        from fabric_cli.core.fab_help import HelpRequest
+
+        fab_ui.print_help_request(HelpRequest(self))
+
+    def print_text_help(self):
         command_name = self.prog.split()[-1]
 
         help_functions = {
-            "acl": lambda: acls_parser.show_help(None),
-            "job": lambda: jobs_parser.show_help(None),
-            "label": lambda: labels_parser.show_help(None),
-            "table": lambda: tables_parser.show_help(None),
-            "auth": lambda: auth_parser.show_help(None),
-            "config": lambda: config_parser.show_help(None),
-            "fab": lambda: fab_ui.display_help(COMMANDS),
+            "acl": lambda: acls_parser.show_help(argparse.Namespace()),
+            "job": lambda: jobs_parser.show_help(argparse.Namespace()),
+            "label": lambda: labels_parser.show_help(argparse.Namespace()),
+            "table": lambda: tables_parser.show_help(argparse.Namespace()),
+            "auth": lambda: auth_parser.show_help(argparse.Namespace()),
+            "config": lambda: config_parser.show_help(argparse.Namespace()),
+            "fab": lambda: fab_ui.display_help(
+                COMMANDS,
+                custom_header=(
+                    "Usage: <command> <subcommand> [flags]"
+                    if self.fab_mode == fab_constant.FAB_MODE_INTERACTIVE
+                    else None
+                ),
+            ),
         }
 
         if command_name in help_functions:
             help_functions[command_name]()
         else:
-            super().print_help(file)
+            super().print_help()
 
     def set_mode(self, mode):
         self.fab_mode = mode
@@ -200,9 +214,12 @@ class CustomArgumentParser(argparse.ArgumentParser):
 _global_parser = None
 _global_subparsers = None
 
+
 def create_parser_and_subparsers():
     """Create parser and subparsers for reuse across CLI modes"""
-    parser = CustomArgumentParser(description="Fabric CLI")
+    parser = CustomArgumentParser(
+        prog="fab", description="Work seamlessly with Fabric from the command line."
+    )
 
     # -c option for command line execution
     parser.add_argument(
@@ -213,7 +230,9 @@ def create_parser_and_subparsers():
     )
 
     # -version and --version
-    parser.add_argument("-v", "--version", action="store_true")
+    parser.add_argument(
+        "-v", "--version", action="store_true", help="Show installed CLI version."
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=False)
 
@@ -260,14 +279,23 @@ def create_parser_and_subparsers():
     )
     version_parser.set_defaults(func=fab_ui.print_version)
 
+    def retain_help_metadata(parent: argparse.ArgumentParser) -> None:
+        from fabric_cli.core.fab_help import child_parsers
+
+        for _, child, aliases, description in child_parsers(parent):
+            setattr(child, "fab_description", description)
+            setattr(child, "fab_aliases", aliases)
+            retain_help_metadata(child)
+
+    retain_help_metadata(parser)
     return parser, subparsers
+
 
 def get_global_parser_and_subparsers():
     """Get singleton parser and subparsers instances"""
     global _global_parser, _global_subparsers
-    
+
     if _global_parser is None:
         _global_parser, _global_subparsers = create_parser_and_subparsers()
-    
-    return _global_parser, _global_subparsers
 
+    return _global_parser, _global_subparsers

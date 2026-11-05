@@ -5,6 +5,8 @@ import json
 import platform
 from argparse import Namespace
 from enum import Enum
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -14,6 +16,157 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as ui
+from fabric_cli.core.fab_help import HelpRequest
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
+
+
+@pytest.mark.parametrize(
+    ("selectors", "saved", "expected"),
+    [
+        (["json"], "text", "json"),
+        (["text"], "json", "text"),
+        (["json", "json"], "text", "json"),
+        ([], "json", "json"),
+        ([], "text", "text"),
+    ],
+)
+def test_help_format_precedence_success(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    selectors: list[str],
+    saved: str,
+    expected: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({"output_format": saved}), encoding="utf-8")
+    monkeypatch.setattr(ui.fab_state_config, "config_file", str(config))
+    parser, subparsers = create_parser_and_subparsers()
+    target = subparsers.choices["mkdir"]
+    with patch.object(
+        ui, "print_output_format", wraps=ui.print_output_format
+    ) as output:
+        assert ui.print_help_request(HelpRequest(target, selectors)) == 0
+    assert output.call_args.args[0].output_format == expected
+    assert output.call_args.args[0].help.parser is target
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    if expected == "json":
+        assert json.loads(captured.out)["command"] == "mkdir"
+    else:
+        assert captured.out == target.format_help()
+
+
+@pytest.mark.parametrize("content", ["{", "[]", '{"output_format": "invalid"}'])
+def test_help_corrupt_config_warning_success(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    content: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = tmp_path / "config.json"
+    config.write_text(content, encoding="utf-8")
+    monkeypatch.setattr(ui.fab_state_config, "config_file", str(config))
+    parser, _ = create_parser_and_subparsers()
+    assert ui.print_help_request(HelpRequest(parser)) == 0
+    captured = capsys.readouterr()
+    assert "using text for help" in captured.err
+    assert "Usage: fab" in captured.out
+    assert config.read_text(encoding="utf-8") == content
+
+
+def test_help_unreadable_config_warning_success(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    parser, _ = create_parser_and_subparsers()
+    with patch("builtins.open", side_effect=PermissionError):
+        assert ui.print_help_request(HelpRequest(parser)) == 0
+    captured = capsys.readouterr()
+    assert "using text for help" in captured.err
+    assert "Usage: fab" in captured.out
+
+
+def test_help_missing_config_default_text_success(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = tmp_path / "missing" / "config.json"
+    monkeypatch.setattr(ui.fab_state_config, "config_file", str(config))
+    parser, _ = create_parser_and_subparsers()
+    assert ui.print_help_request(HelpRequest(parser)) == 0
+    captured = capsys.readouterr()
+    assert "Usage: fab" in captured.out
+    assert captured.err == ""
+    assert not config.parent.exists()
+
+
+@pytest.mark.parametrize("target", ["fab", "job", "mkdir"])
+def test_help_legacy_text_renderer_success(
+    target: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    parser, subparsers = create_parser_and_subparsers()
+    node = parser if target == "fab" else subparsers.choices[target]
+    node.print_text_help()
+    expected = capsys.readouterr().out
+    assert ui.print_help_request(HelpRequest(node, ["text"])) == 0
+    assert capsys.readouterr().out == expected
+
+
+@pytest.mark.parametrize("output_format", ["text", "json"])
+def test_print_output_format_help_in_args_success(
+    output_format: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from fabric_cli.core.fab_help import build_help_data
+
+    _, subparsers = create_parser_and_subparsers()
+    parser = subparsers.choices["mkdir"]
+    data = build_help_data(parser)
+    args = Namespace(
+        command="mkdir", output_format=output_format, help=HelpRequest(parser)
+    )
+    with patch.object(
+        parser, "print_text_help", wraps=parser.print_text_help
+    ) as help_text:
+        ui.print_output_format(args, data=data)
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    if output_format == "text":
+        help_text.assert_called_once_with()
+        assert captured.out == parser.format_help()
+    else:
+        help_text.assert_not_called()
+        assert json.loads(captured.out)["result"]["data"] == [data]
+
+
+def test_print_output_format_without_help_success(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    ui.print_output_format(
+        Namespace(command="pwd", output_format="text", help=False), data="workspace"
+    )
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "workspace"
+    assert captured.err == ""
+
+
+@pytest.mark.parametrize("stage", ["metadata", "serialization"])
+def test_help_generation_failure(
+    stage: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    parser, _ = create_parser_and_subparsers()
+    options = (
+        {"side_effect": ValueError("secret-value")}
+        if stage == "metadata"
+        else {"return_value": {"not_serializable": object()}}
+    )
+    with patch("fabric_cli.core.fab_help.build_help_data", **options):
+        assert ui.print_help_request(HelpRequest(parser, ["json"])) == 1
+    captured = capsys.readouterr()
+    assert "secret-value" not in captured.out + captured.err
+    output = json.loads(captured.out)
+    assert output["status"] == "Failure"
+    assert "data" not in output["result"]
 
 
 class OutputType(Enum):

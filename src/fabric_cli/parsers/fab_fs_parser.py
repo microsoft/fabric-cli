@@ -80,6 +80,10 @@ def register_mkdir_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=mkdir_examples,
         fab_aliases=mkdir_aliases,
         fab_learnmore=mkdir_learnmore,
+        fab_notes=[
+            "Bare -P shows target-specific parameter help instead of creating the resource.",
+            "Target-specific parameter names and allowed values are not included in static help.",
+        ],
     )
     mkdir_parser.add_argument("path", nargs="+", type=str, help="Directory path")
     mkdir_parser.add_argument(
@@ -169,6 +173,7 @@ def register_mv_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=mv_examples,
         fab_aliases=mv_aliases,
         fab_learnmore=["_"],
+        fab_notes=["Quote complete source and destination paths containing spaces."],
     )
     mv_parser.add_argument("from_path", nargs="+", type=str, help="Source path")
     mv_parser.add_argument("to_path", nargs="+", type=str, help="Target path")
@@ -209,6 +214,7 @@ def register_cp_parser(subparsers: _SubParsersAction) -> None:
         fab_examples=cp_examples,
         fab_aliases=cp_aliases,
         fab_learnmore=["_"],
+        fab_notes=["Quote complete source and destination paths containing spaces."],
     )
 
     cp_parser.add_argument("from_path", nargs="+", type=str, help="Source path")

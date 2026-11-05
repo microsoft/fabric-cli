@@ -5,10 +5,9 @@
 
 from argparse import Namespace, _SubParsersAction
 
-from fabric_cli.commands.find import fab_find as find
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui as utils_ui
-
+from fabric_cli.utils.fab_lazy_load import lazy_command
 
 COMMAND_FIND_DESCRIPTION = "Search the OneLake catalog for items."
 
@@ -75,7 +74,9 @@ def register_parser(subparsers: _SubParsersAction) -> None:
     )
 
     parser.usage = f"{utils_error_parser.get_usage_prog(parser)}"
-    parser.set_defaults(func=find.find_command)
+    parser.set_defaults(
+        func=lazy_command("fabric_cli.commands.find.fab_find", "find_command")
+    )
 
 
 def show_help(args: Namespace) -> None:
