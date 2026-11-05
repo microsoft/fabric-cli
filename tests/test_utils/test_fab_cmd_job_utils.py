@@ -267,5 +267,32 @@ def test_validate_timeout_polling_interval_none_values_success():
     validate_timeout_polling_interval(args)
 
 
+@pytest.mark.parametrize("wait_args", [{}, {"wait": False}])
+def test_validate_timeout_polling_interval_without_wait_failure(
+    wait_args: dict[str, bool],
+) -> None:
+    args = Namespace(
+        jobs_command="start", timeout=60, polling_interval=None, **wait_args
+    )
+
+    with pytest.raises(FabricCLIError) as exc_info:
+        validate_timeout_polling_interval(args)
+
+    assert exc_info.value.status_code == fab_constant.ERROR_INVALID_INPUT
+    assert exc_info.value.message == "--timeout can only be used with --wait"
+
+
+def test_validate_timeout_polling_interval_with_wait_success():
+    args = Namespace(jobs_command="start", wait=True, timeout=60, polling_interval=10)
+
+    validate_timeout_polling_interval(args)
+
+
+def test_validate_timeout_polling_interval_run_with_wait_false_success() -> None:
+    args = Namespace(jobs_command="run", wait=False, timeout=60, polling_interval=10)
+
+    validate_timeout_polling_interval(args)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

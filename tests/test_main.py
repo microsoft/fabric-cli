@@ -7,6 +7,7 @@ import site
 import socket
 import subprocess
 import sys
+from argparse import Namespace
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -14,10 +15,43 @@ from unittest.mock import patch
 import pytest
 
 from fabric_cli.core import fab_constant
+from fabric_cli.core.fab_decorators import handle_exceptions
+from fabric_cli.core.fab_exceptions import FabricCLIError
+from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
 
 
 class TestMainModule:
     """Test suite for main module functionality."""
+
+    @pytest.mark.parametrize("command", ["ls", "pwd"])
+    def test_command_string_reports_unflagged_command_error(self, command: str) -> None:
+        """Child-parser dispatch reports the original error and failure code."""
+        from fabric_cli.main import main
+
+        parser, subparsers = create_parser_and_subparsers()
+        error = FabricCLIError("Command failed", fab_constant.ERROR_INVALID_INPUT)
+
+        @handle_exceptions()
+        def fail(args: Namespace) -> None:
+            raise error
+
+        subparsers.choices[command].set_defaults(func=fail)
+        with (
+            patch(
+                "fabric_cli.core.fab_parser_setup.get_global_parser_and_subparsers",
+                return_value=(parser, subparsers),
+            ),
+            patch("argcomplete.autocomplete"),
+            patch("fabric_cli.core.fab_state_config.init_defaults"),
+            patch("fabric_cli.core.fab_logger.print_log_file_path"),
+            patch("fabric_cli.utils.fab_ui.print_output_error") as print_error,
+            patch.object(sys, "argv", ["fab", "-c", command]),
+        ):
+            with pytest.raises(SystemExit) as exc:
+                main()
+
+        assert exc.value.code == fab_constant.EXIT_CODE_ERROR
+        print_error.assert_called_once_with(error, command, output_format_type=None)
 
     def test_main_no_args_starts_interactive_mode_success(self):
         """Test that running 'fab' without arguments automatically enters interactive mode."""
@@ -158,6 +192,9 @@ def _run_help(home: Path, tokens: list[str]) -> subprocess.CompletedProcess[str]
         (["job", "run", "--help", "--output_format", "json"], "job run"),
         (["--output_format", "json", "create", "-help"], "mkdir"),
         (["--output_format=json", "job", "run", "-h"], "job run"),
+        (["--help", "--json"], "fab"),
+        (["--json", "job", "run", "-h"], "job run"),
+        (["create", "--help", "--json"], "mkdir"),
         (["import", "--help", "--output_format=json"], "import"),
         (["job", "run", "--timeout", "bad", "-h", "--output_format=json"], "job run"),
     ],
@@ -225,6 +262,7 @@ def test_help_with_unusable_config_success(
         (["unknown", "--help", "--output_format=json"], "fab"),
         (["job", "unknown", "-h", "--output_format=json"], "job"),
         (["mkdir", "--unknown=secret-value", "-h", "--output_format=json"], "mkdir"),
+        (["mkdir", "--unknown=secret-value", "-h", "--json"], "mkdir"),
         (["mkdir", "-h", "--output_format=json", "--output_format=text"], "mkdir"),
         (["mkdir", "--output_format=json", "-h", "--output_format"], "mkdir"),
         (

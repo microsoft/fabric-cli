@@ -245,6 +245,9 @@ def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:
     assert "create" not in children
     flags = {flag["name"]: flag for flag in root["flags"]}
     assert flags["--command"]["repeat_behavior"] == "append"
+    assert flags["--json"]["type"] == "boolean"
+    assert "repeat_behavior" not in flags["--json"]
+    assert "default" not in flags["--json"]
     for name, data in nodes.items():
         if name != "fab":
             assert "--command" not in {flag["name"] for flag in data["flags"]}
@@ -332,31 +335,36 @@ def test_resolve_help_success(
 
 
 @pytest.mark.parametrize(
-    "tokens",
+    ("tokens", "command"),
     [
-        ["ls", "-la", "--help", "--output_format=json"],
-        ["ls", "--out=json", "--help"],
-        ["ls", "-lh", "--output_format=json"],
-        ["ls", "-alh", "--out", "json"],
-        ["ls", "-lqname", "--help", "--out=json"],
-        ["ls", "-lq--help", "--he", "--out=json"],
-        ["ls", "-la", "--out", "json", "--he"],
+        (["ls", "-la", "--help", "--output_format=json"], "ls"),
+        (["ls", "--out=json", "--help"], "ls"),
+        (["ls", "-lh", "--output_format=json"], "ls"),
+        (["ls", "-alh", "--out", "json"], "ls"),
+        (["ls", "-lqname", "--help", "--out=json"], "ls"),
+        (["ls", "-lq--help", "--he", "--out=json"], "ls"),
+        (["ls", "-la", "--out", "json", "--he"], "ls"),
+        (["--json", "ls", "--help"], "ls"),
+        (["job", "--json", "run", "--help"], "job run"),
+        (["job", "run", "--help", "--json"], "job run"),
+        (["ls", "--json", "--help", "--output_format=json"], "ls"),
     ],
 )
 def test_argparse_option_spellings_json_help_success(
     parser: CustomArgumentParser,
     capsys: pytest.CaptureFixture[str],
     tokens: list[str],
+    command: str,
 ) -> None:
     request = resolve_help(parser, tokens)
     assert request is not None
     assert request.error is None
-    assert request.selectors == ["json"]
+    assert set(request.selectors) == {"json"}
     with pytest.raises(SystemExit) as exit_info:
         parser.parse_args(tokens)
     assert exit_info.value.code == 0
     output = json.loads(capsys.readouterr().out)
-    assert output["command"] == "ls"
+    assert output["command"] == command
     assert output["status"] == "Success"
 
 
@@ -441,6 +449,7 @@ def test_literal_values_use_normal_parser_success(
         ["--help", "mkdir"],
         ["mkdir", "--help=yes"],
         ["ls", "--long=yes", "--help"],
+        ["ls", "--json=yes", "--help"],
     ],
 )
 def test_invalid_help_structure_failure(

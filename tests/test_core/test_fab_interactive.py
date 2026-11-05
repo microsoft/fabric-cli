@@ -4,12 +4,14 @@
 import argparse
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from fabric_cli.core import fab_constant, fab_state_config
 from fabric_cli.core.fab_commands import Command
+from fabric_cli.core.fab_decorators import handle_exceptions
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_interactive import InteractiveCLI
 from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
 from fabric_cli.utils import fab_commands, fab_ui
@@ -176,6 +178,7 @@ class TestInteractiveCLI:
         [
             ("--output_format json", "text"),
             ("--output_format=json", "text"),
+            ("--json", "text"),
             ("", "json"),
         ],
     )
@@ -382,6 +385,38 @@ class TestInteractiveCLI:
         mock_print_log_file_path.assert_called_once()
 
     # Exception Handling Tests
+    @pytest.mark.parametrize("command", ["ls", "pwd"])
+    def test_start_interactive_continues_after_unflagged_command_error(
+        self,
+        command: str,
+        interactive_cli,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_context,
+        mock_print_ui,
+        mock_print_log_file_path,
+    ) -> None:
+        """An unflagged command error is reported without ending the REPL."""
+        parser, subparsers = create_parser_and_subparsers()
+        error = FabricCLIError("Command failed", fab_constant.ERROR_INVALID_INPUT)
+
+        @handle_exceptions()
+        def fail(args: argparse.Namespace) -> None:
+            raise error
+
+        subparsers.choices[command].set_defaults(func=fail)
+        monkeypatch.setattr(interactive_cli, "parser", parser)
+        monkeypatch.setattr(interactive_cli, "subparsers", subparsers)
+        monkeypatch.setattr(interactive_cli, "session", Mock())
+        interactive_cli.session.prompt.side_effect = [command, "quit"]
+
+        with patch("fabric_cli.utils.fab_ui.print_output_error") as print_error:
+            interactive_cli.start_interactive()
+
+        print_error.assert_called_once_with(error, command, output_format_type=None)
+        assert interactive_cli.session.prompt.call_count == 2
+        mock_print_ui.assert_called_with(fab_constant.INTERACTIVE_EXIT_MESSAGE)
+        assert interactive_cli._is_running is False
+
     def test_handle_command_system_exit_exception_success(
         self, interactive_cli, mock_subparsers, mock_print_log_file_path
     ):

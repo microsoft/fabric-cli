@@ -113,6 +113,8 @@ def resolve_help(
                 index += 1
                 continue
             if action.nargs == 0:
+                if action.dest == "output_format":
+                    request.selectors.append(action.const)
                 if separator:
                     request.error = "A boolean flag does not accept a value."
                 index += 1
@@ -176,7 +178,7 @@ def resolve_help(
 def _describe_action(action: argparse.Action) -> dict[str, Any]:
     boolean = isinstance(
         action,
-        (argparse._HelpAction, argparse._StoreTrueAction, argparse._StoreFalseAction),
+        (argparse._HelpAction, argparse._StoreConstAction),
     )
     value_type = (
         "boolean"
@@ -271,8 +273,7 @@ def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
                 invocation = invocation.removeprefix("fab ")
             elif not invocation.startswith("fab "):
                 invocation = f"fab {invocation}"
-            examples.append(
-                {"description": description, "command": invocation})
+            examples.append({"description": description, "command": invocation})
     notes = list(getattr(parser, "fab_notes", []))
     links = ["https://aka.ms/fabric-cli"]
     for item in getattr(parser, "fab_learnmore", []):

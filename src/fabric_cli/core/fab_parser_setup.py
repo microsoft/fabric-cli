@@ -4,7 +4,8 @@
 import argparse
 import re
 import sys
-from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union, overload
+from functools import partial
+from typing import Any
 
 import argcomplete
 
@@ -25,11 +26,6 @@ from fabric_cli.parsers import fab_tables_parser as tables_parser
 from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
-
-if TYPE_CHECKING:
-    from _typeshed import SupportsWrite
-
-_Namespace = TypeVar("_Namespace")
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -125,6 +121,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         fab_aliases=None,
         fab_learnmore=None,
         fab_notes=None,
+        output_format_default: str | None = None,
         **kwargs,
     ):
         kwargs["formatter_class"] = lambda prog: CustomHelpFormatter(
@@ -135,33 +132,24 @@ class CustomArgumentParser(argparse.ArgumentParser):
         )
         super().__init__(*args, **kwargs)
         # Add custom help and format flags
-        fab_global_params.add_global_flags(self)
+        fab_global_params.add_global_flags(
+            self, output_format_default=output_format_default
+        )
         self.fab_mode = fab_constant.FAB_MODE_COMMANDLINE
         self.fab_examples = fab_examples or []
         self.fab_aliases = fab_aliases or []
         self.fab_learnmore = fab_learnmore or []
         self.fab_notes = fab_notes or []
 
-    @overload
-    def parse_args(
-        self,
-        args: Optional[Iterable[str]] = None,
-        namespace: None = None,
-    ) -> argparse.Namespace: ...
+    def add_subparsers(self, **kwargs: Any) -> argparse._SubParsersAction:
+        """Keep child defaults from overwriting an explicit output format."""
+        kwargs.setdefault(
+            "parser_class",
+            partial(type(self), output_format_default=argparse.SUPPRESS),
+        )
+        return super().add_subparsers(**kwargs)
 
-    @overload
-    def parse_args(
-        self, args: Optional[Iterable[str]], namespace: _Namespace
-    ) -> _Namespace: ...
-
-    @overload
-    def parse_args(self, *, namespace: _Namespace) -> _Namespace: ...
-
-    def parse_args(
-        self,
-        args: Optional[Iterable[str]] = None,
-        namespace: Optional[_Namespace] = None,
-    ) -> Union[argparse.Namespace, _Namespace]:
+    def parse_args(self, args=None, namespace=None):
         tokens = list(sys.argv[1:] if args is None else args)
         request = resolve_help(self, tokens)
         if request is not None:
@@ -171,12 +159,12 @@ class CustomArgumentParser(argparse.ArgumentParser):
             setattr(parsed, "output_format", None)
         return parsed
 
-    def print_help(self, file: Optional["SupportsWrite[str]"] = None) -> None:
+    def print_help(self, file=None):
         from fabric_cli.core.fab_help import HelpRequest
 
         fab_ui.print_help_request(HelpRequest(self))
 
-    def print_text_help(self) -> None:
+    def print_text_help(self):
         command_name = self.prog.split()[-1]
 
         help_functions = {
