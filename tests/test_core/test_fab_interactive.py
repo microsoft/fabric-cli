@@ -59,21 +59,13 @@ class TestInteractiveCLI:
         mock_parser,
     ):
         """Test help command and its variations."""
-        from fabric_cli.core.fab_help import HelpRequest
-
-        with (
-            patch(
-                "fabric_cli.core.fab_interactive.resolve_help",
-                return_value=HelpRequest(mock_parser),
-            ) as resolve,
-            patch(
-                "fabric_cli.core.fab_interactive.utils_ui.print_help_request"
-            ) as render,
-        ):
+        with patch.object(
+            mock_parser, "parse_args", side_effect=SystemExit(0)
+        ) as parse:
             for cmd in fab_constant.INTERACTIVE_HELP_COMMANDS:
                 assert interactive_cli.handle_command(cmd) is False
-                resolve.assert_called_with(mock_parser, ["--help"])
-            assert render.call_count == len(fab_constant.INTERACTIVE_HELP_COMMANDS)
+                parse.assert_called_with(["--help"])
+            assert parse.call_count == len(fab_constant.INTERACTIVE_HELP_COMMANDS)
         mock_print_log_file_path.assert_not_called()
 
     @pytest.mark.parametrize("config_kind", ["invalid_object", "unreadable"])
@@ -266,7 +258,6 @@ class TestInteractiveCLI:
     @pytest.mark.parametrize(
         "command",
         [
-            "help --unknown --output_format json",
             "help --output_format=json --output_format=text",
             "help --output_format=json --output_format",
         ],
@@ -430,8 +421,8 @@ class TestInteractiveCLI:
         result = interactive_cli.handle_command(command)
 
         # Should handle SystemExit gracefully and not exit
-        assert result is None
-        mock_print_log_file_path.assert_called_once()
+        assert result is False
+        mock_print_log_file_path.assert_not_called()
 
     # Interactive Session Tests
     def test_start_interactive_normal_flow_success(

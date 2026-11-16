@@ -238,7 +238,8 @@ def print_info(text, command: Optional[str] = None) -> None:
 # Display
 
 
-def _help_output_format(selectors: list[str]) -> str:
+def get_help_output_format(selectors: list[str]) -> str:
+    """Resolve explicit help formats or read the saved format without initializing config."""
     if selectors:
         if any(value not in ("json", "text") for value in selectors):
             raise FabricCLIError(
@@ -267,15 +268,15 @@ def _help_output_format(selectors: list[str]) -> str:
         return "text"
 
 
-def print_help_request(request: "HelpRequest") -> int:
-    """Print help through the common output pipeline and return its exit code."""
-    from fabric_cli.core.fab_help import build_help_data, canonical_command
+def print_help(request: "HelpRequest") -> int:
+    """Select the help format, print it, and return its exit code."""
+    from fabric_cli.core.fab_help import CustomHelpFormatter
 
-    command = canonical_command(request.parser)
-    # Explicit JSON also governs invalid requests, including conflicting selectors.
+    command = " ".join(request.parser.prog.split())
+    command = command.removeprefix("fab ") or "fab"
     format_type = "json" if "json" in request.selectors else "text"
     try:
-        format_type = _help_output_format(request.selectors)
+        format_type = get_help_output_format(request.selectors)
         if request.error:
             raise FabricCLIError(
                 ErrorMessages.Common.invalid_help_request(request.error),
@@ -286,17 +287,20 @@ def print_help_request(request: "HelpRequest") -> int:
         return 2
 
     try:
-        data = build_help_data(request.parser)
         print_output_format(
             Namespace(
                 command=command,
                 output_format=format_type,
                 help=request,
             ),
-            data=data,
+            data=(
+                CustomHelpFormatter.fab_help_json_format(request.parser)
+                if format_type == "json"
+                else None
+            ),
         )
     except Exception:
-        # This entrypoint is an error boundary: never expose payloads or partial help.
+        # Do not expose payloads or partial help at this output boundary.
         print_output_error(
             FabricCLIError(
                 ErrorMessages.Common.invalid_help_request(

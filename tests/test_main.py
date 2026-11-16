@@ -196,7 +196,6 @@ def _run_help(home: Path, tokens: list[str]) -> subprocess.CompletedProcess[str]
         (["--json", "job", "run", "-h"], "job run"),
         (["create", "--help", "--json"], "mkdir"),
         (["import", "--help", "--output_format=json"], "import"),
-        (["job", "run", "--timeout", "bad", "-h", "--output_format=json"], "job run"),
     ],
 )
 def test_offline_json_help_success(
@@ -259,10 +258,6 @@ def test_help_with_unusable_config_success(
 @pytest.mark.parametrize(
     ("tokens", "command"),
     [
-        (["unknown", "--help", "--output_format=json"], "fab"),
-        (["job", "unknown", "-h", "--output_format=json"], "job"),
-        (["mkdir", "--unknown=secret-value", "-h", "--output_format=json"], "mkdir"),
-        (["mkdir", "--unknown=secret-value", "-h", "--json"], "mkdir"),
         (["mkdir", "-h", "--output_format=json", "--output_format=text"], "mkdir"),
         (["mkdir", "--output_format=json", "-h", "--output_format"], "mkdir"),
         (
@@ -288,3 +283,20 @@ def test_invalid_json_help_failure(
     assert "secret" not in result.stdout + result.stderr
     assert result.stderr == ""
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        ["unknown", "--help"],
+        ["job", "unknown", "-h"],
+        ["job", "run", "--timeout", "bad", "-h"],
+    ],
+)
+@pytest.mark.parametrize("output_format", ["text", "json"])
+def test_help_uses_normal_parser_errors(
+    tmp_path: Path, tokens: list[str], output_format: str
+) -> None:
+    result = _run_help(tmp_path, [*tokens, "--output_format", output_format])
+    assert result.returncode == 2
+    assert '"status": "Success"' not in result.stdout

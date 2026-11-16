@@ -16,7 +16,7 @@ from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.fab_output import FabricCLIOutput, OutputStatus
 from fabric_cli.errors import ErrorMessages
 from fabric_cli.utils import fab_ui as ui
-from fabric_cli.core.fab_help import HelpRequest
+from fabric_cli.core.fab_help import CustomHelpFormatter, HelpRequest
 from fabric_cli.core.fab_parser_setup import create_parser_and_subparsers
 
 
@@ -46,7 +46,7 @@ def test_help_format_precedence_success(
     with patch.object(
         ui, "print_output_format", wraps=ui.print_output_format
     ) as output:
-        assert ui.print_help_request(HelpRequest(target, selectors)) == 0
+        assert ui.print_help(HelpRequest(target, selectors)) == 0
     assert output.call_args.args[0].output_format == expected
     assert output.call_args.args[0].help.parser is target
     captured = capsys.readouterr()
@@ -68,7 +68,7 @@ def test_help_corrupt_config_warning_success(
     config.write_text(content, encoding="utf-8")
     monkeypatch.setattr(ui.fab_state_config, "config_file", str(config))
     parser, _ = create_parser_and_subparsers()
-    assert ui.print_help_request(HelpRequest(parser)) == 0
+    assert ui.print_help(HelpRequest(parser)) == 0
     captured = capsys.readouterr()
     assert ErrorMessages.Common.invalid_help_format() in captured.err
     assert "Usage: fab" in captured.out
@@ -80,7 +80,7 @@ def test_help_unreadable_config_warning_success(
 ) -> None:
     parser, _ = create_parser_and_subparsers()
     with patch("builtins.open", side_effect=PermissionError):
-        assert ui.print_help_request(HelpRequest(parser)) == 0
+        assert ui.print_help(HelpRequest(parser)) == 0
     captured = capsys.readouterr()
     assert ErrorMessages.Common.invalid_help_format() in captured.err
     assert "Usage: fab" in captured.out
@@ -94,7 +94,7 @@ def test_help_missing_config_default_text_success(
     config = tmp_path / "missing" / "config.json"
     monkeypatch.setattr(ui.fab_state_config, "config_file", str(config))
     parser, _ = create_parser_and_subparsers()
-    assert ui.print_help_request(HelpRequest(parser)) == 0
+    assert ui.print_help(HelpRequest(parser)) == 0
     captured = capsys.readouterr()
     assert "Usage: fab" in captured.out
     assert captured.err == ""
@@ -109,7 +109,7 @@ def test_help_legacy_text_renderer_success(
     node = parser if target == "fab" else subparsers.choices[target]
     node.print_text_help()
     expected = capsys.readouterr().out
-    assert ui.print_help_request(HelpRequest(node, ["text"])) == 0
+    assert ui.print_help(HelpRequest(node, ["text"])) == 0
     assert capsys.readouterr().out == expected
 
 
@@ -117,11 +117,9 @@ def test_help_legacy_text_renderer_success(
 def test_print_output_format_help_in_args_success(
     output_format: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from fabric_cli.core.fab_help import build_help_data
-
     _, subparsers = create_parser_and_subparsers()
     parser = subparsers.choices["mkdir"]
-    data = build_help_data(parser)
+    data = CustomHelpFormatter.fab_help_json_format(parser)
     args = Namespace(
         command="mkdir", output_format=output_format, help=HelpRequest(parser)
     )
@@ -160,8 +158,8 @@ def test_help_generation_failure(
         if stage == "metadata"
         else {"return_value": {"not_serializable": object()}}
     )
-    with patch("fabric_cli.core.fab_help.build_help_data", **options):
-        assert ui.print_help_request(HelpRequest(parser, ["json"])) == 1
+    with patch.object(CustomHelpFormatter, "fab_help_json_format", **options):
+        assert ui.print_help(HelpRequest(parser, ["json"])) == 1
     captured = capsys.readouterr()
     assert "secret-value" not in captured.out + captured.err
     output = json.loads(captured.out)
@@ -171,6 +169,28 @@ def test_help_generation_failure(
     )
     assert output["result"]["error_code"] == fab_constant.ERROR_UNEXPECTED_ERROR
     assert "data" not in output["result"]
+
+
+def test_text_help_does_not_build_json_metadata(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    parser, _ = create_parser_and_subparsers()
+    with patch.object(CustomHelpFormatter, "fab_help_json_format") as build_data:
+        assert ui.print_help(HelpRequest(parser, ["text"])) == 0
+    build_data.assert_not_called()
+    assert "Usage: fab" in capsys.readouterr().out
+
+
+def test_json_help_does_not_format_text(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _, subparsers = create_parser_and_subparsers()
+    parser = subparsers.choices["mkdir"]
+    with patch.object(CustomHelpFormatter, "fab_help_text") as format_text:
+        assert ui.print_help(HelpRequest(parser, ["json"])) == 0
+    format_text.assert_not_called()
+    data = json.loads(capsys.readouterr().out)["result"]["data"][0]
+    assert data["usage"] == "fab mkdir <path> [flags]"
 
 
 class OutputType(Enum):

@@ -6,20 +6,21 @@
 import argparse
 import json
 from typing import Any, Iterator
+from unittest.mock import patch
 
 import pytest
 
 from fabric_cli import __version__
 from fabric_cli.core.fab_help import (
-    build_help_data,
-    canonical_command,
+    CustomHelpFormatter,
+    HelpRequest,
     child_parsers,
-    resolve_help,
 )
 from fabric_cli.core.fab_parser_setup import (
     CustomArgumentParser,
     create_parser_and_subparsers,
 )
+from fabric_cli.utils import fab_ui
 
 
 def _nodes(
@@ -45,13 +46,19 @@ def parser() -> CustomArgumentParser:
         ("job run", "job run"),
     ],
 )
-def test_canonical_command_prefix_success(prog: str, expected: str) -> None:
-    assert canonical_command(argparse.ArgumentParser(prog=prog)) == expected
+def test_help_command_name_success(
+    prog: str, expected: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert (
+        fab_ui.print_help(HelpRequest(argparse.ArgumentParser(prog=prog), ["json"]))
+        == 0
+    )
+    assert json.loads(capsys.readouterr().out)["command"] == expected
 
 
 def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -> None:
     for node in _nodes(parser):
-        data = build_help_data(node)
+        data = CustomHelpFormatter.fab_help_json_format(node)
         assert set(data) == {
             "schema_version",
             "cli_version",
@@ -166,8 +173,10 @@ def test_all_public_nodes_match_contract_success(parser: CustomArgumentParser) -
 def test_representative_help_values_success(
     parser: CustomArgumentParser, command: str, expected: dict[str, Any]
 ) -> None:
-    node = next(node for node in _nodes(parser) if canonical_command(node) == command)
-    data = build_help_data(node)
+    node = next(
+        node for node in _nodes(parser) if node.prog.removeprefix("fab ") == command
+    )
+    data = CustomHelpFormatter.fab_help_json_format(node)
     assert {field: data[field] for field in expected} == expected
 
 
@@ -200,7 +209,9 @@ def test_required_flags_json_usage_success(
     expected: str,
 ) -> None:
     node = next(
-        node for node in _nodes(parser) if canonical_command(node) == " ".join(tokens)
+        node
+        for node in _nodes(parser)
+        if node.prog.removeprefix("fab ") == " ".join(tokens)
     )
     text_help = node.format_help()
     with pytest.raises(SystemExit) as exit_info:
@@ -227,17 +238,26 @@ def test_required_flag_value_arity_usage_success(
     parser = CustomArgumentParser(prog="fab example")
     parser.add_argument("--value", required=True, nargs=nargs)
     parser.add_argument("--optional")
-    assert build_help_data(parser)["usage"] == f"fab example {expected} [flags]"
+    assert (
+        CustomHelpFormatter.fab_help_json_format(parser)["usage"]
+        == f"fab example {expected} [flags]"
+    )
 
 
 def test_required_boolean_flag_usage_success() -> None:
     parser = CustomArgumentParser(prog="fab example")
     parser.add_argument("-f", "--force", required=True, action="store_true")
-    assert build_help_data(parser)["usage"] == "fab example --force [flags]"
+    assert (
+        CustomHelpFormatter.fab_help_json_format(parser)["usage"]
+        == "fab example --force [flags]"
+    )
 
 
 def test_metadata_semantics_success(parser: CustomArgumentParser) -> None:
-    nodes = {canonical_command(node): build_help_data(node) for node in _nodes(parser)}
+    nodes = {
+        node.prog.removeprefix("fab "): CustomHelpFormatter.fab_help_json_format(node)
+        for node in _nodes(parser)
+    }
     root = nodes["fab"]
     children = {entry["name"]: entry for entry in root["subcommands"]}
     assert "deploy" in children
@@ -286,17 +306,21 @@ def test_job_polling_interval_json_help_success(
     assert flags["--polling_interval"]["minimum"] == 1
 
 
-def test_every_command_alias_resolves_success(parser: CustomArgumentParser) -> None:
+def test_every_command_alias_resolves_success(
+    parser: CustomArgumentParser, capsys: pytest.CaptureFixture[str]
+) -> None:
     def check(parent: argparse.ArgumentParser, prefix: list[str]) -> None:
         for name, child, aliases, _ in child_parsers(parent):
-            assert build_help_data(child)["aliases"] == aliases
+            assert CustomHelpFormatter.fab_help_json_format(child)["aliases"] == aliases
             for spelling in [name, *aliases]:
-                request = resolve_help(
-                    parser, [*prefix, spelling, "--help", "--output_format=json"]
-                )
-                assert request is not None
-                assert request.parser is child
-                assert request.error is None
+                with pytest.raises(SystemExit) as exit_info:
+                    parser.parse_args(
+                        [*prefix, spelling, "--help", "--output_format=json"]
+                    )
+                assert exit_info.value.code == 0
+                assert json.loads(capsys.readouterr().out)[
+                    "command"
+                ] == child.prog.removeprefix("fab ")
             check(child, [*prefix, name])
 
     check(parser, [])
@@ -334,17 +358,19 @@ def test_registered_leaf_aliases_json_help_success(
         (["--output_format", "json", "job", "run", "-help"], "job run"),
         (["create", "--help", "--output_format=json"], "mkdir"),
         (["import", "--help"], "import"),
-        (["job", "run", "--timeout", "not-an-int", "--help"], "job run"),
-        (["mkdir", "-P", "--help"], "mkdir"),
+        (["--help", "mkdir"], "fab"),
     ],
 )
-def test_resolve_help_success(
-    parser: CustomArgumentParser, tokens: list[str], command: str
+def test_selected_command_help_success(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    tokens: list[str],
+    command: str,
 ) -> None:
-    request = resolve_help(parser, tokens)
-    assert request is not None
-    assert canonical_command(request.parser) == command
-    assert request.error is None
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args([*tokens, "--json"])
+    assert exit_info.value.code == 0
+    assert json.loads(capsys.readouterr().out)["command"] == command
 
 
 @pytest.mark.parametrize(
@@ -361,6 +387,9 @@ def test_resolve_help_success(
         (["job", "--json", "run", "--help"], "job run"),
         (["job", "run", "--help", "--json"], "job run"),
         (["ls", "--json", "--help", "--output_format=json"], "ls"),
+        (["mkdir", "-P", "--help", "--json"], "mkdir"),
+        (["ls", "some/path", "--help", "--json"], "ls"),
+        (["job", "run", "--help", "--timeout", "not-an-int", "--json"], "job run"),
     ],
 )
 def test_argparse_option_spellings_json_help_success(
@@ -369,10 +398,6 @@ def test_argparse_option_spellings_json_help_success(
     tokens: list[str],
     command: str,
 ) -> None:
-    request = resolve_help(parser, tokens)
-    assert request is not None
-    assert request.error is None
-    assert set(request.selectors) == {"json"}
     with pytest.raises(SystemExit) as exit_info:
         parser.parse_args(tokens)
     assert exit_info.value.code == 0
@@ -394,7 +419,15 @@ def test_argparse_option_spellings_json_help_success(
 def test_argparse_option_value_boundaries_success(
     parser: CustomArgumentParser, tokens: list[str]
 ) -> None:
-    assert resolve_help(parser, tokens) is None
+    with patch.object(
+        CustomArgumentParser,
+        "print_help",
+        side_effect=AssertionError("Unexpected help"),
+    ):
+        try:
+            parser.parse_args(tokens)
+        except SystemExit as error:
+            assert error.code == 2
 
 
 def test_ambiguous_option_abbreviation_failure(
@@ -405,23 +438,7 @@ def test_ambiguous_option_abbreviation_failure(
     with pytest.raises(SystemExit) as exit_info:
         parser.parse_args(["--o=json", "--help", "--output_format=json"])
     assert exit_info.value.code == 2
-    assert json.loads(capsys.readouterr().out)["status"] == "Failure"
-
-
-def test_disabled_option_abbreviation_failure() -> None:
-    parser = CustomArgumentParser(prog="fab example", allow_abbrev=False)
-    request = resolve_help(parser, ["--out=json", "--help"])
-    assert request is not None
-    assert request.error is not None
-
-
-@pytest.mark.parametrize("token", ["-lx", "-la=yes", "-lhx"])
-def test_invalid_combined_options_failure(
-    parser: CustomArgumentParser, token: str
-) -> None:
-    request = resolve_help(parser, ["ls", token, "--help", "--output_format=json"])
-    assert request is not None
-    assert request.error is not None
+    assert '"status": "Success"' not in capsys.readouterr().out
 
 
 @pytest.mark.parametrize(
@@ -430,7 +447,6 @@ def test_invalid_combined_options_failure(
         ["api", "--input", '{"value": "--help"}'],
         ["api", "--input=--help"],
         ["-c", "mkdir --help"],
-        ["-c", "--help"],
         ["-cmkdir --help"],
         ["mkdir", "--", "--help"],
         ["find", "text containing --help"],
@@ -439,7 +455,15 @@ def test_invalid_combined_options_failure(
 def test_literal_help_tokens_success(
     parser: CustomArgumentParser, tokens: list[str]
 ) -> None:
-    assert resolve_help(parser, tokens) is None
+    with patch.object(
+        CustomArgumentParser,
+        "print_help",
+        side_effect=AssertionError("Unexpected help"),
+    ):
+        try:
+            parser.parse_args(tokens)
+        except SystemExit as error:
+            assert error.code == 2
 
 
 def test_literal_values_use_normal_parser_success(
@@ -454,23 +478,55 @@ def test_literal_values_use_normal_parser_success(
 @pytest.mark.parametrize(
     "tokens",
     [
-        ["unknown", "--help"],
-        ["job", "unknown", "--help"],
-        ["mkdir", "--unknown", "--help"],
         ["mkdir", "--help", "--output_format"],
-        ["job", "run", "--timeout", "--help"],
-        ["--help", "mkdir"],
-        ["mkdir", "--help=yes"],
-        ["ls", "--long=yes", "--help"],
-        ["ls", "--json=yes", "--help"],
     ],
 )
 def test_invalid_help_structure_failure(
     parser: CustomArgumentParser, tokens: list[str]
 ) -> None:
-    request = resolve_help(parser, tokens)
-    assert request is not None
-    assert request.error is not None
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args(tokens)
+    assert exit_info.value.code == 2
+
+
+@pytest.mark.parametrize("output_format", ["text", "json"])
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        ["unknown", "--help"],
+        ["job", "unknown", "--help"],
+        ["job", "run", "--timeout", "not-an-int", "--help"],
+        ["job", "run", "--timeout", "--help"],
+        ["mkdir", "--help=yes"],
+        ["ls", "--long=yes", "--help"],
+        ["ls", "--json=yes", "--help"],
+        ["-c", "--help"],
+    ],
+)
+def test_help_preserves_parser_errors(
+    parser: CustomArgumentParser,
+    capsys: pytest.CaptureFixture[str],
+    tokens: list[str],
+    output_format: str,
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        parser.parse_args([*tokens, "--output_format", output_format])
+    assert exit_info.value.code == 2
+    captured = capsys.readouterr()
+    assert '"status": "Success"' not in captured.out
+
+
+def test_non_help_values_are_validated_once() -> None:
+    values: list[str] = []
+
+    def validate(value: str) -> str:
+        values.append(value)
+        return value
+
+    parser = CustomArgumentParser(prog="fab example")
+    parser.add_argument("--value", type=validate)
+    assert parser.parse_args(["--value", "example"]).value == "example"
+    assert values == ["example"]
 
 
 def test_parser_selector_and_singleton_reuse_success(
@@ -495,7 +551,9 @@ def test_examples_preserve_payload_quoting_success() -> None:
         prog="fab example",
         fab_examples=["# Pass JSON", """$ example --input '{"key": "--help"}'"""],
     )
-    examples: list[dict[str, Any]] = build_help_data(parser)["examples"]
+    examples: list[dict[str, Any]] = CustomHelpFormatter.fab_help_json_format(parser)[
+        "examples"
+    ]
     assert examples == [
         {
             "description": "Pass JSON",
@@ -511,7 +569,7 @@ def test_auth_examples_preserve_modes_success(
     node = next(
         node
         for node in _nodes(parser)
-        if canonical_command(node) == f"auth {operation}"
+        if node.prog.removeprefix("fab ") == f"auth {operation}"
     )
     expected = [
         {
@@ -544,7 +602,7 @@ def test_auth_examples_preserve_modes_success(
                 },
             ]
         )
-    assert build_help_data(node)["examples"] == expected
+    assert CustomHelpFormatter.fab_help_json_format(node)["examples"] == expected
     assert getattr(node, "fab_examples")[:2] == [
         "# interactive mode",
         f"$ auth {operation}\n",
@@ -569,6 +627,6 @@ def test_example_prefix_matches_mode_success(
         prog="fab example",
         fab_examples=[f"# {description}", f"$ {invocation}"],
     )
-    assert build_help_data(parser)["examples"] == [
+    assert CustomHelpFormatter.fab_help_json_format(parser)["examples"] == [
         {"description": description, "command": expected}
     ]

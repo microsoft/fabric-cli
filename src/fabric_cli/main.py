@@ -11,20 +11,16 @@ def main():
         fab_ui.print_version()
         return
 
-    from fabric_cli.core.fab_help import resolve_help
     from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
     parser, subparsers = get_global_parser_and_subparsers()
-
-    help_request = resolve_help(parser, sys.argv[1:])
-    if help_request is not None:
-        sys.exit(fab_ui.print_help_request(help_request))
 
     import argcomplete
 
     from fabric_cli.core import fab_constant, fab_logger, fab_state_config
 
-    argcomplete.autocomplete(parser, default_completer=None)
+    if not any(token in ("-h", "-help", "--help") for token in sys.argv[1:]):
+        argcomplete.autocomplete(parser, default_completer=None)
 
     args = parser.parse_args()
 

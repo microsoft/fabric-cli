@@ -13,7 +13,6 @@ from fabric_cli.core import fab_constant, fab_logger
 from fabric_cli.core.fab_commands import Command
 from fabric_cli.core.fab_context import Context
 from fabric_cli.core.fab_decorators import singleton
-from fabric_cli.core.fab_help import resolve_help
 from fabric_cli.utils import fab_ui as utils_ui
 from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
 
@@ -48,12 +47,19 @@ class InteractiveCLI:
         command_parts = shlex.split(command.strip())
         if command_parts and command_parts[0] in fab_constant.INTERACTIVE_HELP_COMMANDS:
             command_parts = ["--help", *command_parts[1:]]
-        help_request = resolve_help(self.parser, command_parts)
-        if help_request is not None:
-            utils_ui.print_help_request(help_request)
+        if (
+            command_parts
+            and command_parts[0].startswith("-")
+            and command not in fab_constant.INTERACTIVE_VERSION_COMMANDS
+        ):
+            try:
+                self.parser.parse_args(command_parts)
+            except SystemExit:
+                return False
             return False
 
-        fab_logger.print_log_file_path()
+        if not command_parts or command_parts[0] not in self.subparsers.choices:
+            fab_logger.print_log_file_path()
 
         if command in fab_constant.INTERACTIVE_QUIT_COMMANDS:
             utils_ui.print(fab_constant.INTERACTIVE_EXIT_MESSAGE)
@@ -79,6 +85,7 @@ class InteractiveCLI:
 
                 try:
                     subparser_args = subparser.parse_args(command_parts[1:])
+                    fab_logger.print_log_file_path()
                     subparser_args.command = subcommand_name
                     subparser_args.fab_mode = fab_constant.FAB_MODE_INTERACTIVE
                     subparser_args.command_path = Command.get_command_path(
@@ -95,9 +102,11 @@ class InteractiveCLI:
                         )
                 except SystemExit:
                     # Catch SystemExit raised by ArgumentParser and prevent exiting
-                    return
+                    return False
             else:
-                self.parser.error(f"invalid choice: '{command.strip()}'. Type 'help' for available commands.")
+                self.parser.error(
+                    f"invalid choice: '{command.strip()}'. Type 'help' for available commands."
+                )
 
         return False
 

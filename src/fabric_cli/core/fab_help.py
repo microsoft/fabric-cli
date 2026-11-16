@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Resolve help controls and describe registered parsers without executing commands."""
+"""Build text and JSON help from registered command parsers."""
 
 import argparse
+import re
 from copy import copy
 from dataclasses import dataclass, field
 from typing import Any, Iterator, Optional
@@ -11,9 +12,181 @@ from typing import Any, Iterator, Optional
 from fabric_cli import __version__
 
 
+class CustomHelpFormatter(argparse.HelpFormatter):
+    """Format registered command help as text or JSON-ready metadata."""
+
+    def __init__(
+        self,
+        prog: str,
+        fab_examples: Optional[list[str]] = None,
+        fab_aliases: Optional[list[str]] = None,
+        fab_learnmore: Optional[list[str]] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(prog, *args, **kwargs)
+        self.fab_examples = fab_examples or []
+        self.fab_aliases = fab_aliases or []
+        self.fab_learnmore = fab_learnmore or []
+
+    def _format_args(self, action: argparse.Action, default_metavar: str) -> str:
+        if action.nargs in ("*", "+"):
+            return "" if action.option_strings else f"<{action.dest}>"
+        return super()._format_args(action, default_metavar)
+
+    def _format_action_invocation(self, action: argparse.Action) -> str:
+        if not action.metavar and action.nargs in (None, "?"):
+            return ", ".join(action.option_strings)
+        if action.nargs in ("*", "+"):
+            metavar = self._format_args(action, action.dest)
+            return ", ".join(action.option_strings) + metavar
+        return super()._format_action_invocation(action)
+
+    def format_help(self) -> str:
+        """Implement argparse's text-help hook."""
+        return self.fab_help_text()
+
+    def fab_help_text(self) -> str:
+        """Return formatted text help without producing JSON or printing output."""
+        help_message = super().format_help()
+        help_message = help_message.replace("usage:", "Usage:")
+        help_message = help_message.replace("positional arguments:", "Arg(s):")
+        help_message = help_message.replace("options:", "Flags:")
+        help_message = re.sub(
+            r"\s*-h, --help\s*(Show help for command|show this help message and exit)?",
+            "",
+            help_message,
+        )
+        help_message = help_message.replace("  -help\n", "")
+        help_message = help_message.replace("[-h] ", "")
+        help_message = help_message.replace("[-help] ", "")
+        help_message = help_message.replace("[-help]", "")
+
+        if "Flags:" in help_message:
+            flags_section = help_message.split("Flags:")[1].strip()
+            if not flags_section:
+                help_message = help_message.replace("\nFlags:\n", "")
+
+        if self.fab_aliases:
+            help_message += "\nAliases:\n"
+            for alias in self.fab_aliases:
+                help_message += f"  {alias}\n"
+
+        if self.fab_examples:
+            help_message += "\nExamples:\n"
+            for example in self.fab_examples:
+                if "#" in example:
+                    help_message += f"  \033[38;5;243m{example}\033[0m\n"
+                else:
+                    help_message += f"  {example}\n"
+
+        if self.fab_learnmore:
+            help_message += "\nLearn more:\n"
+            if self.fab_learnmore != ["_"]:
+                for learn_more in self.fab_learnmore:
+                    help_message += f"  {learn_more}\n"
+            help_message += "  For more usage examples, see https://aka.ms/fabric-cli\n"
+
+        return help_message + "\n"
+
+    @staticmethod
+    def fab_help_json_format(parser: argparse.ArgumentParser) -> dict[str, Any]:
+        """Generate the versioned JSON help payload directly from a registered parser."""
+        command = " ".join(parser.prog.split())
+        command = command.removeprefix("fab ") or "fab"
+        args: list[dict[str, Any]] = []
+        flags: list[dict[str, Any]] = []
+        required_flags: list[str] = []
+        formatter = argparse.HelpFormatter(parser.prog)
+        help_spellings: list[str] = []
+        for action in parser._actions:
+            if (
+                isinstance(action, argparse._SubParsersAction)
+                or action.help == argparse.SUPPRESS
+            ):
+                continue
+            if isinstance(action, argparse._HelpAction):
+                help_spellings.extend(action.option_strings)
+                continue
+            entry = _describe_action(action)
+            (flags if action.option_strings else args).append(entry)
+            if action.option_strings and action.required:
+                required_flag = entry["name"]
+                if action.nargs != 0:
+                    usage_action = copy(action)
+                    usage_action.metavar = action.metavar or f"<{action.dest}>"
+                    required_flag += (
+                        f" {formatter._format_args(usage_action, action.dest)}"
+                    )
+                required_flags.append(required_flag)
+        if help_spellings:
+            flags.insert(
+                0,
+                {
+                    "name": "--help",
+                    "aliases": [
+                        spelling for spelling in help_spellings if spelling != "--help"
+                    ],
+                    "type": "boolean",
+                    "required": False,
+                    "description": "Show command help.",
+                },
+            )
+        examples: list[dict[str, str]] = []
+        description = "Example invocation."
+        for raw in getattr(parser, "fab_examples", []):
+            example = raw.strip()
+            if example.startswith("#"):
+                description = example.lstrip("#").strip()
+            elif example:
+                invocation = example.removeprefix("$").strip()
+                if "interactive mode" in description.lower():
+                    invocation = invocation.removeprefix("fab ")
+                elif not invocation.startswith("fab "):
+                    invocation = f"fab {invocation}"
+                examples.append({"description": description, "command": invocation})
+        notes = list(getattr(parser, "fab_notes", []))
+        links = ["https://aka.ms/fabric-cli"]
+        for item in getattr(parser, "fab_learnmore", []):
+            if item.startswith(("https://", "http://")):
+                if item not in links:
+                    links.append(item)
+            elif item != "_":
+                notes.append(item)
+        path = "" if command == "fab" else f" {command}"
+        usage_args = " ".join(
+            f"<{entry['name']}>" if entry["required"] else f"[<{entry['name']}>]"
+            for entry in args
+        )
+        children = list(child_parsers(parser))
+        suffix = " <command>" if children else ""
+        if usage_args:
+            suffix += f" {usage_args}"
+        if required_flags:
+            suffix += f" {' '.join(required_flags)}"
+        return {
+            "schema_version": "1.0",
+            "cli_version": __version__,
+            "description": parser.description
+            or getattr(parser, "fab_description", None)
+            or command,
+            "usage": f"fab{path}{suffix} [flags]",
+            "args": args,
+            "flags": flags,
+            "aliases": list(getattr(parser, "fab_aliases", [])),
+            "subcommands": [
+                {"name": name, "aliases": aliases, "description": description}
+                for name, _, aliases, description in children
+            ],
+            "examples": examples,
+            "notes": notes,
+            "learn_more": links,
+        }
+
+
 @dataclass
 class HelpRequest:
-    """A help target and its explicit selectors, before output-format resolution."""
+    """A selected command parser and its requested output formats."""
 
     parser: argparse.ArgumentParser
     selectors: list[str] = field(default_factory=list)
@@ -41,138 +214,6 @@ def child_parsers(
             yield name, child, aliases, descriptions.get(
                 name
             ) or child.description or name
-
-
-def canonical_command(parser: argparse.ArgumentParser) -> str:
-    """Return the canonical command name used in help response envelopes."""
-    parts = parser.prog.split()
-    if parts and parts[0] == "fab":
-        parts = parts[1:]
-    return " ".join(parts) or "fab"
-
-
-def _is_option(token: str) -> bool:
-    if not token.startswith("-") or token == "-":
-        return False
-    try:
-        float(token)
-    except ValueError:
-        return True
-    return False
-
-
-def resolve_help(
-    parser: argparse.ArgumentParser, tokens: list[str]
-) -> Optional[HelpRequest]:
-    """Find help while respecting registered option arity and literal value boundaries.
-
-    Operation requiredness, choices and value validators deliberately do not run here.
-    Structural errors are retained only if the request actually asks for help.
-    """
-    request = HelpRequest(parser)
-    current = parser
-    found = False
-    index = 0
-    positional_index = 0
-    while index < len(tokens):
-        token = tokens[index]
-        if token == "--":
-            break
-        options = current._option_string_actions
-        spelling, separator, value = token.partition("=")
-        attached: Optional[str] = value
-        action = options.get(spelling)
-        if action is None and _is_option(token):
-            matches = current._get_option_tuples(token)
-            if len(matches) > 1:
-                request.error = "An ambiguous option was supplied."
-                index += 1
-                continue
-            if matches:
-                action, spelling = matches[0][:2]
-                # argparse versions differ in tuple size; the explicit value is last.
-                attached = matches[0][-1]
-                separator = "=" if attached is not None else ""
-                if (
-                    len(spelling) == 2
-                    and token.startswith(spelling)
-                    and not token.startswith(f"{spelling}=")
-                ):
-                    while action is not None and action.nargs == 0 and attached:
-                        if isinstance(action, argparse._HelpAction):
-                            found = True
-                        spelling = f"-{attached[0]}"
-                        attached = attached[1:] or None
-                        separator = "=" if attached is not None else ""
-                        action = options.get(spelling)
-        if action is not None:
-            if isinstance(action, argparse._HelpAction):
-                found = True
-                if separator:
-                    request.error = "A help flag does not accept a value."
-                index += 1
-                continue
-            if action.nargs == 0:
-                if action.dest == "output_format":
-                    request.selectors.append(action.const)
-                if separator:
-                    request.error = "A boolean flag does not accept a value."
-                index += 1
-                continue
-            values = [attached] if separator and attached is not None else []
-            index += 1
-            nargs = action.nargs
-            limit = (
-                1 if nargs in (None, "?") else nargs if isinstance(nargs, int) else None
-            )
-            while not separator and index < len(tokens):
-                value = tokens[index]
-                if limit is not None and len(values) >= limit:
-                    break
-                if value == "--" or (
-                    _is_option(value) and spelling not in ("-c", "--command")
-                ):
-                    break
-                values.append(value)
-                index += 1
-            minimum = (
-                0 if nargs in ("?", "*") else nargs if isinstance(nargs, int) else 1
-            )
-            if len(values) < minimum:
-                request.error = "A supplied option is missing its value."
-            if action.dest == "output_format":
-                request.selectors.extend(values)
-            continue
-        if _is_option(token):
-            request.error = "An unknown option was supplied."
-            index += 1
-            continue
-        children = [
-            (name, child, aliases) for name, child, aliases, _ in child_parsers(current)
-        ]
-        child = next(
-            (child for name, child, aliases in children if token in [name, *aliases]),
-            None,
-        )
-        if children:
-            if child is None or found:
-                request.error = (
-                    "An unknown help target or unexpected argument was supplied."
-                )
-            else:
-                current = child
-                request.parser = child
-                positional_index = 0
-        else:
-            positionals = [
-                action for action in current._actions if not action.option_strings
-            ]
-            if positional_index >= len(positionals):
-                request.error = "An unexpected argument was supplied."
-            elif positionals[positional_index].nargs not in ("+", "*"):
-                positional_index += 1
-        index += 1
-    return request if found else None
 
 
 def _describe_action(action: argparse.Action) -> dict[str, Any]:
@@ -220,94 +261,3 @@ def _describe_action(action: argparse.Action) -> dict[str, Any]:
         entry["default"] = action.default
     entry.update(metadata)
     return entry
-
-
-def build_help_data(parser: argparse.ArgumentParser) -> dict[str, Any]:
-    """Generate the versioned public help payload from a registered parser."""
-    command = canonical_command(parser)
-    args: list[dict[str, Any]] = []
-    flags: list[dict[str, Any]] = []
-    required_flags: list[str] = []
-    formatter = argparse.HelpFormatter(parser.prog)
-    help_spellings: list[str] = []
-    for action in parser._actions:
-        if (
-            isinstance(action, argparse._SubParsersAction)
-            or action.help == argparse.SUPPRESS
-        ):
-            continue
-        if isinstance(action, argparse._HelpAction):
-            help_spellings.extend(action.option_strings)
-            continue
-        entry = _describe_action(action)
-        (flags if action.option_strings else args).append(entry)
-        if action.option_strings and action.required:
-            required_flag = entry["name"]
-            if action.nargs != 0:
-                usage_action = copy(action)
-                usage_action.metavar = action.metavar or f"<{action.dest}>"
-                required_flag += f" {formatter._format_args(usage_action, action.dest)}"
-            required_flags.append(required_flag)
-    if help_spellings:
-        flags.insert(
-            0,
-            {
-                "name": "--help",
-                "aliases": [
-                    spelling for spelling in help_spellings if spelling != "--help"
-                ],
-                "type": "boolean",
-                "required": False,
-                "description": "Show command help.",
-            },
-        )
-    examples: list[dict[str, str]] = []
-    description = "Example invocation."
-    for raw in getattr(parser, "fab_examples", []):
-        example = raw.strip()
-        if example.startswith("#"):
-            description = example.lstrip("#").strip()
-        elif example:
-            invocation = example.removeprefix("$").strip()
-            if "interactive mode" in description.lower():
-                invocation = invocation.removeprefix("fab ")
-            elif not invocation.startswith("fab "):
-                invocation = f"fab {invocation}"
-            examples.append({"description": description, "command": invocation})
-    notes = list(getattr(parser, "fab_notes", []))
-    links = ["https://aka.ms/fabric-cli"]
-    for item in getattr(parser, "fab_learnmore", []):
-        if item.startswith(("https://", "http://")):
-            if item not in links:
-                links.append(item)
-        elif item != "_":
-            notes.append(item)
-    path = "" if command == "fab" else f" {command}"
-    usage_args = " ".join(
-        f"<{entry['name']}>" if entry["required"] else f"[<{entry['name']}>]"
-        for entry in args
-    )
-    children = list(child_parsers(parser))
-    suffix = " <command>" if children else ""
-    if usage_args:
-        suffix += f" {usage_args}"
-    if required_flags:
-        suffix += f" {' '.join(required_flags)}"
-    return {
-        "schema_version": "1.0",
-        "cli_version": __version__,
-        "description": parser.description
-        or getattr(parser, "fab_description", None)
-        or command,
-        "usage": f"fab{path}{suffix} [flags]",
-        "args": args,
-        "flags": flags,
-        "aliases": list(getattr(parser, "fab_aliases", [])),
-        "subcommands": [
-            {"name": name, "aliases": aliases, "description": description}
-            for name, _, aliases, description in children
-        ],
-        "examples": examples,
-        "notes": notes,
-        "learn_more": links,
-    }
