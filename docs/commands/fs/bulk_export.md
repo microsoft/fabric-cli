@@ -45,7 +45,7 @@ fab bulk-export <path> -o <output_path> --recursive [-f]
 | Parameter | Description |
 |-----------|-------------|
 | `<path>` | Path to the workspace or folder to export. |
-| `-o, --output <output_path>` | Output directory path. Required. |
+| `-o, --output <output_path>` | Output directory path. Required. Must exist locally; use `.` or `./` for the current local directory. |
 | `--recursive` | Recursively export folder contents. Required for workspace and folder targets. |
 | `-f, --force` | Skip confirmation prompts. Exports without sensitivity label confirmation and proceeds when the output folder is not empty. Optional. |
 
@@ -57,6 +57,9 @@ fab bulk-export ws1.Workspace -o /tmp --recursive --force
 
 # Bulk-export a specific folder
 fab bulk-export ws1.Workspace/folder1.Folder -o /tmp --recursive --force
+
+# Bulk-export to the current local directory
+fab bulk-export ws1.Workspace -o ./ --recursive --force
 ```
 
 **Output:**
