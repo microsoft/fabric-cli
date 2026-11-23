@@ -4,8 +4,9 @@
 import base64
 import os
 from argparse import Namespace
+from collections.abc import Iterator
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -21,8 +22,18 @@ from fabric_cli.utils.fab_cmd_bulk_export_utils import (
 )
 
 
-def _workspace() -> Workspace:
+@pytest.fixture
+def bulk_export_workspace() -> Workspace:
     return Workspace("ws", "workspace-id", Tenant("tenant", "tenant-id"), "Workspace")
+
+
+@pytest.fixture
+def mock_bulk_exporters() -> Iterator[tuple[MagicMock, MagicMock]]:
+    with (
+        patch.object(fab_fs_bulk_export, "bulk_export_workspace") as workspace,
+        patch.object(fab_fs_bulk_export, "bulk_export_folder") as folder,
+    ):
+        yield workspace, folder
 
 
 @pytest.mark.parametrize("target", ["workspace", "folder"])
@@ -41,7 +52,13 @@ def _workspace() -> Workspace:
     ],
 )
 def test_bulk_export_writes_to_local_directory(
-    target: str, output: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    target: str,
+    output: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    bulk_export_workspace: Workspace,
+    mock_bulk_exporters: tuple[MagicMock, MagicMock],
+    mock_print_warning: MagicMock,
 ) -> None:
     monkeypatch.chdir(tmp_path)
     if output.startswith("~"):
@@ -51,7 +68,7 @@ def test_bulk_export_writes_to_local_directory(
         output = str(tmp_path / "absolute")
     output_dir = Path(os.path.expanduser(output))
     output_dir.mkdir(parents=True, exist_ok=True)
-    workspace = _workspace()
+    workspace = bulk_export_workspace
     context = (
         workspace if target == "workspace" else Folder("folder", "folder-id", workspace)
     )
@@ -80,18 +97,14 @@ def test_bulk_export_writes_to_local_directory(
             },
         )
 
+    export_workspace, export_folder = mock_bulk_exporters
+    export_workspace.side_effect = export
+    export_folder.side_effect = export
     with (
         patch(
             "fabric_cli.utils.fab_storage.handle_context.get_command_context",
             return_value=context,
         ) as fabric_resolver,
-        patch.object(
-            fab_fs_bulk_export, "bulk_export_workspace", side_effect=export
-        ) as export_workspace,
-        patch.object(
-            fab_fs_bulk_export, "bulk_export_folder", side_effect=export
-        ) as export_folder,
-        patch("fabric_cli.utils.fab_ui.print_warning"),
         patch("fabric_cli.utils.fab_ui.print_grey"),
     ):
         fab_fs_bulk_export.exec_command(args, context)
@@ -112,11 +125,15 @@ def test_bulk_export_writes_to_local_directory(
     "output", ["missing", "file.txt", "ws.Workspace/lake.Lakehouse/Files"]
 )
 def test_bulk_export_rejects_invalid_local_destination_before_export(
-    output: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    output: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    bulk_export_workspace: Workspace,
+    mock_bulk_exporters: tuple[MagicMock, MagicMock],
 ) -> None:
     monkeypatch.chdir(tmp_path)
     (tmp_path / "file.txt").touch()
-    workspace = _workspace()
+    workspace = bulk_export_workspace
     args = Namespace(output=[output], recursive=True, force=True)
     expected_code = (
         fab_constant.ERROR_INVALID_OPERATION
@@ -129,11 +146,8 @@ def test_bulk_export_rejects_invalid_local_destination_before_export(
         else ErrorMessages.Common.no_such_file_or_directory()
     )
 
-    with (
-        patch.object(fab_fs_bulk_export, "bulk_export_workspace") as export_workspace,
-        patch.object(fab_fs_bulk_export, "bulk_export_folder") as export_folder,
-        pytest.raises(FabricCLIError) as exc,
-    ):
+    export_workspace, export_folder = mock_bulk_exporters
+    with pytest.raises(FabricCLIError) as exc:
         fab_fs_bulk_export.exec_command(args, workspace)
 
     assert exc.value.status_code == expected_code
@@ -157,25 +171,28 @@ def test_bulk_export_current_directory_preserves_nonempty_confirmation(
     confirmed: bool,
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    mock_questionary_confirm: MagicMock,
+    mock_print_warning: MagicMock,
 ) -> None:
     monkeypatch.chdir(tmp_path)
     existing_file = tmp_path / "existing.txt"
     existing_file.write_text("keep", encoding="utf-8")
     args = Namespace(output=".", force=force)
-    with (
-        patch("fabric_cli.utils.fab_ui.prompt_confirm", side_effect=answers) as prompt,
-        patch("fabric_cli.utils.fab_ui.print_warning") as warning,
-    ):
-        assert fab_fs_bulk_export._confirm_export_preconditions(args) is confirmed
-        assert prompt.call_count == len(answers)
-        if force:
-            assert warning.call_args_list == [
-                call("Item definitions are exported without their sensitivity labels"),
-                call("Exporting to a non-empty output folder"),
-            ]
-        else:
-            warning.assert_not_called()
-            assert "not empty" in prompt.call_args_list[0].args[0]
-            if len(answers) == 2:
-                assert "sensitivity labels" in prompt.call_args_list[1].args[0]
+    mock_questionary_confirm.return_value.ask.side_effect = answers
+    assert fab_fs_bulk_export._confirm_export_preconditions(args) is confirmed
+    assert mock_questionary_confirm.call_count == len(answers)
+    assert mock_questionary_confirm.return_value.ask.call_count == len(answers)
+    if force:
+        assert mock_print_warning.call_args_list == [
+            call("Item definitions are exported without their sensitivity labels"),
+            call("Exporting to a non-empty output folder"),
+        ]
+    else:
+        mock_print_warning.assert_not_called()
+        assert "not empty" in mock_questionary_confirm.call_args_list[0].args[0]
+        if len(answers) == 2:
+            assert (
+                "sensitivity labels"
+                in mock_questionary_confirm.call_args_list[1].args[0]
+            )
     assert existing_file.read_text(encoding="utf-8") == "keep"
