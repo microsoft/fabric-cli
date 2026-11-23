@@ -78,6 +78,7 @@ ALL_ITEM_TYPES = [
     ItemType.ORG_APP,
     # ItemType.PLAN,
     ItemType.DATA_BUILD_TOOL_JOB,
+    ItemType.DEPLOYMENT_PLAN,
 ]
 
 item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
@@ -85,6 +86,7 @@ item_type_paramerter = pytest.mark.parametrize("item_type", ALL_ITEM_TYPES)
 basic_item_parametrize = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.ENVIRONMENT,
         ItemType.EVENTSTREAM,
@@ -116,6 +118,7 @@ basic_item_parametrize = pytest.mark.parametrize(
 import_update_existing_item_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.ENVIRONMENT,
         ItemType.EVENTSTREAM,
@@ -143,6 +146,7 @@ import_update_existing_item_success_params = pytest.mark.parametrize(
 import_create_new_item_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.NOTEBOOK,
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.DATA_PIPELINE,
@@ -234,6 +238,7 @@ mkdir_item_with_creation_payload_success_params = pytest.mark.parametrize(
 mv_item_to_item_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.KQL_DASHBOARD,
         ItemType.KQL_QUERYSET,
@@ -276,6 +281,7 @@ mv_item_to_item_type_mismatch_failure_params = pytest.mark.parametrize(
 mv_item_within_workspace_rename_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.KQL_DASHBOARD,
         ItemType.KQL_QUERYSET,
@@ -360,6 +366,7 @@ set_item_metadata_success_params_complete = pytest.mark.parametrize(
 set_item_metadata_for_all_types_success_item_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.ENVIRONMENT,
         ItemType.EVENTSTREAM,
@@ -437,6 +444,7 @@ set_folder_success_params = pytest.mark.parametrize(
 export_item_with_extension_parameters = pytest.mark.parametrize(
     "item_type,expected_file_extension",
     [
+        (ItemType.DEPLOYMENT_PLAN, ".yml"),
         (ItemType.NOTEBOOK, ".ipynb"),
         (ItemType.SPARK_JOB_DEFINITION, ".json"),
         (ItemType.DATA_PIPELINE, ".json"),
@@ -461,6 +469,7 @@ export_item_with_extension_parameters = pytest.mark.parametrize(
 export_item_types_parameters = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.NOTEBOOK,
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.DATA_PIPELINE,
@@ -489,6 +498,7 @@ export_item_types_parameters = pytest.mark.parametrize(
 export_item_format_parameters = pytest.mark.parametrize(
     "item_type,export_format,expected_file_extensions,expected_folders",
     [
+        (ItemType.DEPLOYMENT_PLAN, "DeploymentPlanFormat", [".yml"], []),
         (ItemType.NOTEBOOK, ".py", [".py"], []),
         (ItemType.NOTEBOOK, ".ipynb", [".ipynb"], []),
         (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV1", [".json"], []),
@@ -501,6 +511,7 @@ export_item_format_parameters = pytest.mark.parametrize(
 export_item_default_format_parameters = pytest.mark.parametrize(
     "item_type,expected_file_count",
     [
+        (ItemType.DEPLOYMENT_PLAN, 2),
         (ItemType.NOTEBOOK, 2),  # Default format for notebook is ipynb
         (ItemType.SPARK_JOB_DEFINITION, 2),
         (ItemType.DATA_PIPELINE, 2),
@@ -528,6 +539,7 @@ export_item_default_format_parameters = pytest.mark.parametrize(
 export_item_invalid_format_parameters = pytest.mark.parametrize(
     "item_type,invalid_format",
     [
+        (ItemType.DEPLOYMENT_PLAN, ".txt"),
         (ItemType.NOTEBOOK, ".txt"),
         (ItemType.SPARK_JOB_DEFINITION, ".txt"),
         (ItemType.SEMANTIC_MODEL, ".txt"),
@@ -561,6 +573,7 @@ cp_virtual_workspace_item_failure_params = pytest.mark.parametrize(
 cp_item_types_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.KQL_DASHBOARD,
         ItemType.KQL_QUERYSET,
@@ -586,6 +599,7 @@ cp_item_types_success_params = pytest.mark.parametrize(
 cp_folder_item_types_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.KQL_DASHBOARD,
         ItemType.KQL_QUERYSET,
@@ -632,6 +646,7 @@ ls_item_folders_success_params = pytest.mark.parametrize(
 ls_folder_content_success_params = pytest.mark.parametrize(
     "item_type",
     [
+        ItemType.DEPLOYMENT_PLAN,
         ItemType.DATA_PIPELINE,
         ItemType.ENVIRONMENT,
         ItemType.EVENTHOUSE,

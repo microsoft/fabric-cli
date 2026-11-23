@@ -253,6 +253,7 @@ fab set ws1.Workspace/rep1.Report -q definition.parts[0].payload.datasetReferenc
 - `.Eventhouse`, `.Eventstream`
 - `.MirroredDatabase`, `.Reflex`
 - `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
+- `.DeploymentPlan`
 
 
 #### Copy Item to Workspace
@@ -330,6 +331,7 @@ fab export ws1.Workspace/nb1.Notebook -o /tmp
 - `.Reflex`, `.DigitalTwinBuilder`, `.DigitalTwinBuilderFlow`, `.Map`, `.MountedDataFactory`, `.CopyJob`, `.VariableLibrary`
 - `.GraphModel`, `.Ontology`
 - `.AnomalyDetector`, `.DataBuildToolJob`, `.EventSchemaSet`, `.OrgApp`, `.OrgAppAudience`, `.Plan`
+- `.DeploymentPlan`
 
 
 #### Export to Lakehouse
