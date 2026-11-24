@@ -79,7 +79,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
 
     def print_help(self, file: Any = None) -> None:
         formats = argparse.ArgumentParser(
-            add_help=False, exit_on_error=False, allow_abbrev=self.allow_abbrev
+            add_help=False, exit_on_error=False, allow_abbrev=False
         )
         formats.add_argument("--output_format", action="append")
         formats.add_argument(

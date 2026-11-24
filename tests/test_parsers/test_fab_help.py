@@ -377,12 +377,12 @@ def test_selected_command_help_success(
     ("tokens", "command"),
     [
         (["ls", "-la", "--help", "--output_format=json"], "ls"),
-        (["ls", "--out=json", "--help"], "ls"),
+        (["ls", "--output_format=json", "--help"], "ls"),
         (["ls", "-lh", "--output_format=json"], "ls"),
-        (["ls", "-alh", "--out", "json"], "ls"),
-        (["ls", "-lqname", "--help", "--out=json"], "ls"),
-        (["ls", "-lq--help", "--he", "--out=json"], "ls"),
-        (["ls", "-la", "--out", "json", "--he"], "ls"),
+        (["ls", "-alh", "--output_format", "json"], "ls"),
+        (["ls", "-lqname", "--help", "--output_format=json"], "ls"),
+        (["ls", "-lq--help", "--he", "--output_format=json"], "ls"),
+        (["ls", "-la", "--output_format", "json", "--he"], "ls"),
         (["--json", "ls", "--help"], "ls"),
         (["job", "--json", "run", "--help"], "job run"),
         (["job", "run", "--help", "--json"], "job run"),
@@ -428,6 +428,34 @@ def test_argparse_option_value_boundaries_success(
             parser.parse_args(tokens)
         except SystemExit as error:
             assert error.code == 2
+
+
+@pytest.mark.parametrize(
+    ("tokens", "selectors"),
+    [
+        (["export", "--help", "--output", "json"], []),
+        (["export", "--help", "--output=--json"], []),
+        (["export", "--help", "-o--json"], []),
+        (["export", "--help", "--output", "outdir", "--output_f=json"], []),
+        (["ls", "--out=json", "--help"], []),
+        (["ls", "--help", "--out", "json"], []),
+        (["ls", "--help", "--js"], []),
+        (["export", "--help", "--output", "outdir", "--output_format=json"], ["json"]),
+        (["export", "--help", "--output", "outdir", "--", "--json"], []),
+        (["export", "--help", "--output", "outdir", "--json"], ["json"]),
+    ],
+)
+def test_help_format_option_value_boundaries_success(
+    parser: CustomArgumentParser, tokens: list[str], selectors: list[str]
+) -> None:
+    """Only exact format option names contribute help selectors."""
+    with patch("fabric_cli.utils.fab_ui.print_help", return_value=0) as print_help:
+        with pytest.raises(SystemExit) as exit_info:
+            parser.parse_args(tokens)
+    assert exit_info.value.code == 0
+    request = print_help.call_args.args[0]
+    assert request.selectors == selectors
+    assert request.error is None
 
 
 def test_ambiguous_option_abbreviation_failure(

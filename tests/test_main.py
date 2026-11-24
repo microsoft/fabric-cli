@@ -196,6 +196,13 @@ def _run_help(home: Path, tokens: list[str]) -> subprocess.CompletedProcess[str]
         (["--json", "job", "run", "-h"], "job run"),
         (["create", "--help", "--json"], "mkdir"),
         (["import", "--help", "--output_format=json"], "import"),
+        (
+            ["export", "ws.Workspace", "--output", "outdir", "--help", "--json"],
+            "export",
+        ),
+        (["export", "ws.Workspace", "-o", "outdir", "--help", "--json"], "export"),
+        (["export", "ws.Workspace", "--output=outdir", "--help", "--json"], "export"),
+        (["export", "--help", "--output", "outdir", "second", "--json"], "export"),
     ],
 )
 def test_offline_json_help_success(
