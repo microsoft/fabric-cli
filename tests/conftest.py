@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 
 import os
-from unittest.mock import patch
+from collections.abc import Iterator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,6 +20,13 @@ def _wide_terminal():
 @pytest.fixture
 def mock_questionary_print():
     with patch("questionary.print") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_questionary_confirm() -> Iterator[MagicMock]:
+    """Mock confirmation prompts for unit and command tests."""
+    with patch("questionary.confirm") as mock:
         yield mock
 
 

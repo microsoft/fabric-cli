@@ -350,6 +350,8 @@ def register_bulk_export_parser(subparsers: _SubParsersAction) -> None:
         "$ bulk-export ws1.Workspace -o /tmp --recursive\n",
         "# bulk-export a folder recursively",
         "$ bulk-export ws1.Workspace/folder1.Folder -o /tmp --recursive\n",
+        "# bulk-export to the current local directory",
+        "$ bulk-export ws1.Workspace -o ./ --recursive\n",
     ]
 
     bulk_export_parser = subparsers.add_parser(
