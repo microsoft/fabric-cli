@@ -146,7 +146,7 @@ class TestExportDefinitionPartsToStorage:
                 "fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.export_json_parts"
             ) as mock_export,
             patch(
-                "fabric_cli.utils.fab_cmd_bulk_export_utils.fab_storage.get_export_path"
+                "fabric_cli.utils.fab_cmd_bulk_export_utils.get_local_export_path"
             ) as mock_get_path,
             patch(
                 "fabric_cli.utils.fab_cmd_bulk_export_utils.utils_export.decode_payload"

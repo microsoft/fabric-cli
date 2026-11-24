@@ -1249,12 +1249,6 @@ def disable_debug():
 
 
 @pytest.fixture
-def mock_questionary_confirm():
-    with patch("questionary.confirm") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_print_done():
     with patch("fabric_cli.utils.fab_ui.print_done") as mock:
         yield mock

@@ -127,10 +127,8 @@ class TestBulkExport:
 
         # Assert - should fail with error indicating invalid export path
         assert_fabric_cli_error(
-            constant.ERROR_INVALID_OPERATION,
-            BulkExportErrors.invalid_export_path(
-                lakehouse_onelake_full_path.strip("/")
-            ),
+            constant.ERROR_INVALID_PATH,
+            ErrorMessages.Common.no_such_file_or_directory(),
         )
 
     def test_bulk_export_no_exportable_items_failure(

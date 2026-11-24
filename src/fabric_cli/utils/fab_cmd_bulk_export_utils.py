@@ -1,24 +1,40 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
 import json
-from typing import TypedDict
+import os
 from argparse import Namespace
+from typing import TypedDict
 
 from fabric_cli.core import fab_constant
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.errors.bulk_export import BulkExportErrors
 from fabric_cli.core.fab_commands import Command
-from fabric_cli.utils import fab_ui
+from fabric_cli.core.fab_exceptions import FabricCLIError
 from fabric_cli.core.hiearchy.fab_hiearchy import Item
-from fabric_cli.utils import fab_storage
+from fabric_cli.errors import ErrorMessages
+from fabric_cli.errors.bulk_export import BulkExportErrors
 from fabric_cli.utils import fab_cmd_export_utils as utils_export
+from fabric_cli.utils import fab_ui
 
 
 class ContextItemsSupportMap(TypedDict):
     supported_items: list[Item]
     unsupported_items: list[Item]
+
+
+def get_local_export_path(output_path: str) -> dict[str, str]:
+    """Resolve a bulk-export destination as an existing local directory."""
+    expanded_path = os.path.expanduser(output_path)
+    if not os.path.exists(expanded_path):
+        raise FabricCLIError(
+            ErrorMessages.Common.no_such_file_or_directory(),
+            fab_constant.ERROR_INVALID_PATH,
+        )
+    if not os.path.isdir(expanded_path):
+        raise FabricCLIError(
+            BulkExportErrors.invalid_export_path(expanded_path),
+            fab_constant.ERROR_INVALID_OPERATION,
+        )
+    return {"type": "local", "path": expanded_path}
 
 
 def is_command_supported(element: Item) -> bool:
@@ -52,7 +68,7 @@ def export_definition_parts_to_storage(
     item_def = utils_export.decode_payload(exported_definitions)
     _strip_parent_folders_from_definition_paths(item_def, args.from_path)
 
-    export_path = fab_storage.get_export_path(args.output)
+    export_path = get_local_export_path(args.output)
 
     _validate_definition_parts_paths_are_under_export_path(
         item_def, export_path["path"]
