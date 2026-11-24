@@ -573,6 +573,7 @@ uri_mapping = {
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_BUILD_TOOL_JOB: "dbtitems",
     ItemType.DATA_PIPELINE: "pipelines",
+    ItemType.DEPLOYMENT_PLAN: "deployment-plans",
     ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
     ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digital-twin-builder-flow",
     ItemType.ENVIRONMENT: "sparkenvironments",
