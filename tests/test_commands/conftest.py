@@ -146,7 +146,6 @@ import_update_existing_item_success_params = pytest.mark.parametrize(
 import_create_new_item_success_params = pytest.mark.parametrize(
     "item_type",
     [
-        ItemType.DEPLOYMENT_PLAN,
         ItemType.NOTEBOOK,
         ItemType.SPARK_JOB_DEFINITION,
         ItemType.DATA_PIPELINE,
@@ -172,6 +171,7 @@ import_create_new_item_success_params = pytest.mark.parametrize(
         ItemType.EVENT_SCHEMA_SET,
         ItemType.ORG_APP,
         # ItemType.PLAN,
+        ItemType.DEPLOYMENT_PLAN,
     ],
 )
 
@@ -498,13 +498,19 @@ export_item_types_parameters = pytest.mark.parametrize(
 export_item_format_parameters = pytest.mark.parametrize(
     "item_type,export_format,expected_file_extensions,expected_folders",
     [
-        (ItemType.DEPLOYMENT_PLAN, "DeploymentPlanFormat", [".yml"], []),
         (ItemType.NOTEBOOK, ".py", [".py"], []),
         (ItemType.NOTEBOOK, ".ipynb", [".ipynb"], []),
         (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV1", [".json"], []),
         (ItemType.SPARK_JOB_DEFINITION, "SparkJobDefinitionV2", [".json"], []),
         (ItemType.SEMANTIC_MODEL, "TMDL", [".pbism"], ["definition"]),
         (ItemType.SEMANTIC_MODEL, "TMSL", [".pbism", ".bim"], []),
+        pytest.param(
+            ItemType.DEPLOYMENT_PLAN,
+            "DeploymentPlanFormat",
+            [".yml"],
+            [],
+            id="DeploymentPlan-DeploymentPlanFormat",
+        ),
     ],
 )
 
