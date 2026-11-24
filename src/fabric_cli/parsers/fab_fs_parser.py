@@ -81,7 +81,7 @@ def register_mkdir_parser(subparsers: _SubParsersAction) -> None:
         fab_aliases=mkdir_aliases,
         fab_learnmore=mkdir_learnmore,
         fab_notes=[
-            "Bare -P shows target-specific parameter help instead of creating the resource.",
+            "Bare -P shows target-specific parameter help only for resource types that support it. "
             "Target-specific parameter names and allowed values are not included in static help.",
         ],
     )
