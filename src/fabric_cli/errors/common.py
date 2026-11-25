@@ -10,6 +10,21 @@ from fabric_cli.core import fab_constant
 class CommonErrors:
 
     @staticmethod
+    def invalid_help_request(reason: str) -> str:
+        """Describe an invalid help request without echoing argument values."""
+        return f"Invalid help request: {reason}"
+
+    @staticmethod
+    def invalid_help_format() -> str:
+        """Describe an unsupported help output format."""
+        return "Help output format must be json or text"
+
+    @staticmethod
+    def conflicting_help_formats() -> str:
+        """Describe conflicting explicit output selectors."""
+        return "Conflicting help output formats were supplied"
+
+    @staticmethod
     def invalid_entries_format() -> str:
         return "Invalid entries format"
 
@@ -260,7 +275,9 @@ class CommonErrors:
     @staticmethod
     def invalid_definition_format(valid_formats: list[str]) -> str:
         if valid_formats:
-            message = f"Only the following formats are supported: {', '.join(valid_formats)}"
+            message = (
+                f"Only the following formats are supported: {', '.join(valid_formats)}"
+            )
         else:
             message = "No formats are supported"
         return f"Invalid format. {message}"

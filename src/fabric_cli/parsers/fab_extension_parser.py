@@ -8,7 +8,11 @@ from fabric_cli.core import fab_constant, fab_logger
 
 def register_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser(
-        "extension", help=fab_constant.COMMAND_EXTENSIONS_DESCRIPTION
+        "extension",
+        help=fab_constant.COMMAND_EXTENSIONS_DESCRIPTION,
+        fab_notes=[
+            "This command is a registered placeholder and is not yet supported."
+        ],
     )
     parser.set_defaults(func=show_help)
 

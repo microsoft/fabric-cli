@@ -14,6 +14,16 @@ For command-specific parameters:
 fab <command> --help
 ```
 
+For machine-readable help, add `--output_format json`:
+
+```bash
+fab job run --help --output_format json
+```
+
+`--help`, `-h`, and `-help` support JSON and text. See
+[Json format help](output_format.md#help-in-json-format) for the response
+contract, format precedence, and offline behavior.
+
 For a complete list of commands, see the [Commands page](../commands/index.md).
 
 
@@ -61,6 +71,7 @@ For a complete list of commands, see the [Commands page](../commands/index.md).
 | `--interval`       | Specify the interval for `job` schedule                 |
 | `--json`           | Use JSON output (same as `--output_format json`)         |
 | `--mode`           | Specify the operational mode for `table load`           |
+| `--output_format`  | Select `json` or `text` for results and help             |
 | `--retain_n_hours` | Retain specified hours for `table vacuum`               |
 | `--schedule`       | Set the job schedule for `job`                          |
 | `--show_headers`   | Turn headers on for `api`                               |

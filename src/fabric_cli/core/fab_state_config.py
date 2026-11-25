@@ -18,7 +18,7 @@ def config_location():
     return _location
 
 
-config_file = os.path.join(config_location(), "config.json")
+config_file = os.path.join(expanduser("~/.config/fab/"), "config.json")
 
 
 def read_config(file_path) -> dict:
@@ -32,6 +32,7 @@ def read_config(file_path) -> dict:
 
 
 def write_config(data):
+    create_restricted_dir(os.path.dirname(config_file))
     write_restricted_file(config_file, json.dumps(data, indent=4))
 
 

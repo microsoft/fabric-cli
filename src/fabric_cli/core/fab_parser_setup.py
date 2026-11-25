@@ -2,15 +2,15 @@
 # Licensed under the MIT License.
 
 import argparse
-import re
 import sys
-from collections.abc import Iterable
+from contextvars import ContextVar
 from functools import partial
 from typing import Any
 
 import argcomplete
 
 from fabric_cli.core import fab_constant, fab_logger
+from fabric_cli.core.fab_help import CustomHelpFormatter, HelpRequest, child_parsers
 from fabric_cli.parsers import fab_acls_parser as acls_parser
 from fabric_cli.parsers import fab_api_parser as api_parser
 from fabric_cli.parsers import fab_auth_parser as auth_parser
@@ -27,90 +27,7 @@ from fabric_cli.utils import fab_error_parser as utils_error_parser
 from fabric_cli.utils import fab_ui
 from fabric_cli.utils.fab_commands import COMMANDS
 
-
-class CustomHelpFormatter(argparse.HelpFormatter):
-
-    def __init__(
-        self,
-        prog,
-        fab_examples=None,
-        fab_aliases=None,
-        fab_learnmore=None,
-        *args,
-        **kwargs,
-    ):
-        super().__init__(prog, *args, **kwargs)
-        self.fab_examples = fab_examples or []
-        self.fab_aliases = fab_aliases or []
-        self.fab_learnmore = fab_learnmore or []
-
-    def _format_args(self, action, default_metavar):
-        if action.nargs in ("*", "+"):
-            if action.option_strings:
-                return ""
-            else:
-                # Ensure metavar is lowercase for positional arguments
-                return f"<{action.dest}>"
-        return super()._format_args(action, default_metavar)
-
-    def _format_action_invocation(self, action):
-        if not action.metavar and action.nargs in (None, "?"):
-            # For no metavar and simple arguments
-            return ", ".join(action.option_strings)
-        elif action.nargs in ("*", "+"):
-            metavar = self._format_args(action, action.dest)
-            return ", ".join(action.option_strings) + metavar
-        else:
-            return super()._format_action_invocation(action)
-
-    def format_help(self):
-        help_message = super().format_help()
-
-        # Custom output
-        help_message = help_message.replace("usage:", "Usage:")
-        help_message = help_message.replace("positional arguments:", "Arg(s):")
-        help_message = help_message.replace("options:", "Flags:")
-
-        help_message = re.sub(
-            r"\s*-h, --help\s*(Show help for command|show this help message and exit)?",
-            "",
-            help_message,
-        )
-        help_message = help_message.replace("  -help\n", "")
-        help_message = help_message.replace("[-h] ", "")
-        help_message = help_message.replace("[-help] ", "")
-        help_message = help_message.replace("[-help]", "")
-
-        if "Flags:" in help_message:
-            flags_section = help_message.split("Flags:")[1].strip()
-            if not flags_section:  # If no flags follow the "Flags:" line, remove it
-                help_message = help_message.replace("\nFlags:\n", "")
-
-        # Add aliases
-        if self.fab_aliases:
-            help_message += "\nAliases:\n"
-            for alias in self.fab_aliases:
-                help_message += f"  {alias}\n"
-
-        # Add examples
-        if self.fab_examples:
-            help_message += "\nExamples:\n"
-            for example in self.fab_examples:
-                if "#" in example:
-                    # Grey color
-                    help_message += f"  \033[38;5;243m{example}\033[0m\n"
-                else:
-                    help_message += f"  {example}\n"
-
-        # Add learn more
-        if self.fab_learnmore:
-            help_message += "\nLearn more:\n"
-            if self.fab_learnmore != ["_"]:
-                for learn_more in self.fab_learnmore:
-                    help_message += f"  {learn_more}\n"
-            help_message += "  For more usage examples, see https://aka.ms/fabric-cli\n"
-
-        return help_message + "\n"
+_help_tokens: ContextVar[tuple[str, ...]] = ContextVar("help_tokens", default=())
 
 
 class CustomArgumentParser(argparse.ArgumentParser):
@@ -120,6 +37,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         fab_examples=None,
         fab_aliases=None,
         fab_learnmore=None,
+        fab_notes=None,
         output_format_default: str | None = None,
         **kwargs,
     ):
@@ -137,6 +55,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
         self.fab_mode = fab_constant.FAB_MODE_COMMANDLINE
         self.fab_examples = fab_examples or []
         self.fab_aliases = fab_aliases or []
+        self.fab_learnmore = fab_learnmore or []
+        self.fab_notes = fab_notes or []
 
     def add_subparsers(self, **kwargs: Any) -> argparse._SubParsersAction:
         """Keep child defaults from overwriting an explicit output format."""
@@ -146,34 +66,59 @@ class CustomArgumentParser(argparse.ArgumentParser):
         )
         return super().add_subparsers(**kwargs)
 
-    def parse_args(
-        self,
-        args: Iterable[str] | None = None,
-        namespace: Any = None,
-    ) -> Any:
-        """Supply the output format fallback when parsing any parser directly."""
-        parsed_args = super().parse_args(args, namespace)
-        if not hasattr(parsed_args, "output_format"):
-            setattr(parsed_args, "output_format", None)
-        return parsed_args
+    def parse_args(self, args=None, namespace=None):
+        tokens = list(sys.argv[1:] if args is None else args)
+        context = _help_tokens.set(tuple(tokens))
+        try:
+            parsed = super().parse_args(tokens, namespace)
+        finally:
+            _help_tokens.reset(context)
+        if not hasattr(parsed, "output_format"):
+            setattr(parsed, "output_format", None)
+        return parsed
 
-    def print_help(self, file=None):
+    def print_help(self, file: Any = None) -> None:
+        formats = argparse.ArgumentParser(
+            add_help=False, exit_on_error=False, allow_abbrev=False
+        )
+        formats.add_argument("--output_format", action="append")
+        formats.add_argument(
+            "--json", dest="output_format", action="append_const", const="json"
+        )
+        args = argparse.Namespace(output_format=[])
+        error = None
+        try:
+            formats.parse_known_args(_help_tokens.get(), args)
+        except argparse.ArgumentError as exc:
+            error = str(exc)
+        exit_code = fab_ui.print_help(HelpRequest(self, args.output_format, error))
+        if exit_code:
+            self.exit(exit_code)
+
+    def print_text_help(self):
         command_name = self.prog.split()[-1]
 
         help_functions = {
-            "acl": lambda: acls_parser.show_help(None),
-            "job": lambda: jobs_parser.show_help(None),
-            "label": lambda: labels_parser.show_help(None),
-            "table": lambda: tables_parser.show_help(None),
-            "auth": lambda: auth_parser.show_help(None),
-            "config": lambda: config_parser.show_help(None),
-            "fab": lambda: fab_ui.display_help(COMMANDS),
+            "acl": lambda: acls_parser.show_help(argparse.Namespace()),
+            "job": lambda: jobs_parser.show_help(argparse.Namespace()),
+            "label": lambda: labels_parser.show_help(argparse.Namespace()),
+            "table": lambda: tables_parser.show_help(argparse.Namespace()),
+            "auth": lambda: auth_parser.show_help(argparse.Namespace()),
+            "config": lambda: config_parser.show_help(argparse.Namespace()),
+            "fab": lambda: fab_ui.display_help(
+                COMMANDS,
+                custom_header=(
+                    "Usage: <command> <subcommand> [flags]"
+                    if self.fab_mode == fab_constant.FAB_MODE_INTERACTIVE
+                    else None
+                ),
+            ),
         }
 
         if command_name in help_functions:
             help_functions[command_name]()
         else:
-            super().print_help(file)
+            super().print_help()
 
     def set_mode(self, mode):
         self.fab_mode = mode
@@ -200,9 +145,12 @@ class CustomArgumentParser(argparse.ArgumentParser):
 _global_parser = None
 _global_subparsers = None
 
+
 def create_parser_and_subparsers():
     """Create parser and subparsers for reuse across CLI modes"""
-    parser = CustomArgumentParser(description="Fabric CLI")
+    parser = CustomArgumentParser(
+        prog="fab", description="Work seamlessly with Fabric from the command line."
+    )
 
     # -c option for command line execution
     parser.add_argument(
@@ -213,7 +161,9 @@ def create_parser_and_subparsers():
     )
 
     # -version and --version
-    parser.add_argument("-v", "--version", action="store_true")
+    parser.add_argument(
+        "-v", "--version", action="store_true", help="Show installed CLI version."
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=False)
 
@@ -260,14 +210,21 @@ def create_parser_and_subparsers():
     )
     version_parser.set_defaults(func=fab_ui.print_version)
 
+    def retain_help_metadata(parent: argparse.ArgumentParser) -> None:
+        for _, child, aliases, description in child_parsers(parent):
+            setattr(child, "fab_description", description)
+            setattr(child, "fab_aliases", aliases)
+            retain_help_metadata(child)
+
+    retain_help_metadata(parser)
     return parser, subparsers
+
 
 def get_global_parser_and_subparsers():
     """Get singleton parser and subparsers instances"""
     global _global_parser, _global_subparsers
-    
+
     if _global_parser is None:
         _global_parser, _global_subparsers = create_parser_and_subparsers()
-    
-    return _global_parser, _global_subparsers
 
+    return _global_parser, _global_subparsers

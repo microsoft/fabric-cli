@@ -3,20 +3,24 @@
 
 import sys
 
-import argcomplete
-
-from fabric_cli.core import fab_constant, fab_logger, fab_state_config
-from fabric_cli.core.fab_commands import Command
-from fabric_cli.core.fab_exceptions import FabricCLIError
-from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
-from fabric_cli.parsers import fab_auth_parser as auth_parser
-from fabric_cli.utils import fab_ui
-
 
 def main():
+    from fabric_cli.utils import fab_ui
+
+    if sys.argv[1:] in (["--version"], ["-v"], ["version"]):
+        fab_ui.print_version()
+        return
+
+    from fabric_cli.core.fab_parser_setup import get_global_parser_and_subparsers
+
     parser, subparsers = get_global_parser_and_subparsers()
 
-    argcomplete.autocomplete(parser, default_completer=None)
+    import argcomplete
+
+    from fabric_cli.core import fab_constant, fab_logger, fab_state_config
+
+    if not any(token in ("-h", "-help", "--help") for token in sys.argv[1:]):
+        argcomplete.autocomplete(parser, default_completer=None)
 
     args = parser.parse_args()
 
@@ -24,6 +28,8 @@ def main():
         fab_state_config.init_defaults()
 
         if args.command == "auth" and args.auth_command == None:
+            from fabric_cli.parsers import fab_auth_parser as auth_parser
+
             auth_parser.show_help(args)
             return
 
@@ -95,6 +101,10 @@ def main():
 
 def _handle_keyboard_interrupt(args):
     """Handle KeyboardInterrupt with proper error formatting."""
+    from fabric_cli.core import fab_constant
+    from fabric_cli.core.fab_exceptions import FabricCLIError
+    from fabric_cli.utils import fab_ui
+
     fab_ui.print_output_error(
         FabricCLIError(
             "Operation cancelled",
@@ -107,6 +117,10 @@ def _handle_keyboard_interrupt(args):
 
 def _handle_unexpected_error(err, args):
     """Handle unexpected errors with proper error formatting."""
+    from fabric_cli.core import fab_constant
+    from fabric_cli.core.fab_exceptions import FabricCLIError
+    from fabric_cli.utils import fab_ui
+
     try:
         error_message = str(err.args[0]) if err.args else str(err)
     except:
@@ -120,6 +134,8 @@ def _handle_unexpected_error(err, args):
 
 
 def _execute_command(args, subparsers, parser):
+    from fabric_cli.core.fab_commands import Command
+
     if args.command in subparsers.choices:
         subparser_args = args
         subparser_args.command = args.command
