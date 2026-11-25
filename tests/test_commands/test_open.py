@@ -3,7 +3,8 @@
 
 import argparse
 import json
-from unittest.mock import patch
+from typing import Callable
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,6 +12,8 @@ import fabric_cli.commands.fs.fab_fs_get as fab_get
 from fabric_cli.core import fab_constant as constant
 from fabric_cli.core import fab_handle_context as handle_context
 from fabric_cli.core.fab_types import ItemType, uri_mapping
+from tests.test_commands.commands_parser import CLIExecutor
+from tests.test_commands.data.models import EntityMetadata
 
 
 class TestOpen:
@@ -91,6 +94,35 @@ class TestOpen:
         # Assert
         mock_webbrowser_open_new.assert_called_once_with(
             f"{constant.WEB_URI}/{workspace_id}/{uri_mapping.get(ItemType.NOTEBOOK)}/{item_id}/?experience={constant.FAB_DEFAULT_OPEN_EXPERIENCE_FABRIC}&upn={self.mocked_upn}&ctid={self.mocked_ctid}"
+        )
+
+    @pytest.mark.parametrize(
+        "experience,expected_experience",
+        [
+            ("fabric", constant.FAB_DEFAULT_OPEN_EXPERIENCE_FABRIC),
+            ("powerbi", constant.FAB_DEFAULT_OPEN_EXPERIENCE_POWERBI),
+        ],
+    )
+    @pytest.mark.token_claims({"upn": mocked_upn, "tid": mocked_ctid})
+    def test_open_deployment_plan_success(
+        self,
+        experience: str,
+        expected_experience: str,
+        item_factory: Callable[..., EntityMetadata],
+        cli_executor: CLIExecutor,
+        mock_webbrowser_open_new: Mock,
+        mock_questionary_print: Mock,
+        mock_fab_set_state_config: Callable[[str, str], None],
+    ) -> None:
+        mock_fab_set_state_config(constant.FAB_DEFAULT_OPEN_EXPERIENCE, experience)
+        deployment_plan = item_factory(ItemType.DEPLOYMENT_PLAN)
+        get(deployment_plan.full_path, query=".")
+        data = json.loads(mock_questionary_print.call_args[0][0])
+
+        cli_executor.exec_command(f"open {deployment_plan.full_path}")
+
+        mock_webbrowser_open_new.assert_called_once_with(
+            f"{constant.WEB_URI}/{data['workspaceId']}/deployment-plans/{data['id']}/?experience={expected_experience}&upn={self.mocked_upn}&ctid={self.mocked_ctid}"
         )
 
     # endregion

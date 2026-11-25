@@ -261,6 +261,7 @@ class ItemType(_BaseItemType):
     DATAMART = "Datamart"
     DATA_BUILD_TOOL_JOB = "DataBuildToolJob"
     DATA_PIPELINE = "DataPipeline"
+    DEPLOYMENT_PLAN = "DeploymentPlan"
     DIGITAL_TWIN_BUILDER = "DigitalTwinBuilder"
     DIGITAL_TWIN_BUILDER_FLOW = "DigitalTwinBuilderFlow"
     ENVIRONMENT = "Environment"
@@ -513,6 +514,7 @@ format_mapping = {
     ItemType.DATA_BUILD_TOOL_JOB: "dataBuildToolJobs",
     ItemType.DATA_PIPELINE: "dataPipelines",
     ItemType.DATAMART: "datamarts",
+    ItemType.DEPLOYMENT_PLAN: "deploymentPlans",
     ItemType.DIGITAL_TWIN_BUILDER: "digitalTwinBuilders",
     ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digitalTwinBuilderFlows",
     ItemType.ENVIRONMENT: "environments",
@@ -571,6 +573,7 @@ uri_mapping = {
     ItemType.DATAMART: "datamarts",
     ItemType.DATA_BUILD_TOOL_JOB: "dbtitems",
     ItemType.DATA_PIPELINE: "pipelines",
+    ItemType.DEPLOYMENT_PLAN: "deployment-plans",
     ItemType.DIGITAL_TWIN_BUILDER: "digital-twin-builder",
     ItemType.DIGITAL_TWIN_BUILDER_FLOW: "digital-twin-builder-flow",
     ItemType.ENVIRONMENT: "sparkenvironments",
@@ -612,6 +615,10 @@ uri_mapping = {
 # Item Payload definition
 
 definition_format_mapping = {
+    ItemType.DEPLOYMENT_PLAN: {
+        "default": "",
+        "DeploymentPlanFormat": "DeploymentPlanFormat",
+    },
     ItemType.SPARK_JOB_DEFINITION: {
         "default": "SparkJobDefinitionV1",
         "SparkJobDefinitionV1": "SparkJobDefinitionV1",

@@ -387,6 +387,7 @@ class TestExport:
         )
 
         error_messages = {
+            ItemType.DEPLOYMENT_PLAN: "Invalid format. Only the following formats are supported: DeploymentPlanFormat",
             ItemType.NOTEBOOK: "Invalid format. Only the following formats are supported: .py, .ipynb",
             ItemType.SPARK_JOB_DEFINITION: "Invalid format. Only the following formats are supported: SparkJobDefinitionV1, SparkJobDefinitionV2",
             ItemType.SEMANTIC_MODEL: "Invalid format. Only the following formats are supported: TMDL, TMSL",
